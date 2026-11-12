@@ -80,7 +80,7 @@ func _attaquer() -> void:
 	var vecteur: Vector2 = VECTEURS[direction]
 	sprite.play("attaque_" + direction)
 	lance.rotation = vecteur.angle() - PI / 2.0   # l'image a la pointe vers le BAS : on la tourne pour qu'elle pointe dans la direction du coup
-	lance.z_index = -1 if direction == "haut" else 1  # vers le haut, la lance passe derrière le joueur
+	lance.z_index = 1  # toujours devant (derrière le joueur, elle passait sous le sol du décor)
 	lance.position = Vector2(0, 2) + vecteur * PORTEE_RENTREE
 	lance.visible = true
 	zone.monitoring = true

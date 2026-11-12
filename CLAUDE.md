@@ -179,5 +179,7 @@
 
 - 2026-11-12 : correction lance : l'image `SpriteInHand.png` a la pointe vers le BAS (pas vers le haut) -> rotation = angle - PI/2 dans `player.gd::_attaquer`. Utilisateur : "le reste est ok".
 
+- 2026-11-12 : correction lance vue de dos : `z_index = -1` la plaçait DERRIÈRE le sol du décor (z relatif au parent = absolu -1) -> on ne voyait que le bâton. Maintenant `z_index = 1` toujours.
+
 ## PROCHAINE ÉTAPE : Étape 5i
 - L'utilisateur teste la lance et les pots (Pull, F5, Espace/J). Ensuite : énigmes (Opus), en s'appuyant sur les interactions (pot qui cache une clé, etc.).
