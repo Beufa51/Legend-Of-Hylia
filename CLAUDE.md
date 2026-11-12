@@ -425,6 +425,11 @@
   -> remplace `v_maison_*` (toits vus d'en haut ; + `v_maison_pierre`, caserne 96x64 = 6 cases), `v_arbre_a/b` (40x40, emprise 2x2), `v_sapin`, buissons, roche, souche, herbes, fleurs, clôture ; et FABRIQUE EN CODE le sol : `v_herbe_sol`(+_1/_2 touffes), chemin beige à bords irréguliers `v_chemin_<bits>` (1 N, 2 S, 4 O, 8 E) et `v_chemin_f<coins>` (case pleine + coins d'herbe).
   `exterieur.gd` : `_poser_sol` / `_nom_chemin` (plus de tuiles du pack pour le sol) ; maisons : `S` pierre, `K` caserne 6x4 (door col 1) ; `generer_village.py` : `bordure(g, trou=...)` = forêt dense (2 rangées décalées), caserne en (11,2), capitaine en (14,6).
   Reste du pack Ninja : étal `E`, girouette (images maison), intérieurs = anciennes images Gemini (v_ meubles, couleurs déjà vives).
+- 2026-11-12 : l'utilisateur montre des captures de maisons de Zelda (toit à 4 pans vu d'en haut) comme style préféré, puis une image Zelda retouchée : **REFUSÉ** (sprites Nintendo : jamais dans le dépôt ni envoyés à Gemini ; on décrit le style en mots).
+  **ÉTAPE 9d écrite (non testée dans Godot, aperçus PIL vérifiés)** : `Outils/fabriquer_maisons.py` DESSINE EN CODE des maisons ORIGINALES (à lancer APRÈS `traiter_village2.py`) : toit à 4 pans (panneau central + pans inclinés, 6 motifs : losanges, briques, chaume, ardoise, écailles, bois),
+  mur de pierre avec 2 fenêtres, porte cintrée sous un auvent, 3 dalles, ombre à droite, petit coq doré sur le toit. Maisons **80x64 = 5x4 cases (porte colonne 2)**, caserne **112x64 = 7x4 (porte colonne 3)** ; `PORTES_MAISONS` mis à jour.
+  `generer_village.py` : maisons déplacées (portes : place (5,5) et (20,5) fermées ; ouest (5,5) fermée + (14,5) STAND DE TIR ; caserne (13,5) ; héros (13,5) ; grange (19,5)), `degager_maisons()` retire les décors posés sous une maison, intérieurs -> sorties recalées.
+  ORDRE DES OUTILS : traiter_village.py -> traiter_village2.py -> fabriquer_maisons.py -> generer_village.py. Les planches Gemini de maisons (village2_maisons.jpg) ne sont plus utilisées (remplaçables par du Gemini plus tard, même emprise 5x4).
 
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).

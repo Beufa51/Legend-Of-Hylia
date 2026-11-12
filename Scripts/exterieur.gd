@@ -9,7 +9,7 @@ class_name Exterieur
 #   b  = buisson (1x1)  B = buisson à baies   u = souche   n = panneau   x = caisse
 #   e  = clôture (2 cases)   z = poteau   k = case de l'enclos (marqueur)   s = point de départ d'une poule (marqueur)
 #   f  = tournesol   g = fleur rouge   w = marguerite (fleurs : décor, ne bloquent pas)
-#   MAISONS vues de dessus (4x4, la porte est sur la rangée du bas, 2e colonne) : M rouge+poutres, N ardoise, T chaume, R rouge+pierre, S pierre, L grange en bois ; K = caserne (6x4)
+#   MAISONS dessinées en code (Outils/fabriquer_maisons.py), vues de dessus (5x4, la porte est sur la rangée du bas, 3e colonne) : M rouge+poutres, N ardoise, T chaume, R rouge+pierre, S pierre, L grange en bois ; K = caserne (7x4, porte en 4e colonne)
 #   E  = étal du marché (3x2)  o = tonneau   j = bannière rouge (1x2)
 #   Q  = girouette du coq (3x4)   W = puits (2x2)
 # ANIMAUX : pas dans le plan, mais dans la liste `animaux` : "lettre x y", par ex. "c 9 9"
@@ -54,17 +54,17 @@ const OBJETS_G := {
 	"W": ["v_puits", Vector2i(2, 2), true, 0.0],
 	"e": ["v_cloture", Vector2i(2, 1), true, 0.0],   # clôture (2 cases de large)
 	"z": ["v_poteau", Vector2i(1, 1), true, 0.0],    # poteau de clôture
-	# Maisons : emprise 4x4, la porte est sur la dernière rangée (colonne dans PORTES_MAISONS)
-	"M": ["v_maison_orange", Vector2i(4, 4), true, 0.0],
-	"N": ["v_maison_bleue", Vector2i(4, 4), true, 0.0],
-	"T": ["v_maison_chaume", Vector2i(4, 4), true, 0.0],
-	"R": ["v_maison_rouge", Vector2i(4, 4), true, 0.0],
-	"S": ["v_maison_pierre", Vector2i(4, 4), true, 0.0],
-	"K": ["v_maison_caserne", Vector2i(6, 4), true, 0.0],   # la caserne est plus large (6x4)
-	"L": ["v_maison_bois", Vector2i(4, 4), true, 0.0],
+	# Maisons : emprise 5x4, la porte est sur la dernière rangée (colonne dans PORTES_MAISONS)
+	"M": ["v_maison_orange", Vector2i(5, 4), true, 0.0],
+	"N": ["v_maison_bleue", Vector2i(5, 4), true, 0.0],
+	"T": ["v_maison_chaume", Vector2i(5, 4), true, 0.0],
+	"R": ["v_maison_rouge", Vector2i(5, 4), true, 0.0],
+	"S": ["v_maison_pierre", Vector2i(5, 4), true, 0.0],
+	"K": ["v_maison_caserne", Vector2i(7, 4), true, 0.0],   # la caserne est plus large (7x4)
+	"L": ["v_maison_bois", Vector2i(5, 4), true, 0.0],
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
-const PORTES_MAISONS := {"M": 1, "N": 1, "T": 1, "R": 1, "S": 1, "K": 1, "L": 1}
+const PORTES_MAISONS := {"M": 2, "N": 2, "T": 2, "R": 2, "S": 2, "K": 3, "L": 2}
 # Touffes d'herbe semées automatiquement (images Gemini)
 const TOUFFES_G := ["v_herbe_1", "v_herbe_2"]
 # Animaux : lettre -> [planche, vitesse (px/s), peureux ?, son quand on le frappe]
