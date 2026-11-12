@@ -183,6 +183,9 @@
 
 - 2026-11-12 : **LANCE + POTS TERMINÉS** (testés par l'utilisateur : "c'est bon pour moi", y compris la vue de dos).
 
+- 2026-11-12 : coq : l'utilisateur compte encore 5 plumes par aile -> re-simplifié (flou gaussien sigma 5 + seuil .40 sur les ailes, ~3 lobes/plumes par aile, bords lisses) via `Outils/simplifier_coq.py [sigma] [seuil]`
+  (sigma 7 = 2 gros lobes, trop mou). `Assets/Gemini/embleme/coq_rouge.png` régénéré. Validation de l'utilisateur en attente.
+
 ## PROCHAINE ÉTAPE : Étape 6 = les énigmes (conception = Opus)
 - Concevoir les 3 énigmes de l'aile gauche (1 par salle) + le fragment de la salle 3, en s'appuyant sur : plaques `P`, dalles à flèches `F`, braseros `B`, pots cassables `V` (cachent des objets), lance.
 - Questions à poser à l'utilisateur AVANT de concevoir : style d'énigme préféré (observation / blocs à pousser / ordre à respecter) ; validation du coq (`Assets/Gemini/embleme/coq_rouge.png`).
