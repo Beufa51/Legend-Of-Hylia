@@ -29,7 +29,7 @@
 - **Pitch** : une recrue de la garde royale passe son examen d'adoubement via un mini-donjon d'énigmes.
 - **Donjon en forme de blason** (bouclier + oiseau héraldique) :
   - Entrée en bas, progression vers le haut.
-  - Aile gauche : 3 salles linéaires reliées par couloirs, 1 énigme par salle, 1 fragment à la fin.
+  - Aile gauche : **5 salles** linéaires (une par plume du coq) reliées par couloirs, 1 énigme par salle, 1 fragment à la fin. (Changé le 2026-11-12 : 3 -> 5, car l'utilisateur voit 5 plumes par aile sur le coq.)
   - Aile droite : idem, en symétrie.
   - Convergence (corps + tête) : épreuve finale une fois les 2 fragments obtenus.
 - **Twist** : à la fin d'une aile, cinématique où l'aile pivote et s'emboîte sur le grand blason.
@@ -57,7 +57,7 @@
 ## Points ouverts / à décider
 - [ ] Titre/univers : l'utilisateur a proposé "La Legend d'Hylia" → refusé car Hylia et
       "Legend of..." viennent de Zelda (Nintendo). Trouver un nom 100 % original.
-- [ ] Contenu précis des 7 énigmes (3 gauche, 3 droite, 1 finale).
+- [ ] Contenu précis des **11 énigmes** (5 gauche, 5 droite, 1 finale).
 - [ ] Graphismes : assets gratuits (CC0) ou pixel art maison ? Taille des tuiles / résolution.
 
 - [ ] **Interactions / combat** (idée de l'utilisateur, 2026-11-12) : "ne pas pouvoir taper des pots dans Zelda est frustrant, 0 interaction". Proposition de Claude :
@@ -186,7 +186,9 @@
 - 2026-11-12 : coq : l'utilisateur compte encore 5 plumes par aile -> re-simplifié (flou gaussien sigma 5 + seuil .40 sur les ailes, ~3 lobes/plumes par aile, bords lisses) via `Outils/simplifier_coq.py [sigma] [seuil]`
   (sigma 7 = 2 gros lobes, trop mou). `Assets/Gemini/embleme/coq_rouge.png` régénéré. Validation de l'utilisateur en attente.
 
+- 2026-11-12 : l'utilisateur voit toujours 5 plumes par aile sur le coq (même après simplification) : on ACCEPTE et on passe à **5 salles par aile** (une par plume). Le coq reste tel quel (validé de fait). `world.tscn` a encore 3 salles gauche (Entree + Salle1-3 + 2 couloirs) : à étendre à 5 salles + 4 couloirs.
+
 ## PROCHAINE ÉTAPE : Étape 6 = les énigmes (conception = Opus)
-- Concevoir les 3 énigmes de l'aile gauche (1 par salle) + le fragment de la salle 3, en s'appuyant sur : plaques `P`, dalles à flèches `F`, braseros `B`, pots cassables `V` (cachent des objets), lance.
+- Concevoir les 5 énigmes de l'aile gauche (1 par salle) + le fragment de la salle 3, en s'appuyant sur : plaques `P`, dalles à flèches `F`, braseros `B`, pots cassables `V` (cachent des objets), lance.
 - Questions à poser à l'utilisateur AVANT de concevoir : style d'énigme préféré (observation / blocs à pousser / ordre à respecter) ; validation du coq (`Assets/Gemini/embleme/coq_rouge.png`).
 - Avant ou après : fusionner la branche `etape-4-aile-gauche` dans `main` (GitHub Desktop : Branch -> Merge into current branch, depuis main, puis Push).
