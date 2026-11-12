@@ -80,7 +80,7 @@ def ecrire_scene():
 
 [node name="World" type="Node2D"]
 script = ExtResource("1")
-musique = "res://Assets/Ninja_adventure/Audio/Musics/33 - Calm Village.ogg"
+musique = "res://Assets/Ninja_adventure/Audio/Musics/20 - Good Time.ogg"
 donjon = false
 
 '''
