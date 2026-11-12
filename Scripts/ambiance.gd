@@ -44,6 +44,14 @@ func _ready() -> void:
 	_bruit_du_vent()
 
 
+# TEST du flou (version de développement seulement) : F2 coupe / remet toute l'ambiance.
+func _unhandled_input(event: InputEvent) -> void:
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F2:
+		visible = not visible
+		set_process(visible)
+		Etat.annoncer("Ambiance (feuilles, papillons) : " + ("ON" if visible else "OFF"))
+
+
 func _process(delta: float) -> void:
 	if camera == null:
 		return

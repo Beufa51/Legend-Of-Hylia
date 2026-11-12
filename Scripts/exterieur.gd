@@ -75,8 +75,21 @@ func _ready() -> void:
 
 
 # Le vent : chaque plante penche (skew) selon une vague qui traverse l'écran de gauche à droite.
+var _vent_actif := true
+
+
+# TEST du flou (développement seulement) : F3 coupe / remet le balancement des plantes.
+func _unhandled_input(event: InputEvent) -> void:
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
+		_vent_actif = not _vent_actif
+		for p in _plantes:
+			p[0].skew = 0.0
+		if grille == Etat.salle_courante:
+			Etat.annoncer("Plantes au vent : " + ("ON" if _vent_actif else "OFF"))
+
+
 func _process(delta: float) -> void:
-	if grille != Etat.salle_courante:
+	if grille != Etat.salle_courante or not _vent_actif:
 		return   # inutile d'animer un écran qu'on ne voit pas
 	_temps += delta
 	var force := Ambiance.force_vent
