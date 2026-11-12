@@ -37,12 +37,7 @@ for y in range(H):                          # la place : un grand ovale de terre
     for x in range(W):
         if ((x - 12) / 7.6) ** 2 + ((y - 7) / 3.7) ** 2 <= 1.0: place[y][x] = ':'
 chemin(place, 4, 5, 5, 5); chemin(place, 19, 20, 5, 5)   # devant les portes des maisons
-# Bordure d'arbres en haut et en bas, ouverture au nord (colonnes 10-14)
-for x in (0, 2, 4, 6, 8, 15, 17, 19, 21, 23):
-    put(place, 'A' if x % 4 == 0 else 'a', (x, 0))
-for x in range(0, 24, 2):
-    put(place, 'a' if x % 4 == 0 else 'A', (x, 12))
-put(place, 'b', (24, 12), (24, 13))
+# Bordure d'arbres en haut et en bas, ouverture au nord (colonnes 10-14) : faite plus bas par bordure() (définie après)
 # Côtés : arbres, ouvertures ouest/est (rangées 6-8)
 for (x, y) in [(0, 2), (0, 4), (0, 9), (23, 2), (23, 4), (23, 9)]:
     put(place, 'P' if y == 4 else 'A', (x, y))
@@ -63,13 +58,20 @@ put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10),
 # Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
 animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 5', 'd 17 8']
 
-def bordure(g, haut=True, bas=True):
-    """Arbres en haut et en bas de l'écran."""
+def bordure(g, haut=True, bas=True, trou=None):
+    """Forêt dense en haut et en bas : une rangée d'arbres 2x2 + une rangée décalée (seulement si la case est vide).
+    `trou` = (x0, x1) : colonnes laissées ouvertes (un chemin qui sort de l'écran)."""
+    def ouvert(x): return trou is not None and x <= trou[1] and x + 1 >= trou[0]
     for x in range(0, 24, 2):
-        if haut: put(g, 'A' if x % 4 == 0 else 'a', (x, 0))
-        if bas: put(g, 'a' if x % 4 == 0 else 'A', (x, 12))
+        if haut and not ouvert(x): put(g, 'A' if (x // 2) % 2 == 0 else 'a', (x, 0))
+        if bas and not ouvert(x): put(g, 'a' if (x // 2) % 2 == 0 else 'A', (x, 12))
+    for x in range(1, 23, 2):   # rangée décalée, vers l'intérieur de l'écran
+        if haut and not ouvert(x) and g[1][x] == '.': put(g, 'a' if (x // 2) % 2 == 0 else 'A', (x, 1))
+        if bas and not ouvert(x) and g[11][x] == '.': put(g, 'A' if (x // 2) % 2 == 0 else 'a', (x, 11))
     put(g, 'b', (24, 12), (24, 13), (24, 0), (24, 1))
 
+
+bordure(place, trou=(10, 14))   # (la place est construite plus haut ; sa forêt est posée ici)
 
 # --- VILLAGE OUEST (1,2) : deux maisons au nord, un coin potager/marché au sud.
 #     Entrée par l'est (la place). L'ouest mène à la ferme (pas encore construite) : fermé par des buissons.
@@ -98,7 +100,7 @@ est = vide()
 chemin(est, 0, 24, 6, 8)
 chemin(est, 11, 13, 5, 5)                                     # devant la porte de la caserne
 bordure(est)
-put(est, 'K', (10, 2)); put(est, 'j', (8, 2), (15, 2))        # caserne en pierre : porte en (12,5)
+put(est, 'K', (11, 2)); put(est, 'j', (9, 3), (17, 3))        # caserne 6x4 : porte en (12,5)
 put(est, 'o', (6, 3), (6, 4), (18, 3), (19, 4))
 for (x, y) in [(0, 2), (0, 4), (2, 9), (22, 2), (22, 9), (20, 11)]:
     put(est, 'A' if y % 4 == 0 else 'a', (x, y))
@@ -107,7 +109,7 @@ put(est, 'E', (4, 10)); put(est, 'o', (8, 10), (19, 9))
 put(est, 'g', (9, 5), (16, 5), (13, 10), (2, 6)); put(est, 'f', (7, 5), (17, 4), (12, 11))
 put(est, 'w', (8, 4), (15, 4), (14, 10), (23, 10), (1, 7))
 pnjs_est = [
-    "KnightGold 15 5 gauche | Capitaine Aubrac | Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend au temple, au nord du village. // Deux ailes et un corps : voilà la forme du donjon. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur.",
+    "KnightGold 14 6 gauche | Capitaine Aubrac | Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend au temple, au nord du village. // Deux ailes et un corps : voilà la forme du donjon. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur.",
     "Villager3 7 7 droite | Soldat Merle | Dix ans de garde et je n'ai jamais vu le fond du donjon. // Les anciens disent que les plumes de l'aile gauche sont de plus en plus longues. Je ne sais pas ce que ça veut dire !",
     "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.",
 ]
@@ -252,7 +254,7 @@ def apercu(fichier):
            "f": ("v_tournesol", 1, 1), "g": ("v_fleur_rouge", 1, 1), "w": ("v_marguerite", 1, 1), "o": ("v_tonneau", 1, 1),
            "x": ("v_caisse", 1, 1), "n": ("v_panneau", 1, 1), "u": ("v_souche", 1, 1), "r": ("v_roche", 2, 2), "j": ("v_banniere", 1, 2),
            "W": ("v_puits", 2, 2), "e": ("v_cloture", 2, 1), "z": ("v_poteau", 1, 1), "M": ("v_maison_orange", 4, 4), "N": ("v_maison_bleue", 4, 4), "T": ("v_maison_chaume", 4, 4),
-           "R": ("v_maison_rouge", 4, 4), "K": ("v_maison_caserne", 4, 4), "L": ("v_maison_bois", 4, 4)}
+           "R": ("v_maison_rouge", 4, 4), "S": ("v_maison_pierre", 4, 4), "K": ("v_maison_caserne", 6, 4), "L": ("v_maison_bois", 4, 4)}
     objets = {"Q": ("tuile:girouette_mat", None)}
     xs = [e[1][0] for e in ecrans]; ys = [e[1][1] for e in ecrans]
     mx, my = min(xs), min(ys)
@@ -269,18 +271,15 @@ def apercu(fichier):
             for x in range(W):
                 d = (ox + x * 16, oy + y * 16)
                 if est(x, y):
-                    n, s, o, e = est(x, y - 1), est(x, y + 1), est(x - 1, y), est(x + 1, y)
-                    if n and s and o and e:
-                        t = (16, 8) if not est(x + 1, y + 1) else (17, 8) if not est(x - 1, y + 1) else \
-                            (16, 9) if not est(x + 1, y - 1) else (17, 9) if not est(x - 1, y - 1) else (12, 8)
+                    bits = (1 if est(x, y - 1) else 0) | (2 if est(x, y + 1) else 0) | (4 if est(x - 1, y) else 0) | (8 if est(x + 1, y) else 0)
+                    if bits == 15:
+                        nom_t = "v_chemin_f%d" % ((1 if not est(x + 1, y - 1) else 0) | (2 if not est(x - 1, y - 1) else 0) | (4 if not est(x + 1, y + 1) else 0) | (8 if not est(x - 1, y + 1) else 0))
                     else:
-                        col = 0 if (not o and e) else 2 if (o and not e) else 1
-                        lig = 0 if (not n and s) else 2 if (n and not s) else 1
-                        t = (11 + col, 7 + lig)
+                        nom_t = "v_chemin_%d" % bits
                 else:
                     h = (x * 73 + y * 151 + gx * 31 + gy * 17) % 13
-                    t = [(12, 12), (13, 12), (14, 12), (15, 12)][h] if h < 4 else (11, 12)
-                region("SOL", (t[0], t[1], 1, 1), d)
+                    nom_t = "v_herbe_sol_%d" % (h + 1) if h < 2 else "v_herbe_sol"
+                img.alpha_composite(Image.open(tuiles + nom_t + ".png").convert("RGBA"), d)
         for y in range(H):
             for x in range(W):
                 c = g[y][x]; d = (ox + x * 16, oy + y * 16)

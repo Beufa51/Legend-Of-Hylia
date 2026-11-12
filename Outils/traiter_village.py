@@ -19,7 +19,7 @@ def source(n): return Image.open(os.path.join(RACINE, "originaux", "village_%s.j
 def fond(a):
     """Masque du fond : magenta, ou ardoise sombre bleutée (grille des planches)."""
     r, g, b = a[..., 0].astype(int), a[..., 1].astype(int), a[..., 2].astype(int)
-    magenta = (r > 170) & (b > 170) & (g < 130)
+    magenta = (r > 120) & (b > 120) & (g < 0.62 * np.minimum(r, b))
     ardoise = ((r - 50) ** 2 + (g - 65) ** 2 + (b - 72) ** 2) < 18 ** 2 if ARDOISE else False
     return magenta | ardoise
 

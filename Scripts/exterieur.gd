@@ -9,7 +9,7 @@ class_name Exterieur
 #   b  = buisson (1x1)  B = buisson à baies   u = souche   n = panneau   x = caisse
 #   e  = clôture (2 cases)   z = poteau   k = case de l'enclos (marqueur)   s = point de départ d'une poule (marqueur)
 #   f  = tournesol   g = fleur rouge   w = marguerite (fleurs : décor, ne bloquent pas)
-#   MAISONS (4x4, la porte est sur la rangée du bas) : M orange, N bleue, T chaume, R rouge, K caserne (pierre), L bois
+#   MAISONS vues de dessus (4x4, la porte est sur la rangée du bas, 2e colonne) : M rouge+poutres, N ardoise, T chaume, R rouge+pierre, S pierre, L grange en bois ; K = caserne (6x4)
 #   E  = étal du marché (3x2)  o = tonneau   j = bannière rouge (1x2)
 #   Q  = girouette du coq (3x4)   W = puits (2x2)
 # ANIMAUX : pas dans le plan, mais dans la liste `animaux` : "lettre x y", par ex. "c 9 9"
@@ -59,11 +59,12 @@ const OBJETS_G := {
 	"N": ["v_maison_bleue", Vector2i(4, 4), true, 0.0],
 	"T": ["v_maison_chaume", Vector2i(4, 4), true, 0.0],
 	"R": ["v_maison_rouge", Vector2i(4, 4), true, 0.0],
-	"K": ["v_maison_caserne", Vector2i(4, 4), true, 0.0],
+	"S": ["v_maison_pierre", Vector2i(4, 4), true, 0.0],
+	"K": ["v_maison_caserne", Vector2i(6, 4), true, 0.0],   # la caserne est plus large (6x4)
 	"L": ["v_maison_bois", Vector2i(4, 4), true, 0.0],
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
-const PORTES_MAISONS := {"M": 1, "N": 1, "T": 1, "R": 1, "K": 2, "L": 1}
+const PORTES_MAISONS := {"M": 1, "N": 1, "T": 1, "R": 1, "S": 1, "K": 1, "L": 1}
 # Touffes d'herbe semées automatiquement (images Gemini)
 const TOUFFES_G := ["v_herbe_1", "v_herbe_2"]
 # Animaux : lettre -> [planche, vitesse (px/s), peureux ?, son quand on le frappe]
@@ -146,17 +147,16 @@ func _creer_decor() -> void:
 				_poser_sprite(TOUFFES_G[(x * 7 + y * 3) % TOUFFES_G.size()], Vector2i(x, y), Vector2i.ONE, 0.2)
 
 
-# Le sol : herbe partout (avec quelques détails), chemin de terre là où il y a « : ».
+# Le sol : herbe (couleurs joyeuses, images Gemini/code) avec quelques touffes, et chemin de terre là où il y a « : ».
 func _poser_sol() -> void:
 	for y in layout.size():
 		for x in layout[y].length():
-			var cellule := Vector2i(x, y)
+			var pos := Vector2(x * TUILE, y * TUILE)
 			if _est_chemin(x, y):
-				_poser_region(SOL, Rect2i(_tuile_chemin(x, y), Vector2i.ONE), cellule)
+				_poser(_nom_chemin(x, y), pos)
 			else:
 				var h := (x * 73 + y * 151 + grille.x * 31 + grille.y * 17) % 13   # « hasard » fixe
-				var tuile: Vector2i = HERBE_DETAILS[h] if h < HERBE_DETAILS.size() else HERBE
-				_poser_region(SOL, Rect2i(tuile, Vector2i.ONE), cellule)
+				_poser("v_herbe_sol_%d" % (h + 1) if h < 2 else "v_herbe_sol", pos)
 
 
 # Hors de l'écran, on prolonge la cellule du bord (un chemin qui sort de l'écran n'a pas de bordure).
@@ -166,28 +166,24 @@ func _est_chemin(x: int, y: int) -> bool:
 	return layout[y][x] == ":"
 
 
-# Choisit la tuile de chemin selon les voisins (bords arrondis vers l'herbe).
-func _tuile_chemin(x: int, y: int) -> Vector2i:
-	var n := _est_chemin(x, y - 1)
-	var s := _est_chemin(x, y + 1)
-	var o := _est_chemin(x - 1, y)
-	var e := _est_chemin(x + 1, y)
-	if n and s and o and e:
-		if not _est_chemin(x + 1, y + 1): return CHEMIN_INTERIEUR["se"]
-		if not _est_chemin(x - 1, y + 1): return CHEMIN_INTERIEUR["so"]
-		if not _est_chemin(x + 1, y - 1): return CHEMIN_INTERIEUR["ne"]
-		if not _est_chemin(x - 1, y - 1): return CHEMIN_INTERIEUR["no"]
-		return CHEMIN_COIN + Vector2i(1, 1)
-	var col := 1
-	if not o and e: col = 0
-	elif o and not e: col = 2
-	var lig := 1
-	if not n and s: lig = 0
-	elif n and not s: lig = 2
-	return CHEMIN_COIN + Vector2i(col, lig)
+# Quelle image de chemin ? Elle dépend des 4 voisins (bits : 1 nord, 2 sud, 4 ouest, 8 est) ;
+# entouré de chemin partout : v_chemin_f + 4 bits pour les coins en herbe (1 NE, 2 NO, 4 SE, 8 SO).
+func _nom_chemin(x: int, y: int) -> String:
+	var bits := 0
+	if _est_chemin(x, y - 1): bits |= 1
+	if _est_chemin(x, y + 1): bits |= 2
+	if _est_chemin(x - 1, y): bits |= 4
+	if _est_chemin(x + 1, y): bits |= 8
+	if bits != 15:
+		return "v_chemin_%d" % bits
+	var coins := 0
+	if not _est_chemin(x + 1, y - 1): coins |= 1
+	if not _est_chemin(x - 1, y - 1): coins |= 2
+	if not _est_chemin(x + 1, y + 1): coins |= 4
+	if not _est_chemin(x - 1, y + 1): coins |= 8
+	return "v_chemin_f%d" % coins
 
 
-# Pose un objet Gemini (voir OBJETS_G) dont l'emprise commence à `cellule`.
 func _poser_objet_g(def: Array, cellule: Vector2i) -> void:
 	var emprise: Vector2i = def[1]
 	_poser_sprite(def[0], cellule, emprise, def[3])
