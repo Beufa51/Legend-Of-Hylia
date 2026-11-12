@@ -118,5 +118,13 @@
   (style commun + sol, murs, accessoires, porte). Fonds magenta #FF00FF pour la transparence ; images à ranger dans `Assets/Gemini/`.
   Claude devra ensuite : nettoyer/réduire (Python PIL, nearest, palette), découper en tuiles 16x16, adapter `room.gd`. Le perso Knight reste du pack Ninja Adventure.
 
-## PROCHAINE ÉTAPE : Étape 5d
-- L'utilisateur génère les images Gemini et les dépose dans `Assets/Gemini/` (puis Push). Claude les traite et les branche dans `room.gd`.
+- 2026-11-12 : **ÉTAPE 5d en cours** : 5 planches Gemini reçues (portes, accessoires, blocs, sols A, sols B), classées dans `Assets/Gemini/originaux/`
+  (JPG 1408x768, ~55 pixels d'art par tuile = trop fin pour du 16 px). Outils (hors jeu, Python+PIL, dossier `Outils/` ignoré par Godot) :
+  `decouper.py` (détecte les cases), `traiter_gemini.py [taille]` (découpe + réduit + magenta->transparent) -> `Assets/Gemini/tuiles/` (32 px, 43 fichiers)
+  et `tuiles16/` (16 px). Aperçus : `Outils/apercus/salle_tuiles32.png` et `salle_tuiles16.png`. Constat : à 32 px c'est net et très SNES ; à 16 px c'est flou.
+  MANQUE : planche des BORDS DE MURS (bords, coins ext/int) -> à regénérer ; le mur plein (`mur_plein`) sert provisoirement.
+  DÉCISION À PRENDRE par l'utilisateur : passer à tuiles 32 px (écran 640x352, Knight agrandi x2 dans la scène) [recommandé] ou rester en 16 px.
+  Si 32 px : modifier project.godot (viewport), room.gd (TUILE=32, TAILLE_SALLE), world.gd, player (scale 2), puis brancher les tuiles Gemini.
+
+## PROCHAINE ÉTAPE : Étape 5d (suite)
+- Attendre le choix 32 px / 16 px, puis brancher les tuiles dans `room.gd`. Redemander la planche de murs (bords + coins).
