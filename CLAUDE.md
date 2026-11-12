@@ -233,5 +233,10 @@
   images `porte_48x32` / `porte_48x16` / `porte_32x64` générées en pixels par `traiter_gemini.py` ; UNE `Porte` par groupe de cases `D` voisines (`Room._poser_portes`, taille = boîte englobante) ; dans les plans, les portes du haut/bas font 3x2 cases (rangées 0-1),
   les portes latérales 2x4 (colonnes 23-24), les portes intérieures 3x1. À RE-TESTER : lisibilité du noir, esthétique des portes. DÉCISION : finir d'abord toute l'aile (plumes 3, 4, 5), puis rééquilibrer énigmes/difficulté.
 
-## PROCHAINE ÉTAPE : Étape 6d
-- L'utilisateur teste (Pull, F5) : noir + portes. Puis construire les plumes 3, 4, 5 (3, 4, 5 écrans) et l'Épine 3-5, puis le fragment ; ensuite seulement rééquilibrage des énigmes.
+- 2026-11-12 : retour 6c : "le noir c'est OK ; les portes sont mal mises, on dirait une TRAPPE, pas très beau". Cause : une grande plaque de bois à plat dans une encoche du mur = trappe.
+  **CORRECTION 6d (non testée)** : portes = **GRILLES DE FER (herses)** à barreaux sur fond sombre, cadre de pierre (`porte_48x32`, `porte_48x16`, `porte_16x64`, générées par `traiter_gemini.py::fabrique_grille`) ;
+  la porte latérale ne fait plus qu'1 colonne de large (colonne 23, rangées 5-8) ; à l'ouverture la grille SE RELÈVE (scale:y -> 0, ou scale:x -> 0 pour la porte étroite) au lieu de s'effacer.
+  NB : la session a été longue ; recommandation donnée à l'utilisateur de faire `/clear` puis `/model` Opus avant la conception des plumes 3-5.
+
+## PROCHAINE ÉTAPE : Étape 6e
+- L'utilisateur re-teste les portes (Pull, F5). Puis plumes 3, 4, 5 (3, 4, 5 écrans), épine 3-5, fragment ; ensuite seulement rééquilibrage des énigmes. (Conception = Opus.)

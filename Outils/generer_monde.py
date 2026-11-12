@@ -38,7 +38,7 @@ def epine(est_ferme=False, porte_est=False, tige=True):
     for x in range(2, 23):
         if not (11 <= x <= 13): put(g, 'T', (x, 7))
     if porte_est:
-        for y in range(5, 9): g[y][23] = 'D'; g[y][24] = 'D'   # porte de 2 x 4 cases
+        for y in range(5, 9): g[y][23] = 'D'   # porte de 1 x 4 cases
     if est_ferme:
         for y in range(5, 9): g[y][23] = '#'; g[y][24] = '#'
     return g

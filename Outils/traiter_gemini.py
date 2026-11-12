@@ -213,39 +213,38 @@ br[flamme, 3] = 0
 br[..., :3] = (br[..., :3] * 0.8).astype(int)
 Image.fromarray(br.astype(np.uint8), "RGBA").save(os.path.join(SORTIE, "brasero_eteint.png"))
 
-# --- Portes : double porte de bois cerclée de fer dans un cadre de pierre, dessinée en pixels ---
-# Tailles : porte_48x32 (porte du haut/bas d'une salle), porte_48x16 (mur intérieur), porte_32x64 (porte latérale).
-def fabrique_porte(w, h):
+# --- Portes : GRILLES de fer (herse) dans un cadre de pierre, comme les portes à barreaux des donjons Zelda ---
+# Elles se lisent comme une barrière dans un passage (et non comme une trappe posée au sol).
+# Tailles : porte_48x32 (haut/bas d'une salle, 3x2 cases), porte_48x16 (mur intérieur, 3x1), porte_16x64 (côté, 1x4).
+from PIL import ImageDraw
+
+
+def fabrique_grille(w, h):
+    """Grille vue de face : barreaux verticaux, grosses barres en haut et en bas, cadre de pierre sur les côtés."""
     t = Image.new("RGBA", (w, h), (0, 0, 0, 255))
     d = ImageDraw.Draw(t)
-    pierre, joint, ombre = (92, 104, 94), (48, 58, 52), (26, 32, 29)
-    bois, bois_f, bois_c = (124, 76, 40), (88, 52, 27), (154, 102, 58)
-    fer, fer_c, clou, anneau = (60, 62, 72), (98, 100, 114), (150, 152, 162), (196, 170, 76)
-    d.rectangle((0, 0, w - 1, h - 1), fill=pierre)                      # cadre de pierre
-    for x in range(0, w, 8): d.line((x, 0, x, h - 1), fill=joint)       # joints verticaux
-    d.line((0, h // 2, w - 1, h // 2), fill=joint)
-    d.rectangle((0, 0, w - 1, h - 1), outline=ombre)
-    x0, x1, y0, y1 = 4, w - 5, (3 if h > 16 else 2), h - 1
-    d.rectangle((x0 - 1, y0 - 1, x1 + 1, y1), fill=ombre)               # embrasure sombre
-    milieu = w // 2
-    for (a, b) in ((x0, milieu - 1), (milieu, x1)):                      # deux battants
-        d.rectangle((a, y0, b, y1), fill=bois)
-        for x in range(a + 3, b, 5): d.line((x, y0, x, y1), fill=bois_f) # lames de bois
-        d.line((a, y0, b, y0), fill=bois_c)
-    d.line((milieu - 1, y0, milieu - 1, y1), fill=ombre); d.line((milieu, y0, milieu, y1), fill=ombre)
-    hauteur = y1 - y0
-    for fy in ([y0 + max(2, hauteur // 5), y1 - max(3, hauteur // 5)] if h > 16 else [y0 + 4]):  # bandes de fer
-        d.rectangle((x0, fy, x1, fy + 2), fill=fer); d.line((x0, fy, x1, fy), fill=fer_c)
-        for x in range(x0 + 2, x1, 6): d.point((x, fy + 1), fill=clou)
-    cy = y0 + hauteur // 2 + (1 if h > 16 else 3)
-    for cx in (milieu - 4, milieu + 3):                                  # anneaux
-        d.ellipse((cx - 1, cy - 1, cx + 1, cy + 1), outline=anneau)
+    noir, pierre, joint, ombre = (10, 12, 12), (92, 104, 94), (48, 58, 52), (26, 32, 29)
+    fer, fer_c, fer_o, clou = (72, 74, 86), (130, 132, 148), (34, 36, 44), (176, 178, 190)
+    d.rectangle((0, 0, w - 1, h - 1), fill=noir)                                   # fond sombre derrière les barreaux
+    d.rectangle((0, 0, 3, h - 1), fill=pierre); d.rectangle((w - 4, 0, w - 1, h - 1), fill=pierre)   # montants de pierre
+    d.line((3, 0, 3, h - 1), fill=ombre); d.line((w - 4, 0, w - 4, h - 1), fill=ombre)
+    for y in range(3, h, 8):
+        d.line((0, y, 3, y), fill=joint); d.line((w - 4, y, w - 1, y), fill=joint)
+    haut = 4 if h > 16 else 3
+    d.rectangle((0, 0, w - 1, haut), fill=pierre); d.line((0, haut, w - 1, haut), fill=ombre)       # linteau de pierre
+    for x in range(6, w, 12): d.line((x, 0, x, haut), fill=joint)
+    for x in range(6, w - 5, 5):                                                    # barreaux verticaux
+        d.rectangle((x, haut + 1, x + 1, h - 1), fill=fer)
+        d.line((x, haut + 1, x, h - 1), fill=fer_c)
+        d.line((x + 1, haut + 1, x + 1, h - 1), fill=fer_o)
+    for y in ([haut + 3, h - 4] if h > 16 else [h - 4]):                            # traverses horizontales
+        d.rectangle((4, y, w - 5, y + 1), fill=fer); d.line((4, y, w - 5, y), fill=fer_c)
+        for x in range(6, w - 5, 5): d.point((x, y), fill=clou)
     return t
 
 
-from PIL import ImageDraw
-for (w, h, nom, tourne) in ((48, 32, "porte_48x32", False), (48, 16, "porte_48x16", False), (64, 32, "porte_32x64", True)):
-    img = fabrique_porte(w, h)
+for (w, h, nom, tourne) in ((48, 32, "porte_48x32", False), (48, 16, "porte_48x16", False), (64, 16, "porte_16x64", True)):
+    img = fabrique_grille(w, h)
     if tourne:
         img = img.rotate(90, expand=True)
     img.save(os.path.join(SORTIE, nom + ".png"))
