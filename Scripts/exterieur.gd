@@ -5,9 +5,10 @@ class_name Exterieur
 # ce sont les arbres, maisons, buissons... qui bloquent le joueur.
 # Lettres du plan :
 #   .  = herbe            :  = chemin de terre (les bords s'arrondissent tout seuls)
-#   A  = arbre rond (2x2)  a = autre arbre rond (2x2)   P = sapin (2x2)
-#   b  = buisson (1x1)     f = tournesol   g = fleur rouge   w = marguerite (fleurs : décor, ne bloquent pas)
-#   M  = maison orange (4x3)   N = maison beige (4x3)
+#   A  = arbre rond (2x2)  a = autre arbre rond (2x2)   P = sapin (2x2)   r = roche (2x2)
+#   b  = buisson (1x1)  B = buisson à baies   u = souche   n = panneau   x = caisse
+#   f  = tournesol   g = fleur rouge   w = marguerite (fleurs : décor, ne bloquent pas)
+#   MAISONS (4x4, la porte est sur la rangée du bas) : M orange, N bleue, T chaume, R rouge, K caserne (pierre), L bois
 #   E  = étal du marché (3x2)  o = tonneau   j = bannière rouge (1x2)
 #   Q  = girouette du coq (3x4)   W = puits (2x2)
 # ANIMAUX : pas dans le plan, mais dans la liste `animaux` : "lettre x y", par ex. "c 9 9"
@@ -32,25 +33,36 @@ const CHEMIN_COIN := Vector2i(11, 7)   # coin haut-gauche du bloc 3x3 des bords 
 # Coins intérieurs du chemin (quand seule une cellule en diagonale est de l'herbe)
 const CHEMIN_INTERIEUR := {"se": Vector2i(16, 8), "so": Vector2i(17, 8), "ne": Vector2i(16, 9), "no": Vector2i(17, 9)}
 
-# Objets : lettre -> [image, région dans l'image (en cases), bloque ?, balancement au vent (0 = immobile)]
-# (image "tuile:nom" = une image de Assets/Gemini/tuiles/, sa taille donne la région)
-const OBJETS := {
-	"A": [NATURE, Rect2i(16, 0, 2, 2), true, 0.03],
-	"a": [NATURE, Rect2i(18, 0, 2, 2), true, 0.03],
-	"P": [NATURE, Rect2i(0, 0, 2, 2), true, 0.025],
-	"b": [NATURE, Rect2i(0, 10, 1, 1), true, 0.07],
-	"f": [NATURE, Rect2i(0, 11, 1, 1), false, 0.22],
-	"g": [NATURE, Rect2i(3, 11, 1, 1), false, 0.22],
-	"w": [NATURE, Rect2i(6, 11, 1, 1), false, 0.22],
-	"M": [MAISONS, Rect2i(0, 0, 4, 3), true, 0.0],
-	"N": [MAISONS, Rect2i(4, 0, 4, 3), true, 0.0],
-	"o": [MAISONS, Rect2i(16, 15, 1, 1), true, 0.0],
-	"j": [MAISONS, Rect2i(23, 20, 1, 2), true, 0.1],
-	"Q": ["tuile:girouette_mat", Rect2i(0, 0, 3, 4), true, 0.0],   # girouette : mât + coq qui tourne au vent
-	"W": ["tuile:puits", Rect2i(0, 0, 2, 2), true, 0.0],
+# Objets Gemini : lettre -> [image (Assets/Gemini/tuiles), emprise en cases (largeur, hauteur), bloque ?, balancement au vent (0 = immobile)]
+# L'image est posée CENTRÉE sur l'emprise et ALIGNÉE EN BAS : un arbre ou une maison peut dépasser vers le haut.
+const OBJETS_G := {
+	"A": ["v_arbre_a", Vector2i(2, 2), true, 0.03],
+	"a": ["v_arbre_b", Vector2i(2, 2), true, 0.03],
+	"P": ["v_sapin", Vector2i(2, 2), true, 0.025],
+	"b": ["v_buisson", Vector2i(1, 1), true, 0.07],
+	"B": ["v_buisson_baies", Vector2i(1, 1), true, 0.07],
+	"f": ["v_tournesol", Vector2i(1, 1), false, 0.22],
+	"g": ["v_fleur_rouge", Vector2i(1, 1), false, 0.22],
+	"w": ["v_marguerite", Vector2i(1, 1), false, 0.22],
+	"o": ["v_tonneau", Vector2i(1, 1), true, 0.0],
+	"x": ["v_caisse", Vector2i(1, 1), true, 0.0],
+	"n": ["v_panneau", Vector2i(1, 1), true, 0.0],
+	"u": ["v_souche", Vector2i(1, 1), true, 0.0],
+	"r": ["v_roche", Vector2i(2, 2), true, 0.0],
+	"j": ["v_banniere", Vector2i(1, 2), true, 0.1],
+	"W": ["v_puits", Vector2i(2, 2), true, 0.0],
+	# Maisons : emprise 4x4, la porte est sur la dernière rangée (colonne dans PORTES_MAISONS)
+	"M": ["v_maison_orange", Vector2i(4, 4), true, 0.0],
+	"N": ["v_maison_bleue", Vector2i(4, 4), true, 0.0],
+	"T": ["v_maison_chaume", Vector2i(4, 4), true, 0.0],
+	"R": ["v_maison_rouge", Vector2i(4, 4), true, 0.0],
+	"K": ["v_maison_caserne", Vector2i(4, 4), true, 0.0],
+	"L": ["v_maison_bois", Vector2i(4, 4), true, 0.0],
 }
-# Touffes d'herbe semées automatiquement (TilesetNature) : environ 1 case d'herbe libre sur 11
-const TOUFFES := [Vector2i(3, 10), Vector2i(7, 10), Vector2i(9, 10)]
+# Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
+const PORTES_MAISONS := {"M": 1, "N": 1, "T": 1, "R": 1, "K": 2, "L": 1}
+# Touffes d'herbe semées automatiquement (images Gemini)
+const TOUFFES_G := ["v_herbe_1", "v_herbe_2"]
 # Animaux : lettre -> [planche, vitesse (px/s), peureux ?, son quand on le frappe]
 const ANIMAUX := {
 	"c": ["res://Assets/Ninja_adventure/Actor/Animal/Chicken/SpriteSheetWhite.png", 22.0, true, "poule"],
@@ -112,8 +124,10 @@ func _creer_decor() -> void:
 	for y in layout.size():
 		for x in layout[y].length():
 			var c := layout[y][x]
-			if OBJETS.has(c):
-				_poser_objet(OBJETS[c], Vector2i(x, y))
+			if OBJETS_G.has(c):
+				_poser_objet_g(OBJETS_G[c], Vector2i(x, y))
+			elif c == "Q":   # girouette : mât + coq qui tourne au vent (3x4)
+				_poser_objet(["tuile:girouette_mat", Rect2i(0, 0, 3, 4), true, 0.0], Vector2i(x, y))
 			elif c == "E":   # étal du marché : paniers sur une table
 				_poser_region(MAISONS, Rect2i(16, 16, 3, 1), Vector2i(x, y + 1))
 				_poser_region(MAISONS, Rect2i(16, 13, 3, 1), Vector2i(x, y))
@@ -125,8 +139,7 @@ func _creer_decor() -> void:
 	for y in layout.size():
 		for x in layout[y].length():
 			if _touffe_ici(x, y):
-				var touffe: Vector2i = TOUFFES[(x * 7 + y * 3) % TOUFFES.size()]
-				_poser_region(NATURE, Rect2i(touffe, Vector2i.ONE), Vector2i(x, y), 0.2)
+				_poser_sprite(TOUFFES_G[(x * 7 + y * 3) % TOUFFES_G.size()], Vector2i(x, y), Vector2i.ONE, 0.2)
 
 
 # Le sol : herbe partout (avec quelques détails), chemin de terre là où il y a « : ».
@@ -168,6 +181,33 @@ func _tuile_chemin(x: int, y: int) -> Vector2i:
 	if not n and s: lig = 0
 	elif n and not s: lig = 2
 	return CHEMIN_COIN + Vector2i(col, lig)
+
+
+# Pose un objet Gemini (voir OBJETS_G) dont l'emprise commence à `cellule`.
+func _poser_objet_g(def: Array, cellule: Vector2i) -> void:
+	var emprise: Vector2i = def[1]
+	_poser_sprite(def[0], cellule, emprise, def[3])
+	for dx in emprise.x:
+		for dy in emprise.y:
+			_couvertes[cellule + Vector2i(dx, dy)] = true
+			if def[2]:
+				_solides[cellule + Vector2i(dx, dy)] = true
+
+
+# Une image centrée sur son emprise, alignée en bas. `balance` > 0 : elle se balance au vent (base fixe).
+func _poser_sprite(nom: String, cellule: Vector2i, emprise: Vector2i, balance := 0.0) -> void:
+	var sprite := Sprite2D.new()
+	sprite.texture = _image(nom)
+	sprite.centered = false
+	var taille := Vector2(sprite.texture.get_size())
+	var bas_milieu := Vector2((cellule.x + emprise.x / 2.0) * TUILE, (cellule.y + emprise.y) * TUILE)
+	if balance > 0.0:
+		sprite.offset = Vector2(-taille.x / 2.0, -taille.y)
+		sprite.position = bas_milieu.round()
+		_plantes.append([sprite, balance, sprite.position.x * 0.025, sprite.position.x])
+	else:
+		sprite.position = (bas_milieu - Vector2(taille.x / 2.0, taille.y)).round()
+	add_child(sprite)
 
 
 func _poser_objet(def: Array, cellule: Vector2i) -> void:

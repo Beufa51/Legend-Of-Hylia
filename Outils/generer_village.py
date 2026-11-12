@@ -50,7 +50,7 @@ put(place, 'b', (0, 11), (1, 11), (23, 11), (24, 11))
 # Sortie nord provisoirement fermée (l'écran voisin n'existe pas encore) ; ouest et est sont ouvertes
 put(place, 'b', (11, 0), (12, 0), (13, 0))   # nord encore fermé (grand chemin pas construit)
 # Maisons (portes en bas : colonnes 4 et 20)
-put(place, 'M', (3, 2)); put(place, 'N', (18, 2))
+put(place, 'M', (3, 2)); put(place, 'T', (18, 2))   # maisons 4x4 : portes en (4,5) et (19,5)
 # Statue du coq au centre, bannières de part et d'autre
 put(place, 'Q', (11, 4)); put(place, 'j', (9, 5), (15, 5))   # girouette 3x4 au centre
 # Marché (en bas à gauche) et puits (en bas à droite)
@@ -78,7 +78,7 @@ chemin(ouest, 0, 24, 6, 8)
 chemin(ouest, 4, 5, 5, 5); chemin(ouest, 13, 14, 5, 5)       # devant les portes
 bordure(ouest)
 put(ouest, 'b', (0, 6), (0, 7), (0, 8))                      # ferme pas encore construite
-put(ouest, 'M', (3, 2)); put(ouest, 'N', (12, 2))
+put(ouest, 'M', (3, 2)); put(ouest, 'R', (12, 2))   # portes en (4,5) et (13,5)
 for (x, y) in [(0, 2), (0, 4), (21, 2), (23, 4), (0, 10), (22, 10)]:
     put(ouest, 'A' if x % 2 == 0 else 'a', (x, y))
 put(ouest, 'P', (8, 2), (18, 3))
@@ -99,7 +99,7 @@ est = vide()
 chemin(est, 0, 24, 6, 8)
 chemin(est, 11, 13, 5, 5)                                     # devant la porte de la caserne
 bordure(est)
-put(est, 'N', (10, 2)); put(est, 'j', (8, 2), (15, 2))        # caserne : maison beige + bannières
+put(est, 'K', (10, 2)); put(est, 'j', (8, 2), (15, 2))        # caserne en pierre : porte en (12,5)
 put(est, 'o', (6, 3), (6, 4), (18, 3), (19, 4))
 for (x, y) in [(0, 2), (0, 4), (2, 9), (22, 2), (22, 9), (20, 11)]:
     put(est, 'A' if y % 4 == 0 else 'a', (x, y))
@@ -113,14 +113,14 @@ pnjs_est = [
     "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.",
 ]
 animaux_est = ['d 20 7', 'c 12 11']
-passages_est = ["11 4 InterieurCaserne 12 9"]   # porte de la caserne (maison beige en (10,2)) ; l'intérieur est en bas de la carte
+passages_est = ["12 5 InterieurCaserne 12 9"]   # porte de la caserne (maison beige en (10,2)) ; l'intérieur est en bas de la carte
 
 # --- MAISON DU HÉROS (4,2) : tout à l'est du village, au bout du chemin. Le jeu commence DANS la maison.
 heros = vide()
-chemin(heros, 0, 12, 6, 8); chemin(heros, 12, 12, 5, 5)
+chemin(heros, 0, 12, 6, 8)
 bordure(heros)
 put(heros, 'b', (24, 6), (24, 7), (24, 8))                    # l'est : falaise plus tard
-put(heros, 'M', (11, 2))                                      # la maison orange : porte en (12,4)
+put(heros, 'N', (11, 2))                                      # la maison bleue : porte en (12,5)
 put(heros, 'j', (10, 3), (15, 3))
 for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 3), (22, 9), (19, 11), (3, 11)]:
     put(heros, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
@@ -129,27 +129,31 @@ put(heros, 'o', (9, 4), (14, 4), (16, 9))
 put(heros, 'f', (8, 3), (15, 5), (10, 10), (18, 9)); put(heros, 'g', (9, 5), (14, 5), (6, 10), (20, 9))
 put(heros, 'w', (13, 3), (8, 11), (17, 6), (4, 9), (21, 7))
 animaux_heros = ['c 15 7', 'k 10 6']
-passages_heros = ["12 4 InterieurHeros 12 9"]
+passages_heros = ["12 5 InterieurHeros 12 9"]
 
-def interieur(portes, meubles, haut=3, bas=10, gauche=6, droite=18):
-    """Une pièce rectangulaire (murs : 2 rangées en haut, 1 ailleurs), le reste de l'écran noir."""
+def interieur(porte, meubles, haut, gauche=6, droite=17, bas=10):
+    """Une pièce rectangulaire : mur du haut = 2 rangées (pans de 2 cases : lettres de `haut`), côtés et bas = murs pleins."""
     g = [[' '] * W for _ in range(H)]
-    for y in range(haut, bas + 1):
+    for y in range(3, bas + 1):
         for x in range(gauche, droite + 1):
-            mur = y < haut + 2 or y == bas or x in (gauche, droite)
+            mur = y < 5 or y == bas or x in (gauche, droite)
             g[y][x] = '#' if mur else '.'
-    for (x, y) in portes: g[y][x] = 'm'
+    for i, lettre in enumerate(haut): g[3][gauche + 1 + 2 * i] = lettre
+    g[bas][porte] = 'm'
     for (c, x, y) in meubles: g[y][x] = c
     return g
 
-int_heros = interieur([(12, 10)], [('L', 7, 5), ('S', 16, 5), ('o', 17, 9), ('o', 7, 9)])
-pnjs_int_heros = ["Woman 12 7 bas | Maman | Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'ouest, tout près d'ici. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
-int_caserne = interieur([(12, 10)], [('L', 7, 5), ('L', 10, 5), ('S', 16, 5), ('o', 17, 9), ('o', 7, 9)])
-pnjs_int_caserne = ["Villager3 14 8 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
+int_heros = interieur(12, [('L', 7, 5), ('S', 14, 5), ('q', 11, 5), ('t', 9, 7), ('T', 14, 8), ('C', 13, 8), ('o', 7, 9), ('p', 16, 7)],
+                      ['w', 'y', 'z', 'v', 'x'])
+pnjs_int_heros = ["Woman 10 7 bas | Maman | Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'ouest, tout près d'ici. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
+int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 5), ('F', 7, 8), ('M', 9, 8), ('D', 15, 8)],
+                        ['w', 'z', 'x', 'w', 'x'])
+pnjs_int_caserne = ["Villager3 14 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
 
 FERMEE = "La porte est fermée à clé."
-ferme_place = ["4 4 ! " + FERMEE, "19 4 ! " + FERMEE]
-ferme_ouest = ["4 4 ! " + FERMEE, "13 4 ! " + FERMEE]
+ferme_place = ["4 5 ! " + FERMEE, "19 5 ! " + FERMEE]
+ferme_ouest = ["4 5 ! " + FERMEE, "13 5 ! " + FERMEE]
+
 ecrans = [
     ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place, 'passages': ferme_place}),
     ('VillageOuest', (1, 2), ouest, {'animaux': animaux_ouest, 'pnjs': pnjs_ouest, 'passages': ferme_ouest}),
@@ -158,9 +162,9 @@ ecrans = [
 ]
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
 interieurs = [
-    ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 12 5"],
+    ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 12 6"],
         'indice': "Tu te réveilles chez toi. Aujourd'hui, c'est ton adoubement ! Parle à Maman, puis rejoins le capitaine à la caserne (à l'ouest)."}),
-    ('InterieurCaserne', (3, 5), int_caserne, {'pnjs': pnjs_int_caserne, 'passages': ["12 10 VillageEst 11 5"]}),
+    ('InterieurCaserne', (3, 5), int_caserne, {'pnjs': pnjs_int_caserne, 'passages': ["12 10 VillageEst 12 6"], 'style': 'caserne'}),
 ]
 depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans la maison du héros, à côté du lit
 
@@ -215,11 +219,13 @@ def apercu(fichier):
                 "NATURE": Image.open(pack + "TilesetNature.png").convert("RGBA"),
                 "MAISONS": Image.open(pack + "TilesetHouse.png").convert("RGBA")}
     tuiles = os.path.join(RACINE, "Assets/Gemini/tuiles/")
-    objets = {"A": ("NATURE", (16, 0, 2, 2)), "a": ("NATURE", (18, 0, 2, 2)), "P": ("NATURE", (0, 0, 2, 2)),
-              "b": ("NATURE", (0, 10, 1, 1)), "f": ("NATURE", (0, 11, 1, 1)), "g": ("NATURE", (3, 11, 1, 1)),
-              "w": ("NATURE", (6, 11, 1, 1)),
-              "M": ("MAISONS", (0, 0, 4, 3)), "N": ("MAISONS", (4, 0, 4, 3)), "o": ("MAISONS", (16, 15, 1, 1)),
-              "j": ("MAISONS", (23, 20, 1, 2)), "Q": ("tuile:girouette_mat", None), "W": ("tuile:puits", None)}
+    # Objets Gemini : lettre -> (image, emprise en cases) (même table que Scripts/exterieur.gd::OBJETS_G)
+    gem = {"A": ("v_arbre_a", 2, 2), "a": ("v_arbre_b", 2, 2), "P": ("v_sapin", 2, 2), "b": ("v_buisson", 1, 1), "B": ("v_buisson_baies", 1, 1),
+           "f": ("v_tournesol", 1, 1), "g": ("v_fleur_rouge", 1, 1), "w": ("v_marguerite", 1, 1), "o": ("v_tonneau", 1, 1),
+           "x": ("v_caisse", 1, 1), "n": ("v_panneau", 1, 1), "u": ("v_souche", 1, 1), "r": ("v_roche", 2, 2), "j": ("v_banniere", 1, 2),
+           "W": ("v_puits", 2, 2), "M": ("v_maison_orange", 4, 4), "N": ("v_maison_bleue", 4, 4), "T": ("v_maison_chaume", 4, 4),
+           "R": ("v_maison_rouge", 4, 4), "K": ("v_maison_caserne", 4, 4), "L": ("v_maison_bois", 4, 4)}
+    objets = {"Q": ("tuile:girouette_mat", None)}
     xs = [e[1][0] for e in ecrans]; ys = [e[1][1] for e in ecrans]
     mx, my = min(xs), min(ys)
     img = Image.new("RGBA", ((max(xs) - mx + 1) * 400, (max(ys) - my + 1) * 224), (0, 0, 0, 255))
@@ -250,7 +256,11 @@ def apercu(fichier):
         for y in range(H):
             for x in range(W):
                 c = g[y][x]; d = (ox + x * 16, oy + y * 16)
-                if c in objets:
+                if c in gem:
+                    nom_g, ew, eh = gem[c]
+                    im_g = Image.open(tuiles + nom_g + ".png").convert("RGBA")
+                    img.alpha_composite(im_g, (round(ox + (x + ew / 2) * 16 - im_g.width / 2), round(oy + (y + eh) * 16 - im_g.height)))
+                elif c in objets:
                     planche, r = objets[c]
                     if planche.startswith("tuile:"):
                         img.alpha_composite(Image.open(tuiles + planche[6:] + ".png").convert("RGBA"), d)
@@ -263,7 +273,7 @@ def apercu(fichier):
         for y in range(H):
             for x in range(W):
                 c = g[y][x]
-                taille = {"E": (3, 2), "Q": (3, 4), "W": (2, 2)}.get(c) or (objets[c][1][2:] if c in objets and objets[c][1] else None)
+                taille = {"E": (3, 2), "Q": (3, 4)}.get(c) or ((gem[c][1], gem[c][2]) if c in gem else None)
                 if taille:
                     couvertes |= {(x + i, y + j) for i in range(taille[0]) for j in range(taille[1])}
         for y in range(H):   # le coq de la girouette, au sommet du mât
@@ -274,8 +284,8 @@ def apercu(fichier):
         for y in range(H):
             for x in range(W):
                 if touffe(g, x, y, gx, couvertes):
-                    t = [(3, 10), (7, 10), (9, 10)][(x * 7 + y * 3) % 3]
-                    region("NATURE", (t[0], t[1], 1, 1), (ox + x * 16, oy + y * 16))
+                    gh = Image.open(tuiles + ["v_herbe_1", "v_herbe_2"][(x * 7 + y * 3) % 2] + ".png").convert("RGBA")
+                    img.alpha_composite(gh, (ox + x * 16 + (16 - gh.width) // 2, oy + y * 16 + 16 - gh.height))
         for ligne in props.get('pnjs', []):
             tete = ligne.split('|')[0].split()
             sheet = Image.open(os.path.join(RACINE, "Assets/Ninja_adventure/Actor/Character/%s/SeparateAnim/Idle.png" % tete[0])).convert("RGBA")

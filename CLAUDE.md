@@ -400,7 +400,16 @@
   `generer_village.py` : écran **MaisonHeros (4,2)** (maison orange, porte case (12,4), chemin depuis la caserne), intérieurs à la rangée 5 de la grille : **InterieurHeros (4,5)** (Maman) et **InterieurCaserne (3,5)** (Soldat Gilles) ;
   les 4 autres maisons du village = « porte fermée à clé ». NOUVELLE PARTIE : le joueur démarre DANS la maison du héros (indice de début). La case de porte d'une maison extérieure n'est pas solide (`exterieur.gd::_creer_collisions`).
 
+- 2026-11-12 : l'utilisateur veut un vrai rendu SNES : 4 planches Gemini reçues (maisons, nature, intérieur, caserne) -> `Assets/Gemini/originaux/village_*.jpg`.
+  **ÉTAPE 8f écrite (non testée dans Godot, aperçus PIL vérifiés)** : nouvel outil `Outils/traiter_village.py` (table d'objets : boîte source -> taille en px ; fond magenta/ardoise retiré par remplissage depuis les bords,
+  réduction Lanczos + palette 28 couleurs) -> 59 images `Assets/Gemini/tuiles/v_*.png` (arbres, buissons, fleurs, herbe, roche, puits, 6 maisons 64x64 avec porte calée sur une case, meubles, sols, murs, objets de caserne).
+  `exterieur.gd` : table `OBJETS_G` (lettre -> image, emprise, bloque, vent), image CENTRÉE sur l'emprise et ALIGNÉE EN BAS (`_poser_sprite`) ; MAISONS 4x4 : `M` orange, `N` bleue, `T` chaume, `R` rouge, `K` caserne, `L` bois ;
+  la porte est sur la 4e rangée (colonne dans `PORTES_MAISONS`) -> passage en (x+col, y+3), arrivée dehors en (x+col, y+4). Nouvelles lettres `B` baies, `x` caisse, `n` panneau, `u` souche, `r` roche. Sol (herbe/chemin) et étal `E` encore du pack Ninja.
+  `interieur.gd` RÉÉCRIT : export `style` ("maison" bois/crème, "caserne" pierre), pans de mur du haut 2x2 (lettres w x y v z), meubles par lettre (table `MEUBLES`, voir en-tête du script), tout en images Gemini.
+  `generer_village.py` : maisons 4x4, passages recalculés, intérieurs refaits (hero : lit, cheminée, étagère, table, tapis ; caserne : lits, râteliers, boucliers, table de carte, brasero, coffre).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
-- Tester 8e (démarrage dans la maison, sortie/entrée des portes, caserne, portes fermées, ambiance coupée dedans). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
+- Tester 8e/8f (démarrage dans la maison, portes, rendu des nouveaux sprites, collisions des maisons 4x4). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
+- Idées rendu : sol herbe/chemin Gemini (pas encore : la planche nature a une herbe unie + chemin à bords), étal du marché, clôtures, panneau lisible, bannière coq dans la caserne.
 - Ensuite : dialogues conditionnés par les drapeaux ; chemins + parvis du temple (écrans nord) + liaison avec le donjon ; secrets (bois, cascade) ; ferme ; musique d'intérieur.
 - Plus tard : fin de la vue aérienne avec le VRAI corps du donjon ; rééquilibrage des énigmes ; aile droite ; épreuve finale ; contrôles tactiles.
