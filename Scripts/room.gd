@@ -277,7 +277,7 @@ func _poser_objets() -> void:
 					var cloche := Cloche.new()
 					cloche.position = pos
 					add_child(cloche)
-					cloche.initialiser(self, int(layout[y][x]), sombre)
+					cloche.initialiser(self, int(layout[y][x]), sombre, _image("cloche_support"), _image("cloche_" + layout[y][x]))
 					_cloches[int(layout[y][x])] = cloche
 					_occupe[Vector2i(x, y)] = cloche
 				"^", "v", "<", ">":
@@ -401,6 +401,22 @@ func verifier_braseros() -> void:
 	for brasero in _braseros:
 		brasero.verrouiller()
 	Etat.poser(drapeau_braseros)
+
+
+# Mode développeur : une case libre où poser le joueur, le plus près possible de l'entrée du bas (12, 11).
+# Renvoie la position (dans le monde) du centre du joueur.
+func point_arrivee() -> Vector2:
+	var meilleure := Vector2i(12, 11)
+	var meilleure_distance := 1000000
+	for y in range(EPAISSEUR, layout.size() - EPAISSEUR):
+		for x in range(EPAISSEUR, layout[y].length() - EPAISSEUR):
+			var c := Vector2i(x, y)
+			if ".TPF".contains(layout[y][x]) and not _occupe.has(c):
+				var d := (c - Vector2i(12, 11)).length_squared()
+				if d < meilleure_distance:
+					meilleure = c
+					meilleure_distance = d
+	return position + Vector2(meilleure * TUILE) + Vector2(8, 3)   # les pieds du joueur au centre de la case
 
 
 # --- Sentinelles -----------------------------------------------------------------

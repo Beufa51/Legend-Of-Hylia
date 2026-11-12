@@ -93,6 +93,9 @@ func _lancer_musique() -> void:
 
 # Touche R : recommence la salle où l'on est (les blocs reviennent à leur place).
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1 and OS.is_debug_build():
+		_basculer_menu_dev()
+		return
 	if event.is_action_pressed("reset"):
 		for enfant in get_children():
 			if enfant is Room and enfant.grille == salle_actuelle:
@@ -221,3 +224,55 @@ func _raccompagner(retour: Vector2) -> void:
 	joueur.set_physics_process(true)
 	en_transition = false
 	_raccompagnement = false
+
+
+# --- Mode développeur (touche F1, seulement quand on lance le jeu depuis Godot) -------------
+# Un menu avec un bouton par salle : on y est téléporté directement, pour tester sans tout refaire.
+var _menu_dev: Control
+
+
+func _basculer_menu_dev() -> void:
+	if _menu_dev == null:
+		_creer_menu_dev()
+	_menu_dev.visible = not _menu_dev.visible
+	joueur.set_physics_process(not _menu_dev.visible and not en_transition)
+
+
+func _creer_menu_dev() -> void:
+	var calque := CanvasLayer.new()
+	calque.layer = 10
+	add_child(calque)
+	var panneau := PanelContainer.new()
+	panneau.position = Vector2(8, 8)
+	calque.add_child(panneau)
+	var boite := VBoxContainer.new()
+	panneau.add_child(boite)
+	var titre := Label.new()
+	titre.text = "MODE DÉVELOPPEUR (F1 pour fermer) : aller dans la salle..."
+	titre.add_theme_font_size_override("font_size", 8)
+	boite.add_child(titre)
+	var grille := GridContainer.new()
+	grille.columns = 4
+	boite.add_child(grille)
+	for enfant in get_children():
+		if enfant is Room:
+			var bouton := Button.new()
+			bouton.text = enfant.name
+			bouton.add_theme_font_size_override("font_size", 8)
+			bouton.focus_mode = Control.FOCUS_NONE
+			bouton.pressed.connect(_teleporter.bind(enfant))
+			grille.add_child(bouton)
+	_menu_dev = panneau
+
+
+func _teleporter(salle: Room) -> void:
+	_menu_dev.visible = false
+	joueur.position = salle.point_arrivee()
+	joueur.velocity = Vector2.ZERO
+	salle_actuelle = _salle_du_joueur()
+	Etat.salle_courante = salle_actuelle
+	camera.position = _centre_salle(salle_actuelle)
+	_regler_obscurite(salle_actuelle)
+	_montrer_indice(salle_actuelle)
+	joueur.set_physics_process(true)
+	Etat.annoncer("[dev] " + salle.name)

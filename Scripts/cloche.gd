@@ -2,58 +2,49 @@ extends StaticBody2D
 class_name Cloche
 # Une cloche de bronze à frapper avec la lance : elle joue SA note (énigme "le chant du coq").
 # Lettres du plan : 1 à 5 = numéro de la note (1 = la plus grosse = la plus grave).
-# Dessinée en code. Elle s'illumine quand elle sonne.
+# Images : cloche_support.png + cloche_1..5.png (fabriquées par Outils/fabriquer_objets.py).
 
 # Son de base (pack Ninja Adventure) : un "ding" très pur, qu'on joue plus ou moins aigu.
 const SON_NOTE := "res://Assets/Ninja_adventure/Audio/Sounds/Bonus/Coin.wav"
 # Hauteur de chaque note (gamme pentatonique : do ré mi sol la), plus grave que le son de base
 const HAUTEURS := [0.6, 0.675, 0.75, 0.9, 1.0]
-const BRONZE := Color(0.72, 0.5, 0.2)
-const BRONZE_CLAIR := Color(0.95, 0.78, 0.42)
-const ECLAT := Color(1.0, 0.97, 0.7)
-const ROUGE := Color(0.9, 0.2, 0.15)
+# Teintes appliquées à l'image (au-dessus de 1 = plus lumineux)
+const ECLAT := Color(1.8, 1.7, 1.3)
+const ROUGE := Color(1.6, 0.45, 0.4)
+const DOREE := Color(1.3, 1.2, 0.85)
+const NORMALE := Color(1, 1, 1)
 
 var salle: Node2D   # la salle (Room) : on la prévient quand la cloche est frappée
 var note := 1       # 1 à 5
-var _pivot: Node2D  # la cloche se balance autour de ce point
-var _corps: Polygon2D
-var _reflet: Polygon2D
+var _pivot: Node2D  # la cloche se balance autour de ce point (le crochet)
+var _image: Sprite2D
+var _repos := NORMALE        # teinte au repos (dorée une fois l'énigme résolue)
 var _lumiere: PointLight2D
 var _base_lumiere := 0.0     # lumière au repos (un peu dans le noir, pour la repérer)
 var _dernier_coup := -1000   # en millisecondes : un coup de lance ne compte qu'une fois
 var _tween: Tween
 
 
-func initialiser(une_salle: Node2D, sa_note: int, dans_le_noir: bool) -> void:
+func initialiser(une_salle: Node2D, sa_note: int, dans_le_noir: bool, support: Texture2D, image: Texture2D) -> void:
 	salle = une_salle
 	note = sa_note
 	add_to_group("frappable")
-	# Support en bois : deux montants + une poutre
-	for x in [1, 13]:
-		_rect(Vector2(x, 2), Vector2(2, 13), Color(0.36, 0.22, 0.12))
-	_rect(Vector2(1, 1), Vector2(14, 2), Color(0.45, 0.29, 0.15))
-	# La cloche (plus grosse pour les notes graves)
+	var bois := Sprite2D.new()
+	bois.texture = support
+	bois.centered = false
+	add_child(bois)
 	_pivot = Node2D.new()
-	_pivot.position = Vector2(8, 3)
-	_pivot.scale = Vector2.ONE * (1.0 - (note - 1) * 0.08)
+	_pivot.position = Vector2(8, 4)
 	add_child(_pivot)
-	_corps = Polygon2D.new()
-	_corps.polygon = PackedVector2Array([Vector2(-2, 0), Vector2(2, 0), Vector2(4, 2), Vector2(4, 7),
-		Vector2(6, 10), Vector2(-6, 10), Vector2(-4, 7), Vector2(-4, 2)])
-	_corps.color = BRONZE
-	_pivot.add_child(_corps)
-	_reflet = Polygon2D.new()
-	_reflet.polygon = PackedVector2Array([Vector2(-3, 2), Vector2(-2, 2), Vector2(-2, 8), Vector2(-4, 9)])
-	_reflet.color = BRONZE_CLAIR
-	_pivot.add_child(_reflet)
-	var battant := Polygon2D.new()
-	battant.polygon = PackedVector2Array([Vector2(-1, 10), Vector2(1, 10), Vector2(1, 12), Vector2(-1, 12)])
-	battant.color = Color(0.3, 0.2, 0.1)
-	_pivot.add_child(battant)
+	_image = Sprite2D.new()
+	_image.texture = image
+	_image.centered = false
+	_image.position = Vector2(-8, 0)
+	_pivot.add_child(_image)
 	# Lumière : éteinte en salle claire, petite lueur en salle sombre
 	_base_lumiere = 0.35 if dans_le_noir else 0.0
 	_lumiere = Lumiere.creer(Color(1.0, 0.85, 0.5), 0.6, _base_lumiere)
-	_lumiere.position = Vector2(8, 8)
+	_lumiere.position = Vector2(8, 9)
 	add_child(_lumiere)
 	# Collision (couche 1 : la lance la détecte, le joueur ne passe pas)
 	var forme := RectangleShape2D.new()
@@ -74,13 +65,13 @@ func frapper() -> void:
 	salle.cloche_frappee(note)
 
 
-# Joue la note, balance la cloche et l'illumine un instant de la couleur donnée.
-func sonner(couleur: Color) -> void:
+# Joue la note, balance la cloche et l'illumine un instant de la teinte donnée.
+func sonner(teinte: Color) -> void:
 	_jouer_note()
 	if _tween:
 		_tween.kill()
 	_pivot.rotation = 0.0
-	_corps.color = couleur
+	_image.modulate = teinte
 	_lumiere.energy = 1.2
 	_tween = create_tween()
 	_tween.tween_property(_pivot, "rotation", 0.35, 0.08)
@@ -95,7 +86,7 @@ func rougir() -> void:
 	if _tween:
 		_tween.kill()
 	_pivot.rotation = 0.0
-	_corps.color = ROUGE
+	_image.modulate = ROUGE
 	_tween = create_tween()
 	_tween.tween_interval(0.5)
 	_tween.tween_callback(_au_repos)
@@ -103,13 +94,13 @@ func rougir() -> void:
 
 # Énigme résolue : la cloche reste dorée et lumineuse.
 func dorer() -> void:
+	_repos = DOREE
 	_base_lumiere = 0.6
 	_au_repos()
-	_corps.color = BRONZE_CLAIR
 
 
 func _au_repos() -> void:
-	_corps.color = BRONZE_CLAIR if _base_lumiere >= 0.6 else BRONZE
+	_image.modulate = _repos
 	_lumiere.energy = _base_lumiere
 
 
@@ -124,11 +115,3 @@ func _jouer_note() -> void:
 	salle.add_child(lecteur)
 	lecteur.play()
 	lecteur.finished.connect(lecteur.queue_free)
-
-
-func _rect(pos: Vector2, taille: Vector2, couleur: Color) -> void:
-	var r := ColorRect.new()
-	r.position = pos
-	r.size = taille
-	r.color = couleur
-	add_child(r)

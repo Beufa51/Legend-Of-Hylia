@@ -271,6 +271,12 @@
   Outil `Outils/simuler_sentinelles.py` : même règle de regard en Python, vérifie qu'un passage existe (4a-4d vérifiées ; 4c impossible SANS pousser le bloc, voulu).
   `generer_monde.py` : valeurs Vector2(...)/PackedFloat32Array(...)/nombres écrites sans guillemets.
 
+- 2026-11-12 : retour utilisateur : "bug salle des cloches : taper la statue ne déclenche plus le son ; cloches et plumes moches ; il faudrait un mode développeur". **CORRECTIONS 6g2 (non testées dans Godot)** :
+  1) statue chanteuse : collision sur toute la hauteur de l'image (14x26, tête comprise) -> frappable aussi par le haut (cause probable : seule la case du bas réagissait).
+  2) nouvel outil `Outils/fabriquer_objets.py` -> `Assets/Gemini/tuiles/plume_doree.png` (feather.png du pack recolorée en or), `cloche_support.png`, `cloche_1..5.png` (bronze ombré, 12 à 8 px de large) ;
+     `cloche.gd` utilise ces images (teintes par `modulate` : ECLAT, ROUGE, DOREE) ; `ramassable.gd` = image plume_doree + lueur + pulsation.
+  3) MODE DÉVELOPPEUR : touche **F1** (seulement `OS.is_debug_build()`, donc pas dans un export final) -> menu avec un bouton par salle -> téléportation (`world.gd::_teleporter`, `Room.point_arrivee()` = case libre la plus proche de (12,11)).
+
 ## PROCHAINE ÉTAPE : Étape 6h
 - L'utilisateur teste la course et la plume 4 (Pull, F5) : lisibilité des cônes (couleur, clignotement), difficulté de 4b, le noir de 4d (cônes visibles seulement près des lumières).
   Puis plume 5 « Le pivot » (miroirs + rayon, 5 écrans) + fragment en (5,-5). Ensuite rééquilibrage de toute l'aile.
