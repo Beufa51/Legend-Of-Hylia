@@ -5,7 +5,7 @@ class_name Room
 #   #  = mur (bloque le joueur)       .  = sol
 #   T  = sol avec tapis               B  = brasero (bloque)
 #   S  = statue de chevalier (bloque) O  = statue d'oiseau (bloque)
-#   V  = vase (bloque)
+#   V  = pot cassable à coups de lance (bloque tant qu'il est entier)
 #   P  = plaque de pression orange (sol, ne bloque pas)   F = dalle à flèches (sol)
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
@@ -15,7 +15,7 @@ const TAILLE_SALLE := Vector2i(400, 224)
 const DOSSIER := "res://Assets/Gemini/tuiles/"
 
 # Caractères qui bloquent le joueur (en plus des murs)
-const SOLIDES := "#SOBV"
+const SOLIDES := "#SOB"
 # Épaisseur des murs du bord (en tuiles)
 const EPAISSEUR := 2
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
@@ -176,7 +176,10 @@ func _poser_objets() -> void:
 				"O":
 					_poser("statue_oiseau", pos + Vector2(0, TUILE - 30))
 				"V":
-					_poser("vase_1", pos + Vector2(3, 3))
+					var pot := Pot.new()
+					pot.position = pos
+					add_child(pot)
+					pot.initialiser(_image("vase_1"))
 				"B":
 					_poser_anime(["brasero_1", "brasero_2", "brasero_3"], pos, x + y)
 					_poser_lumiere(pos + Vector2(8, 6), 44.0)

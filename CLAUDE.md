@@ -171,6 +171,11 @@
   Idées d'amélioration restantes : bruitages (pas, portes), portes Gemini (`porte_*.png` non branchées), vrais piliers ronds/cristaux, prompts pixel art avec le coq
   (bannière, porte scellée, rune, grand blason, fragments). Branche `etape-4-aile-gauche` : à fusionner dans `main` (GitHub Desktop : Branch -> Merge into current branch, depuis main).
 
-## PROCHAINE ÉTAPE : Étape 6 = les énigmes
-- Concevoir les 3 énigmes de l'aile gauche (1 par salle, logiques/spatiales, zéro combat) + le fragment de la salle 3. Conception = **Opus**.
-  Éléments déjà prêts pour les énigmes : plaques `P`, dalles à flèches `F`, blocs `dalle_unie`, interrupteurs/cristaux/coffres/clé dans les planches Gemini à générer (planche 6 des prompts, pas encore faite).
+- 2026-11-12 : l'utilisateur préfère une **LANCE** (le garde royal de Zelda OoT a une lance ; piste d'origin story : la lance de la recrue/du garde, à garder pour l'histoire).
+  **ÉTAPE 5h écrite (non testée dans Godot)** : coup de lance = action `attack` (Espace ou J, project.godot) ; `player.gd` : animations `attaque_*` (Attack.png), lance construite en code
+  (Items/Weapons/Lance/SpriteInHand.png + Area2D, sort/rentre en ~0.26 s, immobile pendant le coup) ; `Scripts/pot.gd` (class Pot, StaticBody2D, groupe "cassable", méthode `casser()` : morceaux + bruit)
+  et `room.gd` : la lettre `V` crée un Pot cassable (V retiré de SOLIDES). Bruits : Jump2.wav (lance), Impact3.wav (pot), modifiables en tête des scripts.
+  À FAIRE ensuite : pots qui lâchent des objets (cœur/clé), herbe coupable, panneaux, leviers ; contrôles tactiles pour mobile (bouton d'attaque).
+
+## PROCHAINE ÉTAPE : Étape 5i
+- L'utilisateur teste la lance et les pots (Pull, F5, Espace/J). Ensuite : énigmes (Opus), en s'appuyant sur les interactions (pot qui cache une clé, etc.).
