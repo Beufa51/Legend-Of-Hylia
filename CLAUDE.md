@@ -69,8 +69,12 @@
   Astuce : le sélecteur de rendu en haut à droite n'existe pas chez l'utilisateur → passer par
   Paramètres du projet (Paramètres avancés activés) → Rendu → Moteur de rendu.
 
-## PROCHAINE ÉTAPE : Étape 2 — faire marcher le personnage
-- Confirmer le pack Ninja Adventure, le télécharger, ranger les fichiers dans `assets/`.
-- Créer la scène joueur (CharacterBody2D + AnimatedSprite2D + CollisionShape2D), script de
-  déplacement 4 directions + animations. Actions d'entrée : haut/bas/gauche/droite.
-- Une salle de test simple pour le voir bouger. Modèle conseillé : Sonnet.
+- 2026-11-12 : pack Ninja Adventure ajouté (`Assets/Ninja_adventure/`, A majuscule). Perso choisi : **Knight**
+  (`Actor/Character/Knight/SeparateAnim/Walk.png` 4x4 et `Idle.png` 4x1, cases 16x16, colonnes = bas, haut, gauche, droite).
+- 2026-11-12 : écrits (non testés dans Godot) : `Scripts/player.gd` (animations construites en code),
+  `Scenes/player.tscn`, `Scenes/test_room.tscn` (scène principale), actions move_left/right/up/down
+  (flèches + WASD physique, donc ZQSD en AZERTY) dans project.godot.
+
+## PROCHAINE ÉTAPE : tester l'étape 2 puis étape 3 (salles + transitions)
+- L'utilisateur lance le jeu (F5) et signale ce qui marche ou non (erreurs en rouge dans l'onglet Sortie).
+- Ensuite : murs/collisions (TileMap), caméra fixe par salle, transition entre salles. Modèle : Sonnet.
