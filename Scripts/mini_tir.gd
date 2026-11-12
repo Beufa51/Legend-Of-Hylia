@@ -34,7 +34,7 @@ func _depart() -> void:
 func _maj(delta: float) -> void:
 	# Pots touchés (disparus) ou trop vieux
 	for cible in _cibles.duplicate():
-		var pot: Node = cible[0]
+		var pot = cible[0]   # sans type : un pot cassé est un objet détruit, qu'une variable typée refuserait (erreur)
 		if not is_instance_valid(pot) or pot.is_queued_for_deletion():
 			_score += 1
 			_jouer("res://Assets/Ninja_adventure/Audio/Sounds/Bonus/Coin.wav", -10.0)
