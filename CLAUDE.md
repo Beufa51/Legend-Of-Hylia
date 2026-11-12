@@ -14,6 +14,14 @@
 - **0 coût** : uniquement l'abonnement Claude existant. Pas d'API payante, pas de service facturé à l'usage.
 - **Godot 4.x**, GDScript uniquement, pas de plugin/dépendance externe.
 - Code simple, propre, modulaire, commenté en français. Pas de sur-ingénierie.
+- **Économie du quota Claude** : à la fin de chaque réponse importante, indiquer
+  1) s'il faut faire `/clear` maintenant (après une étape terminée ET notée dans ce fichier),
+  2) quel modèle utiliser pour l'étape suivante (`/model`) :
+     - **Haiku** : petites questions, où trouver un menu, vérif rapide, renommer, typo.
+     - **Sonnet** (défaut recommandé) : guidage pas à pas, écrire/modifier du GDScript courant.
+     - **Opus** : conception (énigmes, architecture des salles), bug coriace, cinématique du blason.
+  Toujours mettre à jour ce fichier AVANT de conseiller un `/clear`.
+- Réponses courtes et ciblées, pas de répétition inutile.
 
 ## GDD résumé (version 1, fournie par l'utilisateur)
 - **Genre** : action-aventure 2D top-down, esprit "Link's Awakening". **Zéro combat** :
@@ -35,7 +43,7 @@
 - Ordre des ailes libre, mais on construit l'**aile gauche en premier**.
 - Énigmes : définies plus tard, on pose d'abord les bases (déplacement, salles, transitions).
 - Assets proposés : pack **Ninja Adventure** (Pixel-boy, CC0, itch.io) — à confirmer par l'utilisateur.
-- Résolution proposée : 320x180 (16:9), tuiles 16x16 — à confirmer.
+- Résolution : 320x180 (16:9), fenêtre 1280x720, stretch viewport, filtre Nearest. Tuiles 16x16.
 - Workflow Git : l'utilisateur utilise GitHub Desktop ; toujours "Pull" avant de travailler, "Push" après.
 
 ## Points ouverts / à décider
@@ -48,3 +56,5 @@
 - 2026-11-12 : GDD v1 reçu, premier avis donné, questions posées. Rien de créé dans Godot encore.
 - 2026-11-12 : réponses reçues (voir Décisions). Étape suivante : création du dépôt GitHub + projet Godot.
 - 2026-11-12 : dépôt créé par l'utilisateur, CLAUDE.md poussé. En attente : projet Godot créé dans le dossier cloné (rendu Compatibilité).
+- 2026-11-12 : projet Godot créé et poussé (project.godot à la racine). Réglages affichage OK.
+  ⚠️ Rendu = "Mobile" au lieu de "Compatibilité" → l'utilisateur doit le changer (menu en haut à droite de l'éditeur).
