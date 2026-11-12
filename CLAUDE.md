@@ -79,7 +79,11 @@
   Le sprite Knight est provisoire : l'utilisateur voudra peut-être un autre perso plus tard (perso maison
   ~27x27 ou autre du pack). Le script player.gd construit les animations en code : changer de perso = changer DOSSIER.
 
-## PROCHAINE ÉTAPE : Étape 3 — salles, murs et caméra
-- Créer une vraie salle (murs avec collisions via TileMap/TileSet du pack, sol), taille 320x180 (20x11 tuiles de 16).
-- Caméra fixe par salle, puis transition avec glissement vers la salle voisine (porte/couloir).
-- Faire une 2e salle reliée pour tester. Modèle : Sonnet (Opus si l'architecture des salles se complique).
+- 2026-11-12 : **ÉTAPE 3 écrite (non testée)** : `Scripts/room.gd` (salle 20x11 tuiles dessinée/collisions depuis un plan texte
+  `layout`, `#`=mur, `.`=sol, ouverture au bord = porte, `grille` = position dans le donjon), `Scripts/world.gd`
+  (caméra fixe par salle + glissement 0.6 s, joueur figé pendant), `Scenes/room.tscn`, `Scenes/world.tscn`
+  (SalleA (0,0) porte à droite, SalleB (1,0) porte à gauche) = nouvelle scène principale.
+  NB : le dépôt ne contient que `Assets/Ninja_adventure/Actor` (pas les Tilesets) → graphismes de salle en couleurs
+  provisoires ; ajouter le dossier `Backgrounds/Tilesets` du pack pour passer aux vraies tuiles.
+
+## PROCHAINE ÉTAPE : tester l'étape 3, puis Étape 4 — vrais graphismes de tuiles + 3 salles de l'aile gauche
