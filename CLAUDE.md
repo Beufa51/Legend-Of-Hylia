@@ -238,5 +238,9 @@
   la porte latérale ne fait plus qu'1 colonne de large (colonne 23, rangées 5-8) ; à l'ouverture la grille SE RELÈVE (scale:y -> 0, ou scale:x -> 0 pour la porte étroite) au lieu de s'effacer.
   NB : la session a été longue ; recommandation donnée à l'utilisateur de faire `/clear` puis `/model` Opus avant la conception des plumes 3-5.
 
-## PROCHAINE ÉTAPE : Étape 6e
-- L'utilisateur re-teste les portes (Pull, F5). Puis plumes 3, 4, 5 (3, 4, 5 écrans), épine 3-5, fragment ; ensuite seulement rééquilibrage des énigmes. (Conception = Opus.)
+- 2026-11-12 : retour 6d : "mieux pour les grilles, mais le HAUT de la grille fait bizarre : on ne sait pas si la grille est coupée ou si c'est le plafond". Cause : la grille touchait le bord haut de l'écran avec un linteau fin de 4 px.
+  **CORRECTION 6e (non testée dans Godot, aperçu PIL vérifié)** : `traiter_gemini.py::fabrique_grille(w, h, linteau)` : GROS linteau de briques (11 px pour la porte 48x32, 6 px pour 48x16) avec lumière en haut et ombre portée sur les barreaux,
+  montants de briques, fond d'embrasure dégradé ; la porte latérale (16x64) n'a que des montants (linteau 0).
+
+## PROCHAINE ÉTAPE : Étape 6f
+- L'utilisateur re-teste les portes (Pull, F5). Puis plumes 3, 4, 5 (3, 4, 5 écrans), épine 3-5, fragment ; ensuite rééquilibrage des énigmes. (Conception = Opus ; faire /clear avant /model.)

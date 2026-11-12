@@ -219,32 +219,51 @@ Image.fromarray(br.astype(np.uint8), "RGBA").save(os.path.join(SORTIE, "brasero_
 from PIL import ImageDraw
 
 
-def fabrique_grille(w, h):
-    """Grille vue de face : barreaux verticaux, grosses barres en haut et en bas, cadre de pierre sur les côtés."""
+def fabrique_grille(w, h, linteau):
+    """Grille vue de face dans une embrasure : GROS linteau de briques en haut (on comprend que c'est le dessus
+    du passage), montants de briques sur les côtés, barreaux verticaux, ombre sous le linteau.
+    `linteau` = hauteur du linteau en pixels (0 pour la porte latérale, qui n'a que des montants)."""
+    brique = Image.open(os.path.join(SORTIE, "sol_a_brique.png")).convert("RGB")
+    brique = Image.fromarray((np.array(brique).astype(float) * 0.9).astype(np.uint8))
     t = Image.new("RGBA", (w, h), (0, 0, 0, 255))
     d = ImageDraw.Draw(t)
-    noir, pierre, joint, ombre = (10, 12, 12), (92, 104, 94), (48, 58, 52), (26, 32, 29)
+    noir, ombre = (10, 12, 12), (22, 28, 25)
     fer, fer_c, fer_o, clou = (72, 74, 86), (130, 132, 148), (34, 36, 44), (176, 178, 190)
-    d.rectangle((0, 0, w - 1, h - 1), fill=noir)                                   # fond sombre derrière les barreaux
-    d.rectangle((0, 0, 3, h - 1), fill=pierre); d.rectangle((w - 4, 0, w - 1, h - 1), fill=pierre)   # montants de pierre
+    haut_ouv = linteau          # début de l'ouverture
+    d.rectangle((0, 0, w - 1, h - 1), fill=noir)
+    # fond de l'embrasure : un peu d'ombre qui s'éclaircit vers le bas
+    for y in range(haut_ouv, h):
+        k = min(1.0, (y - haut_ouv) / 10.0)
+        c = int(8 + 14 * k)
+        d.line((4, y, w - 5, y), fill=(c, c + 2, c + 1))
+    # montants de briques (4 px) à gauche et à droite
+    for x0 in (0, w - 4):
+        for y in range(0, h, 16):
+            t.paste(brique.crop((x0 % 16, 0, x0 % 16 + 4, 16)), (x0, y))
     d.line((3, 0, 3, h - 1), fill=ombre); d.line((w - 4, 0, w - 4, h - 1), fill=ombre)
-    for y in range(3, h, 8):
-        d.line((0, y, 3, y), fill=joint); d.line((w - 4, y, w - 1, y), fill=joint)
-    haut = 4 if h > 16 else 3
-    d.rectangle((0, 0, w - 1, haut), fill=pierre); d.line((0, haut, w - 1, haut), fill=ombre)       # linteau de pierre
-    for x in range(6, w, 12): d.line((x, 0, x, haut), fill=joint)
-    for x in range(6, w - 5, 5):                                                    # barreaux verticaux
-        d.rectangle((x, haut + 1, x + 1, h - 1), fill=fer)
-        d.line((x, haut + 1, x, h - 1), fill=fer_c)
-        d.line((x + 1, haut + 1, x + 1, h - 1), fill=fer_o)
-    for y in ([haut + 3, h - 4] if h > 16 else [h - 4]):                            # traverses horizontales
+    # barreaux
+    for x in range(6, w - 5, 5):
+        d.rectangle((x, haut_ouv + 1, x + 1, h - 1), fill=fer)
+        d.line((x, haut_ouv + 1, x, h - 1), fill=fer_c)
+        d.line((x + 1, haut_ouv + 1, x + 1, h - 1), fill=fer_o)
+    for y in ([haut_ouv + 4, h - 4] if h - haut_ouv > 14 else [h - 4]):
         d.rectangle((4, y, w - 5, y + 1), fill=fer); d.line((4, y, w - 5, y), fill=fer_c)
         for x in range(6, w - 5, 5): d.point((x, y), fill=clou)
+    # linteau de briques, en relief : lumière en haut, ombre dessous
+    if linteau:
+        for x in range(0, w, 16):
+            t.paste(brique.crop((0, 0, min(16, w - x), linteau)), (x, 0))
+        d.line((0, 0, w - 1, 0), fill=(150, 162, 150))
+        d.line((0, linteau - 1, w - 1, linteau - 1), fill=(14, 18, 16))
+        for k, a in enumerate((90, 55, 28)):                           # ombre portée du linteau sur les barreaux
+            ov = Image.new("RGBA", (w - 8, 1), (0, 0, 0, a))
+            t.alpha_composite(ov, (4, linteau + k))
     return t
 
 
-for (w, h, nom, tourne) in ((48, 32, "porte_48x32", False), (48, 16, "porte_48x16", False), (64, 16, "porte_16x64", True)):
-    img = fabrique_grille(w, h)
+from PIL import ImageDraw
+for (w, h, nom, tourne, lint) in ((48, 32, "porte_48x32", False, 11), (48, 16, "porte_48x16", False, 6), (64, 16, "porte_16x64", True, 0)):
+    img = fabrique_grille(w, h, lint)
     if tourne:
         img = img.rotate(90, expand=True)
     img.save(os.path.join(SORTIE, nom + ".png"))
