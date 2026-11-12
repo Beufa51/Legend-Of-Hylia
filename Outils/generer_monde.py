@@ -48,7 +48,7 @@ e1 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 1 es
 e2 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 2 est obtenue
 e3 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 3 est obtenue
 e4 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 4 est obtenue
-e5 = epine(est_ferme=True, tige=False)  # provisoire (plume 5 à construire)
+e5 = epine(est_ferme=True)            # dernière épine : fermée à l'est, la tige monte vers la plume 5 (pointe de l'aile)
 
 # --- Plume 1 : bloc + bouton (leçon : pousser un bloc ; le pot sert à dégager le chemin)
 p1 = vide(); sol(p1, 2, 22, 2, 11); sol(p1, 11, 13, 12, 13)
@@ -145,6 +145,52 @@ for x in range(10, 15): put(p4d, 'T', (x, 4))
 RETOUR_P4 = 'Vector2(1800, -30)'   # entrée de la plume 4 (bas de l'écran 4a, case (12,12))
 REPOS_P4 = 'plume4'                # une fois la plume obtenue, les sentinelles ne surveillent plus
 
+# --- PLUME 5 : « LE PIVOT ». Un soleil (R) incrusté dans le mur lance un rayon de lumière. Les miroirs (M = /, N = \\)
+#     pivotent d'un coup de lance. Il faut guider le rayon jusqu'au réceptacle (Y).
+def plume_grille(g):
+    """Écran de plume : ouvert en bas, grille D en haut."""
+    sol(g, 2, 22, 2, 11); sol(g, 11, 13, 12, 13); sol(g, 11, 13, 0, 1)
+    for x in (11, 12, 13): g[0][x] = 'D'; g[1][x] = 'D'
+
+# 5a (leçon) : 1 miroir. Le rayon part vers le haut ; un coup de lance et il descend vers le réceptacle.
+p5a = vide(); plume_grille(p5a)
+put(p5a, 'R', (1, 4)); put(p5a, 'M', (17, 4)); put(p5a, 'Y', (17, 9))
+put(p5a, 'V', (3, 11), (21, 11), (21, 2)); put(p5a, 'S', (6, 8)); put(p5a, 'B', (3, 2))
+
+# 5b : 3 miroirs et un faux chemin : le rayon monte tout droit vers le haut... mais un pilier l'arrête.
+#      Il faut le faire descendre, longer le bas de la salle et remonter à droite.
+p5b = vide(); plume_grille(p5b)
+put(p5b, 'R', (1, 9)); put(p5b, 'M', (11, 9), (11, 11)); put(p5b, 'N', (20, 11)); put(p5b, 'Y', (20, 4))
+put(p5b, '#', (11, 5), (10, 5), (12, 5))
+put(p5b, 'V', (3, 3), (21, 2), (3, 11)); put(p5b, 'O', (16, 7)); put(p5b, 'B', (6, 3))
+
+# 5c : le bloc COUPE le rayon. Le bloc sur le bouton ouvre la chambre du réceptacle (porte H)...
+#      mais il se trouve alors sur le trajet du rayon : il faut ensuite le pousser de côté.
+p5c = vide(); plume_grille(p5c)
+put(p5c, 'R', (1, 4)); put(p5c, 'M', (18, 4)); put(p5c, 'P', (18, 7)); put(p5c, 'X', (15, 7))
+for x in range(15, 23): p5c[9][x] = '#'
+for y in (10, 11): p5c[y][15] = '#'
+for x in (17, 18, 19): p5c[9][x] = 'H'
+put(p5c, 'Y', (18, 11))
+put(p5c, 'V', (3, 11), (3, 2), (21, 2), (16, 11)); put(p5c, 'S', (8, 8)); put(p5c, 'B', (6, 10))
+
+# 5d : SALLE SOMBRE, 3 miroirs (+ 2 leurres). Le rayon est la seule vraie lumière : il éclaire le chemin qu'on lui fait prendre.
+p5d = vide(); plume_grille(p5d)
+put(p5d, 'R', (1, 10)); put(p5d, 'N', (6, 10), (6, 3)); put(p5d, 'M', (17, 3), (12, 7)); put(p5d, 'N', (20, 10)); put(p5d, 'Y', (17, 8))
+put(p5d, '#', (9, 6), (9, 7), (14, 5), (14, 6), (20, 5))
+put(p5d, 'V', (3, 2), (21, 2), (3, 6))
+
+# 5e (POINTE DE L'AILE) : le coq ne chante qu'au soleil. Dégager le bloc du rayon, régler 2 miroirs pour éclairer
+#      la statue : elle chante. Rejouer la mélodie sur les cloches : l'alcôve s'ouvre -> FRAGMENT de l'aile gauche (W).
+p5e = vide(); sol(p5e, 2, 22, 2, 11); sol(p5e, 11, 13, 12, 13)
+for x in range(2, 23): p5e[5][x] = '#'
+for x in (11, 12, 13): p5e[5][x] = 'D'
+put(p5e, 'W', (12, 3)); put(p5e, 'B', (9, 3), (15, 3))
+for x in range(10, 15): put(p5e, 'T', (x, 4))
+put(p5e, 'R', (1, 10)); put(p5e, 'X', (5, 10)); put(p5e, 'N', (9, 10), (9, 7)); put(p5e, 'C', (16, 7))
+put(p5e, '1', (4, 7)); put(p5e, '2', (20, 10)); put(p5e, '3', (14, 10)); put(p5e, '4', (20, 7))
+put(p5e, 'V', (21, 6), (3, 6))
+
 salles = [
     ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal'}),
     ('Entree', (0, 0), ent, (1.0, 0.96, 0.88), {}),
@@ -171,6 +217,15 @@ salles = [
         'drapeau_gemme': 'plume4', 'duree_braseros': '14.0',
         'indice': 'Dans le noir, les sentinelles fixent la flamme la plus proche.'}),
     ('Epine5', (5, 0), e5, (0.86, 0.90, 0.96), {}),
+    ('Plume5a', (5, -1), p5a, (1.05, 1.0, 0.9), {'drapeau_rayon': 'p5_rayon1', 'drapeau_porte': 'p5_rayon1',
+        'indice': 'Un rayon de soleil ! Frappe le miroir avec ta lance pour le faire pivoter.'}),
+    ('Plume5b', (5, -2), p5b, (1.04, 0.99, 0.92), {'drapeau_rayon': 'p5_rayon2', 'drapeau_porte': 'p5_rayon2'}),
+    ('Plume5c', (5, -3), p5c, (1.03, 0.98, 0.94), {'drapeau_plaque': 'p5_bouton', 'drapeau_porte2': 'p5_bouton',
+        'drapeau_rayon': 'p5_rayon3', 'drapeau_porte': 'p5_rayon3'}),
+    ('Plume5d', (5, -4), p5d, (1.0, 1.0, 1.0), {'sombre': 'true', 'drapeau_rayon': 'p5_rayon4', 'drapeau_porte': 'p5_rayon4'}),
+    ('Plume5e', (5, -5), p5e, (1.08, 1.0, 0.88), {'chanteur_au_soleil': 'true', 'melodie': '3142', 'drapeau_melodie': 'p5_chant',
+        'drapeau_porte': 'p5_chant', 'drapeau_gemme': 'fragment_gauche',
+        'indice': 'La pointe de l\'aile. Au sommet, le fragment attend le chant du coq...'}),
 ]
 depart = (200, 224 + 180)   # le joueur commence dans le vestibule (0,1)
 
@@ -191,7 +246,9 @@ for nom, (gx, gy), g, c, ex in salles:
     if (gx, gy) != (0, 0): out += 'grille = Vector2i(%d, %d)\n' % (gx, gy)
     out += 'teinte = Color(%s, %s, %s, 1)\n' % c
     for k, v in ex.items():
-        brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(')) or v.replace('.', '').isdigit()
+        # Écrit sans guillemets : booléens, Vector2, tableaux et nombres à virgule (ex. 14.0).
+        # ATTENTION : une mélodie comme "132" doit rester un TEXTE (sinon Godot ne la lit pas).
+        brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(')) or ('.' in v and v.replace('.', '').isdigit())
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v))
     out += 'layout = %s\n' % sortie(g)
 out += '''

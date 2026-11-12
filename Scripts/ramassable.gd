@@ -8,7 +8,8 @@ var texte := ""
 var _pris := false
 
 
-func initialiser(nom_drapeau: String, message: String) -> void:
+# `texture` : l'image de l'objet (par défaut, la plume dorée).
+func initialiser(nom_drapeau: String, message: String, texture: Texture2D = null) -> void:
 	drapeau = nom_drapeau
 	texte = message
 	collision_layer = 0
@@ -21,7 +22,7 @@ func initialiser(nom_drapeau: String, message: String) -> void:
 	add_child(collision)
 	# La plume dorée : image plume_doree.png (Outils/fabriquer_objets.py), avec une lueur qui pulse
 	var image := Sprite2D.new()
-	image.texture = load("res://Assets/Gemini/tuiles/plume_doree.png")
+	image.texture = texture if texture != null else load("res://Assets/Gemini/tuiles/plume_doree.png")
 	if image.texture == null:   # image pas encore importée par Godot : lecture directe du fichier
 		image.texture = ImageTexture.create_from_image(Image.load_from_file(ProjectSettings.globalize_path("res://Assets/Gemini/tuiles/plume_doree.png")))
 	image.centered = false

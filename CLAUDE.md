@@ -277,6 +277,20 @@
      `cloche.gd` utilise ces images (teintes par `modulate` : ECLAT, ROUGE, DOREE) ; `ramassable.gd` = image plume_doree + lueur + pulsation.
   3) MODE DÉVELOPPEUR : touche **F1** (seulement `OS.is_debug_build()`, donc pas dans un export final) -> menu avec un bouton par salle -> téléportation (`world.gd::_teleporter`, `Room.point_arrivee()` = case libre la plus proche de (12,11)).
 
-## PROCHAINE ÉTAPE : Étape 6h
-- L'utilisateur teste la course et la plume 4 (Pull, F5) : lisibilité des cônes (couleur, clignotement), difficulté de 4b, le noir de 4d (cônes visibles seulement près des lumières).
-  Puis plume 5 « Le pivot » (miroirs + rayon, 5 écrans) + fragment en (5,-5). Ensuite rééquilibrage de toute l'aile.
+- 2026-11-12 : **VRAI BUG DE LA STATUE TROUVÉ** : depuis 6g, `generer_monde.py` écrivait `melodie = 132` (nombre) au lieu de `"132"` -> Godot ne lisait pas la mélodie -> la statue ne jouait rien.
+  Corrigé : seuls les nombres À VIRGULE (ex. 14.0) sont écrits sans guillemets. LEÇON : toujours vérifier `world.tscn` après une modif du générateur.
+- 2026-11-12 : utilisateur : "plume 5 maintenant (Opus), corrections des plumes 3-4 après (Sonnet)". **ÉTAPE 6h écrite (non testée dans Godot, solutions vérifiées par un traceur Python)** = PLUME 5 « LE PIVOT » + FRAGMENT.
+  NOUVEAU : `Scripts/miroir.gd` (class Miroir, lettres `M` = « / », `N` = « \ », frappé = pivote (anim scale:x + Whoosh2.wav), `renvoyer(dir)`) ; `Scripts/cible.gd` (class Cible, lettre `Y`, s'allume) ;
+  `room.gd` : lettre `R` = soleil dans le mur (compte comme mur : `_est_mur`, `_murs_du_cadre`, SOLIDES, `_opaque`), direction = la case de sol voisine ; `_tracer_rayon()` chaque image dans la salle courante
+  (rebonds sur miroirs, arrêt sur `_opaque`, max 300 cases), `_dessiner_rayon` (draw_line halo + cœur, matériau ADD, scintille), `_eclairer_rayon` (PointLight2D toutes les 2 cases en salle sombre) ;
+  exports `drapeau_rayon`, `drapeau_porte2` (portes `H`, `_poser_portes_lettre`), `chanteur_au_soleil` (la statue ne chante que si le rayon l'éclaire : `statue_frappee()`, et chante d'elle-même quand le soleil arrive sur elle) ;
+  lettre `W` = fragment d'aile (Ramassable avec image `fragment_aile`). `ramassable.gd::initialiser(drapeau, texte, texture = null)`. Jingle « plume » aussi pour les drapeaux `fragment*`.
+  Images (Outils/fabriquer_objets.py) : `miroir_m/n`, `source_soleil`, `cible`, `cible_allumee`, `fragment_aile` (aile gauche de coq_rouge.png, 24x21).
+  SALLES (colonne x=5) : Épine5 (5,0) tige ouverte, fermée à l'est (fin de l'aile). 5a (5,-1) 1 miroir ; 5b (5,-2) 3 miroirs + faux chemin (le rayon monte vers un pilier) ;
+  5c (5,-3) bloc sur bouton -> porte H de la chambre du réceptacle, puis pousser le bloc DE CÔTÉ (il coupe le rayon) ; 5d (5,-4) SOMBRE, 3 miroirs + 2 leurres ;
+  5e (5,-5) POINTE : dégager le bloc, 2 miroirs -> le soleil éclaire la statue -> elle chante « 3142 » -> rejouer sur les cloches -> alcôve -> FRAGMENT (drapeau `fragment_gauche`).
+  **L'AILE GAUCHE EST COMPLÈTE (en code)** : vestibule, entrée, 5 épines, 15 écrans de plumes.
+
+## PROCHAINE ÉTAPE : Étape 7
+- L'utilisateur teste la plume 5 (F1 -> Plume5a... pour y aller direct) + re-teste la statue des cloches (plume 3). Puis (Sonnet) corrections des plumes 3 et 4 selon ses retours.
+  Ensuite : rééquilibrage de l'aile, puis cinématique de l'aile qui pivote (Opus), puis aile droite.

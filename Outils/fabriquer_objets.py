@@ -2,7 +2,11 @@
 Usage : python3 Outils/fabriquer_objets.py      -> écrit dans Assets/Gemini/tuiles/
   - plume_doree.png        : la plume du pack Ninja Adventure (Items/Resource/feather.png) recolorée en or
   - cloche_support.png     : support en bois des cloches (2 montants + poutre)
-  - cloche_1.png ... _5.png : cloches de bronze, de la plus grosse (note grave) à la plus petite"""
+  - cloche_1.png ... _5.png : cloches de bronze, de la plus grosse (note grave) à la plus petite
+  - miroir_m.png (/) et miroir_n.png (\\) : miroirs sur socle (plume 5)
+  - source_soleil.png : disque solaire incrusté dans le mur (d'où part le rayon)
+  - cible.png / cible_allumee.png : réceptacle du rayon (éteint / allumé)
+  - fragment_aile.png : l'aile gauche du coq héraldique (Assets/Gemini/embleme/coq_rouge.png), en petit"""
 import os
 from PIL import Image
 
@@ -88,7 +92,87 @@ def cloche(largeur):
     return img
 
 
+def miroir(sens):
+    """Miroir sur un socle rond. sens = 1 pour '/', -1 pour '\\'."""
+    img = Image.new("RGBA", (16, 16))
+    pierre = [(70, 72, 80, 255), (104, 106, 116, 255), (138, 140, 150, 255)]
+    for y in range(11, 16):   # socle (ellipse aplatie)
+        for x in range(2, 14):
+            if ((x - 7.5) / 6) ** 2 + ((y - 13) / 2.6) ** 2 <= 1:
+                bord = ((x - 7.5) / 6) ** 2 + ((y - 13) / 2.6) ** 2 > 0.6
+                img.putpixel((x, y), CONTOUR if bord and y >= 14 else pierre[2 if y < 13 else 1])
+    argent = [(110, 130, 165, 255), (180, 200, 230, 255), (240, 248, 255, 255)]
+    cadre = (200, 150, 50, 255)
+    for i in range(0, 11):   # plaque diagonale épaisse (cadre doré, verre argenté avec reflets)
+        x = 3 + i if sens == 1 else 12 - i
+        y = 12 - i
+        bout = i in (0, 10)
+        couches = [CONTOUR, cadre] + ([cadre] * 3 if bout else [argent[2] if i % 3 == 1 else argent[1], argent[1], argent[0]]) + [cadre, CONTOUR]
+        for k, c in enumerate(couches):
+            xx = x + (k - 3) if sens == 1 else x - (k - 3)
+            if 0 <= xx < 16:
+                img.putpixel((xx, y), c)
+    return img
+
+
+def soleil():
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            d = ((x - 7.5) ** 2 + (y - 7.5) ** 2) ** 0.5
+            if d <= 4.2:
+                img.putpixel((x, y), (255, 236, 140, 255) if d < 2.5 else (250, 190, 60, 255))
+            elif d <= 5.2:
+                img.putpixel((x, y), (150, 80, 20, 255))
+            elif d <= 7.4 and (abs(x - 7.5) < 1 or abs(y - 7.5) < 1 or abs(abs(x - 7.5) - abs(y - 7.5)) < 1):
+                img.putpixel((x, y), (250, 200, 70, 255))   # rayons
+    return img
+
+
+def cible(allumee):
+    img = Image.new("RGBA", (16, 16))
+    pierre = (96, 98, 108, 255) if not allumee else (130, 120, 96, 255)
+    for y in range(3, 16):
+        for x in range(2, 14):
+            img.putpixel((x, y), CONTOUR if x in (2, 13) or y in (3, 15) else pierre)
+    coeur = (255, 230, 120, 255) if allumee else (70, 56, 40, 255)
+    anneau = (240, 170, 50, 255) if allumee else (120, 100, 70, 255)
+    for y in range(4, 15):
+        for x in range(3, 13):
+            d = ((x - 7.5) ** 2 + (y - 9) ** 2) ** 0.5
+            if d <= 2.2:
+                img.putpixel((x, y), coeur)
+            elif d <= 3.6:
+                img.putpixel((x, y), anneau)
+    return img
+
+
+def fragment():
+    """L'aile gauche du coq, réduite à 22 px de large, avec un contour sombre et un liseré doré."""
+    coq = Image.open(os.path.join(RACINE, "Assets/Gemini/embleme/coq_rouge.png")).convert("RGBA")
+    aile = coq.crop((0, 0, 250, 215))
+    petite = aile.resize((22, 19), Image.LANCZOS)
+    out = Image.new("RGBA", (24, 21))
+    masque = [[petite.getpixel((x, y))[3] > 100 for x in range(22)] for y in range(19)]
+    plein = lambda x, y: 0 <= x < 22 and 0 <= y < 19 and masque[y][x]
+    for y in range(21):
+        for x in range(24):
+            px, py = x - 1, y - 1
+            if plein(px, py):
+                haut_vide = not plein(px, py - 1)
+                out.putpixel((x, y), (250, 200, 80, 255) if haut_vide else (196, 28, 44, 255) if (px + py) % 5 else (150, 16, 32, 255))
+            elif any(plein(px + dx, py + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                out.putpixel((x, y), (40, 8, 12, 255))
+    return out
+
+
 if __name__ == "__main__":
+    miroir(1).save(os.path.join(SORTIE, "miroir_m.png"))
+    miroir(-1).save(os.path.join(SORTIE, "miroir_n.png"))
+    soleil().save(os.path.join(SORTIE, "source_soleil.png"))
+    cible(False).save(os.path.join(SORTIE, "cible.png"))
+    cible(True).save(os.path.join(SORTIE, "cible_allumee.png"))
+    fragment().save(os.path.join(SORTIE, "fragment_aile.png"))
     plume_doree()
     support().save(os.path.join(SORTIE, "cloche_support.png"))
     for note, largeur in enumerate([12, 11, 10, 9, 8], start=1):

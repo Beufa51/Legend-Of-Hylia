@@ -147,7 +147,7 @@ func _afficher_message(texte: String) -> void:
 
 # Un son à chaque drapeau levé : jingle "plume" si le drapeau commence par "plume", sinon jingle "énigme".
 func _jouer_jingle(nom: String) -> void:
-	var flux = load(JINGLE_PLUME if nom.begins_with("plume") else JINGLE_ENIGME)
+	var flux = load(JINGLE_PLUME if (nom.begins_with("plume") or nom.begins_with("fragment")) else JINGLE_ENIGME)
 	if flux == null:
 		return
 	var lecteur := AudioStreamPlayer.new()

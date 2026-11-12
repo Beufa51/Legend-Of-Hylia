@@ -35,8 +35,8 @@ func frapper() -> void:
 	if maintenant - _dernier_coup < 400:
 		return
 	_dernier_coup = maintenant
-	# Petit sursaut de la statue, puis la salle joue la mélodie
+	# Petit sursaut de la statue, puis la salle joue la mélodie (si elle le peut)
 	var tween := create_tween()
 	tween.tween_property(_sprite, "position:y", 16 - 30 - 3, 0.08)
 	tween.tween_property(_sprite, "position:y", 16 - 30, 0.1)
-	salle.jouer_melodie()
+	salle.statue_frappee()

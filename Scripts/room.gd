@@ -14,6 +14,10 @@ class_name Room
 #   P  = bouton de sol : s'enfonce quand un bloc est dessus (voir `drapeau_plaque`)
 #   1 à 5 = cloche à frapper à la lance (le chiffre = sa note, 1 = la plus grave)
 #   C  = statue du coq chanteur : frappée, elle joue la `melodie` de la salle
+#   R  = soleil incrusté dans le mur : le rayon de lumière part de là (vers la seule case de sol voisine)
+#   M  = miroir « / »   N = miroir « \\ » : un coup de lance le fait pivoter ; le rayon rebondit dessus
+#   Y  = réceptacle du rayon (lève `drapeau_rayon`)   W = fragment d'aile à ramasser (lève `drapeau_gemme`)
+#   H  = porte fermée qui s'ouvre avec `drapeau_porte2` (une 2e porte dans la même salle)
 #   ^ v < > = sentinelle (statue de garde) qui regarde dans cette direction (voir `periodes_sentinelles`)
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
@@ -23,7 +27,7 @@ const TAILLE_SALLE := Vector2i(400, 224)
 const DOSSIER := "res://Assets/Gemini/tuiles/"
 
 # Caractères qui bloquent le joueur (en plus des murs)
-const SOLIDES := "#SOB"
+const SOLIDES := "#SOBR"
 # Épaisseur des murs du bord (en tuiles)
 const EPAISSEUR := 2
 # Son d'une fausse note (pack Ninja Adventure)
@@ -57,6 +61,9 @@ const COLONNES_BANNIERES := [7, 17]
 @export var periodes_sentinelles: PackedFloat32Array
 @export var retour := Vector2.ZERO   # où un garde ramène le joueur repéré (position dans le monde)
 @export var drapeau_repos := ""      # quand ce drapeau est levé, les sentinelles ne surveillent plus
+@export var drapeau_porte2 := ""     # les portes H de cette salle s'ouvrent quand ce drapeau est levé
+@export var drapeau_rayon := ""      # levé quand le rayon de lumière touche le réceptacle Y
+@export var chanteur_au_soleil := false   # la statue du coq ne chante que si le rayon l'éclaire
 
 # Cache des images déjà chargées (partagé entre toutes les salles)
 static var _cache := {}
@@ -75,6 +82,18 @@ var _plaques: Array[Vector2i] = []
 var _braseros: Array[Brasero] = []
 var _boutons := {}   # { case : Sprite2D } image de chaque bouton (relevé / enfoncé)
 var _portes: Array[Porte] = []
+var _portes2: Array[Porte] = []
+# Rayon de lumière
+var _source := Vector2i(-1, -1)   # case du soleil R (-1 = pas de rayon dans cette salle)
+var _dir_source := Vector2i.RIGHT
+var _miroirs := {}                # { case : Miroir }
+var _cible: Cible
+var _case_cible := Vector2i(-1, -1)
+var _case_chanteur := Vector2i(-1, -1)
+var _points_rayon := PackedVector2Array()   # le trajet du rayon (centres des cases), pour le dessin
+var _calque_rayon: Node2D
+var _lumieres_rayon: Array[PointLight2D] = []
+var _statue_au_soleil := false
 var _cloches := {}         # { note (int) : Cloche }
 var _progression := 0      # combien de notes de la mélodie ont déjà été rejouées
 var _en_chant := false     # vrai pendant que la statue chante
@@ -93,6 +112,10 @@ func _ready() -> void:
 	Etat.drapeau_change.connect(_sur_drapeau)
 	if Etat.est(drapeau_porte):
 		_sur_drapeau(drapeau_porte)  # drapeau déjà levé : les portes sont ouvertes d'emblée
+	if Etat.est(drapeau_porte2):
+		_sur_drapeau(drapeau_porte2)
+	if _cible != null and Etat.est(drapeau_rayon):
+		_cible.allumer()
 	if Etat.est(drapeau_melodie):
 		for cloche in _cloches.values():
 			cloche.dorer()
@@ -110,6 +133,8 @@ func _process(delta: float) -> void:
 	# Les sentinelles ne surveillent que la salle où se trouve le joueur
 	if not _sentinelles.is_empty() and grille == Etat.salle_courante:
 		_surveiller(delta)
+	if _source.x >= 0 and grille == Etat.salle_courante:
+		_tracer_rayon()
 
 
 # --- Chargement ---------------------------------------------------------------
@@ -170,6 +195,14 @@ func _creer_decor() -> void:
 	_poser_objets()
 	_poser_portes()
 	_poser_details()
+	if _source.x >= 0:
+		_calque_rayon = Node2D.new()
+		_calque_rayon.z_index = 1
+		var additif := CanvasItemMaterial.new()
+		additif.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD   # le rayon "éclaire" ce qu'il traverse
+		_calque_rayon.material = additif
+		_calque_rayon.draw.connect(_dessiner_rayon)
+		add_child(_calque_rayon)
 	if not _sentinelles.is_empty():
 		_calque_regards = Node2D.new()
 		_calque_regards.z_index = 1
@@ -290,7 +323,33 @@ func _poser_objets() -> void:
 					sentinelle.initialiser(Vector2i(x, y), directions[layout[y][x]], periode, _image("statue_chevalier"), sombre)
 					_sentinelles.append(sentinelle)
 					_occupe[Vector2i(x, y)] = sentinelle
+				"R":
+					_source = Vector2i(x, y)
+					for d in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+						if not _est_mur(x + d.x, y + d.y):
+							_dir_source = d
+					_poser("source_soleil", pos)
+				"M", "N":
+					var miroir := Miroir.new()
+					miroir.position = pos
+					add_child(miroir)
+					miroir.initialiser(layout[y][x] == "M", _image("miroir_m"), _image("miroir_n"))
+					_miroirs[Vector2i(x, y)] = miroir
+					_occupe[Vector2i(x, y)] = miroir
+				"Y":
+					_cible = Cible.new()
+					_cible.position = pos
+					add_child(_cible)
+					_cible.initialiser(_image("cible"), _image("cible_allumee"))
+					_case_cible = Vector2i(x, y)
+					_occupe[Vector2i(x, y)] = _cible
+				"W":
+					var fragment := Ramassable.new()
+					fragment.position = pos
+					add_child(fragment)
+					fragment.initialiser(drapeau_gemme, "Fragment de l'aile gauche obtenu !", _image("fragment_aile"))
 				"C":
+					_case_chanteur = Vector2i(x, y)
 					var chanteur := Chanteur.new()
 					chanteur.position = pos
 					add_child(chanteur)
@@ -298,19 +357,25 @@ func _poser_objets() -> void:
 					_occupe[Vector2i(x, y)] = chanteur
 
 
-# Regroupe les cases `D` voisines : chaque groupe devient UNE porte, dessinée avec l'image porte_LxH.
+# Portes D (drapeau_porte) et H (drapeau_porte2).
 func _poser_portes() -> void:
+	_poser_portes_lettre("D", _portes)
+	_poser_portes_lettre("H", _portes2)
+
+
+# Regroupe les cases voisines portant la lettre : chaque groupe devient UNE porte, dessinée avec l'image porte_LxH.
+func _poser_portes_lettre(lettre: String, liste: Array[Porte]) -> void:
 	var vues := {}
 	for y in layout.size():
 		for x in layout[y].length():
 			var depart := Vector2i(x, y)
-			if layout[y][x] != "D" or vues.has(depart):
+			if layout[y][x] != lettre or vues.has(depart):
 				continue
 			var groupe: Array[Vector2i] = []
 			var a_voir: Array[Vector2i] = [depart]
 			while not a_voir.is_empty():
 				var c: Vector2i = a_voir.pop_back()
-				if vues.has(c) or c.y < 0 or c.y >= layout.size() or c.x < 0 or c.x >= layout[c.y].length() or layout[c.y][c.x] != "D":
+				if vues.has(c) or c.y < 0 or c.y >= layout.size() or c.x < 0 or c.x >= layout[c.y].length() or layout[c.y][c.x] != lettre:
 					continue
 				vues[c] = true
 				groupe.append(c)
@@ -326,7 +391,7 @@ func _poser_portes() -> void:
 			porte.position = Vector2(haut_gauche * TUILE)
 			add_child(porte)
 			porte.initialiser(taille, _image("porte_%dx%d" % [int(taille.x), int(taille.y)]))
-			_portes.append(porte)
+			liste.append(porte)
 			for c in groupe:
 				_suivre(porte, c)
 
@@ -385,6 +450,8 @@ func reinitialiser() -> void:
 	_progression = 0
 	for sentinelle in _sentinelles:
 		sentinelle.reinitialiser()
+	for miroir in _miroirs.values():
+		miroir.reinitialiser()
 	for brasero in _braseros:
 		if brasero.allume and not brasero.verrouille:
 			brasero.eteindre()
@@ -491,7 +558,7 @@ func _ligne_libre(a: Vector2i, b: Vector2i, pas: int) -> bool:
 func _opaque(c: Vector2i) -> bool:
 	if c.y < 0 or c.y >= layout.size() or c.x < 0 or c.x >= layout[c.y].length():
 		return true
-	return "#SOBK".contains(layout[c.y][c.x]) or _occupe.has(c)
+	return "#SOBKR".contains(layout[c.y][c.x]) or _occupe.has(c)
 
 
 # Dessine les cases surveillées (elles clignotent juste avant que la sentinelle tourne).
@@ -503,6 +570,81 @@ func _dessiner_regards() -> void:
 		elif _regards[c] and int(_temps * 8.0) % 2 == 0:
 			couleur.a *= 0.4
 		_calque_regards.draw_rect(Rect2(Vector2(c * TUILE), Vector2(TUILE, TUILE)), couleur)
+
+
+# --- Rayon de lumière --------------------------------------------------------------
+
+# Suit le rayon case par case depuis le soleil : il rebondit sur les miroirs et s'arrête sur le premier obstacle.
+func _tracer_rayon() -> void:
+	var c := _source
+	var dir := _dir_source
+	_points_rayon = PackedVector2Array([_centre(c)])
+	var cases: Array[Vector2i] = []
+	var sur_statue := false
+	for _i in 300:   # sécurité : jamais plus de 300 cases (le rayon pourrait tourner en rond entre miroirs)
+		var suivante := c + dir
+		if _miroirs.has(suivante):
+			_points_rayon.append(_centre(suivante))
+			dir = _miroirs[suivante].renvoyer(dir)
+			c = suivante
+			continue
+		if suivante == _case_cible:
+			_points_rayon.append(_centre(suivante) - Vector2(dir) * 5.0)
+			if not _cible.allumee:
+				_cible.allumer()
+				Etat.poser(drapeau_rayon)
+			break
+		if suivante == _case_chanteur:
+			_points_rayon.append(_centre(suivante) - Vector2(dir) * 5.0)
+			sur_statue = true
+			break
+		if _opaque(suivante):
+			_points_rayon.append(_centre(c) + Vector2(dir) * 8.0)
+			break
+		c = suivante
+		cases.append(c)
+	# Le coq chante quand le soleil se lève sur lui !
+	if sur_statue and not _statue_au_soleil:
+		jouer_melodie()
+	_statue_au_soleil = sur_statue
+	_calque_rayon.queue_redraw()
+	if sombre:
+		_eclairer_rayon(cases)
+
+
+func _centre(c: Vector2i) -> Vector2:
+	return Vector2(c * TUILE) + Vector2(8, 8)
+
+
+# Dans une salle sombre, le rayon éclaire son chemin : une lumière toutes les 2 cases.
+func _eclairer_rayon(cases: Array[Vector2i]) -> void:
+	var n := 0
+	for i in range(0, cases.size(), 2):
+		if n >= _lumieres_rayon.size():
+			var l := Lumiere.creer(Color(1.0, 0.92, 0.6), 0.5, 0.9)
+			add_child(l)
+			_lumieres_rayon.append(l)
+		_lumieres_rayon[n].position = Vector2(cases[i] * TUILE) + Vector2(8, 8)
+		_lumieres_rayon[n].enabled = true
+		n += 1
+	for j in range(n, _lumieres_rayon.size()):
+		_lumieres_rayon[j].enabled = false
+
+
+# Le rayon : un trait doré épais et transparent (halo) + un trait fin presque blanc (cœur), qui scintille.
+func _dessiner_rayon() -> void:
+	var scintille := 0.85 + 0.15 * sin(_temps * 12.0)
+	for i in range(_points_rayon.size() - 1):
+		_calque_rayon.draw_line(_points_rayon[i], _points_rayon[i + 1], Color(1.0, 0.7, 0.2, 0.35 * scintille), 6.0)
+		_calque_rayon.draw_line(_points_rayon[i], _points_rayon[i + 1], Color(1.0, 0.95, 0.7, 0.9 * scintille), 2.0)
+
+
+# La statue du coq a été frappée : elle chante... sauf si elle attend le soleil.
+func statue_frappee() -> void:
+	if chanteur_au_soleil and not _statue_au_soleil:
+		Etat.annoncer("La statue reste muette... Le coq ne chante qu'au lever du soleil.")
+		return
+	jouer_melodie()
 
 
 # --- Énigme du chant du coq ----------------------------------------------------
@@ -553,10 +695,15 @@ func _jouer_son(chemin: String, volume_db: float) -> void:
 
 
 func _sur_drapeau(nom: String) -> void:
-	if nom != "" and nom == drapeau_porte:
-		if not _portes.is_empty() and grille != Etat.salle_courante:
+	if nom == "":
+		return
+	for paire in [[drapeau_porte, _portes], [drapeau_porte2, _portes2]]:
+		if nom != paire[0]:
+			continue
+		var liste: Array = paire[1]
+		if not liste.is_empty() and grille != Etat.salle_courante:
 			Etat.annoncer("Un bruit sourd : une porte s'est ouverte quelque part...")
-		for porte in _portes:
+		for porte in liste:
 			if is_instance_valid(porte):
 				porte.ouvrir()
 
@@ -619,7 +766,7 @@ func _poser_anime(noms: Array, pos: Vector2, decalage: int) -> void:
 func _est_mur(x: int, y: int) -> bool:
 	if y < 0 or y >= layout.size() or x < 0 or x >= layout[y].length():
 		return true
-	return layout[y][x] == "#"
+	return "#R".contains(layout[y][x])
 
 
 # Vrai si la case est dans la salle et n'est pas un mur (objets compris).
@@ -634,13 +781,13 @@ func _murs_du_cadre() -> Dictionary:
 	var a_voir: Array[Vector2i] = []
 	for y in layout.size():
 		for x in layout[y].length():
-			if (x == 0 or y == 0 or x == layout[y].length() - 1 or y == layout.size() - 1) and layout[y][x] == "#":
+			if (x == 0 or y == 0 or x == layout[y].length() - 1 or y == layout.size() - 1) and "#R".contains(layout[y][x]):
 				a_voir.append(Vector2i(x, y))
 	while not a_voir.is_empty():
 		var c: Vector2i = a_voir.pop_back()
 		if c.x < 0 or c.y < 0 or c.y >= layout.size() or c.x >= layout[c.y].length():
 			continue
-		if vus.has(c) or layout[c.y][c.x] != "#":
+		if vus.has(c) or not "#R".contains(layout[c.y][c.x]):
 			continue
 		vus[c] = true
 		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
