@@ -133,8 +133,10 @@
   `world.gd` TAILLE_SALLE (640,352), `project.godot` viewport 640x352 / fenêtre 1280x704, joueur scale 2 + vitesse 140 + départ (320,280). L'Entrée a un tapis, braseros, statues, vases.
   Outils Python (dossier `Outils/`, ignoré par Godot) : `traiter_gemini.py` refait toutes les tuiles depuis `Assets/Gemini/originaux/`.
   Portes Gemini (`porte_*.png`) NON branchées (cases de porte = simple passage assombri) ; sols A, blocs fléchés, interrupteurs etc. disponibles pour les énigmes.
-  ATTENTION PI : l'utilisateur veut l'oiseau rouge (image `originaux/embleme_reference.png`) comme symbole du jeu : c'est le blason de Zelda (Nintendo).
-  OK en prototype privé ; à REMPLACER par un emblème 100 % original avant toute publication (comme les noms Cocoricou/Hylio).
+  PI : l'utilisateur voulait l'oiseau rouge de Zelda comme emblème. DÉCISION (2026-11-12) : on crée DÈS MAINTENANT un oiseau héraldique ORIGINAL
+  (même esprit, forme différente, proposé : coq héraldique ailes déployées, symétrique) pour éviter un gros remplacement plus tard. Ne jamais donner
+  à Gemini l'image du blason Zelda (fichier de référence supprimé du dépôt). Les noms Cocoricou/Hylio restent à remplacer avant publication.
+  Le donjon a la forme de l'oiseau : aile gauche (3 salles) / aile droite (3 salles) / corps + tête = convergence.
 
 ## PROCHAINE ÉTAPE : Étape 5e
-- L'utilisateur teste (Pull, ouvrir Godot pour l'import des images, F5) puis commit des fichiers .import. Ensuite : prompts Gemini avec le symbole (bannière, porte scellée, rune, statue, blason), puis énigmes (Opus).
+- L'utilisateur teste (Pull, ouvrir Godot pour l'import des images, F5) puis commit des fichiers .import. Ensuite : l'utilisateur génère l'emblème original (prompt donné), puis prompts Gemini avec CE symbole (bannière, porte scellée, rune, statue, blason), puis énigmes (Opus).
