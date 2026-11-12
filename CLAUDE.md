@@ -302,5 +302,9 @@
   Message unique « La flamme attire le regard de la sentinelle ! ». 4d REFAITE : sentinelles (7,7) > et (17,7) <, braseros (3,10) et (21,10) ; la rangée du bas n'est jamais vue ;
   une flamme ne suffit pas, les deux oui. `Outils/simuler_sentinelles.py` réécrit avec la même géométrie (lit `world.tscn`) : 4a, 4b, 4c (bloc poussé), 4d vérifiées.
 
-## PROCHAINE ÉTAPE : Étape 7
-- L'utilisateur teste les corrections 7a (F1 -> Plume4a..4d, Plume5a..5c). Ensuite : rééquilibrage de l'aile, puis cinématique de l'aile qui pivote (Opus), puis aile droite.
+- 2026-11-12 : corrections 7b (testées, "ça marche") : image du fragment d'aile refaite (`Outils/fabriquer_objets.py::fragment`, aile entière sans le corps du coq, centrée sur sa case dans `ramassable.gd`) ;
+  rayon 5C : `room.gd::_opaque` ignore une porte `ouverte` (la grille invisible bloquait encore le rayon). Plumes 4-5 validées par l'utilisateur.
+
+## PROCHAINE ÉTAPE : Étape 7 (suite)
+- Cinématique de fin d'aile : l'aile pivote et s'emboîte sur le grand blason (conception : Opus). Le fragment `fragment_gauche` existe déjà (drapeau posé à la pointe de la plume 5, salle 5e).
+- Ensuite : rééquilibrage des énigmes/difficulté de l'aile gauche, puis aile droite (symétrie), puis épreuve finale.
