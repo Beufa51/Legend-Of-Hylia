@@ -74,7 +74,7 @@ func _ready() -> void:
 	_poser_animaux()
 
 
-# Le vent : chaque plante penche (skew) selon une vague qui traverse l'écran de gauche à droite.
+# Le vent : les petites plantes se décalent d'un pixel selon une vague qui traverse l'écran.
 var _vent_actif := true
 
 
