@@ -596,7 +596,13 @@ func _voit(sentinelle: Sentinelle, point: Vector2) -> bool:
 func _opaque(c: Vector2i) -> bool:
 	if c.y < 0 or c.y >= layout.size() or c.x < 0 or c.x >= layout[c.y].length():
 		return true
-	return "#SOBKR".contains(layout[c.y][c.x]) or _occupe.has(c)
+	if "#SOBKR".contains(layout[c.y][c.x]):
+		return true
+	var occupant = _occupe.get(c)
+	if occupant == null or not is_instance_valid(occupant):
+		return false
+	# Une porte ouverte (même si sa grille n'a pas fini de disparaître) laisse passer le regard et le rayon
+	return not (occupant is Porte and occupant.ouverte)
 
 
 # Dessine les cônes : un éventail de triangles, opaque près de l'œil, transparent au bout (façon jeu d'infiltration).
