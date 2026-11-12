@@ -199,5 +199,14 @@
   4) SENTINELLES : statues de garde qui tournent la tête, ne pas être vu (sans combat, retour au début de la salle) ; 5) SALLE QUI PIVOTE : un levier tourne la salle de 90° (écho du pivot de l'aile) ;
   6) POTS-INDICES : casser les pots pour trouver des symboles/clés ; 7) SALLE MIROIR (symétrie gauche/droite du blason, plutôt pour l'aile droite) ; 8) lance comme outil (actionner leviers à distance, lancer).
 
-## PROCHAINE ÉTAPE : Étape 6 = les énigmes (conception = Opus, brainstorm avec l'utilisateur)
-- Valider : longueurs des plumes (1-2-3-4-5 ou compact), règle de l'épine (porte n+1 s'ouvre quand la plume n est finie), quelles mécaniques garder. Puis refaire `world.tscn` pour l'aile (entrée + épine + 5 plumes), plume 1 d'abord.
+- 2026-11-12 : utilisateur : "ok vas-y sur tout, je corrigerai / donnerai des idées au fur et à mesure". **ÉTAPE 6a écrite (non testée dans Godot)** = PREMIÈRE TRANCHE de l'aile verticale :
+  `world.tscn` REFAIT : Entrée (0,0) -> Épine1 (1,0) -> Plume1 (1,-1) ; Épine2 (2,0) provisoire (fermée). Épine = couloir horizontal (rangées 5-8) + tige vers le haut (colonnes 11-13).
+  Anciennes salles (Salle1-3, Couloirs) SUPPRIMÉES. Plume1 = didactique : casser le pot (lance) -> pousser le bloc sur la plaque -> la porte de l'alcôve s'ouvre -> plume dorée -> la porte est de l'Épine1 s'ouvre.
+  NOUVEAU CODE : autoload `Etat` (`Scripts/etat.gd`, drapeaux + messages, déclaré dans project.godot [autoload]) ; `bloc.gd` (class Bloc, poussable case par case) ; `porte.gd` (class Porte, dessinée en code, s'ouvre sur drapeau) ;
+  `ramassable.gd` (class Ramassable, plume dorée en Polygon2D) ; `room.gd` : lettres `X` bloc, `D` porte, `G` plume, exports `drapeau_plaque` / `drapeau_porte` / `drapeau_gemme`, registre des cases occupées (`_occupe`, `case_libre`, `verifier_plaques`, `reinitialiser`) ;
+  `player.gd` : groupe "joueur", poussée des blocs (0.3 s d'appui, via get_slide_collision) ; `world.gd` : touche R (action `reset`) recommence la salle, texte de message en bas d'écran (Etat.annoncer), rappel des touches au début.
+  À remplacer plus tard : visuel des portes (code) -> art Gemini ; plume dorée (Polygon2D) -> vraie image ; fragment final.
+  TODO suite : plumes 2 à 5 + épines 3-5 (une plume à la fois : 2 écrans de haut = 2 salles empilées en (2,-1),(2,-2)...), énigmes variées (salle sombre, chant du coq, sentinelles, salle qui pivote).
+
+## PROCHAINE ÉTAPE : Étape 6b
+- L'utilisateur teste la plume 1 (Pull, F5 ; touches : flèches/ZQSD, Espace/J lance, R recommence la salle). Corriger selon son retour, puis construire la plume 2 (2 écrans, énigme "salle sombre").

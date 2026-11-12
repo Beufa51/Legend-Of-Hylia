@@ -20,15 +20,17 @@ var direction := "bas"  # dernière direction regardée
 var attaque := false    # vrai pendant un coup de lance (le joueur ne bouge pas)
 var lance: Node2D       # la lance (image + zone de touche), créée dans _ready
 var zone: Area2D        # zone de touche de la lance
+var _temps_pousse := 0.0  # depuis combien de temps on pousse contre un bloc
 
 
 func _ready() -> void:
+	add_to_group("joueur")
 	sprite.sprite_frames = _creer_animations()
 	sprite.play("repos_bas")
 	_creer_lance()
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if attaque:
 		_frapper_ce_quon_touche()
 		return  # pas de déplacement pendant le coup
@@ -39,7 +41,26 @@ func _physics_process(_delta: float) -> void:
 	var entree := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	velocity = entree * VITESSE
 	move_and_slide()
+	_pousser_les_blocs(entree, delta)
 	_mettre_a_jour_animation(entree)
+
+
+# Si on avance contre un bloc "poussable" pendant un instant, il glisse d'une case.
+func _pousser_les_blocs(entree: Vector2, delta: float) -> void:
+	for i in get_slide_collision_count():
+		var collision := get_slide_collision(i)
+		var autre = collision.get_collider()
+		if autre == null or not autre.is_in_group("poussable"):
+			continue
+		var vers := -collision.get_normal()   # direction du joueur vers le bloc
+		var dir := Vector2i(signi(roundi(vers.x)), 0) if absf(vers.x) > absf(vers.y) else Vector2i(0, signi(roundi(vers.y)))
+		if entree.normalized().dot(Vector2(dir)) > 0.7:   # on appuie bien vers le bloc
+			_temps_pousse += delta
+			if _temps_pousse >= 0.3:
+				autre.pousser(dir)
+				_temps_pousse = 0.0
+			return
+	_temps_pousse = 0.0
 
 
 func _mettre_a_jour_animation(entree: Vector2) -> void:

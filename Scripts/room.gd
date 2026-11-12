@@ -7,6 +7,8 @@ class_name Room
 #   S  = statue de chevalier (bloque) O  = statue d'oiseau (bloque)
 #   V  = pot cassable à coups de lance (bloque tant qu'il est entier)
 #   P  = plaque de pression orange (sol, ne bloque pas)   F = dalle à flèches (sol)
+#   X  = bloc à pousser (sur le sol)  D = porte fermée (s'ouvre quand `drapeau_porte` est levé)
+#   G  = plume dorée à ramasser (lève `drapeau_gemme`)
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
@@ -28,6 +30,10 @@ const COLONNES_BANNIERES := [7, 17]
 @export var grille := Vector2i.ZERO
 # Teinte de la salle (blanc = couleurs normales). Chaque salle a son ambiance.
 @export var teinte := Color.WHITE
+# Énigmes : noms de drapeaux (voir etat.gd). Vide = rien.
+@export var drapeau_plaque := ""   # levé quand TOUTES les plaques P portent un bloc
+@export var drapeau_porte := ""    # les portes D de cette salle s'ouvrent quand ce drapeau est levé
+@export var drapeau_gemme := ""    # levé quand on ramasse la plume G de cette salle
 
 # Cache des images déjà chargées (partagé entre toutes les salles)
 static var _cache := {}
@@ -39,6 +45,11 @@ static var _mat_lumiere: CanvasItemMaterial
 var _animes: Array[Dictionary] = []
 var _temps := 0.0
 var _lumieres: Array[Sprite2D] = []
+# Ce qui occupe une case : { Vector2i : noeud } (pots, blocs, portes). Sert à savoir si une case est libre.
+var _occupe := {}
+var _blocs: Array[Bloc] = []
+var _plaques: Array[Vector2i] = []
+var _portes: Array[Porte] = []
 
 
 func _ready() -> void:
@@ -47,6 +58,9 @@ func _ready() -> void:
 	modulate = teinte  # ne teinte que cette salle (le joueur est ailleurs dans la scène)
 	_creer_decor()
 	_creer_collisions()
+	Etat.drapeau_change.connect(_sur_drapeau)
+	if Etat.est(drapeau_porte):
+		_sur_drapeau(drapeau_porte)  # drapeau déjà levé : les portes sont ouvertes d'emblée
 
 
 # Anime torches et braseros en alternant leurs images.
@@ -180,13 +194,84 @@ func _poser_objets() -> void:
 					pot.position = pos
 					add_child(pot)
 					pot.initialiser(_image("vase_1"))
+					_suivre(pot, Vector2i(x, y))
 				"B":
 					_poser_anime(["brasero_1", "brasero_2", "brasero_3"], pos, x + y)
 					_poser_lumiere(pos + Vector2(8, 6), 44.0)
 				"P":
 					_poser("dalle_orange", pos)
+					_plaques.append(Vector2i(x, y))
+				"X":
+					var bloc := Bloc.new()
+					add_child(bloc)
+					bloc.initialiser(self, Vector2i(x, y), _image("dalle_fleches"))
+					_occupe[Vector2i(x, y)] = bloc
+					_blocs.append(bloc)
+				"D":
+					var porte := Porte.new()
+					porte.position = pos
+					add_child(porte)
+					porte.initialiser()
+					_portes.append(porte)
+					_suivre(porte, Vector2i(x, y))
+				"G":
+					var plume := Ramassable.new()
+					plume.position = pos
+					add_child(plume)
+					plume.initialiser(drapeau_gemme, "Plume obtenue !")
 				"F":
 					_poser("dalle_fleches", pos)
+
+
+# --- Énigmes : cases occupées, plaques, portes ---------------------------------
+
+# Note qu'un noeud occupe une case ; la case se libère toute seule quand le noeud disparaît.
+func _suivre(noeud: Node, cellule: Vector2i) -> void:
+	_occupe[cellule] = noeud
+	noeud.tree_exiting.connect(_oublier.bind(cellule, noeud))
+
+
+func _oublier(cellule: Vector2i, noeud: Node) -> void:
+	if _occupe.get(cellule) == noeud:
+		_occupe.erase(cellule)
+
+
+func occuper(cellule: Vector2i, noeud: Node) -> void:
+	_occupe[cellule] = noeud
+
+
+func liberer(cellule: Vector2i) -> void:
+	_occupe.erase(cellule)
+
+
+# Une case est libre pour un bloc si c'est du sol (pas un mur ni une statue) et que rien ne l'occupe.
+func case_libre(cellule: Vector2i) -> bool:
+	if cellule.y < 0 or cellule.y >= layout.size() or cellule.x < 0 or cellule.x >= layout[cellule.y].length():
+		return false
+	return ".TPFXV".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
+
+
+# Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
+func verifier_plaques() -> void:
+	if drapeau_plaque == "" or _plaques.is_empty():
+		return
+	for plaque in _plaques:
+		if not (_occupe.get(plaque) is Bloc):
+			return
+	Etat.poser(drapeau_plaque)
+
+
+# Touche R : les blocs reviennent à leur place de départ.
+func reinitialiser() -> void:
+	for bloc in _blocs:
+		bloc.reinitialiser()
+
+
+func _sur_drapeau(nom: String) -> void:
+	if nom != "" and nom == drapeau_porte:
+		for porte in _portes:
+			if is_instance_valid(porte):
+				porte.ouvrir()
 
 
 # Torches et bannières sur le mur du haut (seulement là où il y a du mur au-dessus du sol).

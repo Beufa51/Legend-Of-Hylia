@@ -17,6 +17,7 @@ var en_transition := false
 
 func _ready() -> void:
 	_lancer_musique()
+	_creer_messages()
 	salle_actuelle = _salle_du_joueur()
 	camera.position = _centre_salle(salle_actuelle)
 
@@ -64,3 +65,44 @@ func _lancer_musique() -> void:
 	lecteur.volume_db = VOLUME_MUSIQUE_DB
 	add_child(lecteur)
 	lecteur.play()
+
+
+# Touche R : recommence la salle où l'on est (les blocs reviennent à leur place).
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("reset"):
+		for enfant in get_children():
+			if enfant is Room and enfant.grille == salle_actuelle:
+				enfant.reinitialiser()
+
+
+# Petit texte en bas de l'écran pour les messages (Etat.annoncer).
+var _etiquette: Label
+var _tween_message: Tween
+
+
+func _creer_messages() -> void:
+	var calque := CanvasLayer.new()
+	add_child(calque)
+	_etiquette = Label.new()
+	_etiquette.position = Vector2(0, 205)
+	_etiquette.size = Vector2(400, 16)
+	_etiquette.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_etiquette.add_theme_font_size_override("font_size", 10)
+	_etiquette.add_theme_color_override("font_outline_color", Color.BLACK)
+	_etiquette.add_theme_constant_override("outline_size", 4)
+	_etiquette.modulate.a = 0.0
+	calque.add_child(_etiquette)
+	Etat.message.connect(_afficher_message)
+	# Rappel des touches au début
+	await get_tree().create_timer(0.8).timeout
+	Etat.annoncer("Flèches/ZQSD : bouger    Espace/J : lance    R : recommencer la salle")
+
+
+func _afficher_message(texte: String) -> void:
+	_etiquette.text = texte
+	if _tween_message:
+		_tween_message.kill()
+	_etiquette.modulate.a = 1.0
+	_tween_message = create_tween()
+	_tween_message.tween_interval(4.0)
+	_tween_message.tween_property(_etiquette, "modulate:a", 0.0, 0.8)
