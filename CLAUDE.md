@@ -96,6 +96,9 @@
   Chaque couloir = un écran entier (passage de 2 tuiles) → world.gd/room.gd inchangés. Joueur démarre dans Entree (160,140).
   Salles 1-3 ont des piliers/blocs provisoires (futurs emplacements d'énigmes).
 
-## PROCHAINE ÉTAPE : tester l'étape 4, puis Étape 5
-- Tester : lancer le jeu (F5), monter jusqu'à Salle3, vérifier glissements caméra et pas de sortie du donjon.
-- Ensuite : améliorer le décor (variété de tuiles, bordures), puis énigmes (conception = Opus).
+- 2026-11-12 : **ÉTAPE 4 TERMINÉE** (testée par l'utilisateur, ça marche). Travail sur la branche `etape-4-aile-gauche`
+  (à fusionner dans `main` via GitHub Desktop : Branch → Merge into current branch, depuis `main`, puis Push).
+  L'utilisateur ne comprend pas les Pull Requests : ne pas en parler, utiliser seulement le merge local.
+
+## PROCHAINE ÉTAPE : Étape 5
+- Améliorer le décor (variété de tuiles, bordures), puis concevoir les énigmes (conception = Opus).
