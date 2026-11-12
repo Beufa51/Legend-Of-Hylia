@@ -25,7 +25,8 @@ func initialiser(nom_drapeau: String, message: String, texture: Texture2D = null
 	image.texture = texture if texture != null else load("res://Assets/Gemini/tuiles/plume_doree.png")
 	if image.texture == null:   # image pas encore importée par Godot : lecture directe du fichier
 		image.texture = ImageTexture.create_from_image(Image.load_from_file(ProjectSettings.globalize_path("res://Assets/Gemini/tuiles/plume_doree.png")))
-	image.centered = false
+	image.centered = true   # centrée sur la case, même si l'image dépasse 16 px (fragment d'aile)
+	image.position = Vector2(8, 8)
 	add_child(image)
 	var lueur := Lumiere.creer(Color(1.0, 0.85, 0.4), 0.45, 0.8)
 	lueur.position = Vector2(8, 8)

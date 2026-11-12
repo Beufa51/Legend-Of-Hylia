@@ -160,12 +160,14 @@ def cible(allumee):
 def fragment():
     """L'aile gauche du coq, réduite à 22 px de large, avec un contour sombre et un liseré doré."""
     coq = Image.open(os.path.join(RACINE, "Assets/Gemini/embleme/coq_rouge.png")).convert("RGBA")
-    aile = coq.crop((0, 0, 250, 215))
-    petite = aile.resize((22, 19), Image.LANCZOS)
-    out = Image.new("RGBA", (24, 21))
-    masque = [[petite.getpixel((x, y))[3] > 100 for x in range(22)] for y in range(19)]
-    plein = lambda x, y: 0 <= x < 22 and 0 <= y < 19 and masque[y][x]
-    for y in range(21):
+    aile = coq.crop((0, 0, 215, 195))   # sans le corps (x > 215)
+    aile = aile.crop(aile.getbbox())
+    petite = aile.resize((22, max(8, round(22 * aile.height / aile.width))), Image.LANCZOS)
+    h = petite.height
+    out = Image.new("RGBA", (24, h + 2))
+    masque = [[petite.getpixel((x, y))[3] > 100 for x in range(22)] for y in range(h)]
+    plein = lambda x, y: 0 <= x < 22 and 0 <= y < h and masque[y][x]
+    for y in range(h + 2):
         for x in range(24):
             px, py = x - 1, y - 1
             if plein(px, py):
