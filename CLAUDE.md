@@ -312,6 +312,17 @@
   Images : `Assets/Gemini/embleme/blason_socle.png`, `blason_aile_gauche.png`, `blason_aile_droite.png` (244x132, `Outils/fabriquer_objets.py::blason`, pivots affichés par le script = constante `PIVOTS` de world.gd).
   Mode dev F1 : bouton « Cinématique aile gauche » pour la rejouer. Idée suivante : afficher le grand blason (progression) dans l'Entrée.
 
+- 2026-11-12 : idée de l'utilisateur : la cinématique doit se jouer EN SORTANT DU DONJON, en VUE AÉRIENNE : le joueur découvre que le plan des salles parcourues forme une aile,
+  qui pivote et rejoint le CORPS du donjon (autre donjon, pas encore construit). **ÉTAPE 7d écrite (non testée dans Godot, aperçus PIL vérifiés)** — remplace l'ancienne `_cinematique_aile` :
+  1) fragment ramassé -> `world.gd::_retour_entree` (fondu, joueur posé dans l'Entrée, message « sors du donjon ») ; la GRANDE PORTE DU SUD du vestibule (porte `H`, rangées 12-13, colonnes 11-13,
+  `drapeau_porte2 = fragment_gauche`, dans `generer_monde.py`) s'ouvre.
+  2) le joueur sort par là (écran `SORTIE_DONJON` (0,2), détecté dans `_process`) -> `_vue_aerienne(cote)` : fond d'herbe, PLAN VU DU CIEL fabriqué EN CODE depuis les `layout` des salles
+  (`_plan_vu_du_ciel` : 1 pixel par case, sol clair, murs proches du sol sombres, reste transparent ; suit automatiquement les modifs du donjon), point rouge clignotant = le joueur à la sortie ;
+  messages « Vu du ciel, les salles... dessinent... une AILE ! » + liseré doré qui pulse ; zoom arrière, le CORPS du donjon (`blason_socle.png`, coq de pierre) apparaît ;
+  le plan pivote d'un quart de tour autour de sa racine (centre de l'Entrée) et prend la forme de l'aile (`ECHELLE_AILE` (0.5, 1.15)) dans l'empreinte ; clac + éclair + secousse : le plan devient l'aile rouge (`blason_aile_gauche.png`).
+  Puis retour dans le vestibule (le corps du donjon n'existe pas encore). Joué une seule fois (`_vue_aerienne_vue`). F1 -> « Vue aérienne aile gauche » pour la rejouer.
+  À vérifier au test : aspect de la grille `porte_48x32` utilisée sur le mur du BAS (linteau côté salle).
+
 ## PROCHAINE ÉTAPE : Étape 7 (suite)
-- Tester la cinématique (F1 -> bouton, ou ramasser le fragment en 5e). Ajuster durées/sons selon le retour.
+- Tester la vue aérienne (F1 -> bouton, ou pour de vrai : fragment en 5e -> retour à l'Entrée -> sortir par le sud du vestibule). Ajuster durées/sons selon le retour.
 - Ensuite : rééquilibrage des énigmes/difficulté de l'aile gauche, puis aile droite (symétrie), puis épreuve finale.
