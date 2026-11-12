@@ -99,7 +99,7 @@ func _creer_messages() -> void:
 	Etat.message.connect(_afficher_message)
 	# Rappel des touches au début
 	await get_tree().create_timer(0.8).timeout
-	Etat.annoncer("Village de " + Noms.VILLAGE + " — Flèches/ZQSD : bouger    Espace/J : lance    R : recommencer la salle")
+	Etat.annoncer(Noms.VILLAGE + " — Flèches/ZQSD : bouger    Espace/J : lance    R : recommencer la salle")
 	await get_tree().create_timer(5.5).timeout
 	if not Etat.est("vestibule_cristal"):
 		Etat.annoncer("Frappe le cristal bleu avec ta lance pour ouvrir la porte")

@@ -47,7 +47,7 @@
 - Workflow Git : l'utilisateur utilise GitHub Desktop ; toujours "Pull" avant de travailler, "Push" après.
 
 - Histoire : préquelle d'un garde royal (inspiré de l'esprit Zelda OoT). Noms de TRAVAIL :
-  village **Chantecler** (voir ci-dessous), royaume **Hylio** (à changer). Ils restent trop proches de Zelda : avant toute publication
+  village **« Village du Coq Chantant »** (nom choisi par l'utilisateur, 2026-11-12 ; ex-Cocoricou/Chantecler), royaume **Hylio** (à changer). Ils restent trop proches de Zelda : avant toute publication
   publique, les remplacer par des noms 100 % originaux (les centraliser dans un seul fichier pour
   les changer facilement). Sinon garder le dépôt privé.
 - Graphismes : pack Ninja Adventure (téléchargé) + perso créé dans un générateur (planche ~27x27 px,
@@ -217,7 +217,7 @@
   (nom du coq dans le Roman de Renart, domaine public, "chante clair"). "Cocoricou" abandonné : trop proche de "Cocorico" = Kakariko en français. Alternatives : Chantecoq. À valider.
 
 - 2026-11-12 : clin d'œil voulu par l'utilisateur : le village du coq chantant = hommage au coq volant de Link's Awakening (easter egg assumé, mais NOMS et dessins restent originaux). Idées : girouette/statue de coq au village et dans le donjon,
-  chant du coq (son) comme fanfare finale, énigme "le chant du coq" (frapper des cloches/statues dans l'ordre d'une mélodie). Nom du village à confirmer : Chantecler (proposé) ou Chantecoq.
+  chant du coq (son) comme fanfare finale, énigme "le chant du coq" (frapper des cloches/statues dans l'ordre d'une mélodie). NOM DU VILLAGE CONFIRMÉ : « Village du Coq Chantant » (dans `Scripts/noms.gd`).
 
 ## PROCHAINE ÉTAPE : Étape 6b
 - L'utilisateur teste le Vestibule + bouton + jingles (Pull branche etape-4-aile-gauche, F5). Ensuite : plume 2 (2 écrans, salle sombre), choix définitif du nom du village, puis plumes 3-5.

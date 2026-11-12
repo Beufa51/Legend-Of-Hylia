@@ -4,5 +4,5 @@ class_name Noms
 # Noms de TRAVAIL : à remplacer par des noms 100 % originaux avant toute publication.
 
 const TITRE_JEU := "Épreuve de la Garde"
-const VILLAGE := "Chantecler"   # le village du coq qui chante
+const VILLAGE := "Village du Coq Chantant"   # nom choisi par l'utilisateur
 const ROYAUME := "Hylio"        # nom de travail (trop proche de Zelda : à changer)
