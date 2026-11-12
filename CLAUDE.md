@@ -420,6 +420,11 @@
 - 2026-11-12 : retour 9a : « le jeu de la poule n'est pas marrant et galère à jouer ; je n'aime pas le style des maisons ». **POULES REFAITES (9b, non testé)** façon cocottes de Zelda : près d'une poule du jeu (groupe `poules_ferme`), Espace/J la PREND (`Animal.attraper`, tenue au-dessus de la tête, joueur x0.85),
   Espace/J la LANCE (`player.gd::_lancer_poule` : 44, 30 ou 14 px devant sur une place libre, vol de 0,3 s par-dessus les clôtures, `Animal.lancer`) ; les poules ne fuient plus ; 5 poules, 60 s, rubans < 50 / 35 / 22 s ; une poule rentrée est `verrouillee`.
   MAISONS : style Gemini rejeté (raison précise à demander : vue de face vs dessus ? trop cartoon ? couleurs ?) -> à refaire.
+- 2026-11-12 : l'utilisateur aime le style ALttP (maison = grand toit vu d'en haut, forêt dense) puis précise : **couleurs JOYEUSES, comme Link's Awakening DX** (les planches Gemini 2 étaient sombres).
+  3 planches reçues (`Assets/Gemini/originaux/village2_{maisons,nature,sol}.jpg`). **ÉTAPE 9c écrite (non testée dans Godot, aperçu PIL vérifié)** : nouvel outil `Outils/traiter_village2.py` (à lancer APRÈS `traiter_village.py`) : découpe + `joyeux()` (saturation x1.5, luminosité x1.6, verts vers le jaune ; réglables SAT/LUM en tête du script)
+  -> remplace `v_maison_*` (toits vus d'en haut ; + `v_maison_pierre`, caserne 96x64 = 6 cases), `v_arbre_a/b` (40x40, emprise 2x2), `v_sapin`, buissons, roche, souche, herbes, fleurs, clôture ; et FABRIQUE EN CODE le sol : `v_herbe_sol`(+_1/_2 touffes), chemin beige à bords irréguliers `v_chemin_<bits>` (1 N, 2 S, 4 O, 8 E) et `v_chemin_f<coins>` (case pleine + coins d'herbe).
+  `exterieur.gd` : `_poser_sol` / `_nom_chemin` (plus de tuiles du pack pour le sol) ; maisons : `S` pierre, `K` caserne 6x4 (door col 1) ; `generer_village.py` : `bordure(g, trou=...)` = forêt dense (2 rangées décalées), caserne en (11,2), capitaine en (14,6).
+  Reste du pack Ninja : étal `E`, girouette (images maison), intérieurs = anciennes images Gemini (v_ meubles, couleurs déjà vives).
 
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
