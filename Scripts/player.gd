@@ -23,6 +23,7 @@ var lance: Node2D       # la lance (image + zone de touche), créée dans _ready
 var zone: Area2D        # zone de touche de la lance
 var lumiere: PointLight2D  # petite lumière autour du joueur (allumée seulement dans les salles sombres)
 var _recul := Vector2.ZERO  # poussée subie (coup de bec d'une poule...), s'éteint toute seule
+var porte: Animal         # la poule qu'on porte (mini-jeu de la ferme), sinon null
 var _temps_pousse := 0.0  # depuis combien de temps on pousse contre un bloc
 
 
@@ -37,6 +38,11 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if porte != null:
+		if is_instance_valid(porte):
+			porte.global_position = global_position + Vector2(0, -12)   # la poule est tenue au-dessus de la tête
+		else:
+			porte = null
 	if attaque:
 		_frapper_ce_quon_touche()
 		return  # pas de déplacement pendant le coup
@@ -44,13 +50,20 @@ func _physics_process(delta: float) -> void:
 		var habitant := _habitant_proche()
 		if habitant:
 			habitant.parler(self)   # près d'un habitant, la touche d'action sert à PARLER
+		elif porte != null:
+			_lancer_poule()         # on porte une poule : la touche d'action la LANCE
 		else:
-			_attaquer()
+			var poule := _poule_proche()
+			if poule != null:
+				porte = poule       # près d'une poule du mini-jeu : on la PREND
+				poule.attraper()
+			else:
+				_attaquer()
 		return
 	# Vecteur d'entrée : (-1..1, -1..1) selon les touches pressées
 	var entree := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var court := Input.is_action_pressed("run")
-	velocity = entree * VITESSE * (FACTEUR_COURSE if court else 1.0) + _recul
+	velocity = entree * VITESSE * (FACTEUR_COURSE if court else 1.0) * (0.85 if porte != null else 1.0) + _recul
 	_recul = _recul.move_toward(Vector2.ZERO, 600.0 * delta)
 	sprite.speed_scale = 1.6 if court else 1.0   # les jambes vont plus vite quand on court
 	move_and_slide()
@@ -64,6 +77,35 @@ func _habitant_proche() -> Pnj:
 		if n.peut_parler(self):
 			return n
 	return null
+
+
+# Une poule du mini-jeu de la ferme assez près pour la prendre ?
+func _poule_proche() -> Animal:
+	for p in get_tree().get_nodes_in_group("poules_ferme"):
+		if not p.portee and p.collision_layer == 1 and p.global_position.distance_to(global_position) < 18.0 and not p.verrouillee:
+			return p
+	return null
+
+
+# Lance la poule devant soi, le plus loin possible (44, 30 ou 14 px) sur une place libre : elle passe par-dessus les clôtures.
+func _lancer_poule() -> void:
+	var poule := porte
+	porte = null
+	if not is_instance_valid(poule):
+		return
+	var vecteur: Vector2 = VECTEURS[direction]
+	var cible := global_position + vecteur * 14.0
+	for d in [44.0, 30.0, 14.0]:
+		var point := global_position + vecteur * d
+		var requete := PhysicsPointQueryParameters2D.new()
+		requete.position = point
+		requete.collision_mask = 1
+		requete.exclude = [get_rid()]
+		if get_world_2d().direct_space_state.intersect_point(requete, 1).is_empty():
+			cible = point
+			break
+	_jouer_son(SON_LANCE, -6.0)
+	poule.lancer(global_position + Vector2(0, -12), cible)
 
 
 # Pousse le joueur (sans le blesser) : utilisé par les poules en colère.

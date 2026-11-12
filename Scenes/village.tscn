@@ -14,7 +14,7 @@ donjon = false
 
 [node name="Ferme" parent="." instance=ExtResource("2")]
 grille = Vector2i(0, 2)
-pnjs = PackedStringArray("Villager5 12 5 bas | Fermière Jeanne | Oh, par tous les coqs ! Mes poules se sont échappées de l'enclos ! // Tu peux me les ramener ? Elles fuient quand on s'approche : pousse-les doucement vers l'entrée, au sud de l'enclos. // Tu as 75 secondes. Prête ? C'est parti ! | poules")
+pnjs = PackedStringArray("Villager5 12 5 bas | Fermière Jeanne | Oh, par tous les coqs ! Mes poules se sont échappées de l'enclos ! // Tu peux me les ramener ? Approche-toi d'une poule et appuie sur Espace pour la prendre dans tes bras. // Puis appuie encore sur Espace pour la lancer : par-dessus la clôture, ou par l'entrée au sud ! // 5 poules, 60 secondes. Prête ? C'est parti ! | poules")
 passages = PackedStringArray("18 5 ! La grange est fermée à clé.")
 minijeu = "poules"
 layout = PackedStringArray("A.a.A.a.A.a.A.a.A.a.A.a.b", "........................b", "a..........f.....L.....a.", "..we.e.e.e..gs...........", "A..zkkkkkkz.xx........s..", "...zkkkkkkz....s.........", "b..zkkkkkkz:::::::::::o::", "b.gzkkkkkkz::::::::::::::", "b..e...e.zz::::::::::::::", "....n::.......w.f...g.w..", "a..f.::.f.w...s...s..s...", ".....::.....a........o...", "a.A.a.A.a.A.a.A.a.A.a.A.b", "........................b")

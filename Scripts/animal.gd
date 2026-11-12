@@ -70,6 +70,44 @@ func initialiser(planche: String, vitesse: float, peureux: bool, espece: String,
 	_chrono = randf_range(0.5, 2.0)
 
 
+# --- Poule portée (mini-jeu de la ferme) : le joueur la prend dans ses bras, puis la LANCE (comme les cocottes de Zelda) ---
+var portee := false
+var verrouillee := false   # déjà rentrée dans l'enclos : on ne peut plus la reprendre
+
+
+func attraper() -> void:
+	portee = true
+	set_physics_process(false)
+	collision_layer = 0
+	collision_mask = 0
+	z_index = 2
+	_sprite.flip_h = false
+	Animal.cri_poule(self)
+
+
+# Elle vole de `depart` à `arrivee` (positions globales, par-dessus les clôtures), puis se remet à picorer.
+func lancer(depart: Vector2, arrivee: Vector2) -> void:
+	portee = false
+	global_position = depart
+	var vol := create_tween()
+	vol.tween_property(self, "global_position", arrivee, 0.3)
+	var arc := create_tween()
+	arc.tween_property(_sprite, "position:y", -24.0, 0.15).set_ease(Tween.EASE_OUT)
+	arc.tween_property(_sprite, "position:y", -5.0, 0.15).set_ease(Tween.EASE_IN)
+	await vol.finished
+	z_index = 0
+	collision_layer = 1
+	collision_mask = 1
+	_fuite = 0.0
+	_direction = Vector2.ZERO
+	_chrono = 1.0
+	set_physics_process(true)
+
+
+static func cri_poule(poule: Animal) -> void:
+	poule._crier()
+
+
 # Change la zone où l'animal a le droit d'aller (ex. : la poule rentrée dans l'enclos y reste).
 func limiter(zone: Rect2) -> void:
 	_zone = zone

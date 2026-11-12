@@ -417,6 +417,9 @@
   CHASSE AUX POULES (`mini_poules.gd`) : nouvel écran **Ferme (0,2)** (ouest du village ouest, buissons retirés), enclos en clôtures (`e` 2 cases, `z` poteau ; images `v_cloture`, `v_poteau`), cases `k` = intérieur de l'enclos, cases `s` = départs des 6 poules,
   fermière (Villager5) ; poule entrée dans l'enclos = bloquée dedans (`Animal.limiter`) ; 75 s ; rubans au temps : < 60 s / 45 s / 30 s. Grange (L) fermée.
   À FAIRE : afficher les rubans et records (ex. dans la maison du héros), récompenses utiles, mini-jeux 3-4-5.
+- 2026-11-12 : retour 9a : « le jeu de la poule n'est pas marrant et galère à jouer ; je n'aime pas le style des maisons ». **POULES REFAITES (9b, non testé)** façon cocottes de Zelda : près d'une poule du jeu (groupe `poules_ferme`), Espace/J la PREND (`Animal.attraper`, tenue au-dessus de la tête, joueur x0.85),
+  Espace/J la LANCE (`player.gd::_lancer_poule` : 44, 30 ou 14 px devant sur une place libre, vol de 0,3 s par-dessus les clôtures, `Animal.lancer`) ; les poules ne fuient plus ; 5 poules, 60 s, rubans < 50 / 35 / 22 s ; une poule rentrée est `verrouillee`.
+  MAISONS : style Gemini rejeté (raison précise à demander : vue de face vs dessus ? trop cartoon ? couleurs ?) -> à refaire.
 
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).

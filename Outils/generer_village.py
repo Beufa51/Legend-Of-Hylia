@@ -133,7 +133,7 @@ for (x, y) in [(0, 2), (0, 4), (0, 10), (12, 11), (23, 2)]:
     put(ferme, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
 put(ferme, 'x', (12, 4), (13, 4)); put(ferme, 'o', (22, 6), (21, 11))
 put(ferme, 'f', (11, 2), (16, 9), (3, 10), (8, 10)); put(ferme, 'g', (12, 3), (20, 9), (2, 7)); put(ferme, 'w', (14, 9), (2, 3), (10, 10), (22, 9))
-pnjs_ferme = ["Villager5 12 5 bas | Fermière Jeanne | Oh, par tous les coqs ! Mes poules se sont échappées de l'enclos ! // Tu peux me les ramener ? Elles fuient quand on s'approche : pousse-les doucement vers l'entrée, au sud de l'enclos. // Tu as 75 secondes. Prête ? C'est parti ! | poules"]
+pnjs_ferme = ["Villager5 12 5 bas | Fermière Jeanne | Oh, par tous les coqs ! Mes poules se sont échappées de l'enclos ! // Tu peux me les ramener ? Approche-toi d'une poule et appuie sur Espace pour la prendre dans tes bras. // Puis appuie encore sur Espace pour la lancer : par-dessus la clôture, ou par l'entrée au sud ! // 5 poules, 60 secondes. Prête ? C'est parti ! | poules"]
 passages_ferme = ["18 5 ! La grange est fermée à clé."]
 
 # --- MAISON DU HÉROS (4,2) : tout à l'est du village, au bout du chemin. Le jeu commence DANS la maison.

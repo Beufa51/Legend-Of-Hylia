@@ -1,17 +1,18 @@
 extends MiniJeu
 class_name MiniPoules
-# CHASSE AUX POULES : 6 poules se sont échappées. Ramène-les dans l'enclos (cases marquées `k` dans le plan de la ferme)
-# avant la fin du temps. Elles fuient quand tu t'approches : pousse-les vers l'entrée de l'enclos !
-# Une poule entrée dans l'enclos y reste. Points de départ des poules : cases marquées `s`.
-# Rubans (temps) : moins de 60 s = bronze, moins de 45 s = argent, moins de 30 s = or.
+# CHASSE AUX POULES (façon cocottes de Zelda) : 5 poules se sont échappées. Approche-toi d'une poule et appuie sur Espace/J
+# pour la PRENDRE dans tes bras, puis Espace/J encore pour la LANCER (par-dessus les clôtures !) dans l'enclos
+# (cases marquées `k` dans le plan de la ferme). Une poule entrée dans l'enclos y reste. Points de départ : cases `s`.
+# Rubans (temps) : moins de 50 s = bronze, moins de 35 s = argent, moins de 22 s = or.
 
-const DUREE := 75.0
-const SEUILS := [60.0, 45.0, 30.0]
+const DUREE := 60.0
+const SEUILS := [50.0, 35.0, 22.0]
+const NB_POULES := 5
 const PLANCHES := [
 	"res://Assets/Ninja_adventure/Actor/Animal/Chicken/SpriteSheetWhite.png",
 	"res://Assets/Ninja_adventure/Actor/Animal/Chicken/SpriteSheetBrown.png",
 ]
-const VITESSE := 28.0
+const VITESSE := 34.0
 
 var _enclos := Rect2()
 var _poules: Array = []      # [poule, rentrée ?]
@@ -39,20 +40,21 @@ func _depart() -> void:
 				depart.append(Vector2(x * 16 + 8, y * 16 + 10))
 	_enclos = Rect2(coin_min, coin_max - coin_min)
 	_dedans = 0
-	for i in depart.size():
+	for i in mini(depart.size(), NB_POULES):
 		var poule := Animal.new()
 		poule.position = depart[i]
 		ecran.add_child(poule)
-		poule.initialiser(PLANCHES[i % 2], VITESSE, true, "poule", _zone_ecran)
+		poule.initialiser(PLANCHES[i % 2], VITESSE, false, "poule", _zone_ecran)   # elles ne fuient pas : on peut les attraper
 		poule.add_to_group("poules_ferme")
 		_poules.append([poule, false])
-	Etat.annoncer("Ramène les %d poules dans l'enclos ! Elles fuient quand tu t'approches." % _poules.size())
+	Etat.annoncer("Prends une poule (Espace près d'elle), puis relance Espace pour la LANCER dans l'enclos !")
 
 
 func _maj(_delta: float) -> void:
 	for p in _poules:
 		if not p[1] and is_instance_valid(p[0]) and _enclos.has_point(p[0].position):
 			p[1] = true
+			p[0].verrouillee = true
 			_dedans += 1
 			p[0].limiter(_enclos.grow(-5.0))   # elle reste dans l'enclos
 			_jouer("res://Assets/Ninja_adventure/Audio/Sounds/Bonus/Coin.wav", -10.0)
