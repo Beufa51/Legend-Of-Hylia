@@ -29,6 +29,11 @@ func _ready() -> void:
 # Dessine chaque case de la salle (sol ou mur) avec la tuile correspondante.
 func _draw() -> void:
 	var planche: Texture2D = load(PLANCHE)
+	if planche == null:
+		# Sécurité : si l'image ne charge pas, on dessine en couleurs et on le signale
+		push_error("Room : impossible de charger " + PLANCHE)
+		_dessiner_sans_image()
+		return
 	for y in layout.size():
 		for x in layout[y].length():
 			var tuile := TUILE_MUR if layout[y][x] == "#" else TUILE_SOL
@@ -50,3 +55,11 @@ func _creer_collisions() -> void:
 				collision.shape = forme
 				collision.position = Vector2(x * TUILE + TUILE / 2.0, y * TUILE + TUILE / 2.0)
 				corps.add_child(collision)
+
+
+# Plan B (couleurs unies) si la planche de tuiles est introuvable.
+func _dessiner_sans_image() -> void:
+	for y in layout.size():
+		for x in layout[y].length():
+			var couleur := Color(0.18, 0.15, 0.22) if layout[y][x] == "#" else Color(0.35, 0.3, 0.4)
+			draw_rect(Rect2(x * TUILE, y * TUILE, TUILE, TUILE), couleur)
