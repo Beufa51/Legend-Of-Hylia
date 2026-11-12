@@ -1,40 +1,29 @@
 extends StaticBody2D
 class_name Porte
-# Une case de porte fermée (bois et fer, dessinée en code). Elle disparaît quand on appelle ouvrir().
+# Une porte fermée : double battant de bois cerclé de fer (image porte_LxH.png, voir Outils/traiter_gemini.py).
+# Une seule Porte couvre toutes les cases `D` voisines. Elle disparaît quand on appelle ouvrir().
 
-const COULEUR_BOIS := Color(0.45, 0.28, 0.15)
-const COULEUR_BOIS_SOMBRE := Color(0.32, 0.19, 0.10)
-const COULEUR_FER := Color(0.30, 0.30, 0.36)
-const TUILE := 16
 const SON_OUVERTURE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact5.wav"
 
 var _collision: CollisionShape2D
 var ouverte := false
 
 
-func initialiser() -> void:
-	_dessiner_rect(Vector2.ZERO, Vector2(TUILE, TUILE), COULEUR_BOIS)
-	_dessiner_rect(Vector2(5, 0), Vector2(1, TUILE), COULEUR_BOIS_SOMBRE)     # lames de bois
-	_dessiner_rect(Vector2(11, 0), Vector2(1, TUILE), COULEUR_BOIS_SOMBRE)
-	_dessiner_rect(Vector2(0, 2), Vector2(TUILE, 3), COULEUR_FER)             # bandes de fer
-	_dessiner_rect(Vector2(0, 11), Vector2(TUILE, 3), COULEUR_FER)
+# `taille` : taille de la porte en pixels (multiple de 16) ; `texture` : son image.
+func initialiser(taille: Vector2, texture: Texture2D) -> void:
+	var sprite := Sprite2D.new()
+	sprite.texture = texture
+	sprite.centered = false
+	add_child(sprite)
 	var forme := RectangleShape2D.new()
-	forme.size = Vector2(TUILE, TUILE)
+	forme.size = taille
 	_collision = CollisionShape2D.new()
 	_collision.shape = forme
-	_collision.position = Vector2(TUILE / 2.0, TUILE / 2.0)
+	_collision.position = taille / 2.0
 	add_child(_collision)
 
 
-func _dessiner_rect(pos: Vector2, taille: Vector2, couleur: Color) -> void:
-	var r := ColorRect.new()
-	r.position = pos
-	r.size = taille
-	r.color = couleur
-	add_child(r)
-
-
-# La porte s'ouvre : elle ne bloque plus, puis s'efface doucement.
+# La porte s'ouvre : elle ne bloque plus, fait trembler l'écran, puis s'efface doucement.
 func ouvrir() -> void:
 	if ouverte:
 		return

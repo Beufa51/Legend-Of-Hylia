@@ -35,8 +35,8 @@ func initialiser(une_salle: Node2D, secondes: float, eteint: Texture2D, flammes:
 	add_child(collision)
 	_lumiere = Lumiere.creer(Color(1.0, 0.72, 0.4), 1.5, 1.0)
 	_lumiere.position = Vector2(8, 6)
-	_lumiere.enabled = false
 	add_child(_lumiere)
+	_regler_lumiere(false)
 
 
 # Appelé par la lance.
@@ -47,7 +47,7 @@ func frapper() -> void:
 		_jouer_son()
 	allume = true
 	_reste = duree   # un nouveau coup remet le compteur à zéro
-	_lumiere.enabled = true
+	_regler_lumiere(true)
 	salle.verifier_braseros()
 
 
@@ -58,8 +58,14 @@ func verrouiller() -> void:
 
 func eteindre() -> void:
 	allume = false
-	_lumiere.enabled = false
+	_regler_lumiere(false)
 	_sprite.texture = _image_eteint
+
+
+# Allumé : grande lueur. Éteint : une toute petite braise, pour qu'on repère le brasero dans le noir.
+func _regler_lumiere(allumee: bool) -> void:
+	_lumiere.texture_scale = 1.5 if allumee else 0.5
+	_lumiere.energy = 1.0 if allumee else 0.35
 
 
 func _process(delta: float) -> void:

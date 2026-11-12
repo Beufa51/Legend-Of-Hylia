@@ -139,6 +139,7 @@ func _creer_decor() -> void:
 			else:
 				_poser("dalle_unie", pos)  # pilier / bloc isolé
 	_poser_objets()
+	_poser_portes()
 	_poser_details()
 
 
@@ -230,12 +231,7 @@ func _poser_objets() -> void:
 					_occupe[Vector2i(x, y)] = bloc
 					_blocs.append(bloc)
 				"D":
-					var porte := Porte.new()
-					porte.position = pos
-					add_child(porte)
-					porte.initialiser()
-					_portes.append(porte)
-					_suivre(porte, Vector2i(x, y))
+					pass  # les portes sont créées plus bas, par groupes de cases voisines (_poser_portes)
 				"G":
 					var plume := Ramassable.new()
 					plume.position = pos
@@ -243,6 +239,39 @@ func _poser_objets() -> void:
 					plume.initialiser(drapeau_gemme, "Plume obtenue !")
 				"F":
 					_poser("dalle_fleches", pos)
+
+
+# Regroupe les cases `D` voisines : chaque groupe devient UNE porte, dessinée avec l'image porte_LxH.
+func _poser_portes() -> void:
+	var vues := {}
+	for y in layout.size():
+		for x in layout[y].length():
+			var depart := Vector2i(x, y)
+			if layout[y][x] != "D" or vues.has(depart):
+				continue
+			var groupe: Array[Vector2i] = []
+			var a_voir: Array[Vector2i] = [depart]
+			while not a_voir.is_empty():
+				var c: Vector2i = a_voir.pop_back()
+				if vues.has(c) or c.y < 0 or c.y >= layout.size() or c.x < 0 or c.x >= layout[c.y].length() or layout[c.y][c.x] != "D":
+					continue
+				vues[c] = true
+				groupe.append(c)
+				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+					a_voir.append(c + d)
+			var haut_gauche := groupe[0]
+			var bas_droite := groupe[0]
+			for c in groupe:
+				haut_gauche = Vector2i(mini(haut_gauche.x, c.x), mini(haut_gauche.y, c.y))
+				bas_droite = Vector2i(maxi(bas_droite.x, c.x), maxi(bas_droite.y, c.y))
+			var taille := Vector2(bas_droite - haut_gauche + Vector2i.ONE) * TUILE
+			var porte := Porte.new()
+			porte.position = Vector2(haut_gauche * TUILE)
+			add_child(porte)
+			porte.initialiser(taille, _image("porte_%dx%d" % [int(taille.x), int(taille.y)]))
+			_portes.append(porte)
+			for c in groupe:
+				_suivre(porte, c)
 
 
 # --- Énigmes : cases occupées, plaques, portes ---------------------------------

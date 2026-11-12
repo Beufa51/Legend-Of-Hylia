@@ -137,7 +137,7 @@ func _jouer_jingle(nom: String) -> void:
 
 # --- Salles sombres -------------------------------------------------------------
 var _modulation: CanvasModulate   # teinte globale : sombre dans une salle sombre, blanche sinon
-const COULEUR_NUIT := Color(0.13, 0.14, 0.24)
+const COULEUR_NUIT := Color(0.05, 0.055, 0.11)   # plus sombre = plus noir (1,1,1 = pas de nuit)
 
 
 # Assombrit l'écran si la salle est `sombre` (et allume la lumière du joueur).

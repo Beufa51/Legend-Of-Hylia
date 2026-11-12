@@ -212,4 +212,41 @@ flamme[:, :] |= (br[..., 3] > 0) & (np.arange(16)[:, None] < 6)   # tout ce qui 
 br[flamme, 3] = 0
 br[..., :3] = (br[..., :3] * 0.8).astype(int)
 Image.fromarray(br.astype(np.uint8), "RGBA").save(os.path.join(SORTIE, "brasero_eteint.png"))
+
+# --- Portes : double porte de bois cerclée de fer dans un cadre de pierre, dessinée en pixels ---
+# Tailles : porte_48x32 (porte du haut/bas d'une salle), porte_48x16 (mur intérieur), porte_32x64 (porte latérale).
+def fabrique_porte(w, h):
+    t = Image.new("RGBA", (w, h), (0, 0, 0, 255))
+    d = ImageDraw.Draw(t)
+    pierre, joint, ombre = (92, 104, 94), (48, 58, 52), (26, 32, 29)
+    bois, bois_f, bois_c = (124, 76, 40), (88, 52, 27), (154, 102, 58)
+    fer, fer_c, clou, anneau = (60, 62, 72), (98, 100, 114), (150, 152, 162), (196, 170, 76)
+    d.rectangle((0, 0, w - 1, h - 1), fill=pierre)                      # cadre de pierre
+    for x in range(0, w, 8): d.line((x, 0, x, h - 1), fill=joint)       # joints verticaux
+    d.line((0, h // 2, w - 1, h // 2), fill=joint)
+    d.rectangle((0, 0, w - 1, h - 1), outline=ombre)
+    x0, x1, y0, y1 = 4, w - 5, (3 if h > 16 else 2), h - 1
+    d.rectangle((x0 - 1, y0 - 1, x1 + 1, y1), fill=ombre)               # embrasure sombre
+    milieu = w // 2
+    for (a, b) in ((x0, milieu - 1), (milieu, x1)):                      # deux battants
+        d.rectangle((a, y0, b, y1), fill=bois)
+        for x in range(a + 3, b, 5): d.line((x, y0, x, y1), fill=bois_f) # lames de bois
+        d.line((a, y0, b, y0), fill=bois_c)
+    d.line((milieu - 1, y0, milieu - 1, y1), fill=ombre); d.line((milieu, y0, milieu, y1), fill=ombre)
+    hauteur = y1 - y0
+    for fy in ([y0 + max(2, hauteur // 5), y1 - max(3, hauteur // 5)] if h > 16 else [y0 + 4]):  # bandes de fer
+        d.rectangle((x0, fy, x1, fy + 2), fill=fer); d.line((x0, fy, x1, fy), fill=fer_c)
+        for x in range(x0 + 2, x1, 6): d.point((x, fy + 1), fill=clou)
+    cy = y0 + hauteur // 2 + (1 if h > 16 else 3)
+    for cx in (milieu - 4, milieu + 3):                                  # anneaux
+        d.ellipse((cx - 1, cy - 1, cx + 1, cy + 1), outline=anneau)
+    return t
+
+
+from PIL import ImageDraw
+for (w, h, nom, tourne) in ((48, 32, "porte_48x32", False), (48, 16, "porte_48x16", False), (64, 32, "porte_32x64", True)):
+    img = fabrique_porte(w, h)
+    if tourne:
+        img = img.rotate(90, expand=True)
+    img.save(os.path.join(SORTIE, nom + ".png"))
 print("OK ->", os.path.abspath(SORTIE), len(os.listdir(SORTIE)), "fichiers")

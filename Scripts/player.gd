@@ -29,7 +29,7 @@ func _ready() -> void:
 	sprite.sprite_frames = _creer_animations()
 	sprite.play("repos_bas")
 	_creer_lance()
-	lumiere = Lumiere.creer(Color(0.85, 0.92, 1.0), 0.8, 0.85)
+	lumiere = Lumiere.creer(Color(0.85, 0.92, 1.0), 0.6, 0.7)
 	lumiere.enabled = false
 	add_child(lumiere)
 

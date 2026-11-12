@@ -228,5 +228,10 @@
   Leçons de design : chaque énigme enseigne UNE mécanique (vestibule = lance/cristal ; plume 1 = pot + bloc + bouton ; plume 2 = la lance allume, il faut s'organiser dans le noir).
   Risque à vérifier au test : Light2D en rendu Compatibilité (devrait marcher), lisibilité des braseros éteints dans le noir (CanvasModulate 0.13,0.14,0.24).
 
-## PROCHAINE ÉTAPE : Étape 6c
-- L'utilisateur teste (Pull, F5) : vestibule -> entrée -> épine 1 -> plume 1 -> épine 2 -> plume 2 (salle sombre puis cristal/plume). Corriger selon son retour (difficulté du chrono 14 s, visibilité). Puis plume 3 (3 écrans, idée : chant du coq ou sentinelles).
+- 2026-11-12 : retour sur 6b : "ça fonctionne, un peu trop lumineux ; les portes sont très laides ; une fois l'aile finie on REVOIT les énigmes et la difficulté, là on TERMINE l'aile".
+  **ÉTAPE 6c écrite (non testée)** : nuit plus noire (`COULEUR_NUIT` (0.05,0.055,0.11), lumière du joueur 0.6/0.7, braseros éteints = petite braise pour les repérer) ; PORTES refaites : double battant de bois cerclé de fer dans un cadre de pierre,
+  images `porte_48x32` / `porte_48x16` / `porte_32x64` générées en pixels par `traiter_gemini.py` ; UNE `Porte` par groupe de cases `D` voisines (`Room._poser_portes`, taille = boîte englobante) ; dans les plans, les portes du haut/bas font 3x2 cases (rangées 0-1),
+  les portes latérales 2x4 (colonnes 23-24), les portes intérieures 3x1. À RE-TESTER : lisibilité du noir, esthétique des portes. DÉCISION : finir d'abord toute l'aile (plumes 3, 4, 5), puis rééquilibrer énigmes/difficulté.
+
+## PROCHAINE ÉTAPE : Étape 6d
+- L'utilisateur teste (Pull, F5) : noir + portes. Puis construire les plumes 3, 4, 5 (3, 4, 5 écrans) et l'Épine 3-5, puis le fragment ; ensuite seulement rééquilibrage des énigmes.

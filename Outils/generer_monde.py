@@ -17,7 +17,7 @@ def sortie(g): return 'PackedStringArray(' + ', '.join('"' + ''.join(r) + '"' fo
 
 # --- Vestibule (0,1) : on commence ici. Leçon : frapper le cristal avec la lance ouvre la porte du nord.
 vest = vide(); sol(vest, 2, 22, 2, 11); sol(vest, 11, 13, 0, 1)
-for x in (11, 12, 13): vest[1][x] = 'D'
+for x in (11, 12, 13): vest[0][x] = 'D'; vest[1][x] = 'D'   # porte de 3 x 2 cases
 put(vest, 'K', (12, 7))
 put(vest, 'B', (6, 4), (18, 4)); put(vest, 'V', (3, 10), (21, 10), (7, 9), (17, 9), (3, 3), (21, 3))
 for x in range(11, 14):
@@ -38,7 +38,7 @@ def epine(est_ferme=False, porte_est=False, tige=True):
     for x in range(2, 23):
         if not (11 <= x <= 13): put(g, 'T', (x, 7))
     if porte_est:
-        for y in range(5, 9): g[y][23] = 'D'
+        for y in range(5, 9): g[y][23] = 'D'; g[y][24] = 'D'   # porte de 2 x 4 cases
     if est_ferme:
         for y in range(5, 9): g[y][23] = '#'; g[y][24] = '#'
     return g
@@ -60,7 +60,7 @@ for (x, y) in [(8, 7), (8, 8)]: p1[y][x] = '#'
 # --- Plume 2, écran du bas : SALLE SOMBRE. 4 braseros (L) à allumer à la lance, tous en même temps
 #     (chacun s'éteint au bout de 14 s). Leçon : la lance allume ; on s'organise dans le noir.
 p2a = vide(); sol(p2a, 2, 22, 2, 11); sol(p2a, 11, 13, 12, 13); sol(p2a, 11, 13, 0, 1)
-for x in (11, 12, 13): p2a[1][x] = 'D'
+for x in (11, 12, 13): p2a[0][x] = 'D'; p2a[1][x] = 'D'
 put(p2a, 'L', (4, 3), (20, 3), (4, 10), (20, 10))
 for (x0, y0) in [(8, 4), (16, 4), (8, 8), (16, 8)]:
     for dx in (0, 1):
