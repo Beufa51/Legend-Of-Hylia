@@ -75,6 +75,11 @@
   `Scenes/player.tscn`, `Scenes/test_room.tscn` (scène principale), actions move_left/right/up/down
   (flèches + WASD physique, donc ZQSD en AZERTY) dans project.godot.
 
-## PROCHAINE ÉTAPE : tester l'étape 2 puis étape 3 (salles + transitions)
-- L'utilisateur lance le jeu (F5) et signale ce qui marche ou non (erreurs en rouge dans l'onglet Sortie).
-- Ensuite : murs/collisions (TileMap), caméra fixe par salle, transition entre salles. Modèle : Sonnet.
+- 2026-11-12 : **ÉTAPE 2 TERMINÉE** : le Knight se déplace et s'anime dans la salle de test (testé par l'utilisateur).
+  Le sprite Knight est provisoire : l'utilisateur voudra peut-être un autre perso plus tard (perso maison
+  ~27x27 ou autre du pack). Le script player.gd construit les animations en code : changer de perso = changer DOSSIER.
+
+## PROCHAINE ÉTAPE : Étape 3 — salles, murs et caméra
+- Créer une vraie salle (murs avec collisions via TileMap/TileSet du pack, sol), taille 320x180 (20x11 tuiles de 16).
+- Caméra fixe par salle, puis transition avec glissement vers la salle voisine (porte/couloir).
+- Faire une 2e salle reliée pour tester. Modèle : Sonnet (Opus si l'architecture des salles se complique).
