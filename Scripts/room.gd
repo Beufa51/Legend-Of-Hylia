@@ -1,6 +1,6 @@
 extends Node2D
 class_name Room
-# Une salle de 20x11 tuiles de 32 px (= 640x352, la taille de l'écran).
+# Une salle de 25x14 tuiles de 16 px (= 400x224, la taille de l'écran).
 # Le plan de la salle est écrit en texte dans `layout` :
 #   #  = mur (bloque le joueur)       .  = sol
 #   T  = sol avec tapis               B  = brasero (bloque)
@@ -9,17 +9,19 @@ class_name Room
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
-const TUILE := 32
-const TAILLE_SALLE := Vector2i(640, 352)
+const TUILE := 16
+const TAILLE_SALLE := Vector2i(400, 224)
 const DOSSIER := "res://Assets/Gemini/tuiles/"
 
 # Caractères qui bloquent le joueur (en plus des murs)
 const SOLIDES := "#SOBV"
+# Épaisseur des murs du bord (en tuiles)
+const EPAISSEUR := 2
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
-const COLONNES_TORCHES := [3, 16]
-const COLONNES_BANNIERES := [6, 13]
+const COLONNES_TORCHES := [4, 20]
+const COLONNES_BANNIERES := [7, 17]
 
-# Plan de la salle (11 lignes de 20 caractères). Modifiable dans l'inspecteur.
+# Plan de la salle (14 lignes de 25 caractères). Modifiable dans l'inspecteur.
 @export var layout: PackedStringArray
 # Position de la salle dans la grille du donjon : (0,0), (1,0), (0,-1)...
 @export var grille := Vector2i.ZERO
@@ -87,9 +89,9 @@ func _creer_decor() -> void:
 				_poser(_nom_sol(x, y), pos)
 				# Petite ombre sur le sol, juste sous un mur : donne de la profondeur
 				if _est_mur(x, y - 1):
-					_poser_rect(pos, Vector2(TUILE, 9), Color(0, 0, 0, 0.27))
+					_poser_rect(pos, Vector2(TUILE, 5), Color(0, 0, 0, 0.27))
 				# Case de porte (sur le bord de la salle) : sol assombri = passage
-				if x == 0 or y == 0 or x == layout[y].length() - 1 or y == layout.size() - 1:
+				if x < EPAISSEUR or y < EPAISSEUR or x >= layout[y].length() - EPAISSEUR or y >= layout.size() - EPAISSEUR:
 					_poser_rect(pos, Vector2(TUILE, TUILE), Color(0, 0, 0, 0.45))
 			elif murs_cadre.has(Vector2i(x, y)):
 				_poser_mur(x, y)
@@ -99,15 +101,9 @@ func _creer_decor() -> void:
 	_poser_details()
 
 
-# Choisit une tuile de sol : surtout de la dalle unie, avec quelques variantes rares.
-# Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
-func _nom_sol(x: int, y: int) -> String:
-	var h := (x * 7 + y * 13 + x * y * 3) % 23
-	if h == 0:
-		return "sol_b_fissure"
-	if h == 1:
-		return "sol_b_motif"
-	return "sol_b_dalle"
+# Tuile de sol : sol plat et uni, comme dans Zelda SNES (peu de détails au sol).
+func _nom_sol(_x: int, _y: int) -> String:
+	return "sol_plat"
 
 
 # Mur : fond sombre + liserés de pierre du côté du sol.
@@ -118,14 +114,6 @@ func _poser_mur(x: int, y: int) -> void:
 	var s := _est_sol(x, y + 1)
 	var e := _est_sol(x + 1, y)
 	var o := _est_sol(x - 1, y)
-	# Sur le bord de la salle, une porte ne doit pas casser le mur en "coins" :
-	# on ignore les voisins le long du bord pour garder un bord continu.
-	if y == 0 or y == layout.size() - 1:
-		e = false
-		o = false
-	if x == 0 or x == layout[y].length() - 1:
-		n = false
-		s = false
 	# Coins d'abord (deux côtés de sol), puis les côtés restants
 	var utilise := {"n": false, "s": false, "e": false, "o": false}
 	for coin in [["n", "o", n, o], ["n", "e", n, e], ["s", "o", s, o], ["s", "e", s, e]]:
@@ -157,11 +145,11 @@ func _poser_objets() -> void:
 				"T":
 					_poser("tapis_milieu", pos)
 				"S":
-					_poser("statue_chevalier", pos + Vector2(0, TUILE - 60))
+					_poser("statue_chevalier", pos + Vector2(0, TUILE - 30))
 				"O":
-					_poser("statue_oiseau", pos + Vector2(0, TUILE - 60))
+					_poser("statue_oiseau", pos + Vector2(0, TUILE - 30))
 				"V":
-					_poser("vase_1", pos + Vector2(6, 5))
+					_poser("vase_1", pos + Vector2(3, 3))
 				"B":
 					_poser_anime(["brasero_1", "brasero_2", "brasero_3"], pos, x + y)
 
@@ -170,15 +158,15 @@ func _poser_objets() -> void:
 func _poser_details() -> void:
 	for x in COLONNES_BANNIERES:
 		if _mur_haut_libre(x):
-			_poser("banniere", Vector2(x * TUILE, 12))
+			_poser("banniere", Vector2(x * TUILE, EPAISSEUR * TUILE - 26))
 	for x in COLONNES_TORCHES:
 		if _mur_haut_libre(x):
-			_poser_anime(["torche_1", "torche_2"], Vector2(x * TUILE, 0), x)
+			_poser_anime(["torche_1", "torche_2"], Vector2(x * TUILE, (EPAISSEUR - 1) * TUILE), x)
 
 
-# Vrai si la case (x, 0) est un mur avec du sol juste en dessous.
+# Vrai si la dernière ligne du mur du haut en (x) est un mur avec du sol juste en dessous.
 func _mur_haut_libre(x: int) -> bool:
-	return _est_mur(x, 0) and _est_sol(x, 1) and layout.size() > 1
+	return _est_mur(x, EPAISSEUR - 1) and _est_sol(x, EPAISSEUR)
 
 
 # Pose un élément animé (alternance de plusieurs images).

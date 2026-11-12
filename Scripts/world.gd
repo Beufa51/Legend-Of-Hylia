@@ -2,7 +2,7 @@ extends Node2D
 # Gère la caméra : écran fixe par salle, avec glissement quand le joueur
 # passe dans une salle voisine.
 
-const TAILLE_SALLE := Vector2i(640, 352)
+const TAILLE_SALLE := Vector2i(400, 224)
 const DUREE_GLISSEMENT := 0.6  # secondes
 
 @onready var joueur: CharacterBody2D = $Player

@@ -43,7 +43,7 @@
 - Ordre des ailes libre, mais on construit l'**aile gauche en premier**.
 - Énigmes : définies plus tard, on pose d'abord les bases (déplacement, salles, transitions).
 - Assets proposés : pack **Ninja Adventure** (Pixel-boy, CC0, itch.io) — à confirmer par l'utilisateur.
-- Résolution : **640x352 (tuiles 32x32, salle 20x11 tuiles)**, fenêtre 1280x704, stretch viewport, filtre Nearest (changé le 2026-11-12, était 320x180/16 px). Le Knight (16 px) est agrandi x2 (scale 2 dans player.tscn, vitesse 140).
+- Résolution : **400x224 (tuiles 16x16, salle 25x14 tuiles, murs du bord de 2 tuiles)**, fenêtre 1200x672, stretch viewport, filtre Nearest. Le Knight reste à 16 px (scale 1, vitesse 70). (Essai à 32 px le 2026-11-12 : jugé "trop zoomé" par l'utilisateur, abandonné.) Références de style : Zelda ALttP = sol plat uni, peu de détails, gros objets simples, murs épais.
 - Workflow Git : l'utilisateur utilise GitHub Desktop ; toujours "Pull" avant de travailler, "Push" après.
 
 - Histoire : préquelle d'un garde royal (inspiré de l'esprit Zelda OoT). Noms de TRAVAIL :
@@ -138,5 +138,11 @@
   à Gemini l'image du blason Zelda (fichier de référence supprimé du dépôt). Les noms Cocoricou/Hylio restent à remplacer avant publication.
   Le donjon a la forme de l'oiseau : aile gauche (3 salles) / aile droite (3 salles) / corps + tête = convergence.
 
-## PROCHAINE ÉTAPE : Étape 5e
-- L'utilisateur teste (Pull, ouvrir Godot pour l'import des images, F5) puis commit des fichiers .import. Ensuite : l'utilisateur génère l'emblème original (prompt donné), puis prompts Gemini avec CE symbole (bannière, porte scellée, rune, statue, blason), puis énigmes (Opus).
+- 2026-11-12 : test 32 px OK techniquement (bug .tscn corrigé : pas de commentaire `#` dans un .tscn), mais "trop zoomé, pas l'esprit Zelda". L'utilisateur a donné une capture
+  d'Zelda ALttP (sol plat bleu-gris, murs épais, Link petit). **ÉTAPE 5e écrite (non testée dans Godot, aperçu PIL fidèle)** : retour à **16 px**, salle 25x14, viewport 400x224,
+  murs de 2 tuiles, portes de 3 tuiles (colonnes 11-13), sol plat `sol_plat` (généré par `traiter_gemini.py`), fond de mur en briques (`mur_fond`), `EPAISSEUR=2` dans room.gd,
+  torches/bannières sur la 2e ligne de mur. `Outils/traiter_gemini.py` : 16 px par défaut (Lanczos + renforcement), sortie unique `Assets/Gemini/tuiles/`. Les 6 plans de world.tscn
+  ont été régénérés en 25x14. Piliers = `dalle_unie` (provisoire). Emblème coq : en attente du choix de l'utilisateur.
+
+## PROCHAINE ÉTAPE : Étape 5f
+- L'utilisateur teste (Pull, F5). Ensuite : emblème coq (prompt déjà donné), objets Zelda-like (gros piliers ronds, blocs, cristaux), puis énigmes (Opus).

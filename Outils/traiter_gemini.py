@@ -1,6 +1,6 @@
 """Outil de développement : transforme les planches Gemini (Assets/Gemini/originaux)
 en petites images prêtes pour Godot (Assets/Gemini/tuiles), fond magenta -> transparent.
-Usage : python3 Outils/traiter_gemini.py [taille_tuile]   (32 par défaut)"""
+Usage : python3 Outils/traiter_gemini.py [taille_tuile]   (16 par défaut)"""
 import os
 import sys
 import numpy as np
@@ -10,8 +10,10 @@ sys.path.insert(0, os.path.dirname(__file__))
 from decouper import cases
 
 RACINE = os.path.join(os.path.dirname(__file__), "..", "Assets", "Gemini")
-T = int(sys.argv[1]) if len(sys.argv) > 1 else 32
-SORTIE = os.path.join(RACINE, "tuiles" if T == 32 else f"tuiles{T}")
+T = int(sys.argv[1]) if len(sys.argv) > 1 else 16
+# Petites tuiles : réduction plus nette (Lanczos) + léger renforcement des contours
+REDUC = Image.LANCZOS if T < 24 else Image.BOX
+SORTIE = os.path.join(RACINE, "tuiles")
 os.makedirs(SORTIE, exist_ok=True)
 
 
@@ -23,7 +25,7 @@ def reduire(img, boite, w, h, transparent):
     """Découpe `boite`, réduit à w x h pixels (moyenne par blocs). Option : fond magenta -> transparent."""
     c = img.crop(boite)
     if not transparent:
-        return c.resize((w, h), Image.BOX)
+        return c.resize((w, h), REDUC)
     a = np.array(c).astype(int)
     magenta = (a[..., 0] > 170) & (a[..., 2] > 170) & (a[..., 1] < 130)
     # on grossit un peu le magenta pour manger la frange de compression JPG
@@ -31,8 +33,8 @@ def reduire(img, boite, w, h, transparent):
     opaque = (np.array(m) == 0).astype(float)
     rgb = a * opaque[..., None]
     # moyenne pondérée par l'opacité (pas de bord rose)
-    pr = Image.fromarray(rgb.astype(np.uint8)).resize((w, h), Image.BOX)
-    po = Image.fromarray((opaque * 255).astype(np.uint8)).resize((w, h), Image.BOX)
+    pr = Image.fromarray(rgb.astype(np.uint8)).resize((w, h), REDUC)
+    po = Image.fromarray((opaque * 255).astype(np.uint8)).resize((w, h), REDUC)
     po_a = np.array(po).astype(float) / 255
     rgb_r = np.array(pr).astype(float) / np.maximum(po_a[..., None], 1e-3)
     alpha = (po_a > 0.5) * 255
@@ -55,6 +57,11 @@ def nettoyer(img):
 
 def enregistrer(img, nom):
     img = nettoyer(img)
+    if T < 24 and img.mode in ("RGB", "RGBA"):
+        rgb = img.convert("RGB").filter(ImageFilter.UnsharpMask(radius=0.8, percent=140, threshold=2))
+        if img.mode == "RGBA":
+            rgb.putalpha(img.getchannel("A"))
+        img = rgb
     img.save(os.path.join(SORTIE, nom + ".png"))
 
 
@@ -106,7 +113,18 @@ im = ouvrir("murs")
 A = np.array(im).astype(int)
 fond = A[130:230, 100:300].reshape(-1, 3).mean(axis=0)  # couleur du fond sombre
 FOND = tuple(int(v) for v in fond)
-enregistrer(Image.new("RGB", (T, T), FOND), "mur_fond")
+# Sol plat (style Zelda SNES) : couleur moyenne de la dalle + fin quadrillage
+dalle = np.array(Image.open(os.path.join(SORTIE, "sol_b_dalle.png")).convert("RGB")).astype(float)
+base = dalle.reshape(-1, 3).mean(axis=0) * 0.92
+plat = np.tile(base, (T, T, 1))
+plat[:, T - 1] *= 0.86   # trait sombre à droite
+plat[T - 1, :] *= 0.86   # trait sombre en bas
+plat[0, :] = np.minimum(plat[0, :] * 1.08, 255)  # trait clair en haut
+plat[:, 0] = np.minimum(plat[:, 0] * 1.08, 255)  # trait clair à gauche
+enregistrer(Image.fromarray(plat.astype(np.uint8), "RGB"), "sol_plat")
+# Fond de mur : briques de la planche des sols, assombries
+brique = Image.open(os.path.join(SORTIE, "sol_a_brique.png")).convert("RGB")
+enregistrer(Image.fromarray((np.array(brique).astype(float) * 0.72).astype(np.uint8), "RGB"), "mur_fond")
 
 
 def piece(boite, efface):
@@ -118,8 +136,8 @@ def piece(boite, efface):
     # le magenta du séparateur (bords de cellule) devient transparent aussi
     r, g, bl = rgba[..., 0].astype(int), rgba[..., 1].astype(int), rgba[..., 2].astype(int)
     rgba[(r > 170) & (bl > 170) & (g < 130), 3] = 0
-    pr = Image.fromarray(rgba[..., :3]).resize((T, T), Image.BOX)
-    pa = Image.fromarray(rgba[..., 3]).resize((T, T), Image.BOX)
+    pr = Image.fromarray(rgba[..., :3]).resize((T, T), REDUC)
+    pa = Image.fromarray(rgba[..., 3]).resize((T, T), REDUC)
     out = np.dstack([np.array(pr), (np.array(pa) > 127) * 255]).astype(np.uint8)
     return Image.fromarray(out, "RGBA")
 
