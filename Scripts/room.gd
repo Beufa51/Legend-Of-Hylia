@@ -6,6 +6,7 @@ class_name Room
 #   T  = sol avec tapis               B  = brasero (bloque)
 #   S  = statue de chevalier (bloque) O  = statue d'oiseau (bloque)
 #   V  = vase (bloque)
+#   P  = plaque de pression orange (sol, ne bloque pas)   F = dalle à flèches (sol)
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
@@ -25,18 +26,25 @@ const COLONNES_BANNIERES := [7, 17]
 @export var layout: PackedStringArray
 # Position de la salle dans la grille du donjon : (0,0), (1,0), (0,-1)...
 @export var grille := Vector2i.ZERO
+# Teinte de la salle (blanc = couleurs normales). Chaque salle a son ambiance.
+@export var teinte := Color.WHITE
 
 # Cache des images déjà chargées (partagé entre toutes les salles)
 static var _cache := {}
+# Lueur des flammes (texture et matériau partagés par toutes les lumières)
+static var _tex_lumiere: GradientTexture2D
+static var _mat_lumiere: CanvasItemMaterial
 
 # Éléments animés : chaque entrée = { "sprite", "images", "decalage" }
 var _animes: Array[Dictionary] = []
 var _temps := 0.0
+var _lumieres: Array[Sprite2D] = []
 
 
 func _ready() -> void:
 	# On place la salle à sa case de la grille (chaque case = une salle entière)
 	position = Vector2(grille * TAILLE_SALLE)
+	modulate = teinte  # ne teinte que cette salle (le joueur est ailleurs dans la scène)
 	_creer_decor()
 	_creer_collisions()
 
@@ -47,6 +55,9 @@ func _process(delta: float) -> void:
 	for a in _animes:
 		var images: Array = a["images"]
 		a["sprite"].texture = images[int(_temps * 6.0 + a["decalage"]) % images.size()]
+	# Les lueurs vacillent doucement
+	for i in _lumieres.size():
+		_lumieres[i].modulate.a = 0.8 + 0.2 * sin(_temps * 7.0 + i * 1.7) * sin(_temps * 3.1 + i)
 
 
 # --- Chargement ---------------------------------------------------------------
@@ -122,6 +133,10 @@ func _nom_sol(x: int, y: int) -> String:
 func _poser_mur(x: int, y: int) -> void:
 	var pos := Vector2(x * TUILE, y * TUILE)
 	_poser("mur_fond", pos)
+	# Relief : le mur loin du sol est plus sombre, celui qui touche le sol reste clair
+	if not (_est_sol(x, y - 1) or _est_sol(x, y + 1) or _est_sol(x + 1, y) or _est_sol(x - 1, y)
+			or _est_sol(x + 1, y + 1) or _est_sol(x - 1, y + 1) or _est_sol(x + 1, y - 1) or _est_sol(x - 1, y - 1)):
+		_poser_rect(pos, Vector2(TUILE, TUILE), Color(0, 0, 0, 0.38))
 	var n := _est_sol(x, y - 1)
 	var s := _est_sol(x, y + 1)
 	var e := _est_sol(x + 1, y)
@@ -164,6 +179,11 @@ func _poser_objets() -> void:
 					_poser("vase_1", pos + Vector2(3, 3))
 				"B":
 					_poser_anime(["brasero_1", "brasero_2", "brasero_3"], pos, x + y)
+					_poser_lumiere(pos + Vector2(8, 6), 44.0)
+				"P":
+					_poser("dalle_orange", pos)
+				"F":
+					_poser("dalle_fleches", pos)
 
 
 # Torches et bannières sur le mur du haut (seulement là où il y a du mur au-dessus du sol).
@@ -174,11 +194,37 @@ func _poser_details() -> void:
 	for x in COLONNES_TORCHES:
 		if _mur_haut_libre(x):
 			_poser_anime(["torche_1", "torche_2"], Vector2(x * TUILE, (EPAISSEUR - 1) * TUILE), x)
+			_poser_lumiere(Vector2(x * TUILE + 8, EPAISSEUR * TUILE + 2), 52.0)
 
 
 # Vrai si la dernière ligne du mur du haut en (x) est un mur avec du sol juste en dessous.
 func _mur_haut_libre(x: int) -> bool:
 	return _est_mur(x, EPAISSEUR - 1) and _est_sol(x, EPAISSEUR)
+
+
+# Lueur orangée (mélangée en "addition") autour d'une flamme.
+func _poser_lumiere(centre: Vector2, rayon: float) -> void:
+	if _tex_lumiere == null:
+		var g := Gradient.new()
+		g.set_color(0, Color(1.0, 0.62, 0.25, 0.5))
+		g.set_color(1, Color(1.0, 0.45, 0.1, 0.0))
+		_tex_lumiere = GradientTexture2D.new()
+		_tex_lumiere.gradient = g
+		_tex_lumiere.width = 64
+		_tex_lumiere.height = 64
+		_tex_lumiere.fill = GradientTexture2D.FILL_RADIAL
+		_tex_lumiere.fill_from = Vector2(0.5, 0.5)
+		_tex_lumiere.fill_to = Vector2(1.0, 0.5)
+		_mat_lumiere = CanvasItemMaterial.new()
+		_mat_lumiere.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	var lueur := Sprite2D.new()
+	lueur.texture = _tex_lumiere
+	lueur.material = _mat_lumiere
+	lueur.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	lueur.position = centre
+	lueur.scale = Vector2.ONE * (rayon * 2.0 / 64.0)
+	add_child(lueur)
+	_lumieres.append(lueur)
 
 
 # Pose un élément animé (alternance de plusieurs images).

@@ -4,6 +4,9 @@ extends Node2D
 
 const TAILLE_SALLE := Vector2i(400, 224)
 const DUREE_GLISSEMENT := 0.6  # secondes
+# Musique du donjon (pack Ninja Adventure, libre de droits). Autres choix : "12 - Temple.ogg", "30 - Ruins.ogg", "32 - Manor.ogg"
+const MUSIQUE := "res://Assets/Ninja_adventure/Audio/Musics/21 - Dungeon.ogg"
+const VOLUME_MUSIQUE_DB := -8.0
 
 @onready var joueur: CharacterBody2D = $Player
 @onready var camera: Camera2D = $Camera2D
@@ -13,6 +16,7 @@ var en_transition := false
 
 
 func _ready() -> void:
+	_lancer_musique()
 	salle_actuelle = _salle_du_joueur()
 	camera.position = _centre_salle(salle_actuelle)
 
@@ -46,3 +50,17 @@ func _glisser_vers(salle: Vector2i) -> void:
 	await tween.finished
 	joueur.set_physics_process(true)
 	en_transition = false
+
+
+# Joue la musique en boucle (volume baissé pour ne pas couvrir les futurs bruitages).
+func _lancer_musique() -> void:
+	var flux = load(MUSIQUE)
+	if flux == null:
+		push_warning("Musique introuvable : " + MUSIQUE)
+		return
+	flux.loop = true
+	var lecteur := AudioStreamPlayer.new()
+	lecteur.stream = flux
+	lecteur.volume_db = VOLUME_MUSIQUE_DB
+	add_child(lecteur)
+	lecteur.play()
