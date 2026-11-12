@@ -47,7 +47,7 @@
 - Workflow Git : l'utilisateur utilise GitHub Desktop ; toujours "Pull" avant de travailler, "Push" après.
 
 - Histoire : préquelle d'un garde royal (inspiré de l'esprit Zelda OoT). Noms de TRAVAIL :
-  village **Cocoricou**, royaume **Hylio**. Ils restent trop proches de Zelda : avant toute publication
+  village **Chantecler** (voir ci-dessous), royaume **Hylio** (à changer). Ils restent trop proches de Zelda : avant toute publication
   publique, les remplacer par des noms 100 % originaux (les centraliser dans un seul fichier pour
   les changer facilement). Sinon garder le dépôt privé.
 - Graphismes : pack Ninja Adventure (téléchargé) + perso créé dans un générateur (planche ~27x27 px,
@@ -208,5 +208,13 @@
   À remplacer plus tard : visuel des portes (code) -> art Gemini ; plume dorée (Polygon2D) -> vraie image ; fragment final.
   TODO suite : plumes 2 à 5 + épines 3-5 (une plume à la fois : 2 écrans de haut = 2 salles empilées en (2,-1),(2,-2)...), énigmes variées (salle sombre, chant du coq, sentinelles, salle qui pivote).
 
+- 2026-11-12 : retours sur la plume 1 ("ça fonctionne") : 1) AJOUT d'une salle de départ **Vestibule (0,1)** sous l'Entrée (partie basse de l'aile) ; leçon : frapper le CRISTAL bleu (`K`, `cristal.gd`) à la lance ouvre la porte nord (drapeau `vestibule_cristal`).
+  2) le "plaque" (flèche vers le haut) était illogique -> remplacé par un **BOUTON** de sol (`bouton` / `bouton_enfonce`, tuiles générées en PIL dans `traiter_gemini.py`) qui s'enfonce sous un bloc (`Room._maj_boutons`).
+  3) PRINCIPE DE DESIGN (utilisateur, comme dans Zelda) : **chaque énigme facile enseigne une mécanique** (Vestibule = lance/cristal ; Plume 1 = pot -> pousser un bloc -> bouton). À respecter pour la suite.
+  4) SON à chaque résolution d'énigme et chaque plume : `world.gd::_jouer_jingle` (Success2.wav pour un drapeau d'énigme, LevelUp2.wav si le drapeau commence par "plume") ; le cristal ne joue plus de son propre bruit.
+  5) Nouveau `Outils/generer_monde.py` : ÉCRIT `Scenes/world.tscn` (modifier les plans LÀ, pas dans le .tscn). Nouvelle API : `Etat.poser/est/annoncer`, groupe "frappable" (méthode `frapper()` : pots, cristaux).
+  6) NOMS : `Scripts/noms.gd` (class Noms : TITRE_JEU, VILLAGE, ROYAUME) = SEUL endroit des noms. Village = "le village du coq qui chante" (une poule caquette, c'est le COQ qui chante !) -> proposé **Chantecler**
+  (nom du coq dans le Roman de Renart, domaine public, "chante clair"). "Cocoricou" abandonné : trop proche de "Cocorico" = Kakariko en français. Alternatives : Chantecoq. À valider.
+
 ## PROCHAINE ÉTAPE : Étape 6b
-- L'utilisateur teste la plume 1 (Pull, F5 ; touches : flèches/ZQSD, Espace/J lance, R recommence la salle). Corriger selon son retour, puis construire la plume 2 (2 écrans, énigme "salle sombre").
+- L'utilisateur teste le Vestibule + bouton + jingles (Pull branche etape-4-aile-gauche, F5). Ensuite : plume 2 (2 écrans, salle sombre), choix définitif du nom du village, puis plumes 3-5.

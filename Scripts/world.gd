@@ -7,6 +7,9 @@ const DUREE_GLISSEMENT := 0.6  # secondes
 # Musique du donjon (pack Ninja Adventure, libre de droits). Autres choix : "12 - Temple.ogg", "30 - Ruins.ogg", "32 - Manor.ogg"
 const MUSIQUE := "res://Assets/Ninja_adventure/Audio/Musics/21 - Dungeon.ogg"
 const VOLUME_MUSIQUE_DB := -8.0
+# Jingles (pack Ninja Adventure) : une énigme résolue / une plume récupérée
+const JINGLE_ENIGME := "res://Assets/Ninja_adventure/Audio/Jingles/Success2.wav"
+const JINGLE_PLUME := "res://Assets/Ninja_adventure/Audio/Jingles/LevelUp2.wav"
 
 @onready var joueur: CharacterBody2D = $Player
 @onready var camera: Camera2D = $Camera2D
@@ -18,6 +21,7 @@ var en_transition := false
 func _ready() -> void:
 	_lancer_musique()
 	_creer_messages()
+	Etat.drapeau_change.connect(_jouer_jingle)
 	salle_actuelle = _salle_du_joueur()
 	camera.position = _centre_salle(salle_actuelle)
 
@@ -95,7 +99,10 @@ func _creer_messages() -> void:
 	Etat.message.connect(_afficher_message)
 	# Rappel des touches au début
 	await get_tree().create_timer(0.8).timeout
-	Etat.annoncer("Flèches/ZQSD : bouger    Espace/J : lance    R : recommencer la salle")
+	Etat.annoncer("Village de " + Noms.VILLAGE + " — Flèches/ZQSD : bouger    Espace/J : lance    R : recommencer la salle")
+	await get_tree().create_timer(5.5).timeout
+	if not Etat.est("vestibule_cristal"):
+		Etat.annoncer("Frappe le cristal bleu avec ta lance pour ouvrir la porte")
 
 
 func _afficher_message(texte: String) -> void:
@@ -106,3 +113,16 @@ func _afficher_message(texte: String) -> void:
 	_tween_message = create_tween()
 	_tween_message.tween_interval(4.0)
 	_tween_message.tween_property(_etiquette, "modulate:a", 0.0, 0.8)
+
+
+# Un son à chaque drapeau levé : jingle "plume" si le drapeau commence par "plume", sinon jingle "énigme".
+func _jouer_jingle(nom: String) -> void:
+	var flux = load(JINGLE_PLUME if nom.begins_with("plume") else JINGLE_ENIGME)
+	if flux == null:
+		return
+	var lecteur := AudioStreamPlayer.new()
+	lecteur.stream = flux
+	lecteur.volume_db = -2.0
+	add_child(lecteur)
+	lecteur.play()
+	lecteur.finished.connect(lecteur.queue_free)

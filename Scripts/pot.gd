@@ -24,7 +24,12 @@ func initialiser(texture: Texture2D) -> void:
 	add_child(collision)
 
 
-# Appelé par la lance : le pot éclate (une seule fois).
+# Appelé par la lance (via frapper) : le pot éclate (une seule fois).
+func frapper() -> void:
+	casser()
+
+
+# Le pot éclate.
 func casser() -> void:
 	if _casse:
 		return

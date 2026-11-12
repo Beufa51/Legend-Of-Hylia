@@ -116,11 +116,11 @@ func _attaquer() -> void:
 	attaque = false
 
 
-# Pendant le coup : tout ce qui est "cassable" (pots...) dans la zone de la lance éclate.
+# Pendant le coup : tout ce qui réagit à la lance (pots, cristaux...) dans sa zone est frappé.
 func _frapper_ce_quon_touche() -> void:
 	for corps in zone.get_overlapping_bodies():
-		if corps.is_in_group("cassable"):
-			corps.casser()
+		if corps.has_method("frapper"):
+			corps.frapper()
 
 
 func _jouer_son(chemin: String, volume_db: float) -> void:

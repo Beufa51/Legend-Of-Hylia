@@ -180,4 +180,27 @@ for nom, source, coin in [("mur_dot_se", "mur_coin_se", (T - 9, T - 9)), ("mur_d
     dot = Image.new("RGBA", (T, T), (0, 0, 0, 0))
     dot.paste(src.crop((coin[0], coin[1], coin[0] + 9, coin[1] + 9)), coin)
     enregistrer(dot, nom)
+
+# --- Bouton de sol (énigmes) : `bouton` (relevé, rouge-orangé) et `bouton_enfonce` (appuyé par un bloc) ---
+from PIL import ImageDraw
+
+
+def fabrique_bouton(enfonce):
+    t = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(t)
+    d.ellipse((0, 0, 15, 15), fill=(20, 26, 24, 255))        # contour sombre
+    d.ellipse((1, 1, 14, 14), fill=(98, 110, 100, 255))      # socle de pierre
+    d.ellipse((2, 2, 13, 13), fill=(70, 80, 72, 255))
+    if enfonce:
+        d.ellipse((3, 4, 12, 13), fill=(120, 52, 18, 255))   # capuchon rentré, plus sombre
+        d.ellipse((4, 5, 11, 12), fill=(150, 64, 22, 255))
+    else:
+        d.ellipse((3, 3, 12, 12), fill=(170, 70, 20, 255))   # ombre du capuchon
+        d.ellipse((3, 2, 12, 11), fill=(232, 112, 32, 255))  # capuchon
+        d.ellipse((5, 3, 8, 5), fill=(255, 196, 130, 255))   # reflet
+    return t
+
+
+for nom, enf in (("bouton", False), ("bouton_enfonce", True)):
+    fabrique_bouton(enf).save(os.path.join(SORTIE, nom + ".png"))
 print("OK ->", os.path.abspath(SORTIE), len(os.listdir(SORTIE)), "fichiers")

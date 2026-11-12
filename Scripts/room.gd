@@ -9,6 +9,8 @@ class_name Room
 #   P  = plaque de pression orange (sol, ne bloque pas)   F = dalle à flèches (sol)
 #   X  = bloc à pousser (sur le sol)  D = porte fermée (s'ouvre quand `drapeau_porte` est levé)
 #   G  = plume dorée à ramasser (lève `drapeau_gemme`)
+#   K  = cristal à frapper à la lance (lève `drapeau_cristal`)
+#   P  = bouton de sol : s'enfonce quand un bloc est dessus (voir `drapeau_plaque`)
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
@@ -34,6 +36,7 @@ const COLONNES_BANNIERES := [7, 17]
 @export var drapeau_plaque := ""   # levé quand TOUTES les plaques P portent un bloc
 @export var drapeau_porte := ""    # les portes D de cette salle s'ouvrent quand ce drapeau est levé
 @export var drapeau_gemme := ""    # levé quand on ramasse la plume G de cette salle
+@export var drapeau_cristal := ""  # levé quand on frappe le cristal K de cette salle
 
 # Cache des images déjà chargées (partagé entre toutes les salles)
 static var _cache := {}
@@ -49,6 +52,7 @@ var _lumieres: Array[Sprite2D] = []
 var _occupe := {}
 var _blocs: Array[Bloc] = []
 var _plaques: Array[Vector2i] = []
+var _boutons := {}   # { case : Sprite2D } image de chaque bouton (relevé / enfoncé)
 var _portes: Array[Porte] = []
 
 
@@ -199,8 +203,13 @@ func _poser_objets() -> void:
 					_poser_anime(["brasero_1", "brasero_2", "brasero_3"], pos, x + y)
 					_poser_lumiere(pos + Vector2(8, 6), 44.0)
 				"P":
-					_poser("dalle_orange", pos)
+					_boutons[Vector2i(x, y)] = _poser("bouton", pos)
 					_plaques.append(Vector2i(x, y))
+				"K":
+					var cristal := Cristal.new()
+					cristal.position = pos
+					add_child(cristal)
+					cristal.initialiser(drapeau_cristal, "")
 				"X":
 					var bloc := Bloc.new()
 					add_child(bloc)
@@ -253,6 +262,7 @@ func case_libre(cellule: Vector2i) -> bool:
 
 # Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
 func verifier_plaques() -> void:
+	_maj_boutons()
 	if drapeau_plaque == "" or _plaques.is_empty():
 		return
 	for plaque in _plaques:
@@ -261,10 +271,18 @@ func verifier_plaques() -> void:
 	Etat.poser(drapeau_plaque)
 
 
+# Chaque bouton s'enfonce quand un bloc est dessus, et remonte sinon.
+func _maj_boutons() -> void:
+	for cellule in _boutons:
+		var appuye: bool = _occupe.get(cellule) is Bloc
+		_boutons[cellule].texture = _image("bouton_enfonce" if appuye else "bouton")
+
+
 # Touche R : les blocs reviennent à leur place de départ.
 func reinitialiser() -> void:
 	for bloc in _blocs:
 		bloc.reinitialiser()
+	_maj_boutons()
 
 
 func _sur_drapeau(nom: String) -> void:
