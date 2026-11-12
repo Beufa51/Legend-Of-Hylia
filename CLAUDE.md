@@ -189,6 +189,6 @@
 - 2026-11-12 : l'utilisateur voit toujours 5 plumes par aile sur le coq (même après simplification) : on ACCEPTE et on passe à **5 salles par aile** (une par plume). Le coq reste tel quel (validé de fait). `world.tscn` a encore 3 salles gauche (Entree + Salle1-3 + 2 couloirs) : à étendre à 5 salles + 4 couloirs.
 
 ## PROCHAINE ÉTAPE : Étape 6 = les énigmes (conception = Opus)
-- Concevoir les 5 énigmes de l'aile gauche (1 par salle) + le fragment de la salle 3, en s'appuyant sur : plaques `P`, dalles à flèches `F`, braseros `B`, pots cassables `V` (cachent des objets), lance.
+- Concevoir les 5 énigmes de l'aile gauche (1 par salle) + le fragment de la dernière salle (5), en s'appuyant sur : plaques `P`, dalles à flèches `F`, braseros `B`, pots cassables `V` (cachent des objets), lance.
 - Questions à poser à l'utilisateur AVANT de concevoir : style d'énigme préféré (observation / blocs à pousser / ordre à respecter) ; validation du coq (`Assets/Gemini/embleme/coq_rouge.png`).
 - Avant ou après : fusionner la branche `etape-4-aile-gauche` dans `main` (GitHub Desktop : Branch -> Merge into current branch, depuis main, puis Push).
