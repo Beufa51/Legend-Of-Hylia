@@ -149,5 +149,11 @@
   ~3 plumes par aile) -> `Assets/Gemini/embleme/coq_rouge.png` (RGBA 608x324, rouge 168,20,40). Lisible jusqu'à ~64 px de large. (Attention : j'avais d'abord pris
   la variante en bas à droite par erreur ; l'utilisateur a corrigé.) À valider par l'utilisateur ; sinon redemander une variante à Gemini quand la limite sera levée.
 
-## PROCHAINE ÉTAPE : Étape 5f
-- L'utilisateur teste (Pull, F5) et valide le coq simplifié. Ensuite : prompts pixel art avec CE coq (bannière, porte scellée, rune, statue, grand blason, fragments), objets Zelda-like (gros piliers ronds, blocs, cristaux), puis énigmes (Opus).
+- 2026-11-12 : retour 5e : capture Godot = sol GRIS UNI (#4a4a4a) = couleur de fond par défaut de Godot, donc l'image `sol_plat.png` (nouvelle) n'était PAS chargée (pas encore importée).
+  Corrigé : `room.gd::_image` charge le PNG directement depuis le fichier si l'import manque (`Image.load_from_file`). Utilisateur : "sol pas aussi lisse que le tien (ALttP), manque de charme".
+  **ÉTAPE 5f écrite (non testée)** : sol en damier discret 2 tons + biseau + points aux coins (`sol_plat`, `sol_plat_b`, variantes fissure/usure `_c`/`_d`, générés par `traiter_gemini.py`).
+  Nouvel outil `Outils/apercu_salle.py <n> <sortie.png>` (aperçu d'une salle de world.tscn, même logique que room.gd). Pistes charme : lumière/ambiance, murs plus relief,
+  props (colonnes rondes, braseros, blocs, cristaux), tapis colorés, variation de couleurs par salle.
+
+## PROCHAINE ÉTAPE : Étape 5g
+- L'utilisateur teste (Pull, F5, capture). Si sol OK : ajouter du charme (props, couleurs par salle), valider le coq, puis énigmes (Opus).

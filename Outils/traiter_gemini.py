@@ -113,15 +113,32 @@ im = ouvrir("murs")
 A = np.array(im).astype(int)
 fond = A[130:230, 100:300].reshape(-1, 3).mean(axis=0)  # couleur du fond sombre
 FOND = tuple(int(v) for v in fond)
-# Sol plat (style Zelda SNES) : couleur moyenne de la dalle + fin quadrillage
+# Sol (style Zelda SNES) : dalles de 2 tons alternés (damier discret), biseau fin, petits points aux coins.
+# sol_plat = dalle claire, sol_plat_b = dalle un peu plus foncée, sol_plat_c / _d = variantes avec fissure / usure.
 dalle = np.array(Image.open(os.path.join(SORTIE, "sol_b_dalle.png")).convert("RGB")).astype(float)
 base = dalle.reshape(-1, 3).mean(axis=0) * 0.92
-plat = np.tile(base, (T, T, 1))
-plat[:, T - 1] *= 0.86   # trait sombre à droite
-plat[T - 1, :] *= 0.86   # trait sombre en bas
-plat[0, :] = np.minimum(plat[0, :] * 1.08, 255)  # trait clair en haut
-plat[:, 0] = np.minimum(plat[:, 0] * 1.08, 255)  # trait clair à gauche
-enregistrer(Image.fromarray(plat.astype(np.uint8), "RGB"), "sol_plat")
+
+
+def fabrique_dalle(facteur, details=None):
+    d = np.tile(base * facteur, (T, T, 1))
+    d[:, T - 1] *= 0.80          # ombre à droite
+    d[T - 1, :] *= 0.80          # ombre en bas
+    d[0, :-1] *= 1.12            # lumière en haut
+    d[:-1, 0] *= 1.12            # lumière à gauche
+    for (x, y) in [(2, 2), (T - 4, 2), (2, T - 4), (T - 4, T - 4)]:   # petits points (rivets)
+        d[y:y + 1, x:x + 1] *= 0.80
+    if details:
+        for (x, y, f) in details:
+            d[y, x] *= f
+    return Image.fromarray(np.clip(d, 0, 255).astype(np.uint8), "RGB")
+
+
+enregistrer(fabrique_dalle(1.00), "sol_plat")
+enregistrer(fabrique_dalle(0.93), "sol_plat_b")
+fissure = [(6, 5, .6), (7, 6, .6), (8, 7, .6), (8, 8, .6), (9, 9, .6), (10, 10, .6), (7, 5, .75), (11, 11, .6)]
+enregistrer(fabrique_dalle(1.00, fissure), "sol_plat_c")
+usure = [(4, 9, .8), (5, 9, .8), (5, 10, .8), (10, 4, 1.15), (11, 4, 1.15), (11, 5, 1.15), (3, 12, .85), (12, 8, .85)]
+enregistrer(fabrique_dalle(0.93, usure), "sol_plat_d")
 # Fond de mur : briques de la planche des sols, assombries
 brique = Image.open(os.path.join(SORTIE, "sol_a_brique.png")).convert("RGB")
 enregistrer(Image.fromarray((np.array(brique).astype(float) * 0.72).astype(np.uint8), "RGB"), "mur_fond")
