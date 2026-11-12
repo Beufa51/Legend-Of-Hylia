@@ -616,9 +616,9 @@ func _dessiner_regards() -> void:
 		# Contour du cône : on voit bien où il s'arrête
 		var contour := points.duplicate()
 		contour.append(points[0])
-		var trait := couleur
-		trait.a = minf(1.0, couleur.a * 1.6)
-		_calque_regards.draw_polyline(contour, trait, 1.0)
+		var couleur_bord := couleur
+		couleur_bord.a = minf(1.0, couleur.a * 1.6)
+		_calque_regards.draw_polyline(contour, couleur_bord, 1.0)
 
 
 # --- Rayon de lumière --------------------------------------------------------------
