@@ -108,5 +108,11 @@
   noir (`COULEUR_VIDE`) pour les murs épais, brique sombre pour les piliers isolés. Autotile par voisins (`_piece_cadre`). Aperçu PIL vérifié seulement.
   Idées suivantes pour le look SNES : torches/statues/tapis (Elements.png, TilesetInterior.png), trappe ronde 2x2 du cadre, portes avec encadrement.
 
-## PROCHAINE ÉTAPE : Étape 5c
-- L'utilisateur teste (F5). Selon son avis : ajouter accessoires (torches, tapis, statues) puis énigmes (Opus).
+- 2026-11-12 : retour sur 5b : "un peu mieux, portes horribles, ajouter torches et détails". **ÉTAPE 5c écrite (non testée)** : `room.gd` :
+  portes = bord de mur continu (on ignore les voisins le long du bord) + case de porte assombrie ; torches animées (FX/Particle/Fire.png,
+  images 3-6, colonnes 3 et 16 du mur du haut) ; bannières rouges (TilesetHouse.png, colonnes 6 et 13). Pas de torche dans le pack : support dessiné en ColorRect.
+  Question utilisateur : sprites fixes via Gemini ? Réponse : oui pour images fixes (blason, fragments, écran titre, accessoires uniques),
+  pas pour persos/animations ; garder Ninja Adventure pour tuiles/persos (cohérence). Tester d'abord 1 image avant d'en commander plusieurs.
+
+## PROCHAINE ÉTAPE : Étape 5d
+- L'utilisateur teste (F5) le rendu des portes/torches/bannières. Puis : énigmes (Opus).

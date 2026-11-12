@@ -17,6 +17,12 @@ const TUILE_MUR := Vector2i(12, 13)  # pierre sombre (piliers / blocs au milieu 
 # qui commence à la tuile (5, 6). On y prend les coins et les bords.
 const PLANCHE_CADRE := "res://Assets/Ninja_adventure/Backgrounds/Tilesets/Interior/TilesetWallSimple.png"
 const ORIGINE_CADRE := Vector2i(5, 6)
+# Torches (animation de flamme) et bannières accrochées au mur du haut.
+const PLANCHE_FEU := "res://Assets/Ninja_adventure/FX/Particle/Fire.png"   # 8 images de 12x12
+const PLANCHE_MAISON := "res://Assets/Ninja_adventure/Backgrounds/Tilesets/TilesetHouse.png"
+const COLONNES_TORCHES := [3, 16]    # colonnes (en tuiles) des torches sur le mur du haut
+const COLONNES_BANNIERES := [6, 13]  # colonnes des bannières
+const BANNIERE := Rect2(23 * 16, 20 * 16, 16, 32)  # bannière rouge dans TilesetHouse.png
 const COULEUR_VIDE := Color(0.07, 0.10, 0.11)  # noir-vert : l'intérieur épais des murs
 const TUILE_SOL_ETOILE := Vector2i(14, 11)  # petit motif en étoile (rare)
 const TUILE_SOL_BRIQUE := Vector2i(11, 10)  # fissure / brique (rare)
@@ -25,6 +31,9 @@ const TUILE_SOL_BRIQUE := Vector2i(11, 10)  # fissure / brique (rare)
 @export var layout: PackedStringArray
 # Position de la salle dans la grille du donjon : (0,0), (1,0), (0,-1)...
 @export var grille := Vector2i.ZERO
+
+var _flammes: Array[Sprite2D] = []
+var _temps := 0.0
 
 
 func _ready() -> void:
@@ -50,6 +59,9 @@ func _creer_decor() -> void:
 				# Petite ombre sur le sol, juste sous un mur : donne de la profondeur
 				if _est_mur(x, y - 1):
 					_poser_rect(pos, Vector2(TUILE, 5), Color(0, 0, 0, 0.27))
+				# Case de porte (sur le bord de la salle) : sol assombri = passage
+				if x == 0 or y == 0 or x == layout[y].length() - 1 or y == layout.size() - 1:
+					_poser_rect(pos, Vector2(TUILE, TUILE), Color(0, 0, 0, 0.45))
 			elif not murs_cadre.has(Vector2i(x, y)):
 				# Pilier ou bloc isolé : pierre sombre
 				_poser_tuile(planche, TUILE_MUR, pos)
@@ -59,6 +71,48 @@ func _creer_decor() -> void:
 					_poser_rect(pos, Vector2(TUILE, TUILE), COULEUR_VIDE)  # mur épais
 				else:
 					_poser_tuile(cadre, ORIGINE_CADRE + piece, pos)
+	_poser_details()
+
+
+# Torches et bannières sur le mur du haut (seulement là où il y a du mur au-dessus du sol).
+func _poser_details() -> void:
+	for x in COLONNES_BANNIERES:
+		if _mur_haut_libre(x):
+			var banniere := Sprite2D.new()
+			banniere.texture = load(PLANCHE_MAISON)
+			banniere.region_enabled = true
+			banniere.region_rect = BANNIERE
+			banniere.centered = false
+			banniere.position = Vector2(x * TUILE, 9)
+			add_child(banniere)
+	for x in COLONNES_TORCHES:
+		if _mur_haut_libre(x):
+			_poser_torche(Vector2(x * TUILE + TUILE / 2.0, 0))
+
+
+# Vrai si la case (x, 0) est un mur avec du sol juste en dessous.
+func _mur_haut_libre(x: int) -> bool:
+	return _est_mur(x, 0) and _est_sol(x, 1) and layout.size() > 1
+
+
+# Une torche : support en métal + manche + flamme animée.
+func _poser_torche(haut: Vector2) -> void:
+	_poser_rect(haut + Vector2(-3, 10), Vector2(6, 2), Color(0.35, 0.35, 0.4))   # coupelle
+	_poser_rect(haut + Vector2(-1, 12), Vector2(2, 4), Color(0.45, 0.28, 0.15))  # manche
+	var flamme := Sprite2D.new()
+	flamme.texture = load(PLANCHE_FEU)
+	flamme.hframes = 8
+	flamme.frame = 3
+	flamme.position = haut + Vector2(0, 5)
+	add_child(flamme)
+	_flammes.append(flamme)
+
+
+# Anime les flammes (on boucle sur les images 3 à 6 de Fire.png).
+func _process(delta: float) -> void:
+	_temps += delta
+	for i in _flammes.size():
+		_flammes[i].frame = 3 + int(_temps * 8.0 + i * 2) % 4
 
 
 # Vrai si la case est un mur (hors de la salle = mur).
@@ -101,6 +155,14 @@ func _piece_cadre(x: int, y: int) -> Vector2i:
 	var s := _est_sol(x, y + 1)
 	var e := _est_sol(x + 1, y)
 	var o := _est_sol(x - 1, y)
+	# Sur le bord de la salle, une porte ne doit pas casser le mur en "coins" :
+	# on ignore les voisins le long du bord pour garder un bord continu.
+	if y == 0 or y == layout.size() - 1:
+		e = false
+		o = false
+	if x == 0 or x == layout[y].length() - 1:
+		n = false
+		s = false
 	if s and e: return Vector2i(0, 0)   # coin haut-gauche
 	if s and o: return Vector2i(4, 0)   # coin haut-droite
 	if n and e: return Vector2i(0, 4)   # coin bas-gauche
