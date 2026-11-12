@@ -6,7 +6,10 @@ Usage : python3 Outils/fabriquer_objets.py      -> écrit dans Assets/Gemini/tui
   - miroir_m.png (/) et miroir_n.png (\\) : miroirs sur socle (plume 5)
   - source_soleil.png : disque solaire incrusté dans le mur (d'où part le rayon)
   - cible.png / cible_allumee.png : réceptacle du rayon (éteint / allumé)
-  - fragment_aile.png : l'aile gauche du coq héraldique (Assets/Gemini/embleme/coq_rouge.png), en petit"""
+  - fragment_aile.png : l'aile gauche du coq héraldique (Assets/Gemini/embleme/coq_rouge.png), en petit
+  - Assets/Gemini/embleme/blason_socle.png : le GRAND BLASON de la cinématique (coq en pierre, empreintes des ailes vides)
+  - Assets/Gemini/embleme/blason_aile_gauche.png / _droite.png : chaque aile seule, rouge, sur la même toile que le socle
+    (la racine de chaque aile = point de pivot, affiché à la fin du script -> à recopier dans world.gd)"""
 import os
 from PIL import Image
 
@@ -178,7 +181,81 @@ def fragment():
     return out
 
 
+# --- Grand blason de la cinématique -------------------------------------------------------
+LARGEUR_BLASON = 240   # px à l'écran (l'écran fait 400x224)
+MARGE = 2
+
+
+def _masques_ailes(alpha):
+    """Sépare les deux ailes du reste du coq (remplissage depuis un point de chaque aile)."""
+    from PIL import ImageDraw
+    m = alpha.point(lambda v: 255 if v > 100 else 0)
+    ImageDraw.floodfill(m, (100, 80), 100)    # aile gauche
+    ImageDraw.floodfill(m, (508, 80), 50)     # aile droite
+    gauche = m.point(lambda v: 255 if v == 100 else 0)
+    droite = m.point(lambda v: 255 if v == 50 else 0)
+    tout = alpha.point(lambda v: 255 if v > 100 else 0)
+    return tout, gauche, droite
+
+
+def _reduire(masque, w, h):
+    return masque.resize((w, h), Image.LANCZOS).point(lambda v: 255 if v > 110 else 0)
+
+
+def _peindre(masque, interieur, haut, contour, w, h, motif=None):
+    """Remplit `masque` (0/255) : `haut` sur le bord supérieur, `contour` tout autour (1 px), `interieur` dedans."""
+    out = Image.new("RGBA", (w + 2 * MARGE, h + 2 * MARGE))
+    plein = lambda x, y: 0 <= x < w and 0 <= y < h and masque.getpixel((x, y)) > 0
+    for y in range(-MARGE, h + MARGE):
+        for x in range(-MARGE, w + MARGE):
+            if plein(x, y):
+                if not plein(x, y - 1):
+                    c = haut
+                elif motif and motif(x, y):
+                    c = motif(x, y)
+                else:
+                    c = interieur
+            elif any(plein(x + dx, y + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                c = contour
+            else:
+                continue
+            out.putpixel((x + MARGE, y + MARGE), c)
+    return out
+
+
+def blason():
+    coq = Image.open(os.path.join(RACINE, "Assets/Gemini/embleme/coq_rouge.png")).convert("RGBA")
+    tout, gauche, droite = _masques_ailes(coq.getchannel("A"))
+    w = LARGEUR_BLASON
+    h = round(w * coq.height / coq.width)
+    tout, gauche, droite = (_reduire(m, w, h) for m in (tout, gauche, droite))
+    corps = Image.new("L", (w, h))
+    corps.paste(tout, (0, 0))
+    corps.paste(0, (0, 0), gauche)
+    corps.paste(0, (0, 0), droite)
+    # Socle : le coq en pierre grise (petites taches), les ailes = empreintes sombres cerclées d'or terne
+    pierre = lambda x, y: (92, 88, 104, 255) if (x * 7 + y * 13) % 23 == 0 else None
+    socle = _peindre(corps, (122, 118, 134, 255), (170, 166, 180, 255), (26, 22, 34, 255), w, h, pierre)
+    for aile in (gauche, droite):
+        empreinte = _peindre(aile, (30, 26, 42, 255), (20, 16, 30, 255), (150, 118, 60, 255), w, h)
+        socle.alpha_composite(empreinte)
+    # Ailes rouges, liseré doré en haut, plumes légèrement ombrées
+    plume = lambda x, y: (150, 16, 32, 255) if (x + y) % 6 == 0 else None
+    pivots = {}
+    for nom, aile in (("gauche", gauche), ("droite", droite)):
+        img = _peindre(aile, (196, 28, 44, 255), (250, 200, 80, 255), (40, 8, 12, 255), w, h, plume)
+        img.save(os.path.join(RACINE, "Assets/Gemini/embleme/blason_aile_%s.png" % nom))
+        # Racine de l'aile = pixels les plus proches du corps (8 colonnes du côté du corps)
+        xs = [x for x in range(w) for y in range(h) if aile.getpixel((x, y))]
+        bord = max(xs) - 8 if nom == "gauche" else min(xs) + 8
+        pts = [(x, y) for x in range(w) for y in range(h) if aile.getpixel((x, y)) and (x >= bord if nom == "gauche" else x <= bord)]
+        pivots[nom] = (round(sum(p[0] for p in pts) / len(pts)) + MARGE, round(sum(p[1] for p in pts) / len(pts)) + MARGE)
+    socle.save(os.path.join(RACINE, "Assets/Gemini/embleme/blason_socle.png"))
+    print("blason", socle.size, "pivots (dans l'image) :", pivots)
+
+
 if __name__ == "__main__":
+    blason()
     miroir(1).save(os.path.join(SORTIE, "miroir_m.png"))
     miroir(-1).save(os.path.join(SORTIE, "miroir_n.png"))
     soleil().save(os.path.join(SORTIE, "source_soleil.png"))

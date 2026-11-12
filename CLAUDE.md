@@ -305,6 +305,13 @@
 - 2026-11-12 : corrections 7b (testées, "ça marche") : image du fragment d'aile refaite (`Outils/fabriquer_objets.py::fragment`, aile entière sans le corps du coq, centrée sur sa case dans `ramassable.gd`) ;
   rayon 5C : `room.gd::_opaque` ignore une porte `ouverte` (la grille invisible bloquait encore le rayon). Plumes 4-5 validées par l'utilisateur.
 
+- 2026-11-12 : **ÉTAPE 7c écrite (non testée dans Godot, aperçu PIL vérifié)** = CINÉMATIQUE DE FIN D'AILE. `world.gd::_cinematique_aile(cote)` (lancée 1,6 s après le drapeau `fragment_gauche`, `_sur_drapeau`) :
+  écran assombri (CanvasLayer 2 ; messages/fondu passés en calque 3), musique baissée, GRAND BLASON = coq en PIERRE grise avec les empreintes des ailes vides cerclées d'or + halo doré ;
+  l'aile arrive À LA VERTICALE (racine en bas, plumes dressées = la forme du donjon), pivote d'un quart de tour autour de sa racine (TRANS_BACK = s'emboîte avec un petit dépassement),
+  « clac » (Impact5) + éclair + secousse + jingle Secret2, message, puis fondu et RETOUR À L'ENTRÉE. Gère déjà l'aile droite (rotation inverse) et les 2 ailes (message « épreuve finale »).
+  Images : `Assets/Gemini/embleme/blason_socle.png`, `blason_aile_gauche.png`, `blason_aile_droite.png` (244x132, `Outils/fabriquer_objets.py::blason`, pivots affichés par le script = constante `PIVOTS` de world.gd).
+  Mode dev F1 : bouton « Cinématique aile gauche » pour la rejouer. Idée suivante : afficher le grand blason (progression) dans l'Entrée.
+
 ## PROCHAINE ÉTAPE : Étape 7 (suite)
-- Cinématique de fin d'aile : l'aile pivote et s'emboîte sur le grand blason (conception : Opus). Le fragment `fragment_gauche` existe déjà (drapeau posé à la pointe de la plume 5, salle 5e).
+- Tester la cinématique (F1 -> bouton, ou ramasser le fragment en 5e). Ajuster durées/sons selon le retour.
 - Ensuite : rééquilibrage des énigmes/difficulté de l'aile gauche, puis aile droite (symétrie), puis épreuve finale.
