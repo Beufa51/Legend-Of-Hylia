@@ -7,7 +7,7 @@ size = Vector2(8, 6)
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1")
-scale = Vector2(2, 2)  # le Knight (16 px) est agrandi x2 pour aller avec les tuiles de 32 px
+scale = Vector2(2, 2)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 
