@@ -144,5 +144,10 @@
   torches/bannières sur la 2e ligne de mur. `Outils/traiter_gemini.py` : 16 px par défaut (Lanczos + renforcement), sortie unique `Assets/Gemini/tuiles/`. Les 6 plans de world.tscn
   ont été régénérés en 25x14. Piliers = `dalle_unie` (provisoire). Emblème coq : en attente du choix de l'utilisateur.
 
+- 2026-11-12 : **ÉMBLÈME CHOISI** : coq héraldique, variante **en bas à gauche** des 4 générées (`Assets/Gemini/originaux/embleme_coq_4variantes.jpg`),
+  queue en flammes, corps = écu. L'utilisateur voulait MOINS de plumes (limite Gemini atteinte) : simplifié par code (fermeture morphologique 9 px sur les ailes seulement,
+  ~3 plumes par aile) -> `Assets/Gemini/embleme/coq_rouge.png` (RGBA 608x324, rouge 168,20,40). Lisible jusqu'à ~64 px de large. (Attention : j'avais d'abord pris
+  la variante en bas à droite par erreur ; l'utilisateur a corrigé.) À valider par l'utilisateur ; sinon redemander une variante à Gemini quand la limite sera levée.
+
 ## PROCHAINE ÉTAPE : Étape 5f
-- L'utilisateur teste (Pull, F5). Ensuite : emblème coq (prompt déjà donné), objets Zelda-like (gros piliers ronds, blocs, cristaux), puis énigmes (Opus).
+- L'utilisateur teste (Pull, F5) et valide le coq simplifié. Ensuite : prompts pixel art avec CE coq (bannière, porte scellée, rune, statue, grand blason, fragments), objets Zelda-like (gros piliers ronds, blocs, cristaux), puis énigmes (Opus).
