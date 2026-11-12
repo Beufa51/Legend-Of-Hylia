@@ -114,5 +114,9 @@
   Question utilisateur : sprites fixes via Gemini ? Réponse : oui pour images fixes (blason, fragments, écran titre, accessoires uniques),
   pas pour persos/animations ; garder Ninja Adventure pour tuiles/persos (cohérence). Tester d'abord 1 image avant d'en commander plusieurs.
 
+- 2026-11-12 : retour 5c : "mieux". DÉCISION : tester Gemini (images fixes) quitte à remplacer tous les décors du pack. Prompts donnés à l'utilisateur
+  (style commun + sol, murs, accessoires, porte). Fonds magenta #FF00FF pour la transparence ; images à ranger dans `Assets/Gemini/`.
+  Claude devra ensuite : nettoyer/réduire (Python PIL, nearest, palette), découper en tuiles 16x16, adapter `room.gd`. Le perso Knight reste du pack Ninja Adventure.
+
 ## PROCHAINE ÉTAPE : Étape 5d
-- L'utilisateur teste (F5) le rendu des portes/torches/bannières. Puis : énigmes (Opus).
+- L'utilisateur génère les images Gemini et les dépose dans `Assets/Gemini/` (puis Push). Claude les traite et les branche dans `room.gd`.
