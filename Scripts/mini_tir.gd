@@ -33,7 +33,7 @@ func _depart() -> void:
 
 func _maj(delta: float) -> void:
 	# Pots touchés (disparus) ou trop vieux
-	for cible in _cibles.duplicate():
+	for cible in _cibles.duplicate(): 
 		var pot: Node = cible[0]
 		if not is_instance_valid(pot) or pot.is_queued_for_deletion():
 			_score += 1
