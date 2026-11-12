@@ -60,6 +60,10 @@
 - [ ] Contenu précis des 7 énigmes (3 gauche, 3 droite, 1 finale).
 - [ ] Graphismes : assets gratuits (CC0) ou pixel art maison ? Taille des tuiles / résolution.
 
+- [ ] **Interactions / combat** (idée de l'utilisateur, 2026-11-12) : "ne pas pouvoir taper des pots dans Zelda est frustrant, 0 interaction". Proposition de Claude :
+      (1) AJOUTER tôt des interactions SANS combat : épée/coup pour casser les pots (`V`), pousser des blocs, lire des panneaux, leviers/interrupteurs, ramasser des objets (cœurs, clés) ;
+      (2) le vrai COMBAT (ennemis) seulement après les 2 ailes, si l'utilisateur le veut : cela modifie le GDD ("zéro combat"). À trancher plus tard.
+
 ## Journal des étapes
 - 2026-11-12 : GDD v1 reçu, premier avis donné, questions posées. Rien de créé dans Godot encore.
 - 2026-11-12 : réponses reçues (voir Décisions). Étape suivante : création du dépôt GitHub + projet Godot.
