@@ -70,6 +70,11 @@ func initialiser(planche: String, vitesse: float, peureux: bool, espece: String,
 	_chrono = randf_range(0.5, 2.0)
 
 
+# Change la zone où l'animal a le droit d'aller (ex. : la poule rentrée dans l'enclos y reste).
+func limiter(zone: Rect2) -> void:
+	_zone = zone
+
+
 func _physics_process(delta: float) -> void:
 	_chrono -= delta
 	_fuite -= delta

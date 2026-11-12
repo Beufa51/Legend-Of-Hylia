@@ -408,8 +408,18 @@
   `interieur.gd` RÉÉCRIT : export `style` ("maison" bois/crème, "caserne" pierre), pans de mur du haut 2x2 (lettres w x y v z), meubles par lettre (table `MEUBLES`, voir en-tête du script), tout en images Gemini.
   `generer_village.py` : maisons 4x4, passages recalculés, intérieurs refaits (hero : lit, cheminée, étagère, table, tapis ; caserne : lits, râteliers, boucliers, table de carte, brasero, coffre).
 
+- 2026-11-12 : idée de l'utilisateur : des MINI-JEUX comme dans Zelda (maisons/tentes). Liste proposée : 1 stand de tir à la lance, 2 chasse aux poules, 3 jeu des cloches (Simon), 4 parcours de la garde (chrono + course), 5 les trois pots, 6 pêche (avec la rivière).
+  Choisis : 1 et 2. **ÉTAPE 9a écrite (non testée dans Godot)** :
+  FRAMEWORK : `Scripts/minijeu.gd` (class MiniJeu : `_depart`, `_maj`, `_texte_hud`, `_nettoyer`, `_terminer(valeur, plus_grand, seuils[bronze,argent,or], nom_ruban, unite)` : record + ruban + message + jingle ; HUD en haut ; abandon si le joueur quitte l'écran).
+  Lancement : la ligne d'un habitant dans `pnjs` peut avoir une 4e partie `| id` ; `Pnj.parler` -> fin de la boîte de dialogue (`Etat.dialogue_fini`) -> `Etat.minijeu_demande(id)`. L'écran a l'export `minijeu` ("tir" / "poules") -> `Ecran._poser_minijeu`.
+  `Etat.records` (sauvegardés) + `noter_record`. Rubans = drapeaux `ruban_tir_bronze|argent|or`, `ruban_poules_...` (pas encore affichés quelque part).
+  STAND DE TIR (`mini_tir.gd`) : **InterieurStand (1,5)** = maison ROUGE du village ouest (porte (13,5)), Maître Tirard ; pots (`Pot`) sur les cases `c` (rangée 5), 30 s, 1 pot toutes les 0,75 s (3 max, 2 s de vie), bronze 8 / argent 14 / or 20.
+  CHASSE AUX POULES (`mini_poules.gd`) : nouvel écran **Ferme (0,2)** (ouest du village ouest, buissons retirés), enclos en clôtures (`e` 2 cases, `z` poteau ; images `v_cloture`, `v_poteau`), cases `k` = intérieur de l'enclos, cases `s` = départs des 6 poules,
+  fermière (Villager5) ; poule entrée dans l'enclos = bloquée dedans (`Animal.limiter`) ; 75 s ; rubans au temps : < 60 s / 45 s / 30 s. Grange (L) fermée.
+  À FAIRE : afficher les rubans et records (ex. dans la maison du héros), récompenses utiles, mini-jeux 3-4-5.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
-- Tester 8e/8f (démarrage dans la maison, portes, rendu des nouveaux sprites, collisions des maisons 4x4). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
-- Idées rendu : sol herbe/chemin Gemini (pas encore : la planche nature a une herbe unie + chemin à bords), étal du marché, clôtures, panneau lisible, bannière coq dans la caserne.
-- Ensuite : dialogues conditionnés par les drapeaux ; chemins + parvis du temple (écrans nord) + liaison avec le donjon ; secrets (bois, cascade) ; ferme ; musique d'intérieur.
+- Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
+- Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
+- Ensuite : dialogues conditionnés par les drapeaux ; chemins + parvis du temple (écrans nord) + liaison avec le donjon ; secrets (bois, cascade) ; musique d'intérieur.
 - Plus tard : fin de la vue aérienne avec le VRAI corps du donjon ; rééquilibrage des énigmes ; aile droite ; épreuve finale ; contrôles tactiles.

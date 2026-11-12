@@ -7,6 +7,7 @@ class_name Exterieur
 #   .  = herbe            :  = chemin de terre (les bords s'arrondissent tout seuls)
 #   A  = arbre rond (2x2)  a = autre arbre rond (2x2)   P = sapin (2x2)   r = roche (2x2)
 #   b  = buisson (1x1)  B = buisson à baies   u = souche   n = panneau   x = caisse
+#   e  = clôture (2 cases)   z = poteau   k = case de l'enclos (marqueur)   s = point de départ d'une poule (marqueur)
 #   f  = tournesol   g = fleur rouge   w = marguerite (fleurs : décor, ne bloquent pas)
 #   MAISONS (4x4, la porte est sur la rangée du bas) : M orange, N bleue, T chaume, R rouge, K caserne (pierre), L bois
 #   E  = étal du marché (3x2)  o = tonneau   j = bannière rouge (1x2)
@@ -51,6 +52,8 @@ const OBJETS_G := {
 	"r": ["v_roche", Vector2i(2, 2), true, 0.0],
 	"j": ["v_banniere", Vector2i(1, 2), true, 0.1],
 	"W": ["v_puits", Vector2i(2, 2), true, 0.0],
+	"e": ["v_cloture", Vector2i(2, 1), true, 0.0],   # clôture (2 cases de large)
+	"z": ["v_poteau", Vector2i(1, 1), true, 0.0],    # poteau de clôture
 	# Maisons : emprise 4x4, la porte est sur la dernière rangée (colonne dans PORTES_MAISONS)
 	"M": ["v_maison_orange", Vector2i(4, 4), true, 0.0],
 	"N": ["v_maison_bleue", Vector2i(4, 4), true, 0.0],
@@ -89,6 +92,7 @@ func _ready() -> void:
 	_poser_animaux()
 	_poser_pnjs()
 	_poser_passages()
+	_poser_minijeu()
 
 
 # Le vent : les petites plantes se décalent d'un pixel selon une vague qui traverse l'écran.

@@ -97,6 +97,7 @@ func _fermer() -> void:
 	await get_tree().create_timer(0.15).timeout
 	Etat.en_dialogue = false
 	_geler_joueur(false)
+	Etat.dialogue_fini.emit()
 
 
 func _geler_joueur(gele: bool) -> void:

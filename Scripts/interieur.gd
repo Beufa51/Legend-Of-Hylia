@@ -109,6 +109,7 @@ func _ready() -> void:
 							_solides[Vector2i(x + dx, y + dy)] = true
 	_poser_pnjs()
 	_poser_passages()
+	_poser_minijeu()
 	_creer_collisions()
 
 

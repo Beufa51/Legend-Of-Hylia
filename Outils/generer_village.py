@@ -77,7 +77,6 @@ ouest = vide()
 chemin(ouest, 0, 24, 6, 8)
 chemin(ouest, 4, 5, 5, 5); chemin(ouest, 13, 14, 5, 5)       # devant les portes
 bordure(ouest)
-put(ouest, 'b', (0, 6), (0, 7), (0, 8))                      # ferme pas encore construite
 put(ouest, 'M', (3, 2)); put(ouest, 'R', (12, 2))   # portes en (4,5) et (13,5)
 for (x, y) in [(0, 2), (0, 4), (21, 2), (23, 4), (0, 10), (22, 10)]:
     put(ouest, 'A' if x % 2 == 0 else 'a', (x, y))
@@ -114,6 +113,28 @@ pnjs_est = [
 ]
 animaux_est = ['d 20 7', 'c 12 11']
 passages_est = ["12 5 InterieurCaserne 12 9"]   # porte de la caserne (maison beige en (10,2)) ; l'intérieur est en bas de la carte
+
+# --- FERME (0,2) : tout à l'ouest. Enclos à poules (clôtures `e`/`z`, cases `k` = intérieur, entrée au sud en (5..6, 8)),
+#     grange fermée, la fermière lance la CHASSE AUX POULES (cases `s` = où apparaissent les 6 poules).
+ferme = vide()
+chemin(ferme, 11, 24, 6, 8)
+chemin(ferme, 5, 6, 9, 11)                                     # petit chemin vers l'entrée de l'enclos
+bordure(ferme)
+put(ferme, 'b', (0, 6), (0, 7), (0, 8))                        # l'ouest : le fleuve, plus tard
+for x in (3, 5, 7, 9): put(ferme, 'e', (x, 3))                 # clôture du haut (cases 3 à 10)
+put(ferme, 'e', (3, 8), (7, 8)); put(ferme, 'z', (9, 8), (10, 8))   # bas : entrée aux cases 5 et 6
+for y in range(4, 8): put(ferme, 'z', (3, y), (10, y))          # côtés
+for y in range(4, 8):
+    for x in range(4, 10): put(ferme, 'k', (x, y))
+put(ferme, 'n', (4, 9))                                        # panneau de l'enclos
+put(ferme, 'L', (17, 2))                                       # grange : porte en (18,5)
+put(ferme, 's', (13, 3), (15, 5), (14, 10), (18, 10), (21, 10), (22, 4))
+for (x, y) in [(0, 2), (0, 4), (0, 10), (12, 11), (23, 2)]:
+    put(ferme, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+put(ferme, 'x', (12, 4), (13, 4)); put(ferme, 'o', (22, 6), (21, 11))
+put(ferme, 'f', (11, 2), (16, 9), (3, 10), (8, 10)); put(ferme, 'g', (12, 3), (20, 9), (2, 7)); put(ferme, 'w', (14, 9), (2, 3), (10, 10), (22, 9))
+pnjs_ferme = ["Villager5 12 5 bas | Fermière Jeanne | Oh, par tous les coqs ! Mes poules se sont échappées de l'enclos ! // Tu peux me les ramener ? Elles fuient quand on s'approche : pousse-les doucement vers l'entrée, au sud de l'enclos. // Tu as 75 secondes. Prête ? C'est parti ! | poules"]
+passages_ferme = ["18 5 ! La grange est fermée à clé."]
 
 # --- MAISON DU HÉROS (4,2) : tout à l'est du village, au bout du chemin. Le jeu commence DANS la maison.
 heros = vide()
@@ -152,9 +173,15 @@ pnjs_int_caserne = ["Villager3 14 7 gauche | Soldat Gilles | Ici dorment les rec
 
 FERMEE = "La porte est fermée à clé."
 ferme_place = ["4 5 ! " + FERMEE, "19 5 ! " + FERMEE]
-ferme_ouest = ["4 5 ! " + FERMEE, "13 5 ! " + FERMEE]
+ferme_ouest = ["4 5 ! " + FERMEE, "13 5 InterieurStand 12 9"]   # la maison rouge est le STAND DE TIR
+
+# STAND DE TIR (maison rouge du village ouest) : les pots du jeu apparaissent sur les cases `c` (rangée du fond)
+int_stand = interieur(12, [('t', 9, 7), ('o', 7, 5), ('q', 16, 5), ('p', 7, 9), ('U', 8, 8)], ['w', 'y', 'x', 'y', 'w'])
+for x in (9, 11, 13, 15): int_stand[5][x] = 'c'
+pnjs_int_stand = ["Villager4 14 8 gauche | Maître Tirard | Approchez, approchez ! Le grand jeu du stand de la Garde ! // Des pots vont apparaître sur l'étagère du fond. Casse-les à coups de lance avant qu'ils ne disparaissent ! // 30 secondes, 8 pots pour le bronze, 14 pour l'argent, 20 pour l'or. Prête ? C'est parti ! | tir"]
 
 ecrans = [
+    ('Ferme', (0, 2), ferme, {'pnjs': pnjs_ferme, 'passages': passages_ferme, 'minijeu': 'poules'}),
     ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place, 'passages': ferme_place}),
     ('VillageOuest', (1, 2), ouest, {'animaux': animaux_ouest, 'pnjs': pnjs_ouest, 'passages': ferme_ouest}),
     ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est, 'passages': passages_est}),
@@ -164,6 +191,7 @@ ecrans = [
 interieurs = [
     ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 12 6"],
         'indice': "Tu te réveilles chez toi. Aujourd'hui, c'est ton adoubement ! Parle à Maman, puis rejoins le capitaine à la caserne (à l'ouest)."}),
+    ('InterieurStand', (1, 5), int_stand, {'pnjs': pnjs_int_stand, 'passages': ["12 10 VillageOuest 13 6"], 'minijeu': 'tir'}),
     ('InterieurCaserne', (3, 5), int_caserne, {'pnjs': pnjs_int_caserne, 'passages': ["12 10 VillageEst 12 6"], 'style': 'caserne'}),
 ]
 depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans la maison du héros, à côté du lit
@@ -223,7 +251,7 @@ def apercu(fichier):
     gem = {"A": ("v_arbre_a", 2, 2), "a": ("v_arbre_b", 2, 2), "P": ("v_sapin", 2, 2), "b": ("v_buisson", 1, 1), "B": ("v_buisson_baies", 1, 1),
            "f": ("v_tournesol", 1, 1), "g": ("v_fleur_rouge", 1, 1), "w": ("v_marguerite", 1, 1), "o": ("v_tonneau", 1, 1),
            "x": ("v_caisse", 1, 1), "n": ("v_panneau", 1, 1), "u": ("v_souche", 1, 1), "r": ("v_roche", 2, 2), "j": ("v_banniere", 1, 2),
-           "W": ("v_puits", 2, 2), "M": ("v_maison_orange", 4, 4), "N": ("v_maison_bleue", 4, 4), "T": ("v_maison_chaume", 4, 4),
+           "W": ("v_puits", 2, 2), "e": ("v_cloture", 2, 1), "z": ("v_poteau", 1, 1), "M": ("v_maison_orange", 4, 4), "N": ("v_maison_bleue", 4, 4), "T": ("v_maison_chaume", 4, 4),
            "R": ("v_maison_rouge", 4, 4), "K": ("v_maison_caserne", 4, 4), "L": ("v_maison_bois", 4, 4)}
     objets = {"Q": ("tuile:girouette_mat", None)}
     xs = [e[1][0] for e in ecrans]; ys = [e[1][1] for e in ecrans]

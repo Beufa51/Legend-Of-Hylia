@@ -23,6 +23,8 @@ const DOSSIER := "res://Assets/Gemini/tuiles/"
 # Passages (portes de maison...) : "x y Ecran dx dy" = en marchant sur la case (x,y), le joueur
 # arrive dans l'écran nommé `Ecran`, sur sa case (dx,dy). "x y ! texte" = simple message (porte fermée).
 @export var passages: PackedStringArray
+# Mini-jeu de cet écran : "tir" (stand de tir) ou "poules" (chasse aux poules). Un habitant le lance (4e partie de sa ligne dans `pnjs`).
+@export var minijeu := ""
 var interieur := false             # vrai dans une maison (pas de vent ni de feuilles)
 
 # Cache des images déjà chargées (partagé entre tous les écrans)
@@ -80,7 +82,7 @@ func _poser_pnjs() -> void:
 	for ligne in pnjs:
 		var parties := ligne.split("|")
 		var tete := parties[0].strip_edges().split(" ")
-		if parties.size() != 3 or tete.size() != 4:
+		if not parties.size() in [3, 4] or tete.size() != 4:
 			push_warning("Ecran : habitant mal écrit : " + ligne)
 			continue
 		var texte := PackedStringArray()
@@ -90,6 +92,8 @@ func _poser_pnjs() -> void:
 		pnj.position = Vector2(int(tete[1]) * TUILE + 8, int(tete[2]) * TUILE + 13)
 		add_child(pnj)
 		pnj.initialiser(tete[0], parties[1].strip_edges(), texte, tete[3], grille)
+		if parties.size() == 4:
+			pnj.minijeu = parties[3].strip_edges()
 
 
 # Passages : une petite zone sur la case ; quand le joueur y entre -> changement d'écran (signal Etat.passage)
@@ -117,3 +121,14 @@ func _poser_passages() -> void:
 			var cible := d[0]
 			var case := Vector2i(int(d[1]), int(d[2]))
 			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.passage.emit(cible, case))
+
+
+# Crée le mini-jeu de l'écran (export `minijeu`)
+func _poser_minijeu() -> void:
+	var jeu: MiniJeu = null
+	match minijeu:
+		"tir": jeu = MiniTir.new()
+		"poules": jeu = MiniPoules.new()
+	if jeu != null:
+		jeu.initialiser(self)
+		add_child(jeu)

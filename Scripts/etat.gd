@@ -10,11 +10,14 @@ signal message(texte: String)        # un message à afficher à l'écran
 signal secousse                      # l'écran tremble (une porte s'ouvre...)
 signal dialogue_demande(nom: String, lignes: PackedStringArray)   # un habitant parle (boîte de dialogue)
 signal passage(ecran: String, case: Vector2i)   # le joueur franchit une porte : il arrive dans l'écran `ecran`, sur la case `case`
+signal dialogue_fini                 # la boîte de dialogue vient de se fermer
+signal minijeu_demande(id: String)   # un habitant lance un mini-jeu (voir minijeu.gd)
 signal repere(retour: Vector2)       # une sentinelle a vu le joueur : un garde le ramène à `retour`
 
 const FICHIER := "user://sauvegarde.json"
 
 var drapeaux := {}
+var records := {}                     # meilleurs scores des mini-jeux : { "tir": 14, "poules": 38.5 }
 var en_dialogue := false              # vrai pendant une conversation (le joueur est figé)
 var salle_courante := Vector2i.ZERO   # case de la grille où se trouve la caméra (mise à jour par world.gd)
 var position_sauvee := Vector2.ZERO   # où reprendre la partie (Vector2.ZERO = nouvelle partie)
@@ -62,6 +65,7 @@ func sauver() -> void:
 		return
 	fichier.store_string(JSON.stringify({
 		"drapeaux": drapeaux.keys(),
+		"records": records,
 		"x": position_sauvee.x,
 		"y": position_sauvee.y,
 		"scene": scene_sauvee,
@@ -76,6 +80,7 @@ func charger() -> void:
 		return
 	for nom in donnees.get("drapeaux", []):
 		drapeaux[nom] = true
+	records = donnees.get("records", {})
 	position_sauvee = Vector2(donnees.get("x", 0.0), donnees.get("y", 0.0))
 	# (les premières sauvegardes n'avaient pas de scène : elles venaient forcément du donjon)
 	scene_sauvee = donnees.get("scene", "res://Scenes/world.tscn" if position_sauvee != Vector2.ZERO else "")
@@ -84,7 +89,19 @@ func charger() -> void:
 # Nouvelle partie : tout oublier (mode développeur).
 func effacer() -> void:
 	drapeaux.clear()
+	records.clear()
 	position_sauvee = Vector2.ZERO
 	scene_sauvee = ""
 	if FileAccess.file_exists(FICHIER):
 		DirAccess.remove_absolute(FICHIER)
+
+
+# Enregistre un score de mini-jeu. Renvoie vrai s'il bat le record (ou s'il n'y en avait pas).
+# `plus_grand` : vrai si un score plus grand est meilleur (points), faux pour un temps.
+func noter_record(id: String, valeur: float, plus_grand: bool) -> bool:
+	var ancien = records.get(id)
+	if ancien == null or (valeur > ancien if plus_grand else valeur < ancien):
+		records[id] = valeur
+		sauver()
+		return true
+	return false

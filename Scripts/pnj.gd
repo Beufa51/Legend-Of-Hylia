@@ -10,6 +10,7 @@ const PORTEE_PAROLE := 26.0   # px : distance maximale pour parler
 const PORTEE_REGARD := 70.0   # px : il tourne la tête vers le joueur en dessous de cette distance
 
 var nom_affiche := ""
+var minijeu := ""           # si non vide : une fois la conversation finie, ce mini-jeu démarre (voir minijeu.gd)
 var lignes: PackedStringArray
 var _sprite: Sprite2D
 var _direction := 0           # index dans DIRECTIONS
@@ -64,4 +65,6 @@ func peut_parler(joueur: Node2D) -> bool:
 
 func parler(joueur: Node2D) -> void:
 	_regarder(joueur.global_position)
+	if minijeu != "":
+		Etat.dialogue_fini.connect(func(): Etat.minijeu_demande.emit(minijeu), CONNECT_ONE_SHOT)
 	Etat.dialogue_demande.emit(nom_affiche, lignes)

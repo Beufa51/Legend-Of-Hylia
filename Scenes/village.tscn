@@ -12,6 +12,13 @@ script = ExtResource("1")
 musique = "res://Assets/Ninja_adventure/Audio/Musics/20 - Good Time.ogg"
 donjon = false
 
+[node name="Ferme" parent="." instance=ExtResource("2")]
+grille = Vector2i(0, 2)
+pnjs = PackedStringArray("Villager5 12 5 bas | Fermière Jeanne | Oh, par tous les coqs ! Mes poules se sont échappées de l'enclos ! // Tu peux me les ramener ? Elles fuient quand on s'approche : pousse-les doucement vers l'entrée, au sud de l'enclos. // Tu as 75 secondes. Prête ? C'est parti ! | poules")
+passages = PackedStringArray("18 5 ! La grange est fermée à clé.")
+minijeu = "poules"
+layout = PackedStringArray("A.a.A.a.A.a.A.a.A.a.A.a.b", "........................b", "a..........f.....L.....a.", "..we.e.e.e..gs...........", "A..zkkkkkkz.xx........s..", "...zkkkkkkz....s.........", "b..zkkkkkkz:::::::::::o::", "b.gzkkkkkkz::::::::::::::", "b..e...e.zz::::::::::::::", "....n::.......w.f...g.w..", "a..f.::.f.w...s...s..s...", ".....::.....a........o...", "a.A.a.A.a.A.a.A.a.A.a.A.b", "........................b")
+
 [node name="PlaceDuCoq" parent="." instance=ExtResource("2")]
 grille = Vector2i(2, 2)
 animaux = PackedStringArray("c 9 9", "c 15 10", "h 14 4", "k 6 5", "d 17 8")
@@ -22,8 +29,8 @@ layout = PackedStringArray("A.a.A.a.A..bbb.a.a.a.a.a.", "...........:::.........
 grille = Vector2i(1, 2)
 animaux = PackedStringArray("c 6 10", "h 20 9", "c 15 12")
 pnjs = PackedStringArray("Woman 10 9 haut | Colette | Oh, tu es la nouvelle recrue ! Tout le village parle de ton épreuve d'adoubement. // On raconte que le donjon sous le temple a la forme d'un grand coq. // Un coq dans un donjon... Moi, je préfère ceux de ma basse-cour !", "OldMan 8 6 droite | Vieux Gaspard | Le coq chante chaque aube depuis mille ans. // S'il se taisait un jour, le royaume tremblerait. // Ton père tenait la lance avant toi. Garde-la bien, petite.", "Boy 18 5 gauche | Tom | Tu as une vraie lance de la garde ! Tu me la prêtes ? // ... Non ? Tant pis. // Un conseil : n'embête pas les poules. Elles se vengent.")
-passages = PackedStringArray("4 5 ! La porte est fermée à clé.", "13 5 ! La porte est fermée à clé.")
-layout = PackedStringArray("A.a.A.a.A.a.A.a.A.a.A.a.b", "........................b", "A..M....P...R........a...", "..........g.......P......", "A......f...w........g..a.", "..w.::..gj...::.j.wf.....", "b::::::::::::::::::::::::", "b::::::::::::::::::::::::", "b::::::::::::::::::::::::", ".........................", "A...wg.......E...o....A..", "...f..g...o......o.......", "a.A.a.A.a.A.a.A.a.A.awA.b", "........................b")
+passages = PackedStringArray("4 5 ! La porte est fermée à clé.", "13 5 InterieurStand 12 9")
+layout = PackedStringArray("A.a.A.a.A.a.A.a.A.a.A.a.b", "........................b", "A..M....P...R........a...", "..........g.......P......", "A......f...w........g..a.", "..w.::..gj...::.j.wf.....", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ".........................", "A...wg.......E...o....A..", "...f..g...o......o.......", "a.A.a.A.a.A.a.A.a.A.awA.b", "........................b")
 
 [node name="VillageEst" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, 2)
@@ -44,6 +51,13 @@ pnjs = PackedStringArray("Woman 10 7 bas | Maman | Bien dormi ? Aujourd'hui, c'e
 passages = PackedStringArray("12 10 MaisonHeros 12 6")
 indice = "Tu te réveilles chez toi. Aujourd'hui, c'est ton adoubement ! Parle à Maman, puis rejoins le capitaine à la caserne (à l'ouest)."
 layout = PackedStringArray("                         ", "                         ", "                         ", "      #w#y#z#v#x##       ", "      ############       ", "      #L...q..S..#       ", "      #..........#       ", "      #..t......p#       ", "      #......CT..#       ", "      #o.........#       ", "      ######m#####       ", "                         ", "                         ", "                         ")
+
+[node name="InterieurStand" parent="." instance=ExtResource("4")]
+grille = Vector2i(1, 5)
+pnjs = PackedStringArray("Villager4 14 8 gauche | Maître Tirard | Approchez, approchez ! Le grand jeu du stand de la Garde ! // Des pots vont apparaître sur l'étagère du fond. Casse-les à coups de lance avant qu'ils ne disparaissent ! // 30 secondes, 8 pots pour le bronze, 14 pour l'argent, 20 pour l'or. Prête ? C'est parti ! | tir")
+passages = PackedStringArray("12 10 VillageOuest 13 6")
+minijeu = "tir"
+layout = PackedStringArray("                         ", "                         ", "                         ", "      #w#y#x#y#w##       ", "      ############       ", "      #o.c.c.c.cq#       ", "      #..........#       ", "      #..t.......#       ", "      #.U........#       ", "      #p.........#       ", "      ######m#####       ", "                         ", "                         ", "                         ")
 
 [node name="InterieurCaserne" parent="." instance=ExtResource("4")]
 grille = Vector2i(3, 5)

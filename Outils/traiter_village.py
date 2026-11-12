@@ -82,6 +82,8 @@ OBJ = [
  ("nature", (188, 305, 252, 372), "v_herbe_2", 14, 14, "fit"),
  ("nature", (535, 312, 715, 468), "v_roche", 32, 32, "fit"),
  ("nature", (765, 335, 890, 452), "v_souche", 16, 16, "fit"),
+ ("nature", (15, 488, 250, 592), "v_cloture", 32, 16, "fit"),
+ ("nature", (278, 488, 308, 592), "v_poteau", 16, 16, "fit"),
  ("nature", (28, 618, 145, 735), "v_panneau", 16, 16, "fit"),
  ("nature", (205, 612, 312, 752), "v_tonneau", 16, 16, "fit"),
  ("nature", (372, 622, 482, 748), "v_caisse", 16, 16, "fit"),
