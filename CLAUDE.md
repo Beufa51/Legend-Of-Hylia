@@ -181,5 +181,9 @@
 
 - 2026-11-12 : correction lance vue de dos : `z_index = -1` la plaçait DERRIÈRE le sol du décor (z relatif au parent = absolu -1) -> on ne voyait que le bâton. Maintenant `z_index = 1` toujours.
 
-## PROCHAINE ÉTAPE : Étape 5i
-- L'utilisateur teste la lance et les pots (Pull, F5, Espace/J). Ensuite : énigmes (Opus), en s'appuyant sur les interactions (pot qui cache une clé, etc.).
+- 2026-11-12 : **LANCE + POTS TERMINÉS** (testés par l'utilisateur : "c'est bon pour moi", y compris la vue de dos).
+
+## PROCHAINE ÉTAPE : Étape 6 = les énigmes (conception = Opus)
+- Concevoir les 3 énigmes de l'aile gauche (1 par salle) + le fragment de la salle 3, en s'appuyant sur : plaques `P`, dalles à flèches `F`, braseros `B`, pots cassables `V` (cachent des objets), lance.
+- Questions à poser à l'utilisateur AVANT de concevoir : style d'énigme préféré (observation / blocs à pousser / ordre à respecter) ; validation du coq (`Assets/Gemini/embleme/coq_rouge.png`).
+- Avant ou après : fusionner la branche `etape-4-aile-gauche` dans `main` (GitHub Desktop : Branch -> Merge into current branch, depuis main, puis Push).
