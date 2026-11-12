@@ -103,5 +103,10 @@
 - 2026-11-12 : **ÉTAPE 5a écrite (non testée)** : décor amélioré dans `room.gd` (sol avec motifs rares étoile (14,11) / fissure (11,10),
   ombre sous les murs via ColorRect, fonctions `_tuile_sol` et `_poser_tuile`). Aperçu vérifié en image côté Claude, pas dans Godot.
 
-## PROCHAINE ÉTAPE : Étape 5b
-- L'utilisateur teste le décor (Pull/branche `etape-4-aile-gauche`, lancer F5). Si OK : concevoir les énigmes (conception = Opus).
+- 2026-11-12 : retour utilisateur sur 5a : "mieux mais loin des jeux SNES classiques". **ÉTAPE 5b écrite (non testée)** : `room.gd` utilise
+  maintenant le cadre vert de `TilesetWallSimple.png` (coins/bords biseautés, origine (5,6)) pour les murs reliés au bord de la salle,
+  noir (`COULEUR_VIDE`) pour les murs épais, brique sombre pour les piliers isolés. Autotile par voisins (`_piece_cadre`). Aperçu PIL vérifié seulement.
+  Idées suivantes pour le look SNES : torches/statues/tapis (Elements.png, TilesetInterior.png), trappe ronde 2x2 du cadre, portes avec encadrement.
+
+## PROCHAINE ÉTAPE : Étape 5c
+- L'utilisateur teste (F5). Selon son avis : ajouter accessoires (torches, tapis, statues) puis énigmes (Opus).
