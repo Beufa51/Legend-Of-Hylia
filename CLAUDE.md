@@ -91,6 +91,11 @@
   OpenGL 3.3, Compatibilité). Solution : décor fait de `Sprite2D` (region_enabled) ; éviter le dessin direct
   de textures en `_draw`. Rendu actuel peu esthétique (sol uni vert-gris + mur) : à améliorer plus tard.
 
-## PROCHAINE ÉTAPE : Étape 4 — aile gauche : 3 salles linéaires reliées par couloirs
-- Définir le plan des 3 salles + couloirs (grille : entrée en bas, progression vers le haut), les écrire dans world.tscn.
-- Ensuite seulement : améliorer le décor (variété de tuiles, bordures), puis énigmes (conception = Opus).
+- 2026-11-12 : **ÉTAPE 4 écrite (non testée)** : `Scenes/world.tscn` réécrit = aile gauche en colonne x=0, de bas en haut :
+  Entree (0,0) -> Salle1 (0,-1) -> Couloir1 (0,-2) -> Salle2 (0,-3) -> Couloir2 (0,-4) -> Salle3 (0,-5, cul-de-sac = futur fragment).
+  Chaque couloir = un écran entier (passage de 2 tuiles) → world.gd/room.gd inchangés. Joueur démarre dans Entree (160,140).
+  Salles 1-3 ont des piliers/blocs provisoires (futurs emplacements d'énigmes).
+
+## PROCHAINE ÉTAPE : tester l'étape 4, puis Étape 5
+- Tester : lancer le jeu (F5), monter jusqu'à Salle3, vérifier glissements caméra et pas de sortie du donjon.
+- Ensuite : améliorer le décor (variété de tuiles, bordures), puis énigmes (conception = Opus).
