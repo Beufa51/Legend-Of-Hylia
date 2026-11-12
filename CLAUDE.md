@@ -359,8 +359,17 @@
   Tuiles du pack : TilesetField, TilesetNature (arbres), TilesetHouse, TilesetWater, TilesetRelief (falaises) ; PNJ : OldMan/OldWoman/Child/Noble..., capitaine = KnightGold.
   Technique prévue : script `exterieur.gd` (même principe que room.gd : plan texte -> tuiles + collisions, autres lettres : herbe, chemin, arbre, eau, maison, clôture...), `pnj.gd` + boîte de dialogue.
 
+- 2026-11-12 : carte validée par l'utilisateur. **ÉTAPE 8a écrite (non testée dans Godot, aperçu PIL vérifié)** = PLACE DU COQ :
+  `Scripts/exterieur.gd` (class Exterieur, **extends Room** : world.gd le traite comme une salle ; redéfinit `_creer_decor`, `_creer_collisions`, `point_arrivee`) :
+  herbe + détails (TilesetFloor (11,12) et (12..15,12)), chemin de terre `:` auto-bordé (bloc 3x3 en (11,7), coins intérieurs (16,8) se / (17,8) so / (16,9) ne / (17,9) no) ;
+  objets (lettre au coin haut-gauche) : `A`/`a` arbres ronds 2x2, `P` sapin, `b` buisson, `f`/`g` fleurs, `M`/`N` maisons 4x3, `E` étal 3x2, `o` tonneau, `j` bannière, `Q` statue du coq 3x3, `W` puits 2x2.
+  Images maison (Outils/fabriquer_objets.py) : `statue_coq.png` (socle de pierre + coq héraldique rouge), `puits.png`.
+  `Outils/generer_village.py [apercu.png]` écrit `Scenes/village.tscn` (+ aperçu image) ; `Scenes/exterieur.tscn`. PlaceDuCoq = grille (2,2) ; sorties N/O/E fermées par des buissons tant que les voisins n'existent pas.
+  `world.gd` : exports `musique` (village = « 36 - Village.ogg ») et `donjon` (faux = pas de HUD plumes, pas de sortie du donjon) ; F1 -> « Aller au village / au donjon ».
+  SAUVEGARDE : `Etat.scene_sauvee` (scène où reprendre). Nouvelle scène principale `Scenes/demarrage.tscn` (`demarrage.gd`) : partie sauvée -> sa scène, sinon -> village.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester les corrections 7e (sauvegarde : fermer/relancer le jeu ; HUD ; retour rapide ; sentinelles).
-- Faire valider la proposition de carte ci-dessus, puis construire par tranches : 1) `exterieur.gd` + 1 écran test (place du coq) ; 2) village 3 écrans + PNJ/dialogues ;
+- Tester la place du coq (8a). Puis construire par tranches : 2) village ouest + village est (caserne) + maison du héros + PNJ/dialogues ;
   3) intérieurs ; 4) chemins + parvis du temple + liaison avec le donjon ; 5) secrets (bois, cascade).
 - Plus tard : fin de la vue aérienne avec le VRAI corps du donjon ; rééquilibrage des énigmes ; aile droite ; épreuve finale.

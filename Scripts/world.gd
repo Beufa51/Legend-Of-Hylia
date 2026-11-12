@@ -5,7 +5,9 @@ extends Node2D
 const TAILLE_SALLE := Vector2i(400, 224)
 const DUREE_GLISSEMENT := 0.6  # secondes
 # Musique du donjon (pack Ninja Adventure, libre de droits). Autres choix : "12 - Temple.ogg", "30 - Ruins.ogg", "32 - Manor.ogg"
-const MUSIQUE := "res://Assets/Ninja_adventure/Audio/Musics/21 - Dungeon.ogg"
+# Scène qui utilise ce script : le donjon (world.tscn) ou l'extérieur (village.tscn), réglé dans la scène
+@export var musique := "res://Assets/Ninja_adventure/Audio/Musics/21 - Dungeon.ogg"
+@export var donjon := true   # faux à l'extérieur : pas de plumes à l'écran, pas de sortie du donjon
 const VOLUME_MUSIQUE_DB := -8.0
 # Jingles (pack Ninja Adventure) : une énigme résolue / une plume récupérée
 const JINGLE_ENIGME := "res://Assets/Ninja_adventure/Audio/Jingles/Success2.wav"
@@ -19,7 +21,7 @@ var en_transition := false
 
 
 func _ready() -> void:
-	if Etat.position_sauvee != Vector2.ZERO:
+	if Etat.position_sauvee != Vector2.ZERO and Etat.scene_sauvee == scene_file_path:
 		joueur.position = Etat.position_sauvee   # partie sauvegardée : on reprend là où on était
 	_lancer_musique()
 	_creer_messages()
@@ -34,13 +36,14 @@ func _ready() -> void:
 	Etat.repere.connect(_raccompagner)
 	Etat.drapeau_change.connect(_sur_drapeau)
 	_creer_hud()
+	Etat.memoriser_position(joueur.position)   # la sauvegarde retient la scène où l'on est
 
 
 func _process(_delta: float) -> void:
 	if en_transition:
 		return
 	var nouvelle := _salle_du_joueur()
-	if nouvelle == SORTIE_DONJON and Etat.est("fragment_gauche") and not Etat.est("vue_aerienne_gauche"):
+	if donjon and nouvelle == SORTIE_DONJON and Etat.est("fragment_gauche") and not Etat.est("vue_aerienne_gauche"):
 		_vue_aerienne("gauche")   # on sort du donjon avec l'aile : vue du ciel
 		return
 	if nouvelle != salle_actuelle:
@@ -87,9 +90,9 @@ func _montrer_indice(salle: Vector2i) -> void:
 
 # Joue la musique en boucle (volume baissé pour ne pas couvrir les futurs bruitages).
 func _lancer_musique() -> void:
-	var flux = load(MUSIQUE)
+	var flux = load(musique)
 	if flux == null:
-		push_warning("Musique introuvable : " + MUSIQUE)
+		push_warning("Musique introuvable : " + musique)
 		return
 	flux.loop = true
 	var lecteur := AudioStreamPlayer.new()
@@ -142,7 +145,7 @@ func _creer_messages() -> void:
 	Etat.message.connect(_afficher_message)
 	# Rappel des touches au début
 	await get_tree().create_timer(0.8).timeout
-	Etat.annoncer(Noms.VILLAGE + " — Flèches/ZQSD : bouger   Maj/K : courir   Espace/J : lance   R : recommencer")
+	Etat.annoncer((Noms.VILLAGE if not donjon else "L'Épreuve de la Garde") + " — Flèches/ZQSD : bouger   Maj/K : courir   Espace/J : lance   R : recommencer")
 	await get_tree().create_timer(5.5).timeout
 	if not Etat.est("vestibule_cristal") and salle_actuelle == Vector2i(0, 1):   # seulement si on est encore au vestibule
 		Etat.annoncer("Frappe le cristal bleu avec ta lance pour ouvrir la porte")
@@ -279,6 +282,12 @@ func _creer_menu_dev() -> void:
 	bouton_effacer.focus_mode = Control.FOCUS_NONE
 	bouton_effacer.pressed.connect(_dev_nouvelle_partie)
 	boite.add_child(bouton_effacer)
+	var bouton_scene := Button.new()
+	bouton_scene.text = "Aller au village" if donjon else "Aller au donjon"
+	bouton_scene.add_theme_font_size_override("font_size", 8)
+	bouton_scene.focus_mode = Control.FOCUS_NONE
+	bouton_scene.pressed.connect(_dev_changer_scene)
+	boite.add_child(bouton_scene)
 	for enfant in get_children():
 		if enfant is Room:
 			var bouton := Button.new()
@@ -292,7 +301,11 @@ func _creer_menu_dev() -> void:
 
 func _dev_nouvelle_partie() -> void:
 	Etat.effacer()
-	get_tree().reload_current_scene()
+	get_tree().change_scene_to_file("res://Scenes/demarrage.tscn")
+
+
+func _dev_changer_scene() -> void:
+	get_tree().change_scene_to_file("res://Scenes/village.tscn" if donjon else "res://Scenes/world.tscn")
 
 
 func _dev_cinematique() -> void:
@@ -632,6 +645,7 @@ func _creer_hud() -> void:
 		var icone := _sprite(plume, Vector2(4 + i * 11, 3), _hud)
 		_icones_plumes.append(icone)
 	_icone_fragment = _sprite(_texture("res://Assets/Gemini/tuiles/fragment_aile.png"), Vector2(62, 1), _hud)
+	_hud.visible = donjon   # les plumes ne s'affichent que dans le donjon
 	_maj_hud()
 
 

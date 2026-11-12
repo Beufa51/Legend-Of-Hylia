@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://Scripts/world.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/exterieur.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://Scenes/player.tscn" id="3"]
+
+; FICHIER GÉNÉRÉ par Outils/generer_village.py : modifie les plans là-bas, pas ici.
+
+[node name="World" type="Node2D"]
+script = ExtResource("1")
+musique = "res://Assets/Ninja_adventure/Audio/Musics/36 - Village.ogg"
+donjon = false
+
+[node name="PlaceDuCoq" parent="." instance=ExtResource("2")]
+grille = Vector2i(2, 2)
+layout = PackedStringArray("A.a.A.a.A..bbb.a.a.a.a.a.", "...........:::...........", "A..M....f..:::.g..N....A.", "........gf.:::..f........", "P.......:::::::::......P.", "....:::::j:Q:::j:::::....", "b:::::::::::::::::::::::b", "b:::::::::::::::::::::::b", "b:::::::::::::::::::::::b", "A..oE.::::::::::::W...fA.", "..f....o:::::::::....o...", "bb........f...g........bb", "a.A.a.A.a.A.a.A.a.A.a.A.b", "........................b")
+
+[node name="Player" parent="." instance=ExtResource("3")]
+position = Vector2(1000, 611)
+
+[node name="Camera2D" type="Camera2D" parent="."]

@@ -1,0 +1,157 @@
+"""Outil de développement : écrit Scenes/village.tscn (carte extérieure) à partir des plans ci-dessous.
+Usage : python3 Outils/generer_village.py [apercu.png]
+  - sans argument : écrit Scenes/village.tscn
+  - avec un nom de fichier : écrit AUSSI un aperçu image de tous les écrans (même logique que Scripts/exterieur.gd)
+Lettres des plans : voir l'en-tête de Scripts/exterieur.gd. Un écran = 25 x 14 cases.
+
+Carte prévue (5 x 3 écrans) :
+           x=0             x=1              x=2                x=3              x=4
+  y=0   Bois (secret)   Temple aile G    Parvis + CORPS     Temple aile D    Falaise
+  y=1   Rivière         Chemin forêt     Grand chemin       Chemin           Cascade
+  y=2   Ferme           Village ouest    PLACE DU COQ       Village est      Maison du héros
+"""
+import os
+import sys
+
+W, H = 25, 14
+RACINE = os.path.join(os.path.dirname(__file__), "..")
+
+
+def vide(): return [['.'] * W for _ in range(H)]
+def put(g, c, *pts):
+    for (x, y) in pts: g[y][x] = c
+def chemin(g, x0, x1, y0, y1):
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1): g[y][x] = ':'
+def sortie(g): return 'PackedStringArray(' + ', '.join('"' + ''.join(r) + '"' for r in g) + ')'
+
+
+# --- PLACE DU COQ (2,2) : cœur du village. Statue du coq au centre, puits, marché, deux maisons.
+#     Sorties : nord (grand chemin vers le temple), ouest (village ouest), est (village est, caserne).
+#     Tant que les écrans voisins n'existent pas, les sorties sont fermées par des buissons (b).
+place = vide()
+chemin(place, 11, 13, 0, 4)                 # vers le nord
+chemin(place, 0, 5, 6, 8)                   # vers l'ouest
+chemin(place, 19, 24, 6, 8)                 # vers l'est
+for y in range(H):                          # la place : un grand ovale de terre autour de la statue
+    for x in range(W):
+        if ((x - 12) / 7.6) ** 2 + ((y - 7) / 3.7) ** 2 <= 1.0: place[y][x] = ':'
+chemin(place, 4, 5, 5, 5); chemin(place, 19, 20, 5, 5)   # devant les portes des maisons
+# Bordure d'arbres en haut et en bas, ouverture au nord (colonnes 10-14)
+for x in (0, 2, 4, 6, 8, 15, 17, 19, 21, 23):
+    put(place, 'A' if x % 4 == 0 else 'a', (x, 0))
+for x in range(0, 24, 2):
+    put(place, 'a' if x % 4 == 0 else 'A', (x, 12))
+put(place, 'b', (24, 12), (24, 13))
+# Côtés : arbres, ouvertures ouest/est (rangées 6-8)
+for (x, y) in [(0, 2), (0, 4), (0, 9), (23, 2), (23, 4), (23, 9)]:
+    put(place, 'P' if y == 4 else 'A', (x, y))
+put(place, 'b', (0, 11), (1, 11), (23, 11), (24, 11))
+# Sorties provisoirement fermées (écrans voisins pas encore construits)
+put(place, 'b', (0, 6), (0, 7), (0, 8), (24, 6), (24, 7), (24, 8), (11, 0), (12, 0), (13, 0))
+# Maisons (portes en bas : colonnes 4 et 20)
+put(place, 'M', (3, 2)); put(place, 'N', (18, 2))
+# Statue du coq au centre, bannières de part et d'autre
+put(place, 'Q', (11, 5)); put(place, 'j', (9, 5), (15, 5))
+# Marché (en bas à gauche) et puits (en bas à droite)
+put(place, 'E', (4, 9)); put(place, 'o', (7, 10), (3, 9))
+put(place, 'W', (18, 9)); put(place, 'o', (21, 10))
+# Fleurs
+put(place, 'f', (8, 2), (9, 3), (16, 3), (2, 10), (22, 9), (10, 11)); put(place, 'g', (15, 2), (14, 11), (8, 3))
+
+ecrans = [
+    ('PlaceDuCoq', (2, 2), place, {}),
+]
+depart = (2 * 400 + 12 * 16 + 8, 2 * 224 + 10 * 16 + 3)   # nouvelle partie : au sud de la statue
+
+
+def ecrire_scene():
+    out = '''[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://Scripts/world.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/exterieur.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://Scenes/player.tscn" id="3"]
+
+; FICHIER GÉNÉRÉ par Outils/generer_village.py : modifie les plans là-bas, pas ici.
+
+[node name="World" type="Node2D"]
+script = ExtResource("1")
+musique = "res://Assets/Ninja_adventure/Audio/Musics/36 - Village.ogg"
+donjon = false
+
+'''
+    for nom, (gx, gy), g, props in ecrans:
+        out += '[node name="%s" parent="." instance=ExtResource("2")]\n' % nom
+        out += 'grille = Vector2i(%d, %d)\n' % (gx, gy)
+        for k, v in props.items():
+            out += '%s = "%s"\n' % (k, v)
+        out += 'layout = %s\n\n' % sortie(g)
+    out += '''[node name="Player" parent="." instance=ExtResource("3")]
+position = Vector2(%d, %d)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+''' % depart
+    with open(os.path.join(RACINE, "Scenes/village.tscn"), "w", encoding="utf-8") as f:
+        f.write(out)
+    print("village.tscn écrit :", [e[0] for e in ecrans])
+
+
+# --- Aperçu (même logique que Scripts/exterieur.gd) ---------------------------------------
+def apercu(fichier):
+    from PIL import Image
+    pack = os.path.join(RACINE, "Assets/Ninja_adventure/Backgrounds/Tilesets/")
+    planches = {"SOL": Image.open(pack + "TilesetFloor.png").convert("RGBA"),
+                "NATURE": Image.open(pack + "TilesetNature.png").convert("RGBA"),
+                "MAISONS": Image.open(pack + "TilesetHouse.png").convert("RGBA")}
+    tuiles = os.path.join(RACINE, "Assets/Gemini/tuiles/")
+    objets = {"A": ("NATURE", (16, 0, 2, 2)), "a": ("NATURE", (18, 0, 2, 2)), "P": ("NATURE", (0, 0, 2, 2)),
+              "b": ("NATURE", (0, 10, 1, 1)), "f": ("NATURE", (0, 11, 1, 1)), "g": ("NATURE", (1, 11, 1, 1)),
+              "M": ("MAISONS", (0, 0, 4, 3)), "N": ("MAISONS", (4, 0, 4, 3)), "o": ("MAISONS", (16, 15, 1, 1)),
+              "j": ("MAISONS", (23, 20, 1, 2)), "Q": ("tuile:statue_coq", None), "W": ("tuile:puits", None)}
+    xs = [e[1][0] for e in ecrans]; ys = [e[1][1] for e in ecrans]
+    mx, my = min(xs), min(ys)
+    img = Image.new("RGBA", ((max(xs) - mx + 1) * 400, (max(ys) - my + 1) * 224), (0, 0, 0, 255))
+
+    def region(planche, r, dest):
+        x, y, w, h = r
+        img.alpha_composite(planches[planche].crop((x * 16, y * 16, (x + w) * 16, (y + h) * 16)), dest)
+
+    for nom, (gx, gy), g, props in ecrans:
+        ox, oy = (gx - mx) * 400, (gy - my) * 224
+        est = lambda x, y: g[min(max(y, 0), H - 1)][min(max(x, 0), W - 1)] == ':'
+        for y in range(H):
+            for x in range(W):
+                d = (ox + x * 16, oy + y * 16)
+                if est(x, y):
+                    n, s, o, e = est(x, y - 1), est(x, y + 1), est(x - 1, y), est(x + 1, y)
+                    if n and s and o and e:
+                        t = (16, 8) if not est(x + 1, y + 1) else (17, 8) if not est(x - 1, y + 1) else \
+                            (16, 9) if not est(x + 1, y - 1) else (17, 9) if not est(x - 1, y - 1) else (12, 8)
+                    else:
+                        col = 0 if (not o and e) else 2 if (o and not e) else 1
+                        lig = 0 if (not n and s) else 2 if (n and not s) else 1
+                        t = (11 + col, 7 + lig)
+                else:
+                    h = (x * 73 + y * 151 + gx * 31 + gy * 17) % 13
+                    t = [(12, 12), (13, 12), (14, 12), (15, 12)][h] if h < 4 else (11, 12)
+                region("SOL", (t[0], t[1], 1, 1), d)
+        for y in range(H):
+            for x in range(W):
+                c = g[y][x]; d = (ox + x * 16, oy + y * 16)
+                if c in objets:
+                    planche, r = objets[c]
+                    if planche.startswith("tuile:"):
+                        img.alpha_composite(Image.open(tuiles + planche[6:] + ".png").convert("RGBA"), d)
+                    else:
+                        region(planche, r, d)
+                elif c == "E":
+                    region("MAISONS", (16, 16, 3, 1), (d[0], d[1] + 16))
+                    region("MAISONS", (16, 13, 3, 1), d)
+    img.resize((img.width * 2, img.height * 2), Image.NEAREST).save(fichier)
+    print("aperçu écrit :", fichier)
+
+
+if __name__ == "__main__":
+    ecrire_scene()
+    if len(sys.argv) > 1:
+        apercu(sys.argv[1])

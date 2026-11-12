@@ -15,6 +15,7 @@ const FICHIER := "user://sauvegarde.json"
 var drapeaux := {}
 var salle_courante := Vector2i.ZERO   # case de la grille où se trouve la caméra (mise à jour par world.gd)
 var position_sauvee := Vector2.ZERO   # où reprendre la partie (Vector2.ZERO = nouvelle partie)
+var scene_sauvee := ""                # dans quelle scène (donjon ou village) reprendre la partie
 
 
 func _ready() -> void:
@@ -47,6 +48,7 @@ func annoncer(texte: String) -> void:
 # Retient l'endroit où reprendre la partie (appelé quand le joueur entre dans une salle).
 func memoriser_position(pos: Vector2) -> void:
 	position_sauvee = pos
+	scene_sauvee = get_tree().current_scene.scene_file_path
 	sauver()
 
 
@@ -59,6 +61,7 @@ func sauver() -> void:
 		"drapeaux": drapeaux.keys(),
 		"x": position_sauvee.x,
 		"y": position_sauvee.y,
+		"scene": scene_sauvee,
 	}))
 
 
@@ -71,11 +74,14 @@ func charger() -> void:
 	for nom in donnees.get("drapeaux", []):
 		drapeaux[nom] = true
 	position_sauvee = Vector2(donnees.get("x", 0.0), donnees.get("y", 0.0))
+	# (les premières sauvegardes n'avaient pas de scène : elles venaient forcément du donjon)
+	scene_sauvee = donnees.get("scene", "res://Scenes/world.tscn" if position_sauvee != Vector2.ZERO else "")
 
 
 # Nouvelle partie : tout oublier (mode développeur).
 func effacer() -> void:
 	drapeaux.clear()
 	position_sauvee = Vector2.ZERO
+	scene_sauvee = ""
 	if FileAccess.file_exists(FICHIER):
 		DirAccess.remove_absolute(FICHIER)

@@ -181,6 +181,79 @@ def fragment():
     return out
 
 
+# --- Village : statue du coq (place du village) et puits ---------------------------------
+PIERRE = [(70, 66, 82, 255), (112, 108, 122, 255), (150, 146, 160, 255), (190, 186, 198, 255)]   # ombre -> lumière
+
+
+def _bloc(img, x0, y0, x1, y1):
+    """Pavé de pierre ombré (lumière en haut, ombre en bas et à droite, contour sombre)."""
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            bord = x in (x0, x1) or y in (y0, y1)
+            if bord:
+                c = CONTOUR
+            elif y == y0 + 1:
+                c = PIERRE[3]
+            elif y >= y1 - 2 or x == x1 - 1:
+                c = PIERRE[0] if y == y1 - 1 else PIERRE[1]
+            else:
+                c = PIERRE[2] if (x * 3 + y * 5) % 17 else PIERRE[1]
+            img.putpixel((x, y), c)
+
+
+def statue_coq():
+    """48x48 : socle de pierre à 2 étages, colonne, et le coq héraldique en bronze rouge au sommet."""
+    img = Image.new("RGBA", (48, 48))
+    _bloc(img, 3, 36, 44, 47)     # marche du bas
+    _bloc(img, 9, 27, 38, 37)     # socle
+    for x in range(14, 34, 4):    # petites rainures décoratives sur le socle
+        img.putpixel((x, 32), PIERRE[0])
+    coq = Image.open(os.path.join(RACINE, "Assets/Gemini/embleme/coq_rouge.png")).convert("RGBA")
+    petit = coq.resize((40, round(40 * coq.height / coq.width)), Image.LANCZOS)
+    h = petit.height
+    plein = lambda x, y: 0 <= x < 40 and 0 <= y < h and petit.getpixel((x, y))[3] > 110
+    oy = 27 - h   # le coq est posé sur le socle
+    for y in range(-1, h + 1):
+        for x in range(-1, 41):
+            if plein(x, y):
+                c = (236, 92, 70, 255) if not plein(x, y - 1) else (176, 34, 44, 255) if (x + y) % 4 else (132, 20, 34, 255)
+            elif any(plein(x + dx, y + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                c = (40, 8, 12, 255)
+            else:
+                continue
+            if 0 <= y + oy < 48:
+                img.putpixel((x + 4, y + oy), c)
+    return img
+
+
+def puits():
+    """32x32 : margelle ronde en pierre, eau sombre, 2 poteaux et un petit toit de bois."""
+    img = Image.new("RGBA", (32, 32))
+    cx, cy = 15.5, 23.0
+    for y in range(32):
+        for x in range(32):
+            dx, dy = (x - cx) / 13.5, (y - cy) / 8.0
+            d = dx * dx + dy * dy
+            if d <= 1.0:
+                if d > 0.45:   # margelle
+                    c = CONTOUR if d > 0.88 else (PIERRE[3] if y < cy - 3 else PIERRE[2] if y < cy + 3 else PIERRE[1])
+                else:          # eau
+                    c = (24, 52, 92, 255) if (x + y) % 5 else (60, 110, 160, 255)
+                img.putpixel((x, y), c)
+    BOIS, BOIS_OMBRE = (150, 92, 50, 255), (96, 56, 30, 255)
+    for x in (4, 26):          # poteaux
+        for y in range(7, 23):
+            img.putpixel((x, y), CONTOUR); img.putpixel((x + 1, y), BOIS); img.putpixel((x + 2, y), CONTOUR)
+    for y in range(1, 9):      # toit
+        for x in range(1 + (8 - y) // 2, 31 - (8 - y) // 2):
+            img.putpixel((x, y), CONTOUR if y in (1, 8) or x in (1 + (8 - y) // 2, 30 - (8 - y) // 2) else (BOIS if y % 3 else BOIS_OMBRE))
+    for x in range(8, 24):     # treuil et corde
+        img.putpixel((x, 11), BOIS_OMBRE)
+    for y in range(12, 19):
+        img.putpixel((16, y), (200, 180, 140, 255))
+    return img
+
+
 # --- Grand blason de la cinématique -------------------------------------------------------
 LARGEUR_BLASON = 240   # px à l'écran (l'écran fait 400x224)
 MARGE = 2
@@ -255,6 +328,8 @@ def blason():
 
 
 if __name__ == "__main__":
+    statue_coq().save(os.path.join(SORTIE, "statue_coq.png"))
+    puits().save(os.path.join(SORTIE, "puits.png"))
     blason()
     miroir(1).save(os.path.join(SORTIE, "miroir_m.png"))
     miroir(-1).save(os.path.join(SORTIE, "miroir_n.png"))
