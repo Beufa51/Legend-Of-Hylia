@@ -155,5 +155,12 @@
   Nouvel outil `Outils/apercu_salle.py <n> <sortie.png>` (aperçu d'une salle de world.tscn, même logique que room.gd). Pistes charme : lumière/ambiance, murs plus relief,
   props (colonnes rondes, braseros, blocs, cristaux), tapis colorés, variation de couleurs par salle.
 
-## PROCHAINE ÉTAPE : Étape 5g
-- L'utilisateur teste (Pull, F5, capture). Si sol OK : ajouter du charme (props, couleurs par salle), valider le coq, puis énigmes (Opus).
+- 2026-11-12 : retour 5f : "déjà mieux, manque de vie (et de musique), fais tes 4 corrections". **ÉTAPE 5g écrite (non testée dans Godot)** :
+  1) props : nouvelles lettres `P` (plaque orange) et `F` (dalle à flèches) + plus de braseros/statues/vases/tapis dans les 6 plans ; 2) relief des murs : murs profonds assombris (alpha .38) ;
+  3) `@export var teinte` par salle (modulate de la Room, ne touche pas le joueur) : Entrée chaude, Salle1 bleutée, Couloirs sombres, Salle2 verte, Salle3 or/violet ;
+  4) lueurs additives vacillantes (GradientTexture2D radial + CanvasItemMaterial ADD) autour des torches et braseros.
+  + MUSIQUE : `world.gd::_lancer_musique` joue "21 - Dungeon.ogg" (pack Ninja Adventure, `Assets/Ninja_adventure/Audio/Musics/`) en boucle, -8 dB.
+  Alternatives : 12 Temple, 30 Ruins, 32 Manor. Pas de bruitages encore (dossier Audio/Sounds du pack).
+
+## PROCHAINE ÉTAPE : Étape 5h
+- L'utilisateur teste (Pull, F5, capture + avis musique). Ensuite : bruitages (pas, portes), valider le coq, puis énigmes (Opus).
