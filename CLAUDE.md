@@ -162,5 +162,11 @@
   + MUSIQUE : `world.gd::_lancer_musique` joue "21 - Dungeon.ogg" (pack Ninja Adventure, `Assets/Ninja_adventure/Audio/Musics/`) en boucle, -8 dB.
   Alternatives : 12 Temple, 30 Ruins, 32 Manor. Pas de bruitages encore (dossier Audio/Sounds du pack).
 
-## PROCHAINE ÉTAPE : Étape 5h
-- L'utilisateur teste (Pull, F5, capture + avis musique). Ensuite : bruitages (pas, portes), valider le coq, puis énigmes (Opus).
+- 2026-11-12 : **ÉTAPE 5 TERMINÉE** (testée par l'utilisateur : "beaucoup mieux", quelques points d'amélioration à voir plus tard). Décor Gemini 16 px, sol damier,
+  murs épais, props, teintes par salle, lueurs, musique Dungeon. Coq héraldique (`Assets/Gemini/embleme/coq_rouge.png`) : validation de l'utilisateur pas encore confirmée.
+  Idées d'amélioration restantes : bruitages (pas, portes), portes Gemini (`porte_*.png` non branchées), vrais piliers ronds/cristaux, prompts pixel art avec le coq
+  (bannière, porte scellée, rune, grand blason, fragments). Branche `etape-4-aile-gauche` : à fusionner dans `main` (GitHub Desktop : Branch -> Merge into current branch, depuis main).
+
+## PROCHAINE ÉTAPE : Étape 6 = les énigmes
+- Concevoir les 3 énigmes de l'aile gauche (1 par salle, logiques/spatiales, zéro combat) + le fragment de la salle 3. Conception = **Opus**.
+  Éléments déjà prêts pour les énigmes : plaques `P`, dalles à flèches `F`, blocs `dalle_unie`, interrupteurs/cristaux/coffres/clé dans les planches Gemini à générer (planche 6 des prompts, pas encore faite).
