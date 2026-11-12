@@ -57,4 +57,12 @@
 - 2026-11-12 : réponses reçues (voir Décisions). Étape suivante : création du dépôt GitHub + projet Godot.
 - 2026-11-12 : dépôt créé par l'utilisateur, CLAUDE.md poussé. En attente : projet Godot créé dans le dossier cloné (rendu Compatibilité).
 - 2026-11-12 : projet Godot créé et poussé (project.godot à la racine). Réglages affichage OK.
-  ⚠️ Rendu = "Mobile" au lieu de "Compatibilité" → l'utilisateur doit le changer (menu en haut à droite de l'éditeur).
+- 2026-11-12 : rendu passé en gl_compatibility (aussi pour mobile). **ÉTAPE 0 TERMINÉE.**
+  Astuce : le sélecteur de rendu en haut à droite n'existe pas chez l'utilisateur → passer par
+  Paramètres du projet (Paramètres avancés activés) → Rendu → Moteur de rendu.
+
+## PROCHAINE ÉTAPE : Étape 2 — faire marcher le personnage
+- Confirmer le pack Ninja Adventure, le télécharger, ranger les fichiers dans `assets/`.
+- Créer la scène joueur (CharacterBody2D + AnimatedSprite2D + CollisionShape2D), script de
+  déplacement 4 directions + animations. Actions d'entrée : haut/bas/gauche/droite.
+- Une salle de test simple pour le voir bouger. Modèle conseillé : Sonnet.
