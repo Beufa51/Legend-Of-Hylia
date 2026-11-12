@@ -96,7 +96,7 @@ func _lancer_poule() -> void:
 	var vecteur: Vector2 = VECTEURS[direction]
 	var cible := global_position + vecteur * 14.0
 	for d in [44.0, 30.0, 14.0]:
-		var point := global_position + vecteur * d
+		var point: Vector2 = global_position + vecteur * d
 		var requete := PhysicsPointQueryParameters2D.new()
 		requete.position = point
 		requete.collision_mask = 1
