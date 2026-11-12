@@ -3,7 +3,7 @@ extends CharacterBody2D
 # Les animations sont construites ici à partir des planches du pack Ninja Adventure,
 # donc rien à configurer à la main dans l'éditeur.
 
-const VITESSE := 70.0  # pixels par seconde
+const VITESSE := 140.0  # pixels par seconde (le joueur est agrandi x2, donc 2x plus vite)
 const DOSSIER := "res://Assets/Ninja_adventure/Actor/Character/Knight/SeparateAnim/"
 # Ordre des colonnes dans les planches : bas, haut, gauche, droite
 const DIRECTIONS := ["bas", "haut", "gauche", "droite"]

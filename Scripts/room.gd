@@ -1,156 +1,119 @@
 extends Node2D
 class_name Room
-# Une salle de 20x11 tuiles de 16 px (= 320x180, la taille de l'écran).
+# Une salle de 20x11 tuiles de 32 px (= 640x352, la taille de l'écran).
 # Le plan de la salle est écrit en texte dans `layout` :
-#   #  = mur (bloque le joueur)
-#   .  = sol
+#   #  = mur (bloque le joueur)       .  = sol
+#   T  = sol avec tapis               B  = brasero (bloque)
+#   S  = statue de chevalier (bloque) O  = statue d'oiseau (bloque)
+#   V  = vase (bloque)
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
-# Les graphismes viennent de la planche TilesetInteriorFloor.png du pack Ninja Adventure.
+# Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
-const TUILE := 16
-const TAILLE_SALLE := Vector2i(320, 180)
-const PLANCHE := "res://Assets/Ninja_adventure/Backgrounds/Tilesets/Interior/TilesetInteriorFloor.png"
-# Position (colonne, ligne) des tuiles dans la planche. Pour changer le décor, change ces nombres.
-const TUILE_SOL := Vector2i(12, 7)   # sol vert-gris
-const TUILE_MUR := Vector2i(12, 13)  # pierre sombre (piliers / blocs au milieu de la salle)
-# Cadre de mur vert (style donjon) : planche TilesetWallSimple.png, cadre de 5x5 tuiles
-# qui commence à la tuile (5, 6). On y prend les coins et les bords.
-const PLANCHE_CADRE := "res://Assets/Ninja_adventure/Backgrounds/Tilesets/Interior/TilesetWallSimple.png"
-const ORIGINE_CADRE := Vector2i(5, 6)
-# Torches (animation de flamme) et bannières accrochées au mur du haut.
-const PLANCHE_FEU := "res://Assets/Ninja_adventure/FX/Particle/Fire.png"   # 8 images de 12x12
-const PLANCHE_MAISON := "res://Assets/Ninja_adventure/Backgrounds/Tilesets/TilesetHouse.png"
-const COLONNES_TORCHES := [3, 16]    # colonnes (en tuiles) des torches sur le mur du haut
-const COLONNES_BANNIERES := [6, 13]  # colonnes des bannières
-const BANNIERE := Rect2(23 * 16, 20 * 16, 16, 32)  # bannière rouge dans TilesetHouse.png
-const COULEUR_VIDE := Color(0.07, 0.10, 0.11)  # noir-vert : l'intérieur épais des murs
-const TUILE_SOL_ETOILE := Vector2i(14, 11)  # petit motif en étoile (rare)
-const TUILE_SOL_BRIQUE := Vector2i(11, 10)  # fissure / brique (rare)
+const TUILE := 32
+const TAILLE_SALLE := Vector2i(640, 352)
+const DOSSIER := "res://Assets/Gemini/tuiles/"
+
+# Caractères qui bloquent le joueur (en plus des murs)
+const SOLIDES := "#SOBV"
+# Colonnes (en tuiles) des torches et des bannières sur le mur du haut
+const COLONNES_TORCHES := [3, 16]
+const COLONNES_BANNIERES := [6, 13]
 
 # Plan de la salle (11 lignes de 20 caractères). Modifiable dans l'inspecteur.
 @export var layout: PackedStringArray
 # Position de la salle dans la grille du donjon : (0,0), (1,0), (0,-1)...
 @export var grille := Vector2i.ZERO
 
-var _flammes: Array[Sprite2D] = []
+# Cache des images déjà chargées (partagé entre toutes les salles)
+static var _cache := {}
+
+# Éléments animés : chaque entrée = { "sprite", "images", "decalage" }
+var _animes: Array[Dictionary] = []
 var _temps := 0.0
 
 
 func _ready() -> void:
-	# On place la salle à sa case de la grille (chaque case = 320x180 pixels)
+	# On place la salle à sa case de la grille (chaque case = une salle entière)
 	position = Vector2(grille * TAILLE_SALLE)
 	_creer_decor()
 	_creer_collisions()
 
 
-# Pose le décor : sol, murs avec cadre, piliers, ombres.
+# Anime torches et braseros en alternant leurs images.
+func _process(delta: float) -> void:
+	_temps += delta
+	for a in _animes:
+		var images: Array = a["images"]
+		a["sprite"].texture = images[int(_temps * 6.0 + a["decalage"]) % images.size()]
+
+
+# --- Chargement ---------------------------------------------------------------
+
+func _image(nom: String) -> Texture2D:
+	if not _cache.has(nom):
+		_cache[nom] = load(DOSSIER + nom + ".png")
+		if _cache[nom] == null:
+			push_error("Room : image introuvable " + DOSSIER + nom + ".png")
+	return _cache[nom]
+
+
+# Pose une image à la position donnée (coin haut-gauche) et la renvoie.
+func _poser(nom: String, pos: Vector2) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.texture = _image(nom)
+	sprite.centered = false
+	sprite.position = pos
+	add_child(sprite)
+	return sprite
+
+
+# Rectangle de couleur unie (ombres, passages).
+func _poser_rect(pos: Vector2, taille: Vector2, couleur: Color) -> void:
+	var r := ColorRect.new()
+	r.color = couleur
+	r.size = taille
+	r.position = pos
+	add_child(r)
+
+
+# --- Décor --------------------------------------------------------------------
+
 func _creer_decor() -> void:
-	var planche: Texture2D = load(PLANCHE)
-	var cadre: Texture2D = load(PLANCHE_CADRE)
-	if planche == null or cadre == null:
-		push_error("Room : impossible de charger une planche de tuiles")
-		return
 	var murs_cadre := _murs_du_cadre()
 	for y in layout.size():
 		for x in layout[y].length():
 			var pos := Vector2(x * TUILE, y * TUILE)
 			if not _est_mur(x, y):
-				_poser_tuile(planche, _tuile_sol(x, y), pos)
+				_poser(_nom_sol(x, y), pos)
 				# Petite ombre sur le sol, juste sous un mur : donne de la profondeur
 				if _est_mur(x, y - 1):
-					_poser_rect(pos, Vector2(TUILE, 5), Color(0, 0, 0, 0.27))
+					_poser_rect(pos, Vector2(TUILE, 9), Color(0, 0, 0, 0.27))
 				# Case de porte (sur le bord de la salle) : sol assombri = passage
 				if x == 0 or y == 0 or x == layout[y].length() - 1 or y == layout.size() - 1:
 					_poser_rect(pos, Vector2(TUILE, TUILE), Color(0, 0, 0, 0.45))
-			elif not murs_cadre.has(Vector2i(x, y)):
-				# Pilier ou bloc isolé : pierre sombre
-				_poser_tuile(planche, TUILE_MUR, pos)
+			elif murs_cadre.has(Vector2i(x, y)):
+				_poser_mur(x, y)
 			else:
-				var piece := _piece_cadre(x, y)
-				if piece.x < 0:
-					_poser_rect(pos, Vector2(TUILE, TUILE), COULEUR_VIDE)  # mur épais
-				else:
-					_poser_tuile(cadre, ORIGINE_CADRE + piece, pos)
+				_poser("dalle_unie", pos)  # pilier / bloc isolé
+	_poser_objets()
 	_poser_details()
 
 
-# Torches et bannières sur le mur du haut (seulement là où il y a du mur au-dessus du sol).
-func _poser_details() -> void:
-	for x in COLONNES_BANNIERES:
-		if _mur_haut_libre(x):
-			var banniere := Sprite2D.new()
-			banniere.texture = load(PLANCHE_MAISON)
-			banniere.region_enabled = true
-			banniere.region_rect = BANNIERE
-			banniere.centered = false
-			banniere.position = Vector2(x * TUILE, 9)
-			add_child(banniere)
-	for x in COLONNES_TORCHES:
-		if _mur_haut_libre(x):
-			_poser_torche(Vector2(x * TUILE + TUILE / 2.0, 0))
+# Choisit une tuile de sol : surtout de la dalle unie, avec quelques variantes rares.
+# Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
+func _nom_sol(x: int, y: int) -> String:
+	var h := (x * 7 + y * 13 + x * y * 3) % 23
+	if h == 0:
+		return "sol_b_fissure"
+	if h == 1:
+		return "sol_b_motif"
+	return "sol_b_dalle"
 
 
-# Vrai si la case (x, 0) est un mur avec du sol juste en dessous.
-func _mur_haut_libre(x: int) -> bool:
-	return _est_mur(x, 0) and _est_sol(x, 1) and layout.size() > 1
-
-
-# Une torche : support en métal + manche + flamme animée.
-func _poser_torche(haut: Vector2) -> void:
-	_poser_rect(haut + Vector2(-3, 10), Vector2(6, 2), Color(0.35, 0.35, 0.4))   # coupelle
-	_poser_rect(haut + Vector2(-1, 12), Vector2(2, 4), Color(0.45, 0.28, 0.15))  # manche
-	var flamme := Sprite2D.new()
-	flamme.texture = load(PLANCHE_FEU)
-	flamme.hframes = 8
-	flamme.frame = 3
-	flamme.position = haut + Vector2(0, 5)
-	add_child(flamme)
-	_flammes.append(flamme)
-
-
-# Anime les flammes (on boucle sur les images 3 à 6 de Fire.png).
-func _process(delta: float) -> void:
-	_temps += delta
-	for i in _flammes.size():
-		_flammes[i].frame = 3 + int(_temps * 8.0 + i * 2) % 4
-
-
-# Vrai si la case est un mur (hors de la salle = mur).
-func _est_mur(x: int, y: int) -> bool:
-	if y < 0 or y >= layout.size() or x < 0 or x >= layout[y].length():
-		return true
-	return layout[y][x] == "#"
-
-
-# Vrai si la case est du sol (hors de la salle = pas du sol).
-func _est_sol(x: int, y: int) -> bool:
-	return not _est_mur(x, y)
-
-
-# Liste des murs reliés au bord de la salle (ce sont eux qui reçoivent le cadre).
-# Les blocs isolés au milieu (piliers) n'y sont pas.
-func _murs_du_cadre() -> Dictionary:
-	var vus := {}
-	var a_voir: Array[Vector2i] = []
-	for y in layout.size():
-		for x in layout[y].length():
-			if (x == 0 or y == 0 or x == layout[y].length() - 1 or y == layout.size() - 1) and layout[y][x] == "#":
-				a_voir.append(Vector2i(x, y))
-	while not a_voir.is_empty():
-		var c: Vector2i = a_voir.pop_back()
-		if vus.has(c) or not _est_mur(c.x, c.y):
-			continue
-		if c.x < 0 or c.y < 0 or c.y >= layout.size() or c.x >= layout[c.y].length():
-			continue
-		vus[c] = true
-		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			a_voir.append(c + d)
-	return vus
-
-
-# Quelle pièce du cadre pour ce mur ? Renvoie sa position (colonne, ligne) dans le cadre 5x5,
-# ou (-1,-1) si le mur ne touche aucun sol (on met alors du noir).
-func _piece_cadre(x: int, y: int) -> Vector2i:
+# Mur : fond sombre + liserés de pierre du côté du sol.
+func _poser_mur(x: int, y: int) -> void:
+	var pos := Vector2(x * TUILE, y * TUILE)
+	_poser("mur_fond", pos)
 	var n := _est_sol(x, y - 1)
 	var s := _est_sol(x, y + 1)
 	var e := _est_sol(x + 1, y)
@@ -163,63 +126,117 @@ func _piece_cadre(x: int, y: int) -> Vector2i:
 	if x == 0 or x == layout[y].length() - 1:
 		n = false
 		s = false
-	if s and e: return Vector2i(0, 0)   # coin haut-gauche
-	if s and o: return Vector2i(4, 0)   # coin haut-droite
-	if n and e: return Vector2i(0, 4)   # coin bas-gauche
-	if n and o: return Vector2i(4, 4)   # coin bas-droite
-	if s: return Vector2i(3, 0)         # bord du haut
-	if n: return Vector2i(3, 4)         # bord du bas
-	if e: return Vector2i(0, 2)         # bord gauche
-	if o: return Vector2i(4, 2)         # bord droit
-	if _est_sol(x + 1, y + 1): return Vector2i(0, 0)
-	if _est_sol(x - 1, y + 1): return Vector2i(4, 0)
-	if _est_sol(x + 1, y - 1): return Vector2i(0, 4)
-	if _est_sol(x - 1, y - 1): return Vector2i(4, 4)
-	return Vector2i(-1, -1)
+	# Coins d'abord (deux côtés de sol), puis les côtés restants
+	var utilise := {"n": false, "s": false, "e": false, "o": false}
+	for coin in [["n", "o", n, o], ["n", "e", n, e], ["s", "o", s, o], ["s", "e", s, e]]:
+		if coin[2] and coin[3]:
+			_poser("mur_coin_" + coin[0] + coin[1], pos)
+			utilise[coin[0]] = true
+			utilise[coin[1]] = true
+	for cote in [["n", n], ["s", s], ["e", e], ["o", o]]:
+		if cote[1] and not utilise[cote[0]]:
+			_poser("mur_bord_" + cote[0], pos)
+	# Angle rentrant : sol seulement en diagonale
+	if not (n or s or e or o):
+		if _est_sol(x + 1, y + 1):
+			_poser("mur_dot_se", pos)
+		if _est_sol(x - 1, y + 1):
+			_poser("mur_dot_so", pos)
+		if _est_sol(x + 1, y - 1):
+			_poser("mur_dot_ne", pos)
+		if _est_sol(x - 1, y - 1):
+			_poser("mur_dot_no", pos)
 
 
-# Rectangle de couleur unie (ombres, murs épais).
-func _poser_rect(pos: Vector2, taille: Vector2, couleur: Color) -> void:
-	var r := ColorRect.new()
-	r.color = couleur
-	r.size = taille
-	r.position = pos
-	add_child(r)
+# Tapis, statues, braseros, vases posés d'après les lettres du plan.
+func _poser_objets() -> void:
+	for y in layout.size():
+		for x in layout[y].length():
+			var pos := Vector2(x * TUILE, y * TUILE)
+			match layout[y][x]:
+				"T":
+					_poser("tapis_milieu", pos)
+				"S":
+					_poser("statue_chevalier", pos + Vector2(0, TUILE - 60))
+				"O":
+					_poser("statue_oiseau", pos + Vector2(0, TUILE - 60))
+				"V":
+					_poser("vase_1", pos + Vector2(6, 5))
+				"B":
+					_poser_anime(["brasero_1", "brasero_2", "brasero_3"], pos, x + y)
 
 
-# Choisit une tuile de sol : surtout du sol uni, avec quelques motifs rares.
-# Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
-func _tuile_sol(x: int, y: int) -> Vector2i:
-	var h := (x * 7 + y * 13 + x * y * 3) % 17
-	if h == 0:
-		return TUILE_SOL_ETOILE
-	if h == 1:
-		return TUILE_SOL_BRIQUE
-	return TUILE_SOL
+# Torches et bannières sur le mur du haut (seulement là où il y a du mur au-dessus du sol).
+func _poser_details() -> void:
+	for x in COLONNES_BANNIERES:
+		if _mur_haut_libre(x):
+			_poser("banniere", Vector2(x * TUILE, 12))
+	for x in COLONNES_TORCHES:
+		if _mur_haut_libre(x):
+			_poser_anime(["torche_1", "torche_2"], Vector2(x * TUILE, 0), x)
 
 
-# Crée un Sprite2D d'une tuile de la planche à la position donnée.
-func _poser_tuile(planche: Texture2D, tuile: Vector2i, pos: Vector2) -> void:
-	var sprite := Sprite2D.new()
-	sprite.texture = planche
-	sprite.centered = false
-	sprite.region_enabled = true
-	sprite.region_rect = Rect2(tuile.x * TUILE, tuile.y * TUILE, TUILE, TUILE)
-	sprite.position = pos
-	add_child(sprite)
+# Vrai si la case (x, 0) est un mur avec du sol juste en dessous.
+func _mur_haut_libre(x: int) -> bool:
+	return _est_mur(x, 0) and _est_sol(x, 1) and layout.size() > 1
 
 
-# Ajoute une boîte de collision à chaque mur.
+# Pose un élément animé (alternance de plusieurs images).
+func _poser_anime(noms: Array, pos: Vector2, decalage: int) -> void:
+	var images: Array = []
+	for nom in noms:
+		images.append(_image(nom))
+	var sprite := _poser(noms[0], pos)
+	_animes.append({"sprite": sprite, "images": images, "decalage": decalage})
+
+
+# --- Plan ---------------------------------------------------------------------
+
+# Vrai si la case est un mur (hors de la salle = mur).
+func _est_mur(x: int, y: int) -> bool:
+	if y < 0 or y >= layout.size() or x < 0 or x >= layout[y].length():
+		return true
+	return layout[y][x] == "#"
+
+
+# Vrai si la case est dans la salle et n'est pas un mur (objets compris).
+func _est_sol(x: int, y: int) -> bool:
+	return not _est_mur(x, y)
+
+
+# Liste des murs reliés au bord de la salle (ils reçoivent liserés de pierre).
+# Les blocs isolés au milieu (piliers) n'y sont pas.
+func _murs_du_cadre() -> Dictionary:
+	var vus := {}
+	var a_voir: Array[Vector2i] = []
+	for y in layout.size():
+		for x in layout[y].length():
+			if (x == 0 or y == 0 or x == layout[y].length() - 1 or y == layout.size() - 1) and layout[y][x] == "#":
+				a_voir.append(Vector2i(x, y))
+	while not a_voir.is_empty():
+		var c: Vector2i = a_voir.pop_back()
+		if c.x < 0 or c.y < 0 or c.y >= layout.size() or c.x >= layout[c.y].length():
+			continue
+		if vus.has(c) or layout[c.y][c.x] != "#":
+			continue
+		vus[c] = true
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			a_voir.append(c + d)
+	return vus
+
+
+# --- Collisions ---------------------------------------------------------------
+
+# Ajoute une boîte de collision à chaque mur et objet solide.
 func _creer_collisions() -> void:
 	var corps := StaticBody2D.new()
 	add_child(corps)
 	for y in layout.size():
 		for x in layout[y].length():
-			if layout[y][x] == "#":
+			if SOLIDES.contains(layout[y][x]):
 				var forme := RectangleShape2D.new()
 				forme.size = Vector2(TUILE, TUILE)
 				var collision := CollisionShape2D.new()
 				collision.shape = forme
 				collision.position = Vector2(x * TUILE + TUILE / 2.0, y * TUILE + TUILE / 2.0)
 				corps.add_child(collision)
-

@@ -43,7 +43,7 @@
 - Ordre des ailes libre, mais on construit l'**aile gauche en premier**.
 - Énigmes : définies plus tard, on pose d'abord les bases (déplacement, salles, transitions).
 - Assets proposés : pack **Ninja Adventure** (Pixel-boy, CC0, itch.io) — à confirmer par l'utilisateur.
-- Résolution : 320x180 (16:9), fenêtre 1280x720, stretch viewport, filtre Nearest. Tuiles 16x16.
+- Résolution : **640x352 (tuiles 32x32, salle 20x11 tuiles)**, fenêtre 1280x704, stretch viewport, filtre Nearest (changé le 2026-11-12, était 320x180/16 px). Le Knight (16 px) est agrandi x2 (scale 2 dans player.tscn, vitesse 140).
 - Workflow Git : l'utilisateur utilise GitHub Desktop ; toujours "Pull" avant de travailler, "Push" après.
 
 - Histoire : préquelle d'un garde royal (inspiré de l'esprit Zelda OoT). Noms de TRAVAIL :
@@ -126,5 +126,15 @@
   DÉCISION À PRENDRE par l'utilisateur : passer à tuiles 32 px (écran 640x352, Knight agrandi x2 dans la scène) [recommandé] ou rester en 16 px.
   Si 32 px : modifier project.godot (viewport), room.gd (TUILE=32, TAILLE_SALLE), world.gd, player (scale 2), puis brancher les tuiles Gemini.
 
-## PROCHAINE ÉTAPE : Étape 5d (suite)
-- Attendre le choix 32 px / 16 px, puis brancher les tuiles dans `room.gd`. Redemander la planche de murs (bords + coins).
+- 2026-11-12 : utilisateur choisit **32 px**. **ÉTAPE 5d écrite (non testée dans Godot, aperçu PIL vérifié)** : planche de murs Gemini reçue (`originaux/murs.jpg`),
+  découpée en liserés/coins (`mur_bord_n/s/e/o`, `mur_coin_*`, `mur_dot_*` + `mur_fond`). `room.gd` RÉÉCRIT : tuiles 32 px, images individuelles de
+  `Assets/Gemini/tuiles/` (cache statique `_image`), murs = fond sombre + liserés côté sol (autotile par voisins), piliers = `dalle_unie`,
+  lettres du plan : `T` tapis, `B` brasero (animé), `S` statue chevalier, `O` statue oiseau, `V` vase (S/O/B/V/# bloquent), torches animées (colonnes 3 et 16), bannières (6 et 13).
+  `world.gd` TAILLE_SALLE (640,352), `project.godot` viewport 640x352 / fenêtre 1280x704, joueur scale 2 + vitesse 140 + départ (320,280). L'Entrée a un tapis, braseros, statues, vases.
+  Outils Python (dossier `Outils/`, ignoré par Godot) : `traiter_gemini.py` refait toutes les tuiles depuis `Assets/Gemini/originaux/`.
+  Portes Gemini (`porte_*.png`) NON branchées (cases de porte = simple passage assombri) ; sols A, blocs fléchés, interrupteurs etc. disponibles pour les énigmes.
+  ATTENTION PI : l'utilisateur veut l'oiseau rouge (image `originaux/embleme_reference.png`) comme symbole du jeu : c'est le blason de Zelda (Nintendo).
+  OK en prototype privé ; à REMPLACER par un emblème 100 % original avant toute publication (comme les noms Cocoricou/Hylio).
+
+## PROCHAINE ÉTAPE : Étape 5e
+- L'utilisateur teste (Pull, ouvrir Godot pour l'import des images, F5) puis commit des fichiers .import. Ensuite : prompts Gemini avec le symbole (bannière, porte scellée, rune, statue, blason), puis énigmes (Opus).
