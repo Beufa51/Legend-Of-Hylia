@@ -86,4 +86,11 @@
 - 2026-11-12 : pack complet poussé par l'utilisateur. room.gd utilise maintenant de vraies tuiles :
   `Backgrounds/Tilesets/Interior/TilesetInteriorFloor.png`, sol (12,7), mur (12,13) (colonne, ligne de 16 px).
 
-## PROCHAINE ÉTAPE : tester l'étape 3, puis Étape 4 — vrais graphismes de tuiles + 3 salles de l'aile gauche
+- 2026-11-12 : **ÉTAPE 3 TERMINÉE** (testée par l'utilisateur) : salles + murs + caméra avec glissement fonctionnent.
+  LEÇON : `draw_texture_rect_region` dans `_draw()` affichait du BLANC sur le PC de l'utilisateur (GT 740M,
+  OpenGL 3.3, Compatibilité). Solution : décor fait de `Sprite2D` (region_enabled) ; éviter le dessin direct
+  de textures en `_draw`. Rendu actuel peu esthétique (sol uni vert-gris + mur) : à améliorer plus tard.
+
+## PROCHAINE ÉTAPE : Étape 4 — aile gauche : 3 salles linéaires reliées par couloirs
+- Définir le plan des 3 salles + couloirs (grille : entrée en bas, progression vers le haut), les écrire dans world.tscn.
+- Ensuite seulement : améliorer le décor (variété de tuiles, bordures), puis énigmes (conception = Opus).
