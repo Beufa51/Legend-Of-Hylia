@@ -13,6 +13,8 @@ const PLANCHE := "res://Assets/Ninja_adventure/Backgrounds/Tilesets/Interior/Til
 # Position (colonne, ligne) des tuiles dans la planche. Pour changer le décor, change ces nombres.
 const TUILE_SOL := Vector2i(12, 7)   # sol vert-gris
 const TUILE_MUR := Vector2i(12, 13)  # pierre sombre
+const TUILE_SOL_ETOILE := Vector2i(14, 11)  # petit motif en étoile (rare)
+const TUILE_SOL_BRIQUE := Vector2i(11, 10)  # fissure / brique (rare)
 
 # Plan de la salle (11 lignes de 20 caractères). Modifiable dans l'inspecteur.
 @export var layout: PackedStringArray
@@ -35,14 +37,38 @@ func _creer_decor() -> void:
 		return
 	for y in layout.size():
 		for x in layout[y].length():
-			var tuile := TUILE_MUR if layout[y][x] == "#" else TUILE_SOL
-			var sprite := Sprite2D.new()
-			sprite.texture = planche
-			sprite.centered = false
-			sprite.region_enabled = true
-			sprite.region_rect = Rect2(tuile.x * TUILE, tuile.y * TUILE, TUILE, TUILE)
-			sprite.position = Vector2(x * TUILE, y * TUILE)
-			add_child(sprite)
+			var est_mur := layout[y][x] == "#"
+			var tuile := TUILE_MUR if est_mur else _tuile_sol(x, y)
+			_poser_tuile(planche, tuile, Vector2(x * TUILE, y * TUILE))
+			# Petite ombre sur le sol, juste sous un mur : donne de la profondeur
+			if not est_mur and y > 0 and layout[y - 1][x] == "#":
+				var ombre := ColorRect.new()
+				ombre.color = Color(0, 0, 0, 0.27)
+				ombre.size = Vector2(TUILE, 5)
+				ombre.position = Vector2(x * TUILE, y * TUILE)
+				add_child(ombre)
+
+
+# Choisit une tuile de sol : surtout du sol uni, avec quelques motifs rares.
+# Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
+func _tuile_sol(x: int, y: int) -> Vector2i:
+	var h := (x * 7 + y * 13 + x * y * 3) % 17
+	if h == 0:
+		return TUILE_SOL_ETOILE
+	if h == 1:
+		return TUILE_SOL_BRIQUE
+	return TUILE_SOL
+
+
+# Crée un Sprite2D d'une tuile de la planche à la position donnée.
+func _poser_tuile(planche: Texture2D, tuile: Vector2i, pos: Vector2) -> void:
+	var sprite := Sprite2D.new()
+	sprite.texture = planche
+	sprite.centered = false
+	sprite.region_enabled = true
+	sprite.region_rect = Rect2(tuile.x * TUILE, tuile.y * TUILE, TUILE, TUILE)
+	sprite.position = pos
+	add_child(sprite)
 
 
 # Ajoute une boîte de collision à chaque mur.

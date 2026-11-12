@@ -100,5 +100,8 @@
   (à fusionner dans `main` via GitHub Desktop : Branch → Merge into current branch, depuis `main`, puis Push).
   L'utilisateur ne comprend pas les Pull Requests : ne pas en parler, utiliser seulement le merge local.
 
-## PROCHAINE ÉTAPE : Étape 5
-- Améliorer le décor (variété de tuiles, bordures), puis concevoir les énigmes (conception = Opus).
+- 2026-11-12 : **ÉTAPE 5a écrite (non testée)** : décor amélioré dans `room.gd` (sol avec motifs rares étoile (14,11) / fissure (11,10),
+  ombre sous les murs via ColorRect, fonctions `_tuile_sol` et `_poser_tuile`). Aperçu vérifié en image côté Claude, pas dans Godot.
+
+## PROCHAINE ÉTAPE : Étape 5b
+- L'utilisateur teste le décor (Pull/branche `etape-4-aile-gauche`, lancer F5). Si OK : concevoir les énigmes (conception = Opus).
