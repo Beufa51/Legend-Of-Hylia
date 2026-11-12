@@ -83,7 +83,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
 		_vent_actif = not _vent_actif
 		for p in _plantes:
-			p[0].skew = 0.0
+			p[0].position.x = p[3]
 		if grille == Etat.salle_courante:
 			Etat.annoncer("Plantes au vent : " + ("ON" if _vent_actif else "OFF"))
 
@@ -94,8 +94,9 @@ func _process(delta: float) -> void:
 	_temps += delta
 	var force := Ambiance.force_vent
 	for p in _plantes:
+		# Décalage d'un pixel ENTIER (pas de déformation : le skew faisait un effet de flou). Seules les petites plantes bougent, surtout pendant les rafales.
 		var sprite: Sprite2D = p[0]
-		sprite.skew = p[1] * force * (0.55 + 0.45 * sin(_temps * 2.3 - p[2]))
+		sprite.position.x = p[3] + roundf(p[1] * 6.0 * force * sin(_temps * 2.3 - p[2]))
 	if _coq:   # le coq se retourne quand le vent change de sens (son pivot : le bas du mât)
 		_coq.scale.x = clampf(sin(_temps * 0.45) * 5.0, -1.0, 1.0)
 		_coq.rotation = sin(_temps * 3.1) * 0.05 * force
@@ -203,7 +204,7 @@ func _poser_region(fichier: String, region: Rect2i, cellule: Vector2i, balance :
 		# le point d'accroche passe en bas au milieu : c'est le haut qui bouge
 		sprite.offset = Vector2(-taille.x / 2.0, -taille.y)
 		sprite.position += Vector2(taille.x / 2.0, taille.y)
-		_plantes.append([sprite, balance, sprite.position.x * 0.025])
+		_plantes.append([sprite, balance, sprite.position.x * 0.025, sprite.position.x])
 	add_child(sprite)
 
 
