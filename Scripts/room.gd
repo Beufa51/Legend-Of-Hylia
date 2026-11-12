@@ -1,5 +1,6 @@
-extends Node2D
+extends Ecran
 class_name Room
+# Une SALLE DE DONJON (voir ecran.gd pour ce qui est commun avec les écrans extérieurs).
 # Une salle de 25x14 tuiles de 16 px (= 400x224, la taille de l'écran).
 # Le plan de la salle est écrit en texte dans `layout` :
 #   #  = mur (bloque le joueur)       .  = sol
@@ -22,9 +23,6 @@ class_name Room
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
-const TUILE := 16
-const TAILLE_SALLE := Vector2i(400, 224)
-const DOSSIER := "res://Assets/Gemini/tuiles/"
 
 # Caractères qui bloquent le joueur (en plus des murs)
 const SOLIDES := "#SOBR"
@@ -42,23 +40,15 @@ const COULEUR_REPERE := Color(1.0, 0.2, 0.15, 0.55)
 const COLONNES_TORCHES := [4, 20]
 const COLONNES_BANNIERES := [7, 17]
 
-# Plan de la salle (14 lignes de 25 caractères). Modifiable dans l'inspecteur.
-@export var layout: PackedStringArray
-# Position de la salle dans la grille du donjon : (0,0), (1,0), (0,-1)...
-@export var grille := Vector2i.ZERO
-# Teinte de la salle (blanc = couleurs normales). Chaque salle a son ambiance.
-@export var teinte := Color.WHITE
 # Énigmes : noms de drapeaux (voir etat.gd). Vide = rien.
 @export var drapeau_plaque := ""   # levé quand TOUTES les plaques P portent un bloc
 @export var drapeau_porte := ""    # les portes D de cette salle s'ouvrent quand ce drapeau est levé
 @export var drapeau_gemme := ""    # levé quand on ramasse la plume G de cette salle
 @export var drapeau_cristal := ""  # levé quand on frappe le cristal K de cette salle
-@export var sombre := false        # salle plongée dans le noir (seules les lumières éclairent)
 @export var drapeau_braseros := "" # levé quand TOUS les braseros L sont allumés en même temps
 @export var duree_braseros := 14.0 # secondes avant qu'un brasero L s'éteigne
 @export var melodie := ""          # notes à rejouer sur les cloches, dans l'ordre (ex. "132")
 @export var drapeau_melodie := ""  # levé quand on a rejoué toute la mélodie sans faute
-@export var indice := ""           # message affiché la première fois qu'on entre dans la salle
 # Sentinelles : temps (s) entre deux quarts de tour de chaque sentinelle, dans l'ordre de lecture du plan
 # (de gauche à droite, de haut en bas). 0 ou absent = elle ne tourne pas.
 @export var periodes_sentinelles: PackedFloat32Array
@@ -68,8 +58,6 @@ const COLONNES_BANNIERES := [7, 17]
 @export var drapeau_rayon := ""      # levé quand le rayon de lumière touche le réceptacle Y
 @export var chanteur_au_soleil := false   # la statue du coq ne chante que si le rayon l'éclaire
 
-# Cache des images déjà chargées (partagé entre toutes les salles)
-static var _cache := {}
 # Lueur des flammes (texture et matériau partagés par toutes les lumières)
 static var _tex_lumiere: GradientTexture2D
 static var _mat_lumiere: CanvasItemMaterial
@@ -143,40 +131,6 @@ func _process(delta: float) -> void:
 
 
 # --- Chargement ---------------------------------------------------------------
-
-func _image(nom: String) -> Texture2D:
-	if not _cache.has(nom):
-		var chemin := DOSSIER + nom + ".png"
-		var tex = load(chemin) if ResourceLoader.exists(chemin) else null
-		if tex == null:
-			# Image pas encore importée par Godot : on la lit directement dans le fichier
-			var img := Image.load_from_file(ProjectSettings.globalize_path(chemin))
-			if img != null:
-				tex = ImageTexture.create_from_image(img)
-			else:
-				push_error("Room : image introuvable " + chemin)
-		_cache[nom] = tex
-	return _cache[nom]
-
-
-# Pose une image à la position donnée (coin haut-gauche) et la renvoie.
-func _poser(nom: String, pos: Vector2) -> Sprite2D:
-	var sprite := Sprite2D.new()
-	sprite.texture = _image(nom)
-	sprite.centered = false
-	sprite.position = pos
-	add_child(sprite)
-	return sprite
-
-
-# Rectangle de couleur unie (ombres, passages).
-func _poser_rect(pos: Vector2, taille: Vector2, couleur: Color) -> void:
-	var r := ColorRect.new()
-	r.color = couleur
-	r.size = taille
-	r.position = pos
-	add_child(r)
-
 
 # --- Décor --------------------------------------------------------------------
 

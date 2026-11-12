@@ -36,6 +36,10 @@ func _ready() -> void:
 	Etat.repere.connect(_raccompagner)
 	Etat.drapeau_change.connect(_sur_drapeau)
 	_creer_hud()
+	if not donjon:
+		var ambiance := Ambiance.new()   # vent, feuilles, nuages, papillons, oiseaux (extérieur seulement)
+		ambiance.camera = camera
+		add_child(ambiance)
 	Etat.memoriser_position(joueur.position)   # la sauvegarde retient la scène où l'on est
 
 
@@ -83,7 +87,7 @@ var _indices_vus := {}
 
 func _montrer_indice(salle: Vector2i) -> void:
 	for enfant in get_children():
-		if enfant is Room and enfant.grille == salle and enfant.indice != "" and not _indices_vus.has(salle):
+		if enfant is Ecran and enfant.grille == salle and enfant.indice != "" and not _indices_vus.has(salle):
 			_indices_vus[salle] = true
 			Etat.annoncer(enfant.indice)
 
@@ -110,7 +114,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("reset") and not en_transition:
 		for enfant in get_children():
-			if enfant is Room and enfant.grille == salle_actuelle:
+			if enfant is Ecran and enfant.grille == salle_actuelle:
 				enfant.reinitialiser()
 
 
@@ -183,7 +187,7 @@ const COULEUR_NUIT := Color(0.05, 0.055, 0.11)   # plus sombre = plus noir (1,1,
 func _regler_obscurite(salle: Vector2i) -> void:
 	var noir := false
 	for enfant in get_children():
-		if enfant is Room and enfant.grille == salle:
+		if enfant is Ecran and enfant.grille == salle:
 			noir = enfant.sombre
 	var tween := create_tween()
 	tween.tween_property(_modulation, "color", COULEUR_NUIT if noir else Color.WHITE, 0.4)
@@ -227,7 +231,7 @@ func _raccompagner(retour: Vector2) -> void:
 	joueur.position = retour
 	joueur.velocity = Vector2.ZERO
 	for enfant in get_children():
-		if enfant is Room and enfant.grille == salle_reperee:
+		if enfant is Ecran and enfant.grille == salle_reperee:
 			enfant.reinitialiser()
 	salle_actuelle = _salle_du_joueur()
 	Etat.salle_courante = salle_actuelle
@@ -289,7 +293,7 @@ func _creer_menu_dev() -> void:
 	bouton_scene.pressed.connect(_dev_changer_scene)
 	boite.add_child(bouton_scene)
 	for enfant in get_children():
-		if enfant is Room:
+		if enfant is Ecran:
 			var bouton := Button.new()
 			bouton.text = enfant.name
 			bouton.add_theme_font_size_override("font_size", 8)
@@ -313,7 +317,7 @@ func _dev_cinematique() -> void:
 	_vue_aerienne("gauche")
 
 
-func _teleporter(salle: Room) -> void:
+func _teleporter(salle: Ecran) -> void:
 	_menu_dev.visible = false
 	joueur.position = salle.point_arrivee()
 	joueur.velocity = Vector2.ZERO
@@ -380,8 +384,8 @@ func _ramener(nom_salle: String, case: Vector2i, texte: String) -> void:
 	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
 	await t.finished
 	for enfant in get_children():
-		if enfant is Room and enfant.name == nom_salle:
-			joueur.position = enfant.position + Vector2(case * Room.TUILE) + Vector2(8, 3)
+		if enfant is Ecran and enfant.name == nom_salle:
+			joueur.position = enfant.position + Vector2(case * Ecran.TUILE) + Vector2(8, 3)
 	joueur.velocity = Vector2.ZERO
 	_placer_camera()
 	Etat.memoriser_position(joueur.position)

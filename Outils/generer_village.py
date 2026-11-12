@@ -56,11 +56,15 @@ put(place, 'Q', (11, 5)); put(place, 'j', (9, 5), (15, 5))
 # Marché (en bas à gauche) et puits (en bas à droite)
 put(place, 'E', (4, 9)); put(place, 'o', (7, 10), (3, 9))
 put(place, 'W', (18, 9)); put(place, 'o', (21, 10))
-# Fleurs
-put(place, 'f', (8, 2), (9, 3), (16, 3), (2, 10), (22, 9), (10, 11)); put(place, 'g', (15, 2), (14, 11), (8, 3))
+# Fleurs (f tournesol, g fleur rouge, w marguerite) : par petits massifs
+put(place, 'f', (8, 2), (9, 3), (16, 3), (22, 9), (10, 11))
+put(place, 'g', (15, 2), (14, 11), (8, 3), (2, 6), (7, 5), (17, 4), (21, 5))
+put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10), (2, 2), (7, 4), (22, 5))
+# Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
+animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 5', 'd 17 8']
 
 ecrans = [
-    ('PlaceDuCoq', (2, 2), place, {}),
+    ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place}),
 ]
 depart = (2 * 400 + 12 * 16 + 8, 2 * 224 + 10 * 16 + 3)   # nouvelle partie : au sud de la statue
 
@@ -84,7 +88,10 @@ donjon = false
         out += '[node name="%s" parent="." instance=ExtResource("2")]\n' % nom
         out += 'grille = Vector2i(%d, %d)\n' % (gx, gy)
         for k, v in props.items():
-            out += '%s = "%s"\n' % (k, v)
+            if isinstance(v, list):   # liste de textes -> PackedStringArray
+                out += '%s = PackedStringArray(%s)\n' % (k, ', '.join('"%s"' % e for e in v))
+            else:
+                out += '%s = "%s"\n' % (k, v)
         out += 'layout = %s\n\n' % sortie(g)
     out += '''[node name="Player" parent="." instance=ExtResource("3")]
 position = Vector2(%d, %d)
@@ -97,6 +104,13 @@ position = Vector2(%d, %d)
 
 
 # --- Aperçu (même logique que Scripts/exterieur.gd) ---------------------------------------
+def touffe(g, x, y, gx, couvertes):
+    if (x * 37 + y * 91 + gx * 13) % 6 != 0 or g[y][x] != '.' or (x, y) in couvertes:
+        return False
+    est = lambda xx, yy: g[min(max(yy, 0), H - 1)][min(max(xx, 0), W - 1)] == ':'
+    return not any(est(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+
+
 def apercu(fichier):
     from PIL import Image
     pack = os.path.join(RACINE, "Assets/Ninja_adventure/Backgrounds/Tilesets/")
@@ -105,7 +119,8 @@ def apercu(fichier):
                 "MAISONS": Image.open(pack + "TilesetHouse.png").convert("RGBA")}
     tuiles = os.path.join(RACINE, "Assets/Gemini/tuiles/")
     objets = {"A": ("NATURE", (16, 0, 2, 2)), "a": ("NATURE", (18, 0, 2, 2)), "P": ("NATURE", (0, 0, 2, 2)),
-              "b": ("NATURE", (0, 10, 1, 1)), "f": ("NATURE", (0, 11, 1, 1)), "g": ("NATURE", (1, 11, 1, 1)),
+              "b": ("NATURE", (0, 10, 1, 1)), "f": ("NATURE", (0, 11, 1, 1)), "g": ("NATURE", (3, 11, 1, 1)),
+              "w": ("NATURE", (6, 11, 1, 1)),
               "M": ("MAISONS", (0, 0, 4, 3)), "N": ("MAISONS", (4, 0, 4, 3)), "o": ("MAISONS", (16, 15, 1, 1)),
               "j": ("MAISONS", (23, 20, 1, 2)), "Q": ("tuile:statue_coq", None), "W": ("tuile:puits", None)}
     xs = [e[1][0] for e in ecrans]; ys = [e[1][1] for e in ecrans]
@@ -147,6 +162,23 @@ def apercu(fichier):
                 elif c == "E":
                     region("MAISONS", (16, 16, 3, 1), (d[0], d[1] + 16))
                     region("MAISONS", (16, 13, 3, 1), d)
+        couvertes = set()
+        for y in range(H):
+            for x in range(W):
+                c = g[y][x]
+                taille = {"E": (3, 2), "Q": (3, 3), "W": (2, 2)}.get(c) or (objets[c][1][2:] if c in objets and objets[c][1] else None)
+                if taille:
+                    couvertes |= {(x + i, y + j) for i in range(taille[0]) for j in range(taille[1])}
+        for y in range(H):
+            for x in range(W):
+                if touffe(g, x, y, gx, couvertes):
+                    t = [(3, 10), (7, 10), (9, 10)][(x * 7 + y * 3) % 3]
+                    region("NATURE", (t[0], t[1], 1, 1), (ox + x * 16, oy + y * 16))
+        for ligne in props.get('animaux', []):
+            c, x, y = ligne.split()
+            fich = {"c": "Chicken/SpriteSheetWhite", "h": "Chicken/SpriteSheetBrown", "k": "Cat/SpriteSheet", "d": "Dog/SpriteSheet"}[c]
+            a = Image.open(os.path.join(RACINE, "Assets/Ninja_adventure/Actor/Animal/%s.png" % fich)).convert("RGBA").crop((0, 0, 16, 16))
+            img.alpha_composite(a, (ox + int(x) * 16, oy + int(y) * 16 - 3))
     img.resize((img.width * 2, img.height * 2), Image.NEAREST).save(fichier)
     print("aperçu écrit :", fichier)
 

@@ -368,6 +368,19 @@
   `world.gd` : exports `musique` (village = « 36 - Village.ogg ») et `donjon` (faux = pas de HUD plumes, pas de sortie du donjon) ; F1 -> « Aller au village / au donjon ».
   SAUVEGARDE : `Etat.scene_sauvee` (scène où reprendre). Nouvelle scène principale `Scenes/demarrage.tscn` (`demarrage.gd`) : partie sauvée -> sa scène, sinon -> village.
 
+- 2026-11-12 : retour 8a : « pas mal mais pas le charme d'un Zelda, pas assez vivant : vent, fleurs, animaux, poules ». Question archi : séparer extérieur / chaque donjon pour qu'une modif ne casse pas tout.
+  **ÉTAPE 8b écrite (non testée dans Godot, aperçu PIL vérifié pour l'image fixe)** :
+  ARCHITECTURE : nouvelle base `Scripts/ecran.gd` (class Ecran : TUILE, TAILLE_SALLE, DOSSIER, exports layout/grille/teinte/sombre/indice, cache `_image`, `_poser`, `_poser_rect`,
+  `reinitialiser()` et `point_arrivee()` par défaut). `room.gd` (donjon) et `exterieur.gd` (extérieur) en héritent SÉPARÉMENT (Exterieur n'hérite plus de Room).
+  `world.gd` parle aux écrans via `Ecran` (seule la vue aérienne garde `Room`). RÈGLE : commun -> ecran.gd ; donjon -> room.gd ; extérieur -> exterieur.gd ;
+  chaque lieu a son générateur (`generer_monde.py` = aile gauche, `generer_village.py` = village) et sa scène.
+  VIE : `Scripts/ambiance.gd` (class Ambiance, créée par world.gd si `donjon = false`, suit la caméra) : `static var force_vent` (rafales toutes les 7-13 s),
+  feuilles/pétales (FX/Particle/Leaf.png, LeafPink.png) qui traversent l'écran, 2 ombres de nuages (Clouds.png, noir 12 %), 2 papillons (dessinés), vent (Ambient/Wind.wav -24 dB) + oiseaux (Creature/Bird.wav).
+  `exterieur.gd` : plantes/arbres/bannières qui se balancent (`skew`, base fixe, `_plantes`), touffes d'herbe semées seules (~1/6, pas au bord des chemins ni sous un objet),
+  fleurs `f` tournesol / `g` rouge / `w` marguerite ; export `animaux` ("lettre x y") -> `Scripts/animal.gd` (class Animal, CharacterBody2D couche 1 : promenade, picore,
+  la poule fuit le joueur ; coup de lance = sursaut + cri (Bird.wav aigu / Dog.wav) + plumes (CPUParticles2D) + fuite ; gag après 6 coups de poule ; le chat se rendort).
+  Place : 3 poules, 1 chat devant la maison orange, 1 chien.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester les corrections 7e (sauvegarde : fermer/relancer le jeu ; HUD ; retour rapide ; sentinelles).
 - Tester la place du coq (8a). Puis construire par tranches : 2) village ouest + village est (caserne) + maison du héros + PNJ/dialogues ;

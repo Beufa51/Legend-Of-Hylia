@@ -1,4 +1,4 @@
-extends Room
+extends Ecran
 class_name Exterieur
 # Un écran EXTÉRIEUR (village, chemins, forêt...). Même principe qu'une salle du donjon
 # (plan texte `layout` de 25 x 14 cases, position `grille`, glissement de caméra), mais sans murs :
@@ -6,10 +6,14 @@ class_name Exterieur
 # Lettres du plan :
 #   .  = herbe            :  = chemin de terre (les bords s'arrondissent tout seuls)
 #   A  = arbre rond (2x2)  a = autre arbre rond (2x2)   P = sapin (2x2)
-#   b  = buisson (1x1)     f = fleurs jaunes (décor, ne bloque pas)   g = fleurs rouges (décor)
+#   b  = buisson (1x1)     f = tournesol   g = fleur rouge   w = marguerite (fleurs : décor, ne bloquent pas)
 #   M  = maison orange (4x3)   N = maison beige (4x3)
 #   E  = étal du marché (3x2)  o = tonneau   j = bannière rouge (1x2)
 #   Q  = statue du coq (3x3)   W = puits (2x2)
+# ANIMAUX : pas dans le plan, mais dans la liste `animaux` : "lettre x y", par ex. "c 9 9"
+#   c  = poule blanche   h = poule rousse   k = chat   d = chien
+# VIE : les plantes, arbres et bannières se balancent au vent (force donnée par Ambiance.force_vent),
+# des touffes d'herbe sont semées toutes seules dans l'herbe libre.
 # Une lettre d'objet se met sur la cellule du COIN HAUT-GAUCHE de l'objet ; les autres cases de l'objet
 # restent en herbe ou en chemin dans le plan (le sol est dessiné dessous).
 
@@ -25,24 +29,59 @@ const CHEMIN_COIN := Vector2i(11, 7)   # coin haut-gauche du bloc 3x3 des bords 
 # Coins intérieurs du chemin (quand seule une cellule en diagonale est de l'herbe)
 const CHEMIN_INTERIEUR := {"se": Vector2i(16, 8), "so": Vector2i(17, 8), "ne": Vector2i(16, 9), "no": Vector2i(17, 9)}
 
-# Objets : lettre -> [image, région dans l'image (en cases), bloque ?]
+# Objets : lettre -> [image, région dans l'image (en cases), bloque ?, balancement au vent (0 = immobile)]
 # (image "tuile:nom" = une image de Assets/Gemini/tuiles/, sa taille donne la région)
 const OBJETS := {
-	"A": [NATURE, Rect2i(16, 0, 2, 2), true],
-	"a": [NATURE, Rect2i(18, 0, 2, 2), true],
-	"P": [NATURE, Rect2i(0, 0, 2, 2), true],
-	"b": [NATURE, Rect2i(0, 10, 1, 1), true],
-	"f": [NATURE, Rect2i(0, 11, 1, 1), false],
-	"g": [NATURE, Rect2i(1, 11, 1, 1), false],
-	"M": [MAISONS, Rect2i(0, 0, 4, 3), true],
-	"N": [MAISONS, Rect2i(4, 0, 4, 3), true],
-	"o": [MAISONS, Rect2i(16, 15, 1, 1), true],
-	"j": [MAISONS, Rect2i(23, 20, 1, 2), true],
-	"Q": ["tuile:statue_coq", Rect2i(0, 0, 3, 3), true],
-	"W": ["tuile:puits", Rect2i(0, 0, 2, 2), true],
+	"A": [NATURE, Rect2i(16, 0, 2, 2), true, 0.03],
+	"a": [NATURE, Rect2i(18, 0, 2, 2), true, 0.03],
+	"P": [NATURE, Rect2i(0, 0, 2, 2), true, 0.025],
+	"b": [NATURE, Rect2i(0, 10, 1, 1), true, 0.07],
+	"f": [NATURE, Rect2i(0, 11, 1, 1), false, 0.22],
+	"g": [NATURE, Rect2i(3, 11, 1, 1), false, 0.22],
+	"w": [NATURE, Rect2i(6, 11, 1, 1), false, 0.22],
+	"M": [MAISONS, Rect2i(0, 0, 4, 3), true, 0.0],
+	"N": [MAISONS, Rect2i(4, 0, 4, 3), true, 0.0],
+	"o": [MAISONS, Rect2i(16, 15, 1, 1), true, 0.0],
+	"j": [MAISONS, Rect2i(23, 20, 1, 2), true, 0.1],
+	"Q": ["tuile:statue_coq", Rect2i(0, 0, 3, 3), true, 0.0],
+	"W": ["tuile:puits", Rect2i(0, 0, 2, 2), true, 0.0],
+}
+# Touffes d'herbe semées automatiquement (TilesetNature) : environ 1 case d'herbe libre sur 11
+const TOUFFES := [Vector2i(3, 10), Vector2i(7, 10), Vector2i(9, 10)]
+# Animaux : lettre -> [planche, vitesse (px/s), peureux ?, son quand on le frappe]
+const ANIMAUX := {
+	"c": ["res://Assets/Ninja_adventure/Actor/Animal/Chicken/SpriteSheetWhite.png", 22.0, true, "poule"],
+	"h": ["res://Assets/Ninja_adventure/Actor/Animal/Chicken/SpriteSheetBrown.png", 22.0, true, "poule"],
+	"k": ["res://Assets/Ninja_adventure/Actor/Animal/Cat/SpriteSheet.png", 0.0, false, "chat"],
+	"d": ["res://Assets/Ninja_adventure/Actor/Animal/Dog/SpriteSheet.png", 14.0, false, "chien"],
 }
 
+# Animaux de l'écran : "lettre x y" (voir ANIMAUX)
+@export var animaux: PackedStringArray
+
 var _solides := {}   # cases bloquées par un objet
+var _couvertes := {} # cases recouvertes par un objet (bloquant ou non) : pas de touffe d'herbe dessus
+var _plantes: Array = []   # [sprite, amplitude, phase] : ce qui se balance au vent
+var _temps := 0.0
+
+
+func _ready() -> void:
+	position = Vector2(grille * TAILLE_SALLE)
+	modulate = teinte
+	_creer_decor()
+	_creer_collisions()
+	_poser_animaux()
+
+
+# Le vent : chaque plante penche (skew) selon une vague qui traverse l'écran de gauche à droite.
+func _process(delta: float) -> void:
+	if grille != Etat.salle_courante:
+		return   # inutile d'animer un écran qu'on ne voit pas
+	_temps += delta
+	var force := Ambiance.force_vent
+	for p in _plantes:
+		var sprite: Sprite2D = p[0]
+		sprite.skew = p[1] * force * (0.55 + 0.45 * sin(_temps * 2.3 - p[2]))
 
 
 func _creer_decor() -> void:
@@ -58,6 +97,13 @@ func _creer_decor() -> void:
 				for dx in 3:
 					for dy in 2:
 						_solides[Vector2i(x + dx, y + dy)] = true
+						_couvertes[Vector2i(x + dx, y + dy)] = true
+	# Touffes d'herbe, une fois les objets posés (jamais sous un objet)
+	for y in layout.size():
+		for x in layout[y].length():
+			if _touffe_ici(x, y):
+				var touffe: Vector2i = TOUFFES[(x * 7 + y * 3) % TOUFFES.size()]
+				_poser_region(NATURE, Rect2i(touffe, Vector2i.ONE), Vector2i(x, y), 0.2)
 
 
 # Le sol : herbe partout (avec quelques détails), chemin de terre là où il y a « : ».
@@ -107,22 +153,53 @@ func _poser_objet(def: Array, cellule: Vector2i) -> void:
 	if image.begins_with("tuile:"):
 		_poser(image.substr(6), Vector2(cellule * TUILE))
 	else:
-		_poser_region(image, region, cellule)
-	if def[2]:
-		for dx in region.size.x:
-			for dy in region.size.y:
+		_poser_region(image, region, cellule, def[3])
+	for dx in region.size.x:
+		for dy in region.size.y:
+			_couvertes[cellule + Vector2i(dx, dy)] = true
+			if def[2]:
 				_solides[cellule + Vector2i(dx, dy)] = true
 
 
 # Pose un morceau (en cases) d'une planche du pack. Sprite2D + region : marche sur toutes les cartes graphiques.
-func _poser_region(fichier: String, region: Rect2i, cellule: Vector2i) -> void:
+# `balance` > 0 : l'objet se balance au vent (il penche depuis sa base, qui reste fixe).
+func _poser_region(fichier: String, region: Rect2i, cellule: Vector2i, balance := 0.0) -> void:
 	var sprite := Sprite2D.new()
 	sprite.texture = load(fichier)
 	sprite.centered = false
 	sprite.region_enabled = true
-	sprite.region_rect = Rect2(Vector2(region.position * TUILE), Vector2(region.size * TUILE))
+	var taille := Vector2(region.size * TUILE)
+	sprite.region_rect = Rect2(Vector2(region.position * TUILE), taille)
 	sprite.position = Vector2(cellule * TUILE)
+	if balance > 0.0:
+		# le point d'accroche passe en bas au milieu : c'est le haut qui bouge
+		sprite.offset = Vector2(-taille.x / 2.0, -taille.y)
+		sprite.position += Vector2(taille.x / 2.0, taille.y)
+		_plantes.append([sprite, balance, sprite.position.x * 0.025])
 	add_child(sprite)
+
+
+# Une touffe d'herbe ici ? Sur ~1 case d'herbe sur 6, pas sous un objet ni au bord d'un chemin (calcul fixe, pas de hasard).
+func _touffe_ici(x: int, y: int) -> bool:
+	if (x * 37 + y * 91 + grille.x * 13) % 6 != 0 or layout[y][x] != "." or _couvertes.has(Vector2i(x, y)):
+		return false
+	for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		if _est_chemin(x + d.x, y + d.y):
+			return false
+	return true
+
+
+func _poser_animaux() -> void:
+	for ligne in animaux:
+		var morceaux := ligne.split(" ")
+		if morceaux.size() != 3 or not ANIMAUX.has(morceaux[0]):
+			push_warning("Exterieur : animal mal écrit : " + ligne)
+			continue
+		var def: Array = ANIMAUX[morceaux[0]]
+		var animal := Animal.new()
+		animal.position = Vector2(int(morceaux[1]) * TUILE + 8, int(morceaux[2]) * TUILE + 10)
+		add_child(animal)
+		animal.initialiser(def[0], def[1], def[2], def[3], Rect2(Vector2(TUILE, TUILE), Vector2(TAILLE_SALLE) - Vector2(TUILE, TUILE) * 2))
 
 
 func _creer_collisions() -> void:
@@ -144,7 +221,7 @@ func point_arrivee() -> Vector2:
 	for y in layout.size():
 		for x in layout[y].length():
 			var c := Vector2i(x, y)
-			if not _solides.has(c) and (layout[y][x] == "." or layout[y][x] == ":"):
+			if not _solides.has(c) and (layout[y][x] == "." or layout[y][x] == ":") and not _touffe_ici(x, y):
 				var d := (c - Vector2i(12, 10)).length_squared()
 				if d < distance:
 					meilleure = c
