@@ -203,4 +203,13 @@ def fabrique_bouton(enfonce):
 
 for nom, enf in (("bouton", False), ("bouton_enfonce", True)):
     fabrique_bouton(enf).save(os.path.join(SORTIE, nom + ".png"))
+
+# --- Brasero éteint : le brasero_2 sans sa flamme (pixels orange/jaune effacés), un peu assombri ---
+br = np.array(Image.open(os.path.join(SORTIE, "brasero_2.png")).convert("RGBA")).astype(int)
+flamme = (br[..., 0] > 150) & (br[..., 0] - br[..., 2] > 60) & ((br[..., 1] > 110) | (br[..., 0] > 190))
+flamme[9:, :] = False   # on ne touche pas au pied du brasero
+flamme[:, :] |= (br[..., 3] > 0) & (np.arange(16)[:, None] < 6)   # tout ce qui dépasse en haut est de la flamme
+br[flamme, 3] = 0
+br[..., :3] = (br[..., :3] * 0.8).astype(int)
+Image.fromarray(br.astype(np.uint8), "RGBA").save(os.path.join(SORTIE, "brasero_eteint.png"))
 print("OK ->", os.path.abspath(SORTIE), len(os.listdir(SORTIE)), "fichiers")

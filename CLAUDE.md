@@ -219,5 +219,14 @@
 - 2026-11-12 : clin d'œil voulu par l'utilisateur : le village du coq chantant = hommage au coq volant de Link's Awakening (easter egg assumé, mais NOMS et dessins restent originaux). Idées : girouette/statue de coq au village et dans le donjon,
   chant du coq (son) comme fanfare finale, énigme "le chant du coq" (frapper des cloches/statues dans l'ordre d'une mélodie). NOM DU VILLAGE CONFIRMÉ : « Village du Coq Chantant » (dans `Scripts/noms.gd`).
 
-## PROCHAINE ÉTAPE : Étape 6b
-- L'utilisateur teste le Vestibule + bouton + jingles (Pull branche etape-4-aile-gauche, F5). Ensuite : plume 2 (2 écrans, salle sombre), choix définitif du nom du village, puis plumes 3-5.
+- 2026-11-12 : utilisateur : "construis la plume 2 avec la salle sombre ; le cristal doit faire quelque chose (ouvrir la porte de la prochaine salle) et il faut un bruit quand on l'active". **ÉTAPE 6b écrite (non testée dans Godot)** :
+  FEEDBACK : cristal = bruit (Magic2.wav) ; toute porte qui s'ouvre = bruit (Impact5.wav) + secousse d'écran (`Etat.secousse`) ; si la porte est dans une AUTRE salle que celle de la caméra (`Etat.salle_courante`), message "Un bruit sourd : une porte s'est ouverte quelque part...".
+  PLUME 2 (2 écrans) : **Plume2a (2,-1) SALLE SOMBRE** : 4 braseros `L` (`brasero.gd`, class Brasero) à allumer à la lance, s'éteignent après 14 s (`duree_braseros`), il faut TOUS les allumer en même temps (clignotent les 3 dernières secondes) -> `drapeau_braseros` "p2_braseros"
+  ouvre la porte du haut. **Plume2b (2,-2)** : le cristal `K` ouvre la porte de l'alcôve ("p2_cristal") ; la plume dorée (drapeau "plume2") ouvre la porte est de l'Épine2 (-> Épine3 (3,0), provisoire, fermée).
+  OBSCURITÉ : `@export var sombre` dans Room ; `world.gd::_regler_obscurite` (CanvasModulate global, COULEUR_NUIT, tween 0.4 s) + lumière du joueur (`player.regler_lumiere`, PointLight2D) ; `lumiere.gd` (class Lumiere.creer) fabrique les PointLight2D ; pas de torches/bannières dans une salle sombre.
+  Nouvelle tuile `brasero_eteint` (flamme effacée, générée par `traiter_gemini.py`). `Outils/generer_monde.py` reste la source de `world.tscn` (modifier les plans LÀ).
+  Leçons de design : chaque énigme enseigne UNE mécanique (vestibule = lance/cristal ; plume 1 = pot + bloc + bouton ; plume 2 = la lance allume, il faut s'organiser dans le noir).
+  Risque à vérifier au test : Light2D en rendu Compatibilité (devrait marcher), lisibilité des braseros éteints dans le noir (CanvasModulate 0.13,0.14,0.24).
+
+## PROCHAINE ÉTAPE : Étape 6c
+- L'utilisateur teste (Pull, F5) : vestibule -> entrée -> épine 1 -> plume 1 -> épine 2 -> plume 2 (salle sombre puis cristal/plume). Corriger selon son retour (difficulté du chrono 14 s, visibilité). Puis plume 3 (3 écrans, idée : chant du coq ou sentinelles).

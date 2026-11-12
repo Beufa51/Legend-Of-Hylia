@@ -10,6 +10,7 @@ class_name Room
 #   X  = bloc à pousser (sur le sol)  D = porte fermée (s'ouvre quand `drapeau_porte` est levé)
 #   G  = plume dorée à ramasser (lève `drapeau_gemme`)
 #   K  = cristal à frapper à la lance (lève `drapeau_cristal`)
+#   L  = brasero à allumer à la lance, dans une salle `sombre` (voir `drapeau_braseros`)
 #   P  = bouton de sol : s'enfonce quand un bloc est dessus (voir `drapeau_plaque`)
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
@@ -37,6 +38,9 @@ const COLONNES_BANNIERES := [7, 17]
 @export var drapeau_porte := ""    # les portes D de cette salle s'ouvrent quand ce drapeau est levé
 @export var drapeau_gemme := ""    # levé quand on ramasse la plume G de cette salle
 @export var drapeau_cristal := ""  # levé quand on frappe le cristal K de cette salle
+@export var sombre := false        # salle plongée dans le noir (seules les lumières éclairent)
+@export var drapeau_braseros := "" # levé quand TOUS les braseros L sont allumés en même temps
+@export var duree_braseros := 14.0 # secondes avant qu'un brasero L s'éteigne
 
 # Cache des images déjà chargées (partagé entre toutes les salles)
 static var _cache := {}
@@ -52,6 +56,7 @@ var _lumieres: Array[Sprite2D] = []
 var _occupe := {}
 var _blocs: Array[Bloc] = []
 var _plaques: Array[Vector2i] = []
+var _braseros: Array[Brasero] = []
 var _boutons := {}   # { case : Sprite2D } image de chaque bouton (relevé / enfoncé)
 var _portes: Array[Porte] = []
 
@@ -205,6 +210,14 @@ func _poser_objets() -> void:
 				"P":
 					_boutons[Vector2i(x, y)] = _poser("bouton", pos)
 					_plaques.append(Vector2i(x, y))
+				"L":
+					var brasero := Brasero.new()
+					brasero.position = pos
+					add_child(brasero)
+					var flammes: Array[Texture2D] = [_image("brasero_1"), _image("brasero_2"), _image("brasero_3")]
+					brasero.initialiser(self, duree_braseros, _image("brasero_eteint"), flammes)
+					_braseros.append(brasero)
+					_occupe[Vector2i(x, y)] = brasero
 				"K":
 					var cristal := Cristal.new()
 					cristal.position = pos
@@ -285,8 +298,20 @@ func reinitialiser() -> void:
 	_maj_boutons()
 
 
+# Appelé par un brasero qui vient de s'allumer : si tous brûlent en même temps, c'est gagné.
+func verifier_braseros() -> void:
+	for brasero in _braseros:
+		if not brasero.allume:
+			return
+	for brasero in _braseros:
+		brasero.verrouiller()
+	Etat.poser(drapeau_braseros)
+
+
 func _sur_drapeau(nom: String) -> void:
 	if nom != "" and nom == drapeau_porte:
+		if not _portes.is_empty() and grille != Etat.salle_courante:
+			Etat.annoncer("Un bruit sourd : une porte s'est ouverte quelque part...")
 		for porte in _portes:
 			if is_instance_valid(porte):
 				porte.ouvrir()
@@ -294,6 +319,8 @@ func _sur_drapeau(nom: String) -> void:
 
 # Torches et bannières sur le mur du haut (seulement là où il y a du mur au-dessus du sol).
 func _poser_details() -> void:
+	if sombre:
+		return  # pas de torches dans une salle sombre
 	for x in COLONNES_BANNIERES:
 		if _mur_haut_libre(x):
 			_poser("banniere", Vector2(x * TUILE, EPAISSEUR * TUILE - 26))

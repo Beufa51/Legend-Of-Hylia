@@ -20,6 +20,7 @@ var direction := "bas"  # dernière direction regardée
 var attaque := false    # vrai pendant un coup de lance (le joueur ne bouge pas)
 var lance: Node2D       # la lance (image + zone de touche), créée dans _ready
 var zone: Area2D        # zone de touche de la lance
+var lumiere: PointLight2D  # petite lumière autour du joueur (allumée seulement dans les salles sombres)
 var _temps_pousse := 0.0  # depuis combien de temps on pousse contre un bloc
 
 
@@ -28,6 +29,9 @@ func _ready() -> void:
 	sprite.sprite_frames = _creer_animations()
 	sprite.play("repos_bas")
 	_creer_lance()
+	lumiere = Lumiere.creer(Color(0.85, 0.92, 1.0), 0.8, 0.85)
+	lumiere.enabled = false
+	add_child(lumiere)
 
 
 func _physics_process(delta: float) -> void:
@@ -73,6 +77,11 @@ func _mettre_a_jour_animation(entree: Vector2) -> void:
 		sprite.play("marche_" + direction)
 	else:
 		sprite.play("repos_" + direction)
+
+
+# Allume ou éteint la petite lumière du joueur (appelé par world.gd selon la salle).
+func regler_lumiere(allumee: bool) -> void:
+	lumiere.enabled = allumee
 
 
 # Construit la lance : une image + une zone (Area2D) qui détecte ce qu'elle touche.

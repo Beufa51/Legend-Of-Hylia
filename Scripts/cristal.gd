@@ -3,6 +3,7 @@ class_name Cristal
 # Un cristal à frapper avec la lance : il s'allume et lève un drapeau (ouvre une porte, par exemple).
 # Dessiné en code. Il reste allumé une fois frappé.
 
+const SON := "res://Assets/Ninja_adventure/Audio/Sounds/Magic & Skill/Magic2.wav"
 const BLEU := Color(0.25, 0.55, 0.95)
 const BLEU_CLAIR := Color(0.7, 0.9, 1.0)
 const OR := Color(1.0, 0.85, 0.35)
@@ -48,6 +49,14 @@ func frapper() -> void:
 	actif = true
 	_corps.color = OR
 	_reflet.color = Color(1, 1, 0.9)
+	var flux = load(SON)
+	if flux != null:
+		var lecteur := AudioStreamPlayer.new()
+		lecteur.stream = flux
+		lecteur.volume_db = -3.0
+		get_parent().add_child(lecteur)
+		lecteur.play()
+		lecteur.finished.connect(lecteur.queue_free)
 	Etat.poser(drapeau)
 	if texte != "":
 		Etat.annoncer(texte)

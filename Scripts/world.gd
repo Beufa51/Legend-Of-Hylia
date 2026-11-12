@@ -24,6 +24,11 @@ func _ready() -> void:
 	Etat.drapeau_change.connect(_jouer_jingle)
 	salle_actuelle = _salle_du_joueur()
 	camera.position = _centre_salle(salle_actuelle)
+	Etat.salle_courante = salle_actuelle
+	_modulation = CanvasModulate.new()
+	add_child(_modulation)
+	_regler_obscurite(salle_actuelle)
+	Etat.secousse.connect(_secouer)
 
 
 func _process(_delta: float) -> void:
@@ -49,6 +54,8 @@ func _centre_salle(salle: Vector2i) -> Vector2:
 func _glisser_vers(salle: Vector2i) -> void:
 	en_transition = true
 	salle_actuelle = salle
+	Etat.salle_courante = salle
+	_regler_obscurite(salle)
 	joueur.set_physics_process(false)
 	var tween := create_tween()
 	tween.tween_property(camera, "position", _centre_salle(salle), DUREE_GLISSEMENT)
@@ -126,3 +133,27 @@ func _jouer_jingle(nom: String) -> void:
 	add_child(lecteur)
 	lecteur.play()
 	lecteur.finished.connect(lecteur.queue_free)
+
+
+# --- Salles sombres -------------------------------------------------------------
+var _modulation: CanvasModulate   # teinte globale : sombre dans une salle sombre, blanche sinon
+const COULEUR_NUIT := Color(0.13, 0.14, 0.24)
+
+
+# Assombrit l'écran si la salle est `sombre` (et allume la lumière du joueur).
+func _regler_obscurite(salle: Vector2i) -> void:
+	var noir := false
+	for enfant in get_children():
+		if enfant is Room and enfant.grille == salle:
+			noir = enfant.sombre
+	var tween := create_tween()
+	tween.tween_property(_modulation, "color", COULEUR_NUIT if noir else Color.WHITE, 0.4)
+	joueur.regler_lumiere(noir)
+
+
+# Petite secousse de l'écran (une porte s'ouvre).
+func _secouer() -> void:
+	var tween := create_tween()
+	for i in 6:
+		tween.tween_property(camera, "offset", Vector2(randf_range(-3, 3), randf_range(-2, 2)), 0.04)
+	tween.tween_property(camera, "offset", Vector2.ZERO, 0.05)

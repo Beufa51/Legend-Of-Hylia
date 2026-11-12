@@ -6,6 +6,7 @@ const COULEUR_BOIS := Color(0.45, 0.28, 0.15)
 const COULEUR_BOIS_SOMBRE := Color(0.32, 0.19, 0.10)
 const COULEUR_FER := Color(0.30, 0.30, 0.36)
 const TUILE := 16
+const SON_OUVERTURE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact5.wav"
 
 var _collision: CollisionShape2D
 var ouverte := false
@@ -39,6 +40,15 @@ func ouvrir() -> void:
 		return
 	ouverte = true
 	_collision.set_deferred("disabled", true)
+	Etat.secousse.emit()
+	var flux = load(SON_OUVERTURE)
+	if flux != null:
+		var lecteur := AudioStreamPlayer.new()
+		lecteur.stream = flux
+		lecteur.volume_db = -2.0
+		get_parent().add_child(lecteur)
+		lecteur.play()
+		lecteur.finished.connect(lecteur.queue_free)
 	var tween := create_tween()
 	tween.tween_property(self, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(queue_free)
