@@ -291,6 +291,16 @@
   5e (5,-5) POINTE : dégager le bloc, 2 miroirs -> le soleil éclaire la statue -> elle chante « 3142 » -> rejouer sur les cloches -> alcôve -> FRAGMENT (drapeau `fragment_gauche`).
   **L'AILE GAUCHE EST COMPLÈTE (en code)** : vestibule, entrée, 5 épines, 15 écrans de plumes.
 
+- 2026-11-12 : retours sur les plumes 4 et 5. **CORRECTIONS 7a écrites (non testées dans Godot)** :
+  PLUME 5c : le bloc bloquait le rayon une fois sur le bouton (pas compris). REFAITE : le bloc est AU DÉPART dans le rayon (miroir `N` en (18,4), bloc (18,6)) ;
+  le pousser à droite jusqu'au bouton (21,6) libère le rayon ET ouvre la grille H. Réceptacle `Y` redessiné = SOLEIL ÉTEINT sur socle (même motif que le soleil R),
+  pulsation dorée tant qu'il est éteint (`cible.gd`). Indices ajoutés en 5a/5b/5c. Bug du texte « frappe le cristal » : rappel de début de partie montré seulement si on est au vestibule.
+  Messages en bas d'écran : 2 lignes avec retour à la ligne automatique.
+  SENTINELLES : sprite = garde GladiatorBlue du pack (teinté pierre, sur socle), il se tourne vraiment ; VRAI CÔNE de vision (façon MGS) : 24 rayons, demi-angle 26°, portée 7 cases,
+  arrêté par les obstacles, rotation douce de la tête (7 rad/s), dégradé + contour, rouge si repéré ; détection = pieds du joueur dans le cône (`room.gd::_voit`, `_portee_libre`, `_cone`).
+  Cônes et bulles dessinés dans un CanvasLayer (`follow_viewport_enabled`) -> visibles même dans les salles sombres. Bulles « ? » (attirée par une flamme) et « ! » (repéré), Ui/Emote du pack.
+  Message unique « La flamme attire le regard de la sentinelle ! ». 4d REFAITE : sentinelles (7,7) > et (17,7) <, braseros (3,10) et (21,10) ; la rangée du bas n'est jamais vue ;
+  une flamme ne suffit pas, les deux oui. `Outils/simuler_sentinelles.py` réécrit avec la même géométrie (lit `world.tscn`) : 4a, 4b, 4c (bloc poussé), 4d vérifiées.
+
 ## PROCHAINE ÉTAPE : Étape 7
-- L'utilisateur teste la plume 5 (F1 -> Plume5a... pour y aller direct) + re-teste la statue des cloches (plume 3). Puis (Sonnet) corrections des plumes 3 et 4 selon ses retours.
-  Ensuite : rééquilibrage de l'aile, puis cinématique de l'aile qui pivote (Opus), puis aile droite.
+- L'utilisateur teste les corrections 7a (F1 -> Plume4a..4d, Plume5a..5c). Ensuite : rééquilibrage de l'aile, puis cinématique de l'aile qui pivote (Opus), puis aile droite.

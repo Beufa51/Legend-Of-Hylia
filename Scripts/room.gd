@@ -32,9 +32,12 @@ const SOLIDES := "#SOBR"
 const EPAISSEUR := 2
 # Son d'une fausse note (pack Ninja Adventure)
 const SON_ERREUR := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Cancel.wav"
-# Regard des sentinelles : portée (en cases) et couleur des cases surveillées
+# Regard des sentinelles : un CÔNE de vision (portée en cases, demi-ouverture en radians) et ses couleurs
 const PORTEE_REGARD := 7
-const COULEUR_REGARD := Color(1.0, 0.85, 0.3, 0.28)
+const DEMI_ANGLE := 0.4538   # 26 degrés (en radians)
+const RAYONS_CONE := 24   # nombre de rayons lancés pour dessiner le cône (plus = plus lisse)
+const COULEUR_REGARD := Color(1.0, 0.85, 0.3, 0.42)   # près de l'œil (le bout du cône est plus transparent)
+const COULEUR_REPERE := Color(1.0, 0.2, 0.15, 0.55)
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
 const COLONNES_TORCHES := [4, 20]
 const COLONNES_BANNIERES := [7, 17]
@@ -98,8 +101,10 @@ var _cloches := {}         # { note (int) : Cloche }
 var _progression := 0      # combien de notes de la mélodie ont déjà été rejouées
 var _en_chant := false     # vrai pendant que la statue chante
 var _sentinelles: Array[Sentinelle] = []
-var _regards := {}         # { case : vrai si la sentinelle va bientôt tourner } = cases surveillées
-var _calque_regards: Node2D   # dessine les cases surveillées par-dessus le sol
+var _cones: Array[PackedVector2Array] = []   # un cône par sentinelle : [œil, puis les bouts des rayons]
+var _cones_clignotent: Array[bool] = []      # vrai si la sentinelle va bientôt tourner
+var _calque_regards: Node2D   # dessine les cônes AU-DESSUS de l'obscurité (dans un CanvasLayer)
+var _flamme_vue := false      # le message « la flamme attire le regard » n'est montré qu'une fois
 var _repere := false       # le joueur vient d'être repéré (on attend que le garde le ramène)
 
 
@@ -203,11 +208,6 @@ func _creer_decor() -> void:
 		_calque_rayon.material = additif
 		_calque_rayon.draw.connect(_dessiner_rayon)
 		add_child(_calque_rayon)
-	if not _sentinelles.is_empty():
-		_calque_regards = Node2D.new()
-		_calque_regards.z_index = 1
-		_calque_regards.draw.connect(_dessiner_regards)
-		add_child(_calque_regards)
 
 
 # Tuile de sol : damier discret de deux tons (comme Zelda SNES), avec de rares dalles fissurées/usées.
@@ -320,7 +320,7 @@ func _poser_objets() -> void:
 					var directions := {"^": Vector2i.UP, "v": Vector2i.DOWN, "<": Vector2i.LEFT, ">": Vector2i.RIGHT}
 					var n := _sentinelles.size()
 					var periode: float = periodes_sentinelles[n] if n < periodes_sentinelles.size() else 0.0
-					sentinelle.initialiser(Vector2i(x, y), directions[layout[y][x]], periode, _image("statue_chevalier"), sombre)
+					sentinelle.initialiser(Vector2i(x, y), directions[layout[y][x]], periode, sombre, _calque_sentinelles())
 					_sentinelles.append(sentinelle)
 					_occupe[Vector2i(x, y)] = sentinelle
 				"R":
@@ -488,20 +488,39 @@ func point_arrivee() -> Vector2:
 
 # --- Sentinelles -----------------------------------------------------------------
 
+# Calque des cônes et des bulles : dans un CanvasLayer qui suit la caméra, pour rester visible
+# même dans une salle sombre (l'obscurité, CanvasModulate, ne touche que le monde).
+func _calque_sentinelles() -> Node2D:
+	if _calque_regards == null:
+		var calque := CanvasLayer.new()
+		calque.follow_viewport_enabled = true
+		add_child(calque)
+		_calque_regards = Node2D.new()
+		_calque_regards.position = position
+		_calque_regards.draw.connect(_dessiner_regards)
+		calque.add_child(_calque_regards)
+	return _calque_regards
+
+
 # Chaque image : les sentinelles tournent la tête (ou fixent la flamme la plus proche),
-# on calcule les cases qu'elles voient, et si le joueur est sur l'une d'elles, il est repéré.
+# on calcule leur cône de vision, et si les pieds du joueur sont dedans, il est repéré.
 func _surveiller(delta: float) -> void:
-	_regards.clear()
+	_cones.clear()
+	_cones_clignotent.clear()
 	var au_repos := Etat.est(drapeau_repos)
 	for sentinelle in _sentinelles:
 		if au_repos:
 			sentinelle.endormir()
 			continue
+		var flamme := _direction_attiree(sentinelle)
+		var attiree := flamme != Vector2i.ZERO
+		sentinelle.regarder(flamme if attiree else sentinelle.direction_normale(), attiree)
 		sentinelle.avancer(delta)
-		sentinelle.regarder(_direction_attiree(sentinelle))
-		var bientot := sentinelle.va_tourner()
-		for c in _cases_vues(sentinelle.case, sentinelle.direction):
-			_regards[c] = bientot
+		if attiree and not _flamme_vue:
+			_flamme_vue = true
+			Etat.annoncer("La flamme attire le regard de la sentinelle !")
+		_cones.append(_cone(sentinelle))
+		_cones_clignotent.append(sentinelle.va_tourner())
 	_calque_regards.queue_redraw()
 	if au_repos or _repere:
 		return
@@ -509,12 +528,15 @@ func _surveiller(delta: float) -> void:
 	if joueur == null:
 		return
 	var pied := to_local(joueur.global_position) + Vector2(0, 5)   # les pieds du joueur
-	if _regards.has(Vector2i(floori(pied.x / TUILE), floori(pied.y / TUILE))):
-		_repere = true
-		Etat.repere.emit(retour)
+	for sentinelle in _sentinelles:
+		if _voit(sentinelle, pied):
+			_repere = true
+			sentinelle.alerter()
+			Etat.repere.emit(retour)
+			return
 
 
-# Une flamme allumée attire le regard : la sentinelle fixe le brasero allumé le plus proche.
+# Une flamme allumée attire le regard : direction du brasero allumé le plus proche (ZERO s'il n'y en a pas).
 func _direction_attiree(sentinelle: Sentinelle) -> Vector2i:
 	var meilleur: Brasero = null
 	var meilleure_distance := INF
@@ -524,34 +546,50 @@ func _direction_attiree(sentinelle: Sentinelle) -> Vector2i:
 			meilleur = brasero
 			meilleure_distance = d
 	if meilleur == null:
-		return sentinelle.direction_normale()
+		return Vector2i.ZERO
 	var vers := meilleur.position / TUILE - Vector2(sentinelle.case)
 	if absf(vers.x) >= absf(vers.y):
 		return Vector2i(signi(roundi(vers.x)), 0)
 	return Vector2i(0, signi(roundi(vers.y)))
 
 
-# Les cases vues : un cône qui s'élargit (1, 3, 3, puis 5 cases de large), arrêté par tout obstacle.
-func _cases_vues(depuis: Vector2i, dir: Vector2i) -> Array[Vector2i]:
-	var vues: Array[Vector2i] = []
-	var cote := Vector2i(-dir.y, dir.x)   # perpendiculaire au regard
-	for distance in range(1, PORTEE_REGARD + 1):
-		var demi := mini(2, int(distance / 2.0))
-		for decalage in range(-demi, demi + 1):
-			var c := depuis + dir * distance + cote * decalage
-			if not _opaque(c) and _ligne_libre(depuis, c, distance * 4):
-				vues.append(c)
-	return vues
+func _oeil(sentinelle: Sentinelle) -> Vector2:
+	return Vector2(sentinelle.case * TUILE) + Vector2(8, 8)
 
 
-# Vrai si rien ne bloque la vue entre deux cases (on avance par petits pas sur la ligne).
-func _ligne_libre(a: Vector2i, b: Vector2i, pas: int) -> bool:
-	for i in range(1, pas):
-		var t := float(i) / pas
-		var c := Vector2i(floori(a.x + (b.x - a.x) * t + 0.5), floori(a.y + (b.y - a.y) * t + 0.5))
-		if c != a and c != b and _opaque(c):
-			return false
-	return true
+# Le cône : on lance des rayons en éventail depuis l'œil ; chacun s'arrête au premier obstacle.
+func _cone(sentinelle: Sentinelle) -> PackedVector2Array:
+	var oeil := _oeil(sentinelle)
+	var points := PackedVector2Array([oeil])
+	for i in RAYONS_CONE + 1:
+		var a := sentinelle.angle - DEMI_ANGLE + 2.0 * DEMI_ANGLE * i / RAYONS_CONE
+		points.append(oeil + Vector2.from_angle(a) * _portee_libre(oeil, a, sentinelle.case))
+	return points
+
+
+# Jusqu'où (en pixels) la vue porte dans cette direction avant de heurter un obstacle.
+func _portee_libre(oeil: Vector2, a: float, case_sentinelle: Vector2i) -> float:
+	var direction := Vector2.from_angle(a)
+	var d := 0.0
+	var portee := float(PORTEE_REGARD * TUILE)
+	while d < portee:
+		d += 2.0
+		var p := oeil + direction * d
+		var c := Vector2i(floori(p.x / TUILE), floori(p.y / TUILE))
+		if c != case_sentinelle and _opaque(c):
+			return d - 2.0
+	return portee
+
+
+# Vrai si le point est dans le cône de la sentinelle : assez près, dans l'angle, et rien ne cache la vue.
+func _voit(sentinelle: Sentinelle, point: Vector2) -> bool:
+	var oeil := _oeil(sentinelle)
+	var vers := point - oeil
+	if vers.length() > PORTEE_REGARD * TUILE:
+		return false
+	if absf(angle_difference(sentinelle.angle, vers.angle())) > DEMI_ANGLE:
+		return false
+	return _portee_libre(oeil, vers.angle(), sentinelle.case) >= vers.length() - 1.0
 
 
 # Une case cache la vue : murs, statues, braseros, et tout ce qui occupe une case (blocs, pots, portes...).
@@ -561,15 +599,26 @@ func _opaque(c: Vector2i) -> bool:
 	return "#SOBKR".contains(layout[c.y][c.x]) or _occupe.has(c)
 
 
-# Dessine les cases surveillées (elles clignotent juste avant que la sentinelle tourne).
+# Dessine les cônes : un éventail de triangles, opaque près de l'œil, transparent au bout (façon jeu d'infiltration).
+# Le cône clignote juste avant que la sentinelle tourne, et devient rouge quand le joueur est repéré.
 func _dessiner_regards() -> void:
-	for c in _regards:
-		var couleur := COULEUR_REGARD
-		if _repere:
-			couleur = Color(1.0, 0.2, 0.15, 0.45)
-		elif _regards[c] and int(_temps * 8.0) % 2 == 0:
+	for n in _cones.size():
+		var points := _cones[n]
+		var couleur := COULEUR_REPERE if _repere else COULEUR_REGARD
+		if not _repere and _cones_clignotent[n] and int(_temps * 8.0) % 2 == 0:
 			couleur.a *= 0.4
-		_calque_regards.draw_rect(Rect2(Vector2(c * TUILE), Vector2(TUILE, TUILE)), couleur)
+		var bout := couleur
+		bout.a *= 0.3
+		var couleurs := PackedColorArray([couleur, bout, bout])
+		for i in range(1, points.size() - 1):
+			# draw_primitive accepte les triangles « plats » (sans erreur), contrairement à draw_colored_polygon
+			_calque_regards.draw_primitive(PackedVector2Array([points[0], points[i], points[i + 1]]), couleurs, PackedVector2Array())
+		# Contour du cône : on voit bien où il s'arrête
+		var contour := points.duplicate()
+		contour.append(points[0])
+		var trait := couleur
+		trait.a = minf(1.0, couleur.a * 1.6)
+		_calque_regards.draw_polyline(contour, trait, 1.0)
 
 
 # --- Rayon de lumière --------------------------------------------------------------

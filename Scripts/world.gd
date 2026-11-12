@@ -118,9 +118,12 @@ func _creer_messages() -> void:
 	_fondu.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	calque.add_child(_fondu)
 	_etiquette = Label.new()
-	_etiquette.position = Vector2(0, 205)
-	_etiquette.size = Vector2(400, 16)
+	# Zone de 2 lignes en bas de l'écran : un message trop long passe à la ligne au lieu d'être coupé
+	_etiquette.position = Vector2(8, 192)
+	_etiquette.size = Vector2(384, 30)
 	_etiquette.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_etiquette.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	_etiquette.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_etiquette.add_theme_font_size_override("font_size", 10)
 	_etiquette.add_theme_color_override("font_outline_color", Color.BLACK)
 	_etiquette.add_theme_constant_override("outline_size", 4)
@@ -131,7 +134,7 @@ func _creer_messages() -> void:
 	await get_tree().create_timer(0.8).timeout
 	Etat.annoncer(Noms.VILLAGE + " — Flèches/ZQSD : bouger   Maj/K : courir   Espace/J : lance   R : recommencer")
 	await get_tree().create_timer(5.5).timeout
-	if not Etat.est("vestibule_cristal"):
+	if not Etat.est("vestibule_cristal") and salle_actuelle == Vector2i(0, 1):   # seulement si on est encore au vestibule
 		Etat.annoncer("Frappe le cristal bleu avec ta lance pour ouvrir la porte")
 
 

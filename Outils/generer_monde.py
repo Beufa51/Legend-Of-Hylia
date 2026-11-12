@@ -136,10 +136,12 @@ sol(p4c, 12, 12, 6, 7); sol(p4c, 6, 12, 5, 5); sol(p4c, 7, 7, 3, 4)
 put(p4c, '>', (5, 5)); put(p4c, 'X', (11, 5))
 put(p4c, 'V', (3, 11), (21, 11), (3, 8), (21, 8)); put(p4c, 'S', (8, 8), (16, 8)); put(p4c, 'B', (3, 2), (21, 2))
 
-# 4d (la pointe) : SALLE SOMBRE. Deux sentinelles gardent le passage vers la plume.
-#     Une flamme attire leur regard : allumer les DEUX braseros (L) pour qu'elles regardent chacune de leur côté.
+# 4d (la pointe) : SALLE SOMBRE. Deux sentinelles se font face et gardent le passage vers la plume.
+#     Une flamme attire leur regard : le brasero de gauche fait tourner la tête de la sentinelle de gauche,
+#     celui de droite la sentinelle de droite. Les deux allumés -> le passage du milieu n'est plus surveillé.
+#     La rangée du bas (11) n'est jamais vue : on peut aller allumer les braseros sans risque.
 p4d = vide(); sol(p4d, 2, 22, 6, 11); sol(p4d, 11, 13, 12, 13); sol(p4d, 2, 22, 2, 4); sol(p4d, 12, 12, 5, 5)
-put(p4d, '>', (8, 8)); put(p4d, '<', (16, 8)); put(p4d, 'L', (2, 11), (22, 11)); put(p4d, 'G', (12, 3))
+put(p4d, '>', (7, 7)); put(p4d, '<', (17, 7)); put(p4d, 'L', (3, 10), (21, 10)); put(p4d, 'G', (12, 3))
 put(p4d, 'V', (3, 2), (21, 2), (2, 6), (22, 6))
 for x in range(10, 15): put(p4d, 'T', (x, 4))
 RETOUR_P4 = 'Vector2(1800, -30)'   # entrée de la plume 4 (bas de l'écran 4a, case (12,12))
@@ -164,10 +166,10 @@ put(p5b, 'R', (1, 9)); put(p5b, 'M', (11, 9), (11, 11)); put(p5b, 'N', (20, 11))
 put(p5b, '#', (11, 5), (10, 5), (12, 5))
 put(p5b, 'V', (3, 3), (21, 2), (3, 11)); put(p5b, 'O', (16, 7)); put(p5b, 'B', (6, 3))
 
-# 5c : le bloc COUPE le rayon. Le bloc sur le bouton ouvre la chambre du réceptacle (porte H)...
-#      mais il se trouve alors sur le trajet du rayon : il faut ensuite le pousser de côté.
+# 5c : le bloc COUPE le rayon. Au départ, le bloc est posé en plein dans le rayon (on voit le rayon s'arrêter dessus).
+#      Le pousser jusqu'au bouton (à droite) fait d'une pierre deux coups : le rayon passe ET la grille H s'ouvre.
 p5c = vide(); plume_grille(p5c)
-put(p5c, 'R', (1, 4)); put(p5c, 'M', (18, 4)); put(p5c, 'P', (18, 7)); put(p5c, 'X', (15, 7))
+put(p5c, 'R', (1, 4)); put(p5c, 'N', (18, 4)); put(p5c, 'X', (18, 6)); put(p5c, 'P', (21, 6))
 for x in range(15, 23): p5c[9][x] = '#'
 for y in (10, 11): p5c[y][15] = '#'
 for x in (17, 18, 19): p5c[9][x] = 'H'
@@ -208,20 +210,22 @@ salles = [
         'indice': 'Dans le noir, guette les cloches qui s\'allument quand le coq chante.'}),
     ('Epine4', (4, 0), e4, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume4'}),
     ('Plume4a', (4, -1), p4a, (0.94, 0.96, 1.04), {'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4,
-        'indice': 'Une sentinelle ! Ne marche pas dans son regard. Les piliers font de l\'ombre.'}),
+        'indice': 'Ce garde de pierre est une SENTINELLE : ne passe pas dans son cône de vision. Les murs te cachent.'}),
     ('Plume4b', (4, -2), p4b, (0.96, 0.95, 1.02), {'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4,
         'periodes_sentinelles': 'PackedFloat32Array(2, 3)',
         'indice': 'Elles tournent la tête : observe leur rythme. Maj ou K pour courir.'}),
     ('Plume4c', (4, -3), p4c, (0.98, 0.94, 1.0), {'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4}),
     ('Plume4d', (4, -4), p4d, (1.0, 1.0, 1.0), {'sombre': 'true', 'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4,
         'drapeau_gemme': 'plume4', 'duree_braseros': '14.0',
-        'indice': 'Dans le noir, les sentinelles fixent la flamme la plus proche.'}),
+        'indice': 'Une flamme attire le regard des sentinelles. Allume les braseros pour détourner leurs yeux.'}),
     ('Epine5', (5, 0), e5, (0.86, 0.90, 0.96), {}),
     ('Plume5a', (5, -1), p5a, (1.05, 1.0, 0.9), {'drapeau_rayon': 'p5_rayon1', 'drapeau_porte': 'p5_rayon1',
-        'indice': 'Un rayon de soleil ! Frappe le miroir avec ta lance pour le faire pivoter.'}),
-    ('Plume5b', (5, -2), p5b, (1.04, 0.99, 0.92), {'drapeau_rayon': 'p5_rayon2', 'drapeau_porte': 'p5_rayon2'}),
+        'indice': 'Frappe le MIROIR à la lance pour le faire pivoter : guide le rayon jusqu\'au soleil éteint.'}),
+    ('Plume5b', (5, -2), p5b, (1.04, 0.99, 0.92), {'drapeau_rayon': 'p5_rayon2', 'drapeau_porte': 'p5_rayon2',
+        'indice': 'Le chemin le plus court n\'est pas toujours le bon...'}),
     ('Plume5c', (5, -3), p5c, (1.03, 0.98, 0.94), {'drapeau_plaque': 'p5_bouton', 'drapeau_porte2': 'p5_bouton',
-        'drapeau_rayon': 'p5_rayon3', 'drapeau_porte': 'p5_rayon3'}),
+        'drapeau_rayon': 'p5_rayon3', 'drapeau_porte': 'p5_rayon3',
+        'indice': 'Un bloc arrête la lumière... et un bouton attend un bloc.'}),
     ('Plume5d', (5, -4), p5d, (1.0, 1.0, 1.0), {'sombre': 'true', 'drapeau_rayon': 'p5_rayon4', 'drapeau_porte': 'p5_rayon4'}),
     ('Plume5e', (5, -5), p5e, (1.08, 1.0, 0.88), {'chanteur_au_soleil': 'true', 'melodie': '3142', 'drapeau_melodie': 'p5_chant',
         'drapeau_porte': 'p5_chant', 'drapeau_gemme': 'fragment_gauche',

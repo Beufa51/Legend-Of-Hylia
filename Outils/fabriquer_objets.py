@@ -130,20 +130,30 @@ def soleil():
 
 
 def cible(allumee):
+    """Réceptacle du rayon : un SOLEIL (même motif que source_soleil) posé sur un socle de pierre.
+    Éteint = soleil de pierre grise (on comprend qu'il attend la lumière) ; allumé = soleil doré."""
     img = Image.new("RGBA", (16, 16))
-    pierre = (96, 98, 108, 255) if not allumee else (130, 120, 96, 255)
-    for y in range(3, 16):
-        for x in range(2, 14):
-            img.putpixel((x, y), CONTOUR if x in (2, 13) or y in (3, 15) else pierre)
-    coeur = (255, 230, 120, 255) if allumee else (70, 56, 40, 255)
-    anneau = (240, 170, 50, 255) if allumee else (120, 100, 70, 255)
-    for y in range(4, 15):
-        for x in range(3, 13):
-            d = ((x - 7.5) ** 2 + (y - 9) ** 2) ** 0.5
-            if d <= 2.2:
+    # Socle (colonnes 4-11, lignes 11-15) avec un dessus clair
+    for y in range(11, 16):
+        for x in range(4, 12):
+            bord = x in (4, 11) or y == 15
+            img.putpixel((x, y), CONTOUR if bord else ((150, 150, 160, 255) if y == 11 else (100, 100, 112, 255)))
+    if allumee:
+        coeur, disque, cercle, rayon = (255, 246, 190, 255), (250, 200, 70, 255), (150, 80, 20, 255), (255, 214, 90, 255)
+    else:
+        coeur, disque, cercle, rayon = (120, 112, 100, 255), (92, 86, 80, 255), (40, 34, 30, 255), (110, 104, 96, 255)
+    cx, cy = 7.5, 6.0
+    for y in range(0, 12):
+        for x in range(16):
+            d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
+            if d <= 2.0:
                 img.putpixel((x, y), coeur)
-            elif d <= 3.6:
-                img.putpixel((x, y), anneau)
+            elif d <= 3.4:
+                img.putpixel((x, y), disque)
+            elif d <= 4.4:
+                img.putpixel((x, y), cercle)
+            elif d <= 6.2 and (abs(x - cx) < 1 or abs(y - cy) < 1 or abs(abs(x - cx) - abs(y - cy)) < 1) and y <= 10:
+                img.putpixel((x, y), rayon)
     return img
 
 
