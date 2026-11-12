@@ -56,12 +56,24 @@ func _glisser_vers(salle: Vector2i) -> void:
 	salle_actuelle = salle
 	Etat.salle_courante = salle
 	_regler_obscurite(salle)
+	_montrer_indice(salle)
 	joueur.set_physics_process(false)
 	var tween := create_tween()
 	tween.tween_property(camera, "position", _centre_salle(salle), DUREE_GLISSEMENT)
 	await tween.finished
 	joueur.set_physics_process(true)
 	en_transition = false
+
+
+# Indice d'une salle (export `indice` de Room) : affiché une seule fois, à la première visite.
+var _indices_vus := {}
+
+
+func _montrer_indice(salle: Vector2i) -> void:
+	for enfant in get_children():
+		if enfant is Room and enfant.grille == salle and enfant.indice != "" and not _indices_vus.has(salle):
+			_indices_vus[salle] = true
+			Etat.annoncer(enfant.indice)
 
 
 # Joue la musique en boucle (volume baissé pour ne pas couvrir les futurs bruitages).

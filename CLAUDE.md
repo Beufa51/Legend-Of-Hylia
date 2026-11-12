@@ -242,5 +242,19 @@
   **CORRECTION 6e (non testée dans Godot, aperçu PIL vérifié)** : `traiter_gemini.py::fabrique_grille(w, h, linteau)` : GROS linteau de briques (11 px pour la porte 48x32, 6 px pour 48x16) avec lumière en haut et ombre portée sur les barreaux,
   montants de briques, fond d'embrasure dégradé ; la porte latérale (16x64) n'a que des montants (linteau 0).
 
-## PROCHAINE ÉTAPE : Étape 6f
-- L'utilisateur re-teste les portes (Pull, F5). Puis plumes 3, 4, 5 (3, 4, 5 écrans), épine 3-5, fragment ; ensuite rééquilibrage des énigmes. (Conception = Opus ; faire /clear avant /model.)
+- 2026-11-12 : **PLAN DES PLUMES 3-5 VALIDÉ** par l'utilisateur (1 mécanique nouvelle par plume ; 1er écran = leçon, suivants = complication, dernier = combinaison) :
+  - Plume 3 (3 écrans, colonne x=3) « LE CHANT DU COQ » : frapper la statue du coq -> mélodie, chaque cloche s'illumine sur sa note ; rejouer la mélodie sur les cloches.
+    3a = 3 cloches/3 notes (leçon) ; 3b = 4 notes, une cloche dans une niche derrière un bloc ; 3c = SOMBRE, 5 notes, ouvre l'alcôve de la plume.
+  - Plume 4 (4 écrans, x=4) « LES SENTINELLES » : statues de garde, cône de regard visible au sol. Vu = alerte + **un garde te RACCOMPAGNE À L'ENTRÉE DE LA PLUME** (choix de l'utilisateur, pas de dégâts).
+    4a = 1 sentinelle fixe + piliers ; 4b = 2 sentinelles qui tournent à des rythmes différents ; 4c = se cacher derrière un bloc poussé ; 4d = sombre, allumer un brasero révèle les cônes mais attire les regards.
+  - Plume 5 (5 écrans, x=5, pointe de l'aile) « LE PIVOT » : rayon de lumière + miroirs qui pivotent de 90° d'un coup de lance -> guider le rayon vers une cible.
+    5a = 1 miroir ; 5b = 2 miroirs + faux chemin ; 5c = un bloc coupe/laisse passer le rayon ; 5d = sombre (le rayon éclaire) ; 5e = salle finale (miroirs + bloc + mélodie) -> FRAGMENT D'AILE en (5,-5).
+  - Alternative gardée en réserve : plots qui basculent orange/bleu au coup de cristal (façon ALttP).
+- 2026-11-12 : **ÉTAPE 6f écrite (non testée dans Godot)** = PLUME 3. Nouveau : `Scripts/cloche.gd` (class Cloche, lettres `1`-`5` = note, dessinée en code, taille selon la note, son `Bonus/Coin.wav` avec `pitch_scale`
+  gamme pentatonique `HAUTEURS`, anti-répétition 400 ms car la lance frappe à chaque image) ; `Scripts/chanteur.gd` (class Chanteur, lettre `C`, image `statue_oiseau`) ; `room.gd` : exports `melodie`, `drapeau_melodie`, `indice`,
+  `jouer_melodie()` (0.6 s par note), `cloche_frappee()` (fausse note = cloches rouges + `Menu/Cancel.wav`, on recommence) ; `world.gd::_montrer_indice` (message à la 1re visite d'une salle, sans drapeau donc sans jingle).
+  `generer_monde.py` : Épine3 (3,0) porte est = drapeau `plume3` -> Épine4 (4,0) provisoire fermée ; Plume3a (3,-1) « 132 », Plume3b (3,-2) « 2413 », Plume3c (3,-3) sombre « 31524 » + plume dorée.
+  Drapeaux : p3_chant1, p3_chant2, p3_chant3, plume3. Godot n'a pas pu être lancé côté Claude (non autorisé) : code relu à la main seulement.
+
+## PROCHAINE ÉTAPE : Étape 6g
+- L'utilisateur teste la plume 3 (Pull, F5) : son des cloches (hauteurs, volume), lisibilité dans le noir, difficulté. Puis plume 4 (sentinelles), puis plume 5 (miroirs + fragment). Ensuite rééquilibrage de toute l'aile.

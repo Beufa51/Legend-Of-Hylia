@@ -46,7 +46,8 @@ def epine(est_ferme=False, porte_est=False, tige=True):
 
 e1 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 1 est obtenue
 e2 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 2 est obtenue
-e3 = epine(est_ferme=True, tige=False)  # provisoire (plumes 3 à 5 à construire)
+e3 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 3 est obtenue
+e4 = epine(est_ferme=True, tige=False)  # provisoire (plumes 4 et 5 à construire)
 
 # --- Plume 1 : bloc + bouton (leçon : pousser un bloc ; le pot sert à dégager le chemin)
 p1 = vide(); sol(p1, 2, 22, 2, 11); sol(p1, 11, 13, 12, 13)
@@ -75,6 +76,40 @@ put(p2b, 'G', (12, 3)); put(p2b, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p2b, 'T', (x, 4))
 put(p2b, 'K', (4, 8)); put(p2b, 'S', (20, 7)); put(p2b, 'O', (3, 11)); put(p2b, 'V', (21, 11), (12, 9), (8, 7))
 
+# --- PLUME 3 : « LE CHANT DU COQ ». Frapper la statue du coq (C) : elle chante une mélodie et chaque cloche
+#     s'allume quand sa note passe. Il faut rejouer la mélodie sur les cloches (1 à 5) avec la lance.
+def plume_bas_haut(g):
+    """Salle d'une plume avec une ouverture en bas (vers l'écran du dessous) et une grille en haut."""
+    sol(g, 2, 22, 2, 11); sol(g, 11, 13, 12, 13); sol(g, 11, 13, 0, 1)
+    for x in (11, 12, 13): g[0][x] = 'D'; g[1][x] = 'D'
+
+# 3a (en bas) : leçon, 3 cloches, 3 notes
+p3a = vide(); plume_bas_haut(p3a)
+put(p3a, 'C', (12, 8))
+for y in (9, 10, 11): put(p3a, 'T', (11, y), (12, y), (13, y))
+put(p3a, '3', (6, 5)); put(p3a, '2', (18, 5)); put(p3a, '1', (12, 4))
+put(p3a, 'B', (3, 3), (21, 3)); put(p3a, 'V', (3, 11), (21, 11), (4, 8)); put(p3a, 'S', (20, 8))
+
+# 3b (au milieu) : 4 cloches, 4 notes ; la cloche 3 est dans une niche, cachée derrière un bloc à pousser
+p3b = vide(); plume_bas_haut(p3b)
+put(p3b, 'C', (12, 9))
+for y in (10, 11): put(p3b, 'T', (11, y), (12, y), (13, y))
+put(p3b, '#', (16, 2), (18, 2)); put(p3b, '3', (17, 2)); put(p3b, 'X', (17, 3))
+put(p3b, '2', (5, 4)); put(p3b, '1', (5, 9)); put(p3b, '4', (19, 9))
+put(p3b, '#', (8, 6), (16, 6))
+put(p3b, 'V', (3, 11), (21, 11), (21, 3)); put(p3b, 'O', (3, 2)); put(p3b, 'B', (9, 2))
+
+# 3c (la pointe) : SALLE SOMBRE, 5 cloches, 5 notes : il faut repérer dans le noir les cloches qui s'allument.
+#     La mélodie ouvre l'alcôve où se trouve la plume.
+p3c = vide(); sol(p3c, 2, 22, 2, 11); sol(p3c, 11, 13, 12, 13)
+for x in range(2, 23): p3c[5][x] = '#'
+for x in (11, 12, 13): p3c[5][x] = 'D'
+put(p3c, 'G', (12, 3)); put(p3c, 'V', (5, 3), (19, 3), (3, 2), (21, 2))
+for x in range(10, 15): put(p3c, 'T', (x, 4))
+put(p3c, 'C', (12, 9))
+put(p3c, '3', (4, 7)); put(p3c, '1', (8, 10)); put(p3c, '5', (16, 10)); put(p3c, '2', (20, 7)); put(p3c, '4', (16, 6))
+put(p3c, 'V', (3, 11), (21, 11))
+
 salles = [
     ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal'}),
     ('Entree', (0, 0), ent, (1.0, 0.96, 0.88), {}),
@@ -83,7 +118,14 @@ salles = [
     ('Epine2', (2, 0), e2, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume2'}),
     ('Plume2a', (2, -1), p2a, (1.0, 1.0, 1.0), {'sombre': 'true', 'drapeau_braseros': 'p2_braseros', 'drapeau_porte': 'p2_braseros'}),
     ('Plume2b', (2, -2), p2b, (1.04, 0.98, 0.9), {'drapeau_cristal': 'p2_cristal', 'drapeau_porte': 'p2_cristal', 'drapeau_gemme': 'plume2'}),
-    ('Epine3', (3, 0), e3, (0.86, 0.90, 0.96), {}),
+    ('Epine3', (3, 0), e3, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume3'}),
+    ('Plume3a', (3, -1), p3a, (1.04, 0.98, 0.9), {'melodie': '132', 'drapeau_melodie': 'p3_chant1', 'drapeau_porte': 'p3_chant1',
+        'indice': 'Frappe la statue du coq : écoute son chant, puis rejoue-le sur les cloches.'}),
+    ('Plume3b', (3, -2), p3b, (1.02, 0.96, 0.92), {'melodie': '2413', 'drapeau_melodie': 'p3_chant2', 'drapeau_porte': 'p3_chant2'}),
+    ('Plume3c', (3, -3), p3c, (1.0, 1.0, 1.0), {'sombre': 'true', 'melodie': '31524', 'drapeau_melodie': 'p3_chant3',
+        'drapeau_porte': 'p3_chant3', 'drapeau_gemme': 'plume3',
+        'indice': 'Dans le noir, guette les cloches qui s\'allument quand le coq chante.'}),
+    ('Epine4', (4, 0), e4, (0.86, 0.90, 0.96), {}),
 ]
 depart = (200, 224 + 180)   # le joueur commence dans le vestibule (0,1)
 

@@ -12,6 +12,8 @@ class_name Room
 #   K  = cristal à frapper à la lance (lève `drapeau_cristal`)
 #   L  = brasero à allumer à la lance, dans une salle `sombre` (voir `drapeau_braseros`)
 #   P  = bouton de sol : s'enfonce quand un bloc est dessus (voir `drapeau_plaque`)
+#   1 à 5 = cloche à frapper à la lance (le chiffre = sa note, 1 = la plus grave)
+#   C  = statue du coq chanteur : frappée, elle joue la `melodie` de la salle
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
@@ -23,6 +25,8 @@ const DOSSIER := "res://Assets/Gemini/tuiles/"
 const SOLIDES := "#SOB"
 # Épaisseur des murs du bord (en tuiles)
 const EPAISSEUR := 2
+# Son d'une fausse note (pack Ninja Adventure)
+const SON_ERREUR := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Cancel.wav"
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
 const COLONNES_TORCHES := [4, 20]
 const COLONNES_BANNIERES := [7, 17]
@@ -41,6 +45,9 @@ const COLONNES_BANNIERES := [7, 17]
 @export var sombre := false        # salle plongée dans le noir (seules les lumières éclairent)
 @export var drapeau_braseros := "" # levé quand TOUS les braseros L sont allumés en même temps
 @export var duree_braseros := 14.0 # secondes avant qu'un brasero L s'éteigne
+@export var melodie := ""          # notes à rejouer sur les cloches, dans l'ordre (ex. "132")
+@export var drapeau_melodie := ""  # levé quand on a rejoué toute la mélodie sans faute
+@export var indice := ""           # message affiché la première fois qu'on entre dans la salle
 
 # Cache des images déjà chargées (partagé entre toutes les salles)
 static var _cache := {}
@@ -59,6 +66,9 @@ var _plaques: Array[Vector2i] = []
 var _braseros: Array[Brasero] = []
 var _boutons := {}   # { case : Sprite2D } image de chaque bouton (relevé / enfoncé)
 var _portes: Array[Porte] = []
+var _cloches := {}         # { note (int) : Cloche }
+var _progression := 0      # combien de notes de la mélodie ont déjà été rejouées
+var _en_chant := false     # vrai pendant que la statue chante
 
 
 func _ready() -> void:
@@ -70,6 +80,9 @@ func _ready() -> void:
 	Etat.drapeau_change.connect(_sur_drapeau)
 	if Etat.est(drapeau_porte):
 		_sur_drapeau(drapeau_porte)  # drapeau déjà levé : les portes sont ouvertes d'emblée
+	if Etat.est(drapeau_melodie):
+		for cloche in _cloches.values():
+			cloche.dorer()
 
 
 # Anime torches et braseros en alternant leurs images.
@@ -239,6 +252,19 @@ func _poser_objets() -> void:
 					plume.initialiser(drapeau_gemme, "Plume obtenue !")
 				"F":
 					_poser("dalle_fleches", pos)
+				"1", "2", "3", "4", "5":
+					var cloche := Cloche.new()
+					cloche.position = pos
+					add_child(cloche)
+					cloche.initialiser(self, int(layout[y][x]), sombre)
+					_cloches[int(layout[y][x])] = cloche
+					_occupe[Vector2i(x, y)] = cloche
+				"C":
+					var chanteur := Chanteur.new()
+					chanteur.position = pos
+					add_child(chanteur)
+					chanteur.initialiser(self, _image("statue_oiseau"), sombre)
+					_occupe[Vector2i(x, y)] = chanteur
 
 
 # Regroupe les cases `D` voisines : chaque groupe devient UNE porte, dessinée avec l'image porte_LxH.
@@ -325,6 +351,7 @@ func reinitialiser() -> void:
 	for bloc in _blocs:
 		bloc.reinitialiser()
 	_maj_boutons()
+	_progression = 0
 
 
 # Appelé par un brasero qui vient de s'allumer : si tous brûlent en même temps, c'est gagné.
@@ -335,6 +362,53 @@ func verifier_braseros() -> void:
 	for brasero in _braseros:
 		brasero.verrouiller()
 	Etat.poser(drapeau_braseros)
+
+
+# --- Énigme du chant du coq ----------------------------------------------------
+
+# La statue chante : chaque note de la mélodie fait sonner et briller sa cloche, l'une après l'autre.
+func jouer_melodie() -> void:
+	if _en_chant:
+		return
+	_en_chant = true
+	_progression = 0
+	for i in melodie.length():
+		var cloche: Cloche = _cloches.get(int(melodie[i]))
+		if cloche != null:
+			cloche.sonner(Cloche.ECLAT)
+		await get_tree().create_timer(0.6).timeout
+	_en_chant = false
+
+
+# Appelé par une cloche frappée par le joueur.
+func cloche_frappee(note: int) -> void:
+	if melodie == "" or _en_chant or Etat.est(drapeau_melodie):
+		return
+	if str(note) == melodie[_progression]:
+		_progression += 1
+		if _progression == melodie.length():
+			_progression = 0
+			for cloche in _cloches.values():
+				cloche.dorer()
+			Etat.poser(drapeau_melodie)
+		return
+	# Fausse note : toutes les cloches rougissent et on recommence depuis le début
+	_progression = 0
+	for cloche in _cloches.values():
+		cloche.rougir()
+	_jouer_son(SON_ERREUR, -6.0)
+
+
+func _jouer_son(chemin: String, volume_db: float) -> void:
+	var flux = load(chemin)
+	if flux == null:
+		return
+	var lecteur := AudioStreamPlayer.new()
+	lecteur.stream = flux
+	lecteur.volume_db = volume_db
+	add_child(lecteur)
+	lecteur.play()
+	lecteur.finished.connect(lecteur.queue_free)
 
 
 func _sur_drapeau(nom: String) -> void:
