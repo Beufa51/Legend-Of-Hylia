@@ -9,6 +9,7 @@ signal drapeau_change(nom: String)   # un drapeau vient d'être levé
 signal message(texte: String)        # un message à afficher à l'écran
 signal secousse                      # l'écran tremble (une porte s'ouvre...)
 signal dialogue_demande(nom: String, lignes: PackedStringArray)   # un habitant parle (boîte de dialogue)
+signal passage(ecran: String, case: Vector2i)   # le joueur franchit une porte : il arrive dans l'écran `ecran`, sur la case `case`
 signal repere(retour: Vector2)       # une sentinelle a vu le joueur : un garde le ramène à `retour`
 
 const FICHIER := "user://sauvegarde.json"

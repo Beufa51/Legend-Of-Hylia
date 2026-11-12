@@ -99,7 +99,6 @@ est = vide()
 chemin(est, 0, 24, 6, 8)
 chemin(est, 11, 13, 5, 5)                                     # devant la porte de la caserne
 bordure(est)
-put(est, 'b', (24, 6), (24, 7), (24, 8))                      # maison du héros pas encore construite
 put(est, 'N', (10, 2)); put(est, 'j', (8, 2), (15, 2))        # caserne : maison beige + bannières
 put(est, 'o', (6, 3), (6, 4), (18, 3), (19, 4))
 for (x, y) in [(0, 2), (0, 4), (2, 9), (22, 2), (22, 9), (20, 11)]:
@@ -114,21 +113,65 @@ pnjs_est = [
     "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.",
 ]
 animaux_est = ['d 20 7', 'c 12 11']
+passages_est = ["11 4 InterieurCaserne 12 9"]   # porte de la caserne (maison beige en (10,2)) ; l'intérieur est en bas de la carte
 
+# --- MAISON DU HÉROS (4,2) : tout à l'est du village, au bout du chemin. Le jeu commence DANS la maison.
+heros = vide()
+chemin(heros, 0, 12, 6, 8); chemin(heros, 12, 12, 5, 5)
+bordure(heros)
+put(heros, 'b', (24, 6), (24, 7), (24, 8))                    # l'est : falaise plus tard
+put(heros, 'M', (11, 2))                                      # la maison orange : porte en (12,4)
+put(heros, 'j', (10, 3), (15, 3))
+for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 3), (22, 9), (19, 11), (3, 11)]:
+    put(heros, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+put(heros, 'P', (18, 2), (20, 5), (21, 10))
+put(heros, 'o', (9, 4), (14, 4), (16, 9))
+put(heros, 'f', (8, 3), (15, 5), (10, 10), (18, 9)); put(heros, 'g', (9, 5), (14, 5), (6, 10), (20, 9))
+put(heros, 'w', (13, 3), (8, 11), (17, 6), (4, 9), (21, 7))
+animaux_heros = ['c 15 7', 'k 10 6']
+passages_heros = ["12 4 InterieurHeros 12 9"]
+
+def interieur(portes, meubles, haut=3, bas=10, gauche=6, droite=18):
+    """Une pièce rectangulaire (murs : 2 rangées en haut, 1 ailleurs), le reste de l'écran noir."""
+    g = [[' '] * W for _ in range(H)]
+    for y in range(haut, bas + 1):
+        for x in range(gauche, droite + 1):
+            mur = y < haut + 2 or y == bas or x in (gauche, droite)
+            g[y][x] = '#' if mur else '.'
+    for (x, y) in portes: g[y][x] = 'm'
+    for (c, x, y) in meubles: g[y][x] = c
+    return g
+
+int_heros = interieur([(12, 10)], [('L', 7, 5), ('S', 16, 5), ('o', 17, 9), ('o', 7, 9)])
+pnjs_int_heros = ["Woman 12 7 bas | Maman | Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'ouest, tout près d'ici. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
+int_caserne = interieur([(12, 10)], [('L', 7, 5), ('L', 10, 5), ('S', 16, 5), ('o', 17, 9), ('o', 7, 9)])
+pnjs_int_caserne = ["Villager3 14 8 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
+
+FERMEE = "La porte est fermée à clé."
+ferme_place = ["4 4 ! " + FERMEE, "19 4 ! " + FERMEE]
+ferme_ouest = ["4 4 ! " + FERMEE, "13 4 ! " + FERMEE]
 ecrans = [
-    ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place}),
-    ('VillageOuest', (1, 2), ouest, {'animaux': animaux_ouest, 'pnjs': pnjs_ouest}),
-    ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est}),
+    ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place, 'passages': ferme_place}),
+    ('VillageOuest', (1, 2), ouest, {'animaux': animaux_ouest, 'pnjs': pnjs_ouest, 'passages': ferme_ouest}),
+    ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est, 'passages': passages_est}),
+    ('MaisonHeros', (4, 2), heros, {'animaux': animaux_heros, 'passages': passages_heros}),
 ]
-depart = (2 * 400 + 12 * 16 + 8, 2 * 224 + 10 * 16 + 3)   # nouvelle partie : au sud de la statue
+# Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
+interieurs = [
+    ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 12 5"],
+        'indice': "Tu te réveilles chez toi. Aujourd'hui, c'est ton adoubement ! Parle à Maman, puis rejoins le capitaine à la caserne (à l'ouest)."}),
+    ('InterieurCaserne', (3, 5), int_caserne, {'pnjs': pnjs_int_caserne, 'passages': ["12 10 VillageEst 11 5"]}),
+]
+depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans la maison du héros, à côté du lit
 
 
 def ecrire_scene():
-    out = '''[gd_scene load_steps=4 format=3]
+    out = '''[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://Scripts/world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://Scenes/exterieur.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://Scenes/player.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://Scenes/interieur.tscn" id="4"]
 
 ; FICHIER GÉNÉRÉ par Outils/generer_village.py : modifie les plans là-bas, pas ici.
 
@@ -138,8 +181,8 @@ musique = "res://Assets/Ninja_adventure/Audio/Musics/20 - Good Time.ogg"
 donjon = false
 
 '''
-    for nom, (gx, gy), g, props in ecrans:
-        out += '[node name="%s" parent="." instance=ExtResource("2")]\n' % nom
+    for nom, (gx, gy), g, props in ecrans + interieurs:
+        out += '[node name="%s" parent="." instance=ExtResource("%s")]\n' % (nom, "4" if nom.startswith("Interieur") else "2")
         out += 'grille = Vector2i(%d, %d)\n' % (gx, gy)
         for k, v in props.items():
             if isinstance(v, list):   # liste de textes -> PackedStringArray
@@ -154,7 +197,7 @@ position = Vector2(%d, %d)
 ''' % depart
     with open(os.path.join(RACINE, "Scenes/village.tscn"), "w", encoding="utf-8") as f:
         f.write(out)
-    print("village.tscn écrit :", [e[0] for e in ecrans])
+    print("village.tscn écrit :", [e[0] for e in ecrans + interieurs])
 
 
 # --- Aperçu (même logique que Scripts/exterieur.gd) ---------------------------------------

@@ -34,6 +34,7 @@ func _ready() -> void:
 	_regler_obscurite(salle_actuelle)
 	Etat.secousse.connect(_secouer)
 	Etat.repere.connect(_raccompagner)
+	Etat.passage.connect(func(ecran, case): _ramener(ecran, case, ""))
 	Etat.drapeau_change.connect(_sur_drapeau)
 	_creer_hud()
 	add_child(Dialogue.new())   # boîte de dialogue des habitants
@@ -41,6 +42,8 @@ func _ready() -> void:
 		var ambiance := Ambiance.new()   # vent, feuilles, nuages, papillons, oiseaux (extérieur seulement)
 		ambiance.camera = camera
 		add_child(ambiance)
+		_ambiance = ambiance
+		_regler_obscurite(salle_actuelle)   # (si on reprend la partie dans une maison)
 	Etat.memoriser_position(joueur.position)   # la sauvegarde retient la scène où l'on est
 
 
@@ -180,6 +183,7 @@ func _jouer_jingle(nom: String) -> void:
 
 
 # --- Salles sombres -------------------------------------------------------------
+var _ambiance: Ambiance
 var _modulation: CanvasModulate   # teinte globale : sombre dans une salle sombre, blanche sinon
 const COULEUR_NUIT := Color(0.05, 0.055, 0.11)   # plus sombre = plus noir (1,1,1 = pas de nuit)
 
@@ -187,9 +191,14 @@ const COULEUR_NUIT := Color(0.05, 0.055, 0.11)   # plus sombre = plus noir (1,1,
 # Assombrit l'écran si la salle est `sombre` (et allume la lumière du joueur).
 func _regler_obscurite(salle: Vector2i) -> void:
 	var noir := false
+	var dedans := false
 	for enfant in get_children():
 		if enfant is Ecran and enfant.grille == salle:
 			noir = enfant.sombre
+			dedans = enfant.interieur
+	if _ambiance:   # pas de vent ni de feuilles dans une maison
+		_ambiance.visible = not dedans
+		_ambiance.process_mode = Node.PROCESS_MODE_DISABLED if dedans else Node.PROCESS_MODE_INHERIT
 	var tween := create_tween()
 	tween.tween_property(_modulation, "color", COULEUR_NUIT if noir else Color.WHITE, 0.4)
 	joueur.regler_lumiere(noir)
@@ -389,6 +398,7 @@ func _ramener(nom_salle: String, case: Vector2i, texte: String) -> void:
 			joueur.position = enfant.position + Vector2(case * Ecran.TUILE) + Vector2(8, 3)
 	joueur.velocity = Vector2.ZERO
 	_placer_camera()
+	_montrer_indice(salle_actuelle)
 	Etat.memoriser_position(joueur.position)
 	await get_tree().create_timer(0.4).timeout
 	t = create_tween()
@@ -396,7 +406,8 @@ func _ramener(nom_salle: String, case: Vector2i, texte: String) -> void:
 	await t.finished
 	joueur.set_physics_process(true)
 	en_transition = false
-	Etat.annoncer(texte)
+	if texte != "":
+		Etat.annoncer(texte)
 
 
 # Caméra et obscurité calées sur la salle où se trouve le joueur (sans glissement).

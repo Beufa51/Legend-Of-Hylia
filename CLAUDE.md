@@ -393,8 +393,14 @@
   `Etat.dialogue_demande` + `Etat.en_dialogue` ; `player.gd` : près d'un habitant (26 px), Espace/J = PARLER au lieu de frapper ; `exterieur.gd` : export `pnjs` (lignes "Perso x y direction | Nom | phrase // phrase").
   Textes des PNJ dans `generer_village.py` (éviter les guillemets droits ", utiliser « »).
 
+- 2026-11-12 : **ÉTAPE 8e écrite (non testée dans Godot, aperçu PIL vérifié)** = MAISON DU HÉROS + INTÉRIEURS VISITABLES.
+  `ecran.gd` (commun) : `pnjs` (déplacé depuis exterieur.gd) + `passages` ("x y Ecran dx dy" = marcher sur la case -> arriver dans l'écran nommé, case (dx,dy) ; "x y ! texte" = message, ex. porte fermée) ; `interieur` (vrai = pas de vent/feuilles : `world.gd::_regler_obscurite` coupe l'Ambiance).
+  `Etat.passage` (signal) -> `world.gd` -> `_ramener(ecran, case, "")` (fondu, joueur déplacé ; `_montrer_indice` appelé). NOUVEAU `Scripts/interieur.gd` (class Interieur extends Ecran, `Scenes/interieur.tscn`) :
+  plan texte (' ' noir, # mur brique, . sol, m paillasson, L lit, S étagère, o tonneau, B banc), sol TilesetInteriorFloor (4,13), meubles de `tileset_bed.png`.
+  `generer_village.py` : écran **MaisonHeros (4,2)** (maison orange, porte case (12,4), chemin depuis la caserne), intérieurs à la rangée 5 de la grille : **InterieurHeros (4,5)** (Maman) et **InterieurCaserne (3,5)** (Soldat Gilles) ;
+  les 4 autres maisons du village = « porte fermée à clé ». NOUVELLE PARTIE : le joueur démarre DANS la maison du héros (indice de début). La case de porte d'une maison extérieure n'est pas solide (`exterieur.gd::_creer_collisions`).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
-- Tester les corrections 7e (sauvegarde : fermer/relancer le jeu ; HUD ; retour rapide ; sentinelles).
-- Tester 8d (dialogues, 3 écrans). Puis : 2) maison du héros (4,2) + dialogues conditionnés par les drapeaux ;
-  3) intérieurs ; 4) chemins + parvis du temple + liaison avec le donjon ; 5) secrets (bois, cascade).
-- Plus tard : fin de la vue aérienne avec le VRAI corps du donjon ; rééquilibrage des énigmes ; aile droite ; épreuve finale.
+- Tester 8e (démarrage dans la maison, sortie/entrée des portes, caserne, portes fermées, ambiance coupée dedans). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
+- Ensuite : dialogues conditionnés par les drapeaux ; chemins + parvis du temple (écrans nord) + liaison avec le donjon ; secrets (bois, cascade) ; ferme ; musique d'intérieur.
+- Plus tard : fin de la vue aérienne avec le VRAI corps du donjon ; rééquilibrage des énigmes ; aile droite ; épreuve finale ; contrôles tactiles.
