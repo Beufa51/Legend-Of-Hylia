@@ -12,7 +12,10 @@ const SONS := {
 }
 const DISTANCE_PEUR := 30.0   # px : un animal peureux fuit si le joueur est plus près que ça
 
-static var _coups_poules := 0   # pour le clin d'œil : à force de frapper les poules...
+static var _coups_poules := 0   # à force de frapper les poules...
+static var _dernier_coup_poule := -100.0
+const COUPS_AVANT_COLERE := 5   # ...elles s'énervent (comme dans Zelda), mais sans jamais blesser
+const DUREE_COLERE := 12.0
 
 var _sprite: Sprite2D
 var _vitesse := 0.0
@@ -25,6 +28,9 @@ var _fuite := 0.0             # temps de fuite restant
 var _image_chrono := 0.0
 var _dernier_coup := -10.0
 var _plumes: CPUParticles2D
+var _colere := 0.0            # temps restant de colère (poule qui fonce sur le joueur)
+var _bec := 0.0               # délai entre deux coups de bec
+var _renfort := false         # poule venue en renfort : disparaît après la colère
 
 
 func initialiser(planche: String, vitesse: float, peureux: bool, espece: String, zone: Rect2) -> void:
@@ -45,6 +51,7 @@ func initialiser(planche: String, vitesse: float, peureux: bool, espece: String,
 	_sprite.position = Vector2(0, -5)
 	add_child(_sprite)
 	if espece == "poule":
+		add_to_group("poules")
 		_plumes = CPUParticles2D.new()   # petites plumes qui volent quand on la frappe
 		_plumes.emitting = false
 		_plumes.one_shot = true
@@ -67,6 +74,9 @@ func _physics_process(delta: float) -> void:
 	_chrono -= delta
 	_fuite -= delta
 	var joueur := _joueur()
+	if _colere > 0.0:
+		_attaquer(delta, joueur)
+		return
 	if _peureux and joueur and joueur.global_position.distance_to(global_position) < DISTANCE_PEUR and _fuite <= 0.0:
 		_fuir(joueur, 0.9)
 	if _fuite <= 0.0 and _chrono <= 0.0:
@@ -122,9 +132,13 @@ func frapper() -> void:
 	if joueur and _vitesse > 0.0:
 		_fuir(joueur, 1.8)
 	if _espece == "poule":
+		if maintenant - _dernier_coup_poule > 8.0:
+			_coups_poules = 0   # on a laissé les poules tranquilles : elles pardonnent
+		_dernier_coup_poule = maintenant
 		_coups_poules += 1
-		if _coups_poules == 6:
-			Etat.annoncer("Les poules du village te regardent d'un drôle d'air... Elles ont la rancune tenace.")
+		if _coups_poules >= COUPS_AVANT_COLERE:
+			_coups_poules = 0
+			_declencher_colere()
 	elif _espece == "chat":
 		Etat.annoncer("Le chat ouvre un œil, soupire... et se rendort.")
 
@@ -147,3 +161,53 @@ func _crier() -> void:
 
 func _joueur() -> Node2D:
 	return get_tree().get_first_node_in_group("joueur") as Node2D
+
+
+# TOUTES les poules de l'écran s'énervent, et des renforts arrivent par les bords (comme les cocottes de Zelda).
+func _declencher_colere() -> void:
+	Etat.annoncer("Oh non... les poules sont furieuses !")
+	for p in get_tree().get_nodes_in_group("poules"):
+		p._se_facher()
+	for i in 5:
+		var renfort := Animal.new()
+		var bord := Vector2(_zone.position.x if i % 2 == 0 else _zone.end.x, randf_range(_zone.position.y, _zone.end.y))
+		renfort.position = bord
+		get_parent().add_child(renfort)
+		renfort.initialiser("res://Assets/Ninja_adventure/Actor/Animal/Chicken/SpriteSheetWhite.png", _vitesse, true, "poule", _zone)
+		renfort._renfort = true
+		renfort._se_facher()
+
+
+func _se_facher() -> void:
+	_colere = DUREE_COLERE
+	_bec = 0.0
+	_sprite.modulate = Color(1.0, 0.55, 0.5)
+	_crier()
+
+
+# Colère : la poule fonce sur le joueur et le repousse à coups de bec (aucun dégât). Elle se calme au bout d'un moment.
+func _attaquer(delta: float, joueur: Node2D) -> void:
+	_colere -= delta
+	_bec -= delta
+	if _colere <= 0.0:
+		_sprite.modulate = Color.WHITE
+		_sprite.rotation = 0.0
+		_fuite = 0.0
+		_chrono = 0.5
+		if _renfort:
+			queue_free()
+		return
+	if joueur:
+		_direction = (joueur.global_position - global_position).normalized()
+		velocity = _direction * _vitesse * 3.6
+		move_and_slide()
+		if _bec <= 0.0 and joueur.global_position.distance_to(global_position) < 13.0:
+			_bec = 0.8
+			_crier()
+			if joueur.has_method("repousser"):
+				joueur.repousser(_direction * 170.0)
+			var saut := create_tween()
+			saut.tween_property(_sprite, "position:y", -11.0, 0.08)
+			saut.tween_property(_sprite, "position:y", -5.0, 0.1)
+	_animer(delta)
+	_sprite.rotation = sin(Time.get_ticks_msec() / 40.0) * 0.12   # elle s'agite

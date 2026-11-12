@@ -52,7 +52,7 @@ put(place, 'b', (0, 6), (0, 7), (0, 8), (24, 6), (24, 7), (24, 8), (11, 0), (12,
 # Maisons (portes en bas : colonnes 4 et 20)
 put(place, 'M', (3, 2)); put(place, 'N', (18, 2))
 # Statue du coq au centre, bannières de part et d'autre
-put(place, 'Q', (11, 5)); put(place, 'j', (9, 5), (15, 5))
+put(place, 'Q', (11, 4)); put(place, 'j', (9, 5), (15, 5))   # girouette 3x4 au centre
 # Marché (en bas à gauche) et puits (en bas à droite)
 put(place, 'E', (4, 9)); put(place, 'o', (7, 10), (3, 9))
 put(place, 'W', (18, 9)); put(place, 'o', (21, 10))
@@ -122,7 +122,7 @@ def apercu(fichier):
               "b": ("NATURE", (0, 10, 1, 1)), "f": ("NATURE", (0, 11, 1, 1)), "g": ("NATURE", (3, 11, 1, 1)),
               "w": ("NATURE", (6, 11, 1, 1)),
               "M": ("MAISONS", (0, 0, 4, 3)), "N": ("MAISONS", (4, 0, 4, 3)), "o": ("MAISONS", (16, 15, 1, 1)),
-              "j": ("MAISONS", (23, 20, 1, 2)), "Q": ("tuile:statue_coq", None), "W": ("tuile:puits", None)}
+              "j": ("MAISONS", (23, 20, 1, 2)), "Q": ("tuile:girouette_mat", None), "W": ("tuile:puits", None)}
     xs = [e[1][0] for e in ecrans]; ys = [e[1][1] for e in ecrans]
     mx, my = min(xs), min(ys)
     img = Image.new("RGBA", ((max(xs) - mx + 1) * 400, (max(ys) - my + 1) * 224), (0, 0, 0, 255))
@@ -166,9 +166,14 @@ def apercu(fichier):
         for y in range(H):
             for x in range(W):
                 c = g[y][x]
-                taille = {"E": (3, 2), "Q": (3, 3), "W": (2, 2)}.get(c) or (objets[c][1][2:] if c in objets and objets[c][1] else None)
+                taille = {"E": (3, 2), "Q": (3, 4), "W": (2, 2)}.get(c) or (objets[c][1][2:] if c in objets and objets[c][1] else None)
                 if taille:
                     couvertes |= {(x + i, y + j) for i in range(taille[0]) for j in range(taille[1])}
+        for y in range(H):   # le coq de la girouette, au sommet du mât
+            for x in range(W):
+                if g[y][x] == "Q":
+                    coq = Image.open(tuiles + "girouette_coq.png").convert("RGBA")
+                    img.alpha_composite(coq, (ox + x * 16 + 24 - coq.width // 2, oy + y * 16 + 17 - coq.height))
         for y in range(H):
             for x in range(W):
                 if touffe(g, x, y, gx, couvertes):

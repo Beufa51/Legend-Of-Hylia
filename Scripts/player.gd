@@ -22,6 +22,7 @@ var attaque := false    # vrai pendant un coup de lance (le joueur ne bouge pas)
 var lance: Node2D       # la lance (image + zone de touche), créée dans _ready
 var zone: Area2D        # zone de touche de la lance
 var lumiere: PointLight2D  # petite lumière autour du joueur (allumée seulement dans les salles sombres)
+var _recul := Vector2.ZERO  # poussée subie (coup de bec d'une poule...), s'éteint toute seule
 var _temps_pousse := 0.0  # depuis combien de temps on pousse contre un bloc
 
 
@@ -45,11 +46,17 @@ func _physics_process(delta: float) -> void:
 	# Vecteur d'entrée : (-1..1, -1..1) selon les touches pressées
 	var entree := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var court := Input.is_action_pressed("run")
-	velocity = entree * VITESSE * (FACTEUR_COURSE if court else 1.0)
+	velocity = entree * VITESSE * (FACTEUR_COURSE if court else 1.0) + _recul
+	_recul = _recul.move_toward(Vector2.ZERO, 600.0 * delta)
 	sprite.speed_scale = 1.6 if court else 1.0   # les jambes vont plus vite quand on court
 	move_and_slide()
 	_pousser_les_blocs(entree, delta)
 	_mettre_a_jour_animation(entree)
+
+
+# Pousse le joueur (sans le blesser) : utilisé par les poules en colère.
+func repousser(force: Vector2) -> void:
+	_recul = force
 
 
 # Si on avance contre un bloc "poussable" pendant un instant, il glisse d'une case.

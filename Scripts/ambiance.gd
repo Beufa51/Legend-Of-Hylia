@@ -15,7 +15,7 @@ const PETALE := "res://Assets/Ninja_adventure/FX/Particle/LeafPink.png"
 const NUAGE := "res://Assets/Ninja_adventure/FX/Particle/Clouds.png"
 const SON_VENT := "res://Assets/Ninja_adventure/Audio/Sounds/Ambient/Wind.wav"
 const SON_OISEAU := "res://Assets/Ninja_adventure/Audio/Sounds/Creature/Bird.wav"
-const MAX_FEUILLES := 12
+const MAX_FEUILLES := 4
 const COULEURS_PAPILLONS := [Color(1.0, 0.95, 0.5), Color(1.0, 0.6, 0.8)]
 
 var camera: Camera2D
@@ -52,12 +52,12 @@ func _process(delta: float) -> void:
 	# Rafales : de temps en temps le vent forcit pendant 2-3 s
 	_prochaine_rafale -= delta
 	if _prochaine_rafale <= 0.0:
-		_prochaine_rafale = randf_range(7.0, 13.0)
+		_prochaine_rafale = randf_range(16.0, 28.0)
 		var t := create_tween()
 		t.tween_property(self, "_rafale", 1.0, 1.2).set_trans(Tween.TRANS_SINE)
 		t.tween_interval(randf_range(1.0, 2.0))
 		t.tween_property(self, "_rafale", 0.0, 1.8).set_trans(Tween.TRANS_SINE)
-	force_vent = 0.7 + 0.25 * sin(_temps * 0.7) + 1.1 * _rafale
+	force_vent = 0.3 + 0.08 * sin(_temps * 0.7) + 0.5 * _rafale   # vent discret
 	_bouger_feuilles(delta)
 	# Ombres des nuages : elles dérivent, et reviennent par la gauche
 	for nuage in _nuages:
@@ -76,7 +76,7 @@ func _process(delta: float) -> void:
 func _bouger_feuilles(delta: float) -> void:
 	_prochaine_feuille -= delta * force_vent
 	if _prochaine_feuille <= 0.0 and _feuilles.size() < MAX_FEUILLES:
-		_prochaine_feuille = randf_range(0.5, 1.4)
+		_prochaine_feuille = randf_range(1.5, 3.5)
 		var feuille := Sprite2D.new()
 		feuille.texture = load(PETALE if randf() < 0.3 else FEUILLE)
 		feuille.hframes = 6
@@ -85,7 +85,7 @@ func _bouger_feuilles(delta: float) -> void:
 		_feuilles.append([feuille, randf_range(35.0, 60.0), randf() * TAU])
 	for f in _feuilles.duplicate():
 		var sprite: Sprite2D = f[0]
-		sprite.position.x += f[1] * force_vent * delta
+		sprite.position.x += f[1] * (0.5 + force_vent) * delta
 		sprite.position.y += sin(_temps * 2.5 + f[2]) * 18.0 * delta + 6.0 * delta   # elle ondule en tombant doucement
 		sprite.frame = int(_temps * 8.0 + f[2] * 3.0) % 6
 		if sprite.position.x > 215 or sprite.position.y > 120:
@@ -116,7 +116,7 @@ func _bruit_du_vent() -> void:
 		return
 	var lecteur := AudioStreamPlayer.new()
 	lecteur.stream = flux
-	lecteur.volume_db = -24.0
+	lecteur.volume_db = -32.0
 	add_child(lecteur)
 	lecteur.play()
 	lecteur.finished.connect(lecteur.play)

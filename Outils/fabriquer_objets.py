@@ -226,6 +226,44 @@ def statue_coq():
     return img
 
 
+def girouette_mat():
+    """48x64 : socle de pierre, mât de fer avec ses 4 branches (N/S/E/O). Le coq est une image à part (il tourne)."""
+    img = Image.new("RGBA", (48, 64))
+    _bloc(img, 5, 54, 42, 63)     # marche
+    _bloc(img, 14, 46, 33, 55)    # socle
+    FER, FER_C = (92, 88, 104, 255), (150, 146, 164, 255)
+    for y in range(16, 47):       # le mât
+        img.putpixel((22, y), CONTOUR); img.putpixel((23, y), FER_C); img.putpixel((24, y), FER); img.putpixel((25, y), CONTOUR)
+    for x in range(14, 34):       # branche des points cardinaux
+        img.putpixel((x, 29), CONTOUR); img.putpixel((x, 30), FER_C if x < 24 else FER); img.putpixel((x, 31), CONTOUR)
+    for x in (13, 34):            # boules au bout
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                img.putpixel((x + dx, 30 + dy), FER_C if dx + dy < 0 else FER)
+    for dx in (-1, 0, 1):         # pointe du haut
+        img.putpixel((23 + dx, 15), CONTOUR)
+    return img
+
+
+def girouette_coq():
+    """Le coq de la girouette (regarde à droite), 28 px de large, rouge héraldique."""
+    coq = Image.open(os.path.join(RACINE, "Assets/Gemini/embleme/coq_rouge.png")).convert("RGBA")
+    petit = coq.resize((26, round(26 * coq.height / coq.width)), Image.LANCZOS)
+    w, h = petit.size
+    img = Image.new("RGBA", (w + 2, h + 2))
+    plein = lambda x, y: 0 <= x < w and 0 <= y < h and petit.getpixel((x, y))[3] > 110
+    for y in range(-1, h + 1):
+        for x in range(-1, w + 1):
+            if plein(x, y):
+                c = (236, 92, 70, 255) if not plein(x, y - 1) else (176, 34, 44, 255) if (x + y) % 4 else (132, 20, 34, 255)
+            elif any(plein(x + dx, y + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                c = (40, 8, 12, 255)
+            else:
+                continue
+            img.putpixel((x + 1, y + 1), c)
+    return img
+
+
 def puits():
     """32x32 : margelle ronde en pierre, eau sombre, 2 poteaux et un petit toit de bois."""
     img = Image.new("RGBA", (32, 32))
@@ -330,6 +368,8 @@ def blason():
 if __name__ == "__main__":
     statue_coq().save(os.path.join(SORTIE, "statue_coq.png"))
     puits().save(os.path.join(SORTIE, "puits.png"))
+    girouette_mat().save(os.path.join(SORTIE, "girouette_mat.png"))
+    girouette_coq().save(os.path.join(SORTIE, "girouette_coq.png"))
     blason()
     miroir(1).save(os.path.join(SORTIE, "miroir_m.png"))
     miroir(-1).save(os.path.join(SORTIE, "miroir_n.png"))

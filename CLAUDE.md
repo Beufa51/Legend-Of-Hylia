@@ -381,6 +381,11 @@
   la poule fuit le joueur ; coup de lance = sursaut + cri (Bird.wav aigu / Dog.wav) + plumes (CPUParticles2D) + fuite ; gag après 6 coups de poule ; le chat se rendort).
   Place : 3 poules, 1 chat devant la maison orange, 1 chien.
 
+- 2026-11-12 : retours 8b : « trop de vent, attaque de poules comme Zelda, girouette au centre avec le coq ». **ÉTAPE 8c écrite (non testée dans Godot, aperçu PIL vérifié)** :
+  VENT adouci (`ambiance.gd` : force 0.3 + rafales +0.5 toutes les 16-28 s, 4 feuilles max, son -32 dB). POULES EN COLÈRE (`animal.gd`) : 5 coups de lance en moins de 8 s -> toutes les poules + 5 renforts
+  (blanches, venues des bords) foncent sur le joueur 12 s, le repoussent à coups de bec (`player.gd::repousser`, aucun dégât), se calment ensuite, renforts disparaissent. GIROUETTE : `Q` = mât de fer + socle 3x4
+  (`girouette_mat.png`) + coq (`girouette_coq.png`) qui se retourne doucement (`exterieur.gd::_coq`), au centre de la place (11,4) ; l'ancienne statue du coq n'est plus utilisée. Images via `Outils/fabriquer_objets.py`.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester les corrections 7e (sauvegarde : fermer/relancer le jeu ; HUD ; retour rapide ; sentinelles).
 - Tester la place du coq (8a). Puis construire par tranches : 2) village ouest + village est (caserne) + maison du héros + PNJ/dialogues ;

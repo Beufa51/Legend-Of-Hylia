@@ -9,7 +9,7 @@ class_name Exterieur
 #   b  = buisson (1x1)     f = tournesol   g = fleur rouge   w = marguerite (fleurs : décor, ne bloquent pas)
 #   M  = maison orange (4x3)   N = maison beige (4x3)
 #   E  = étal du marché (3x2)  o = tonneau   j = bannière rouge (1x2)
-#   Q  = statue du coq (3x3)   W = puits (2x2)
+#   Q  = girouette du coq (3x4)   W = puits (2x2)
 # ANIMAUX : pas dans le plan, mais dans la liste `animaux` : "lettre x y", par ex. "c 9 9"
 #   c  = poule blanche   h = poule rousse   k = chat   d = chien
 # VIE : les plantes, arbres et bannières se balancent au vent (force donnée par Ambiance.force_vent),
@@ -43,7 +43,7 @@ const OBJETS := {
 	"N": [MAISONS, Rect2i(4, 0, 4, 3), true, 0.0],
 	"o": [MAISONS, Rect2i(16, 15, 1, 1), true, 0.0],
 	"j": [MAISONS, Rect2i(23, 20, 1, 2), true, 0.1],
-	"Q": ["tuile:statue_coq", Rect2i(0, 0, 3, 3), true, 0.0],
+	"Q": ["tuile:girouette_mat", Rect2i(0, 0, 3, 4), true, 0.0],   # girouette : mât + coq qui tourne au vent
 	"W": ["tuile:puits", Rect2i(0, 0, 2, 2), true, 0.0],
 }
 # Touffes d'herbe semées automatiquement (TilesetNature) : environ 1 case d'herbe libre sur 11
@@ -63,6 +63,7 @@ var _solides := {}   # cases bloquées par un objet
 var _couvertes := {} # cases recouvertes par un objet (bloquant ou non) : pas de touffe d'herbe dessus
 var _plantes: Array = []   # [sprite, amplitude, phase] : ce qui se balance au vent
 var _temps := 0.0
+var _coq: Sprite2D   # le coq de la girouette
 
 
 func _ready() -> void:
@@ -82,6 +83,9 @@ func _process(delta: float) -> void:
 	for p in _plantes:
 		var sprite: Sprite2D = p[0]
 		sprite.skew = p[1] * force * (0.55 + 0.45 * sin(_temps * 2.3 - p[2]))
+	if _coq:   # le coq se retourne quand le vent change de sens (son pivot : le bas du mât)
+		_coq.scale.x = clampf(sin(_temps * 0.45) * 5.0, -1.0, 1.0)
+		_coq.rotation = sin(_temps * 3.1) * 0.05 * force
 
 
 func _creer_decor() -> void:
@@ -152,6 +156,8 @@ func _poser_objet(def: Array, cellule: Vector2i) -> void:
 	var image: String = def[0]
 	if image.begins_with("tuile:"):
 		_poser(image.substr(6), Vector2(cellule * TUILE))
+		if image == "tuile:girouette_mat":
+			_poser_coq_girouette(cellule)
 	else:
 		_poser_region(image, region, cellule, def[3])
 	for dx in region.size.x:
@@ -159,6 +165,15 @@ func _poser_objet(def: Array, cellule: Vector2i) -> void:
 			_couvertes[cellule + Vector2i(dx, dy)] = true
 			if def[2]:
 				_solides[cellule + Vector2i(dx, dy)] = true
+
+
+# Le coq tournant tout en haut du mât.
+func _poser_coq_girouette(cellule: Vector2i) -> void:
+	_coq = Sprite2D.new()
+	_coq.texture = _image("girouette_coq")
+	_coq.offset = Vector2(0, -_coq.texture.get_height() / 2.0)   # pivot = pieds du coq
+	_coq.position = Vector2(cellule * TUILE) + Vector2(24, 17)
+	add_child(_coq)
 
 
 # Pose un morceau (en cases) d'une planche du pack. Sprite2D + region : marche sur toutes les cartes graphiques.

@@ -14,7 +14,7 @@ donjon = false
 [node name="PlaceDuCoq" parent="." instance=ExtResource("2")]
 grille = Vector2i(2, 2)
 animaux = PackedStringArray("c 9 9", "c 15 10", "h 14 4", "k 6 5", "d 17 8")
-layout = PackedStringArray("A.a.A.a.A..bbb.a.a.a.a.a.", "...........:::...........", "A.wM....fw.:::.gw.N....A.", "........gf.:::..f........", "P......w:::::::::g.....P.", "....:::g:j:Q:::j:::::gw..", "b:g:::::::::::::::::::::b", "b:::::::::::::::::::::::b", "b:::::::::::::::::::::::b", "A..oE.::::::::::::W...fA.", "..w....o:::::::::....ow..", "bb.w......fw..gw.......bb", "a.A.a.A.a.A.a.A.a.A.a.A.b", "........................b")
+layout = PackedStringArray("A.a.A.a.A..bbb.a.a.a.a.a.", "...........:::...........", "A.wM....fw.:::.gw.N....A.", "........gf.:::..f........", "P......w:::Q:::::g.....P.", "....:::g:j:::::j:::::gw..", "b:g:::::::::::::::::::::b", "b:::::::::::::::::::::::b", "b:::::::::::::::::::::::b", "A..oE.::::::::::::W...fA.", "..w....o:::::::::....ow..", "bb.w......fw..gw.......bb", "a.A.a.A.a.A.a.A.a.A.a.A.b", "........................b")
 
 [node name="Player" parent="." instance=ExtResource("3")]
 position = Vector2(1000, 611)
