@@ -8,7 +8,7 @@ const DOSSIER := "res://Assets/Ninja_adventure/Actor/Character/Knight/SeparateAn
 # Ordre des colonnes dans les planches : bas, haut, gauche, droite
 const DIRECTIONS := ["bas", "haut", "gauche", "droite"]
 const VECTEURS := {"bas": Vector2.DOWN, "haut": Vector2.UP, "gauche": Vector2.LEFT, "droite": Vector2.RIGHT}
-# La lance du garde royal (pack Ninja Adventure) : image de la lance tenue en main, pointe vers le haut
+# La lance du garde royal (pack Ninja Adventure) : image de la lance tenue en main (pointe vers le bas dans l'image)
 const LANCE_IMAGE := "res://Assets/Ninja_adventure/Items/Weapons/Lance/SpriteInHand.png"
 const SON_LANCE := "res://Assets/Ninja_adventure/Audio/Sounds/Jump & Bounce/Jump2.wav"
 const PORTEE_RENTREE := 4.0   # distance de la lance (en pixels) quand elle est rentrée
@@ -79,7 +79,7 @@ func _attaquer() -> void:
 	attaque = true
 	var vecteur: Vector2 = VECTEURS[direction]
 	sprite.play("attaque_" + direction)
-	lance.rotation = vecteur.angle() + PI / 2.0   # l'image pointe vers le haut : on la tourne
+	lance.rotation = vecteur.angle() - PI / 2.0   # l'image a la pointe vers le BAS : on la tourne pour qu'elle pointe dans la direction du coup
 	lance.z_index = -1 if direction == "haut" else 1  # vers le haut, la lance passe derrière le joueur
 	lance.position = Vector2(0, 2) + vecteur * PORTEE_RENTREE
 	lance.visible = true

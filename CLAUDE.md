@@ -177,5 +177,7 @@
   et `room.gd` : la lettre `V` crée un Pot cassable (V retiré de SOLIDES). Bruits : Jump2.wav (lance), Impact3.wav (pot), modifiables en tête des scripts.
   À FAIRE ensuite : pots qui lâchent des objets (cœur/clé), herbe coupable, panneaux, leviers ; contrôles tactiles pour mobile (bouton d'attaque).
 
+- 2026-11-12 : correction lance : l'image `SpriteInHand.png` a la pointe vers le BAS (pas vers le haut) -> rotation = angle - PI/2 dans `player.gd::_attaquer`. Utilisateur : "le reste est ok".
+
 ## PROCHAINE ÉTAPE : Étape 5i
 - L'utilisateur teste la lance et les pots (Pull, F5, Espace/J). Ensuite : énigmes (Opus), en s'appuyant sur les interactions (pot qui cache une clé, etc.).
