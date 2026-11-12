@@ -53,9 +53,16 @@ func _process(delta: float) -> void:
 
 func _image(nom: String) -> Texture2D:
 	if not _cache.has(nom):
-		_cache[nom] = load(DOSSIER + nom + ".png")
-		if _cache[nom] == null:
-			push_error("Room : image introuvable " + DOSSIER + nom + ".png")
+		var chemin := DOSSIER + nom + ".png"
+		var tex = load(chemin) if ResourceLoader.exists(chemin) else null
+		if tex == null:
+			# Image pas encore importée par Godot : on la lit directement dans le fichier
+			var img := Image.load_from_file(ProjectSettings.globalize_path(chemin))
+			if img != null:
+				tex = ImageTexture.create_from_image(img)
+			else:
+				push_error("Room : image introuvable " + chemin)
+		_cache[nom] = tex
 	return _cache[nom]
 
 
@@ -101,9 +108,14 @@ func _creer_decor() -> void:
 	_poser_details()
 
 
-# Tuile de sol : sol plat et uni, comme dans Zelda SNES (peu de détails au sol).
-func _nom_sol(_x: int, _y: int) -> String:
-	return "sol_plat"
+# Tuile de sol : damier discret de deux tons (comme Zelda SNES), avec de rares dalles fissurées/usées.
+# Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
+func _nom_sol(x: int, y: int) -> String:
+	var h := (x * 7 + y * 13 + x * y * 3) % 37
+	var clair := (x + y) % 2 == 0
+	if h == 0:
+		return "sol_plat_c" if clair else "sol_plat_d"
+	return "sol_plat" if clair else "sol_plat_b"
 
 
 # Mur : fond sombre + liserés de pierre du côté du sol.
