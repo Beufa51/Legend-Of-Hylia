@@ -46,6 +46,14 @@
 - Résolution : 320x180 (16:9), fenêtre 1280x720, stretch viewport, filtre Nearest. Tuiles 16x16.
 - Workflow Git : l'utilisateur utilise GitHub Desktop ; toujours "Pull" avant de travailler, "Push" après.
 
+- Histoire : préquelle d'un garde royal (inspiré de l'esprit Zelda OoT). Noms de TRAVAIL :
+  village **Cocoricou**, royaume **Hylio**. Ils restent trop proches de Zelda : avant toute publication
+  publique, les remplacer par des noms 100 % originaux (les centraliser dans un seul fichier pour
+  les changer facilement). Sinon garder le dépôt privé.
+- Graphismes : pack Ninja Adventure (téléchargé) + perso créé dans un générateur (planche ~27x27 px,
+  licence du générateur à vérifier ; original à mettre dans `assets/`). On fait marcher d'abord un perso
+  Ninja Adventure (16x16), le perso maison viendra après si le style colle.
+
 ## Points ouverts / à décider
 - [ ] Titre/univers : l'utilisateur a proposé "La Legend d'Hylia" → refusé car Hylia et
       "Legend of..." viennent de Zelda (Nintendo). Trouver un nom 100 % original.
@@ -57,4 +65,12 @@
 - 2026-11-12 : réponses reçues (voir Décisions). Étape suivante : création du dépôt GitHub + projet Godot.
 - 2026-11-12 : dépôt créé par l'utilisateur, CLAUDE.md poussé. En attente : projet Godot créé dans le dossier cloné (rendu Compatibilité).
 - 2026-11-12 : projet Godot créé et poussé (project.godot à la racine). Réglages affichage OK.
-  ⚠️ Rendu = "Mobile" au lieu de "Compatibilité" → l'utilisateur doit le changer (menu en haut à droite de l'éditeur).
+- 2026-11-12 : rendu passé en gl_compatibility (aussi pour mobile). **ÉTAPE 0 TERMINÉE.**
+  Astuce : le sélecteur de rendu en haut à droite n'existe pas chez l'utilisateur → passer par
+  Paramètres du projet (Paramètres avancés activés) → Rendu → Moteur de rendu.
+
+## PROCHAINE ÉTAPE : Étape 2 — faire marcher le personnage
+- Confirmer le pack Ninja Adventure, le télécharger, ranger les fichiers dans `assets/`.
+- Créer la scène joueur (CharacterBody2D + AnimatedSprite2D + CollisionShape2D), script de
+  déplacement 4 directions + animations. Actions d'entrée : haut/bas/gauche/droite.
+- Une salle de test simple pour le voir bouger. Modèle conseillé : Sonnet.
