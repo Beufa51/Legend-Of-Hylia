@@ -216,5 +216,8 @@
   6) NOMS : `Scripts/noms.gd` (class Noms : TITRE_JEU, VILLAGE, ROYAUME) = SEUL endroit des noms. Village = "le village du coq qui chante" (une poule caquette, c'est le COQ qui chante !) -> proposé **Chantecler**
   (nom du coq dans le Roman de Renart, domaine public, "chante clair"). "Cocoricou" abandonné : trop proche de "Cocorico" = Kakariko en français. Alternatives : Chantecoq. À valider.
 
+- 2026-11-12 : clin d'œil voulu par l'utilisateur : le village du coq chantant = hommage au coq volant de Link's Awakening (easter egg assumé, mais NOMS et dessins restent originaux). Idées : girouette/statue de coq au village et dans le donjon,
+  chant du coq (son) comme fanfare finale, énigme "le chant du coq" (frapper des cloches/statues dans l'ordre d'une mélodie). Nom du village à confirmer : Chantecler (proposé) ou Chantecoq.
+
 ## PROCHAINE ÉTAPE : Étape 6b
 - L'utilisateur teste le Vestibule + bouton + jingles (Pull branche etape-4-aile-gauche, F5). Ensuite : plume 2 (2 écrans, salle sombre), choix définitif du nom du village, puis plumes 3-5.
