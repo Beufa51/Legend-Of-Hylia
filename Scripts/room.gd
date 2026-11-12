@@ -299,7 +299,7 @@ func _poser_objets() -> void:
 					_blocs.append(bloc)
 				"D":
 					pass  # les portes sont créées plus bas, par groupes de cases voisines (_poser_portes)
-				"G":
+				"G" when not Etat.est(drapeau_gemme):   # déjà ramassée (partie sauvegardée) : pas de plume
 					var plume := Ramassable.new()
 					plume.position = pos
 					add_child(plume)
@@ -343,7 +343,7 @@ func _poser_objets() -> void:
 					_cible.initialiser(_image("cible"), _image("cible_allumee"))
 					_case_cible = Vector2i(x, y)
 					_occupe[Vector2i(x, y)] = _cible
-				"W":
+				"W" when not Etat.est(drapeau_gemme):
 					var fragment := Ramassable.new()
 					fragment.position = pos
 					add_child(fragment)

@@ -19,6 +19,8 @@ var en_transition := false
 
 
 func _ready() -> void:
+	if Etat.position_sauvee != Vector2.ZERO:
+		joueur.position = Etat.position_sauvee   # partie sauvegardée : on reprend là où on était
 	_lancer_musique()
 	_creer_messages()
 	Etat.drapeau_change.connect(_jouer_jingle)
@@ -31,13 +33,14 @@ func _ready() -> void:
 	Etat.secousse.connect(_secouer)
 	Etat.repere.connect(_raccompagner)
 	Etat.drapeau_change.connect(_sur_drapeau)
+	_creer_hud()
 
 
 func _process(_delta: float) -> void:
 	if en_transition:
 		return
 	var nouvelle := _salle_du_joueur()
-	if nouvelle == SORTIE_DONJON and Etat.est("fragment_gauche") and not _vue_aerienne_vue:
+	if nouvelle == SORTIE_DONJON and Etat.est("fragment_gauche") and not Etat.est("vue_aerienne_gauche"):
 		_vue_aerienne("gauche")   # on sort du donjon avec l'aile : vue du ciel
 		return
 	if nouvelle != salle_actuelle:
@@ -66,6 +69,7 @@ func _glisser_vers(salle: Vector2i) -> void:
 	var tween := create_tween()
 	tween.tween_property(camera, "position", _centre_salle(salle), DUREE_GLISSEMENT)
 	await tween.finished
+	Etat.memoriser_position(joueur.position)   # sauvegarde : on reprendra à l'entrée de cette salle
 	joueur.set_physics_process(true)
 	en_transition = false
 
@@ -212,7 +216,7 @@ func _raccompagner(retour: Vector2) -> void:
 		add_child(lecteur)
 		lecteur.play()
 		lecteur.finished.connect(lecteur.queue_free)
-	Etat.annoncer("Repéré ! Un garde te raccompagne à l'entrée de la plume.")
+	Etat.annoncer("Repéré ! Un garde te raccompagne au début de la salle.")
 	await get_tree().create_timer(0.7).timeout
 	var tween := create_tween()
 	tween.tween_property(_fondu, "modulate:a", 1.0, 0.4)
@@ -269,6 +273,12 @@ func _creer_menu_dev() -> void:
 	bouton_cine.focus_mode = Control.FOCUS_NONE
 	bouton_cine.pressed.connect(_dev_cinematique)
 	boite.add_child(bouton_cine)
+	var bouton_effacer := Button.new()
+	bouton_effacer.text = "Effacer la sauvegarde (nouvelle partie)"
+	bouton_effacer.add_theme_font_size_override("font_size", 8)
+	bouton_effacer.focus_mode = Control.FOCUS_NONE
+	bouton_effacer.pressed.connect(_dev_nouvelle_partie)
+	boite.add_child(bouton_effacer)
 	for enfant in get_children():
 		if enfant is Room:
 			var bouton := Button.new()
@@ -278,6 +288,11 @@ func _creer_menu_dev() -> void:
 			bouton.pressed.connect(_teleporter.bind(enfant))
 			grille.add_child(bouton)
 	_menu_dev = panneau
+
+
+func _dev_nouvelle_partie() -> void:
+	Etat.effacer()
+	get_tree().reload_current_scene()
 
 
 func _dev_cinematique() -> void:
@@ -295,6 +310,7 @@ func _teleporter(salle: Room) -> void:
 	_regler_obscurite(salle_actuelle)
 	_montrer_indice(salle_actuelle)
 	joueur.set_physics_process(true)
+	Etat.memoriser_position(joueur.position)
 	Etat.annoncer("[dev] " + salle.name)
 
 
@@ -325,36 +341,44 @@ const CIEL_MUR := Color(0.282, 0.259, 0.329)
 const ECHELLE_AILE := Vector2(0.5, 1.15)   # forme finale du plan pour épouser l'empreinte de l'aile (x = épine, y = plumes)
 const CIEL_OR := Color(0.980, 0.784, 0.314)
 var _musique: AudioStreamPlayer
-var _vue_aerienne_vue := false
 
 
+# RETOUR RAPIDE : après une plume (1 à 4), une force ramène le joueur dans l'épine, devant la porte
+# qui vient de s'ouvrir ; après le fragment, à l'Entrée. Plus besoin de refaire le chemin à vide.
 func _sur_drapeau(nom: String) -> void:
+	_maj_hud()
 	if nom == "fragment_gauche":
 		await get_tree().create_timer(1.8).timeout   # laisser le temps au jingle et au message
-		_retour_entree()
+		_ramener("Entree", Vector2i(12, 9), "Une force t'a ramené à l'entrée. La grande porte du vestibule est ouverte : sors du donjon !")
+	elif nom in ["plume1", "plume2", "plume3", "plume4"]:
+		await get_tree().create_timer(1.8).timeout
+		_ramener("Epine" + nom.substr(5), Vector2i(12, 6), "Une force t'a ramené dans l'épine de l'aile. La porte de l'est est ouverte !")
 
 
-# Une force ramène le joueur à l'Entrée (pas besoin de refaire tout le chemin à pied).
-func _retour_entree() -> void:
+# Fondu au noir, le joueur est posé dans la salle `nom_salle`, sur la case `case`.
+func _ramener(nom_salle: String, case: Vector2i, texte: String) -> void:
 	if en_transition:
-		return
+		await get_tree().create_timer(0.8).timeout   # une autre transition se termine
+		if en_transition:
+			return
 	en_transition = true
 	joueur.set_physics_process(false)
 	var t := create_tween()
 	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
 	await t.finished
 	for enfant in get_children():
-		if enfant is Room and enfant.name == "Entree":
-			joueur.position = enfant.point_arrivee()
+		if enfant is Room and enfant.name == nom_salle:
+			joueur.position = enfant.position + Vector2(case * Room.TUILE) + Vector2(8, 3)
 	joueur.velocity = Vector2.ZERO
 	_placer_camera()
+	Etat.memoriser_position(joueur.position)
 	await get_tree().create_timer(0.4).timeout
 	t = create_tween()
 	t.tween_property(_fondu, "modulate:a", 0.0, 0.6)
 	await t.finished
 	joueur.set_physics_process(true)
 	en_transition = false
-	Etat.annoncer("Une force t'a ramené à l'entrée. La grande porte du vestibule est ouverte : sors du donjon !")
+	Etat.annoncer(texte)
 
 
 # Caméra et obscurité calées sur la salle où se trouve le joueur (sans glissement).
@@ -458,7 +482,8 @@ func _vue_aerienne(cote: String) -> void:
 	if en_transition:
 		return
 	en_transition = true
-	_vue_aerienne_vue = true
+	Etat.noter("vue_aerienne_" + cote)
+	_hud.visible = false
 	joueur.set_physics_process(false)
 	joueur.velocity = Vector2.ZERO
 	var droite := cote == "droite"
@@ -578,6 +603,8 @@ func _vue_aerienne(cote: String) -> void:
 		if enfant is Room and enfant.grille == SORTIE_DONJON - Vector2i(0, 1):
 			joueur.position = enfant.position + Vector2(12 * 16 + 8, 10 * 16 + 3)
 	_placer_camera()
+	Etat.memoriser_position(joueur.position)
+	_hud.visible = true
 	await get_tree().create_timer(0.4).timeout
 	t = create_tween()
 	t.tween_property(_fondu, "modulate:a", 0.0, 0.6)
@@ -586,3 +613,32 @@ func _vue_aerienne(cote: String) -> void:
 	await t.finished
 	joueur.set_physics_process(true)
 	en_transition = false
+
+
+# --- HUD : les 5 plumes de l'aile, en haut à gauche ------------------------------------
+# Une plume grise = pas encore obtenue ; dorée = obtenue. Le fragment d'aile s'ajoute à côté.
+var _hud: CanvasLayer
+var _icones_plumes: Array[Sprite2D] = []
+var _icone_fragment: Sprite2D
+const TEINTE_MANQUANTE := Color(0.12, 0.12, 0.18, 0.75)
+
+
+func _creer_hud() -> void:
+	_hud = CanvasLayer.new()
+	_hud.layer = 3
+	add_child(_hud)
+	var plume := _texture("res://Assets/Gemini/tuiles/plume_doree.png")
+	for i in 5:
+		var icone := _sprite(plume, Vector2(4 + i * 11, 3), _hud)
+		_icones_plumes.append(icone)
+	_icone_fragment = _sprite(_texture("res://Assets/Gemini/tuiles/fragment_aile.png"), Vector2(62, 1), _hud)
+	_maj_hud()
+
+
+func _maj_hud() -> void:
+	for i in 5:
+		_icones_plumes[i].modulate = Color.WHITE if Etat.est("plume%d" % (i + 1)) else TEINTE_MANQUANTE
+	# plume 5 = le fragment (la plume 5 n'a pas de plume dorée : sa récompense est le fragment)
+	if Etat.est("fragment_gauche"):
+		_icones_plumes[4].modulate = Color.WHITE
+	_icone_fragment.visible = Etat.est("fragment_gauche")

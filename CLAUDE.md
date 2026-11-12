@@ -323,6 +323,44 @@
   Puis retour dans le vestibule (le corps du donjon n'existe pas encore). Joué une seule fois (`_vue_aerienne_vue`). F1 -> « Vue aérienne aile gauche » pour la rejouer.
   À vérifier au test : aspect de la grille `porte_48x32` utilisée sur le mur du BAS (linteau côté salle).
 
-## PROCHAINE ÉTAPE : Étape 7 (suite)
-- Tester la vue aérienne (F1 -> bouton, ou pour de vrai : fragment en 5e -> retour à l'Entrée -> sortir par le sud du vestibule). Ajuster durées/sons selon le retour.
-- Ensuite : rééquilibrage des énigmes/difficulté de l'aile gauche, puis aile droite (symétrie), puis épreuve finale.
+- 2026-11-12 : vue aérienne 7d testée : « pas mal ». À TERME : l'aile doit rejoindre le VRAI bâtiment principal (corps du donjon, pas encore créé) -> refaire la fin de la cinématique quand le corps existera (pour l'instant : coq de pierre du blason).
+
+- 2026-11-12 : **AUDIT JOUEUR de l'aile gauche** (relecture des plans et du code, pas de vraie partie) :
+  BLOQUANTS/IMPORTANTS : (A) AUCUNE SAUVEGARDE : fermer le navigateur = tout perdre -> sauver `Etat.drapeaux` dans `user://` (marche aussi sur le web) ;
+  (B) Plume 4 : repéré = retour en bas de 4a même depuis 4d (jusqu'à 4 écrans à refaire) -> retour au bas de l'écran COURANT ;
+  (C) aller-retour : après chaque plume il faut redescendre n écrans + l'épine (jusqu'à 4 écrans à vide) -> raccourci (retour à l'épine après la plume, comme pour le fragment) ;
+  (D) pas de contrôles tactiles (cible mobile) ; (E) aucune progression visible -> HUD : 5 plumes en haut de l'écran (renforce l'idée de l'aile).
+  DESIGN : Plume 2b = simple cristal, redite du vestibule (à enrichir) ; épines = 5 couloirs identiques et vides ; pots vides (aucune récompense) ; 3c = 5 notes dans le noir (dur, mais on peut réécouter) ;
+  rappel des touches = un seul long message de 5 s (R recommencer peu visible) ; aucune histoire / aucun PNJ (le village va le donner) ; après le fragment, plus rien à faire (aile droite absente).
+  POINTS FORTS : 1 mécanique par plume avec leçon -> complication -> combinaison ; feedback sonore/visuel partout ; indices à la 1re visite ; mode dev F1.
+
+- 2026-11-12 : choix de l'utilisateur après l'audit : corriger A, B, C, E ; carte MOYENNE (~15 écrans) ; PNJ + maisons VISITABLES.
+  **CORRECTIONS 7e écrites (non testées dans Godot)** :
+  A) SAUVEGARDE : `etat.gd` écrit `user://sauvegarde.json` (drapeaux + `position_sauvee`) à chaque `poser` ; `charger()` au démarrage ; `noter(nom)` = drapeau silencieux (sans jingle) ;
+     `memoriser_position` à chaque entrée de salle (`_glisser_vers`), retour rapide, téléportation ; `world._ready` replace le joueur ; `room.gd` : `G`/`W` déjà ramassés ne réapparaissent pas (`"G" when ...`).
+     F1 -> « Effacer la sauvegarde (nouvelle partie) » (`Etat.effacer` + rechargement). La vue aérienne est mémorisée (`vue_aerienne_gauche`).
+  B) Sentinelles : `retour` = bas de l'écran COURANT (`generer_monde.py::retour_p4(n)`), message « au début de la salle ».
+  C) RETOUR RAPIDE : `world.gd::_ramener(salle, case, texte)` : après plume1-4 -> épine N case (12,6) ; après le fragment -> Entrée.
+  E) HUD : 5 plumes en haut à gauche (grises -> dorées), + icône du fragment ; la 5e s'allume avec le fragment ; caché pendant la vue aérienne.
+
+- 2026-11-12 : **PROPOSITION DE CARTE EXTÉRIEURE (à valider par l'utilisateur)** : scène séparée `overworld.tscn` (même système d'écrans 400x224 + glissement), musique village/extérieur,
+  passage donjon <-> extérieur = changement de scène à la porte sud du vestibule (la vue aérienne se joue à ce moment). 5 x 3 écrans :
+  ```
+           x=0              x=1               x=2                 x=3               x=4
+  y=0   Bois (secret)    Temple aile G     Parvis + CORPS      Temple aile D     Falaise (vue)
+                          (entrée donjon)   (scellé, final)     (aile droite)
+  y=1   Rivière + pont   Chemin forestier  Grand chemin        Chemin            Cascade (secret)
+  y=2   Ferme / champs   Village ouest     PLACE DU COQ        Village est       Maison du héros
+                          (maisons, PNJ)   (statue-girouette,   (CASERNE de la     (départ du jeu)
+                                            puits, marché)       Garde, capitaine)
+  ```
+  Intérieurs visitables (1 écran chacun, grille à part, porte = téléport) : maison du héros (départ), caserne (le capitaine lance l'épreuve), auberge/boutique.
+  Début du jeu : réveil dans la maison du héros -> caserne -> le capitaine envoie à l'épreuve -> chemin vers le nord -> temple de l'aile gauche.
+  Tuiles du pack : TilesetField, TilesetNature (arbres), TilesetHouse, TilesetWater, TilesetRelief (falaises) ; PNJ : OldMan/OldWoman/Child/Noble..., capitaine = KnightGold.
+  Technique prévue : script `exterieur.gd` (même principe que room.gd : plan texte -> tuiles + collisions, autres lettres : herbe, chemin, arbre, eau, maison, clôture...), `pnj.gd` + boîte de dialogue.
+
+## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
+- Tester les corrections 7e (sauvegarde : fermer/relancer le jeu ; HUD ; retour rapide ; sentinelles).
+- Faire valider la proposition de carte ci-dessus, puis construire par tranches : 1) `exterieur.gd` + 1 écran test (place du coq) ; 2) village 3 écrans + PNJ/dialogues ;
+  3) intérieurs ; 4) chemins + parvis du temple + liaison avec le donjon ; 5) secrets (bois, cascade).
+- Plus tard : fin de la vue aérienne avec le VRAI corps du donjon ; rééquilibrage des énigmes ; aile droite ; épreuve finale.

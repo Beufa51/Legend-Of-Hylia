@@ -109,7 +109,7 @@ layout = PackedStringArray("###########...###########", "###########...#########
 [node name="Plume4b" parent="." instance=ExtResource("2")]
 grille = Vector2i(4, -2)
 teinte = Color(0.96, 0.95, 1.02, 1)
-retour = Vector2(1800, -30)
+retour = Vector2(1800, -254)
 drapeau_repos = "plume4"
 periodes_sentinelles = PackedFloat32Array(2, 3)
 indice = "Elles tournent la tête : observe leur rythme. Maj ou K pour courir."
@@ -118,7 +118,7 @@ layout = PackedStringArray("###########...###########", "###########...#########
 [node name="Plume4c" parent="." instance=ExtResource("2")]
 grille = Vector2i(4, -3)
 teinte = Color(0.98, 0.94, 1.0, 1)
-retour = Vector2(1800, -30)
+retour = Vector2(1800, -478)
 drapeau_repos = "plume4"
 layout = PackedStringArray("###########...###########", "###########...###########", "##.B.................B.##", "#######.#################", "#######.#################", "#####>.....X.############", "############.############", "############.############", "##.V....S.......S....V.##", "##.....................##", "##.....................##", "##.V.................V.##", "###########...###########", "###########...###########")
 
@@ -126,7 +126,7 @@ layout = PackedStringArray("###########...###########", "###########...#########
 grille = Vector2i(4, -4)
 teinte = Color(1.0, 1.0, 1.0, 1)
 sombre = true
-retour = Vector2(1800, -30)
+retour = Vector2(1800, -702)
 drapeau_repos = "plume4"
 drapeau_gemme = "plume4"
 duree_braseros = 14.0

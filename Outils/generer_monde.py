@@ -145,7 +145,8 @@ p4d = vide(); sol(p4d, 2, 22, 6, 11); sol(p4d, 11, 13, 12, 13); sol(p4d, 2, 22, 
 put(p4d, '>', (7, 7)); put(p4d, '<', (17, 7)); put(p4d, 'L', (3, 10), (21, 10)); put(p4d, 'G', (12, 3))
 put(p4d, 'V', (3, 2), (21, 2), (2, 6), (22, 6))
 for x in range(10, 15): put(p4d, 'T', (x, 4))
-RETOUR_P4 = 'Vector2(1800, -30)'   # entrée de la plume 4 (bas de l'écran 4a, case (12,12))
+def retour_p4(n):   # repéré = retour au bas de l'écran où l'on est (case (12,12) de l'écran 4a, 4b, 4c ou 4d)
+    return 'Vector2(1800, %d)' % (-224 * n + 194)
 REPOS_P4 = 'plume4'                # une fois la plume obtenue, les sentinelles ne surveillent plus
 
 # --- PLUME 5 : « LE PIVOT ». Un soleil (R) incrusté dans le mur lance un rayon de lumière. Les miroirs (M = /, N = \\)
@@ -210,13 +211,13 @@ salles = [
         'drapeau_porte': 'p3_chant3', 'drapeau_gemme': 'plume3',
         'indice': 'Dans le noir, guette les cloches qui s\'allument quand le coq chante.'}),
     ('Epine4', (4, 0), e4, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume4'}),
-    ('Plume4a', (4, -1), p4a, (0.94, 0.96, 1.04), {'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4,
+    ('Plume4a', (4, -1), p4a, (0.94, 0.96, 1.04), {'retour': retour_p4(1), 'drapeau_repos': REPOS_P4,
         'indice': 'Ce garde de pierre est une SENTINELLE : ne passe pas dans son cône de vision. Les murs te cachent.'}),
-    ('Plume4b', (4, -2), p4b, (0.96, 0.95, 1.02), {'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4,
+    ('Plume4b', (4, -2), p4b, (0.96, 0.95, 1.02), {'retour': retour_p4(2), 'drapeau_repos': REPOS_P4,
         'periodes_sentinelles': 'PackedFloat32Array(2, 3)',
         'indice': 'Elles tournent la tête : observe leur rythme. Maj ou K pour courir.'}),
-    ('Plume4c', (4, -3), p4c, (0.98, 0.94, 1.0), {'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4}),
-    ('Plume4d', (4, -4), p4d, (1.0, 1.0, 1.0), {'sombre': 'true', 'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4,
+    ('Plume4c', (4, -3), p4c, (0.98, 0.94, 1.0), {'retour': retour_p4(3), 'drapeau_repos': REPOS_P4}),
+    ('Plume4d', (4, -4), p4d, (1.0, 1.0, 1.0), {'sombre': 'true', 'retour': retour_p4(4), 'drapeau_repos': REPOS_P4,
         'drapeau_gemme': 'plume4', 'duree_braseros': '14.0',
         'indice': 'Une flamme attire le regard des sentinelles. Allume les braseros pour détourner leurs yeux.'}),
     ('Epine5', (5, 0), e5, (0.86, 0.90, 0.96), {}),
