@@ -188,7 +188,16 @@
 
 - 2026-11-12 : l'utilisateur voit toujours 5 plumes par aile sur le coq (même après simplification) : on ACCEPTE et on passe à **5 salles par aile** (une par plume). Le coq reste tel quel (validé de fait). `world.tscn` a encore 3 salles gauche (Entree + Salle1-3 + 2 couloirs) : à étendre à 5 salles + 4 couloirs.
 
-## PROCHAINE ÉTAPE : Étape 6 = les énigmes (conception = Opus)
-- Concevoir les 5 énigmes de l'aile gauche (1 par salle) + le fragment de la dernière salle (5), en s'appuyant sur : plaques `P`, dalles à flèches `F`, braseros `B`, pots cassables `V` (cachent des objets), lance.
-- Questions à poser à l'utilisateur AVANT de concevoir : style d'énigme préféré (observation / blocs à pousser / ordre à respecter) ; validation du coq (`Assets/Gemini/embleme/coq_rouge.png`).
-- Avant ou après : fusionner la branche `etape-4-aile-gauche` dans `main` (GitHub Desktop : Branch -> Merge into current branch, depuis main, puis Push).
+- 2026-11-12 : **CONCEPT DE L'AILE (utilisateur, avec image d'une aile verticale : 5 plumes dressées, de plus en plus longues de gauche à droite, racine en bas)** :
+  l'aile se présente à la VERTICALE. Plan : une SALLE D'ENTRÉE (racine de l'aile, en bas) -> une sorte de COULOIR (l'axe/épine de l'aile) qui part vers la droite -> 5 PLUMES = 5 salles allongées
+  (verticales) de plus en plus LONGUES et DURES de gauche à droite (longueur de la plume = longueur/difficulté de la salle). Les énigmes doivent suivre cette progression.
+  Le fragment est au bout de la plus longue plume (pointe de l'aile). Cinématique : l'aile pivote et s'emboîte sur le blason.
+  Proposition de Claude (à valider) : plume n = n écrans de haut (1,2,3,4,5) ; chaque plume = une chaîne d'énigmes qui se termine à la pointe ; finir la plume n ouvre la porte n+1 sur l'épine ;
+  construction INCRÉMENTALE (plume 1 d'abord, test, puis la suivante). Alternative plus compacte si trop long : 1-2-2-3-4 écrans.
+  Utilisateur : veut un MÉLANGE d'énigmes, plus original que "pousser un bloc" (mais le bloc reste la base, plume 1 = didactique). Il veut BRAINSTORMER.
+  Idées proposées (à voter) : 1) blocs à pousser (base) ; 2) salle SOMBRE : allumer les braseros à la lance pour révéler le chemin (lueurs déjà codées) ; 3) CHANT DU COQ : frapper des statues/cloches dans l'ordre de la mélodie entendue ;
+  4) SENTINELLES : statues de garde qui tournent la tête, ne pas être vu (sans combat, retour au début de la salle) ; 5) SALLE QUI PIVOTE : un levier tourne la salle de 90° (écho du pivot de l'aile) ;
+  6) POTS-INDICES : casser les pots pour trouver des symboles/clés ; 7) SALLE MIROIR (symétrie gauche/droite du blason, plutôt pour l'aile droite) ; 8) lance comme outil (actionner leviers à distance, lancer).
+
+## PROCHAINE ÉTAPE : Étape 6 = les énigmes (conception = Opus, brainstorm avec l'utilisateur)
+- Valider : longueurs des plumes (1-2-3-4-5 ou compact), règle de l'épine (porte n+1 s'ouvre quand la plume n est finie), quelles mécaniques garder. Puis refaire `world.tscn` pour l'aile (entrée + épine + 5 plumes), plume 1 d'abord.
