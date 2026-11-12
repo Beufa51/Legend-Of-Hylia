@@ -83,7 +83,7 @@
   `layout`, `#`=mur, `.`=sol, ouverture au bord = porte, `grille` = position dans le donjon), `Scripts/world.gd`
   (caméra fixe par salle + glissement 0.6 s, joueur figé pendant), `Scenes/room.tscn`, `Scenes/world.tscn`
   (SalleA (0,0) porte à droite, SalleB (1,0) porte à gauche) = nouvelle scène principale.
-  NB : le dépôt ne contient que `Assets/Ninja_adventure/Actor` (pas les Tilesets) → graphismes de salle en couleurs
-  provisoires ; ajouter le dossier `Backgrounds/Tilesets` du pack pour passer aux vraies tuiles.
+- 2026-11-12 : pack complet poussé par l'utilisateur. room.gd utilise maintenant de vraies tuiles :
+  `Backgrounds/Tilesets/Interior/TilesetInteriorFloor.png`, sol (12,7), mur (12,13) (colonne, ligne de 16 px).
 
 ## PROCHAINE ÉTAPE : tester l'étape 3, puis Étape 4 — vrais graphismes de tuiles + 3 salles de l'aile gauche

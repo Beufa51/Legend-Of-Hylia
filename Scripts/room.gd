@@ -5,12 +5,14 @@ class_name Room
 #   #  = mur (bloque le joueur)
 #   .  = sol
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
-# Les couleurs sont provisoires : on mettra les vrais graphismes du pack plus tard.
+# Les graphismes viennent de la planche TilesetInteriorFloor.png du pack Ninja Adventure.
 
 const TUILE := 16
 const TAILLE_SALLE := Vector2i(320, 180)
-const COULEUR_SOL := Color(0.35, 0.3, 0.4)
-const COULEUR_MUR := Color(0.18, 0.15, 0.22)
+const PLANCHE := "res://Assets/Ninja_adventure/Backgrounds/Tilesets/Interior/TilesetInteriorFloor.png"
+# Position (colonne, ligne) des tuiles dans la planche. Pour changer le décor, change ces nombres.
+const TUILE_SOL := Vector2i(12, 7)   # sol vert-gris
+const TUILE_MUR := Vector2i(12, 13)  # pierre sombre
 
 # Plan de la salle (11 lignes de 20 caractères). Modifiable dans l'inspecteur.
 @export var layout: PackedStringArray
@@ -24,13 +26,15 @@ func _ready() -> void:
 	_creer_collisions()
 
 
-# Dessine le sol puis chaque mur.
+# Dessine chaque case de la salle (sol ou mur) avec la tuile correspondante.
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, Vector2(TAILLE_SALLE)), COULEUR_SOL)
+	var planche: Texture2D = load(PLANCHE)
 	for y in layout.size():
 		for x in layout[y].length():
-			if layout[y][x] == "#":
-				draw_rect(Rect2(x * TUILE, y * TUILE, TUILE, TUILE), COULEUR_MUR)
+			var tuile := TUILE_MUR if layout[y][x] == "#" else TUILE_SOL
+			draw_texture_rect_region(planche,
+				Rect2(x * TUILE, y * TUILE, TUILE, TUILE),
+				Rect2(tuile.x * TUILE, tuile.y * TUILE, TUILE, TUILE))
 
 
 # Ajoute une boîte de collision à chaque mur.
