@@ -386,8 +386,15 @@
   (blanches, venues des bords) foncent sur le joueur 12 s, le repoussent à coups de bec (`player.gd::repousser`, aucun dégât), se calment ensuite, renforts disparaissent. GIROUETTE : `Q` = mât de fer + socle 3x4
   (`girouette_mat.png`) + coq (`girouette_coq.png`) qui se retourne doucement (`exterieur.gd::_coq`), au centre de la place (11,4) ; l'ancienne statue du coq n'est plus utilisée. Images via `Outils/fabriquer_objets.py`.
 
+- 2026-11-12 : **ÉTAPE 8d écrite (non testée dans Godot, aperçu PIL vérifié)** = VILLAGE OUEST (1,2) + VILLAGE EST (3,2, CASERNE) + PNJ/DIALOGUES.
+  `generer_village.py` : 3 écrans (sorties ouest/est de la place OUVERTES ; ferme (0,2) et maison du héros (4,2) fermées par des buissons, nord fermé). Ouest : 2 maisons, marché, 3 habitants (Colette, Gaspard, Tom).
+  Est : caserne (maison beige + bannières), Capitaine Aubrac (KnightGold, annonce l'épreuve au temple), Soldat Merle, Marchande Rosine. Les maisons ne s'ouvrent pas encore (intérieurs à faire).
+  NOUVEAU : `Scripts/pnj.gd` (class Pnj : StaticBody2D, groupe "pnj", tourne la tête vers le joueur, `parler`) ; `Scripts/dialogue.gd` (class Dialogue, CanvasLayer 4, texte lettre par lettre, créée par world.gd) ;
+  `Etat.dialogue_demande` + `Etat.en_dialogue` ; `player.gd` : près d'un habitant (26 px), Espace/J = PARLER au lieu de frapper ; `exterieur.gd` : export `pnjs` (lignes "Perso x y direction | Nom | phrase // phrase").
+  Textes des PNJ dans `generer_village.py` (éviter les guillemets droits ", utiliser « »).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester les corrections 7e (sauvegarde : fermer/relancer le jeu ; HUD ; retour rapide ; sentinelles).
-- Tester la place du coq (8a). Puis construire par tranches : 2) village ouest + village est (caserne) + maison du héros + PNJ/dialogues ;
+- Tester 8d (dialogues, 3 écrans). Puis : 2) maison du héros (4,2) + dialogues conditionnés par les drapeaux ;
   3) intérieurs ; 4) chemins + parvis du temple + liaison avec le donjon ; 5) secrets (bois, cascade).
 - Plus tard : fin de la vue aérienne avec le VRAI corps du donjon ; rééquilibrage des énigmes ; aile droite ; épreuve finale.

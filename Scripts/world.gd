@@ -36,6 +36,7 @@ func _ready() -> void:
 	Etat.repere.connect(_raccompagner)
 	Etat.drapeau_change.connect(_sur_drapeau)
 	_creer_hud()
+	add_child(Dialogue.new())   # boîte de dialogue des habitants
 	if not donjon:
 		var ambiance := Ambiance.new()   # vent, feuilles, nuages, papillons, oiseaux (extérieur seulement)
 		ambiance.camera = camera
@@ -112,7 +113,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1 and OS.is_debug_build():
 		_basculer_menu_dev()
 		return
-	if event.is_action_pressed("reset") and not en_transition:
+	if event.is_action_pressed("reset") and not en_transition and not Etat.en_dialogue:
 		for enfant in get_children():
 			if enfant is Ecran and enfant.grille == salle_actuelle:
 				enfant.reinitialiser()

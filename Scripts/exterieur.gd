@@ -12,6 +12,8 @@ class_name Exterieur
 #   Q  = girouette du coq (3x4)   W = puits (2x2)
 # ANIMAUX : pas dans le plan, mais dans la liste `animaux` : "lettre x y", par ex. "c 9 9"
 #   c  = poule blanche   h = poule rousse   k = chat   d = chien
+# HABITANTS : dans la liste `pnjs`, une ligne par habitant : "Perso x y direction | Nom | phrase // phrase // ..."
+#   (Perso = dossier du pack Actor/Character, ex. OldMan, Villager2, Woman ; direction = bas, haut, gauche, droite)
 # VIE : les plantes, arbres et bannières se balancent au vent (force donnée par Ambiance.force_vent),
 # des touffes d'herbe sont semées toutes seules dans l'herbe libre.
 # Une lettre d'objet se met sur la cellule du COIN HAUT-GAUCHE de l'objet ; les autres cases de l'objet
@@ -58,6 +60,8 @@ const ANIMAUX := {
 
 # Animaux de l'écran : "lettre x y" (voir ANIMAUX)
 @export var animaux: PackedStringArray
+# Habitants de l'écran : "Perso x y direction | Nom | phrase // phrase" (voir l'en-tête)
+@export var pnjs: PackedStringArray
 
 var _solides := {}   # cases bloquées par un objet
 var _couvertes := {} # cases recouvertes par un objet (bloquant ou non) : pas de touffe d'herbe dessus
@@ -72,6 +76,7 @@ func _ready() -> void:
 	_creer_decor()
 	_creer_collisions()
 	_poser_animaux()
+	_poser_pnjs()
 
 
 # Le vent : les petites plantes se décalent d'un pixel selon une vague qui traverse l'écran.
@@ -229,6 +234,22 @@ func _poser_animaux() -> void:
 		animal.position = Vector2(int(morceaux[1]) * TUILE + 8, int(morceaux[2]) * TUILE + 10)
 		add_child(animal)
 		animal.initialiser(def[0], def[1], def[2], def[3], Rect2(Vector2(TUILE, TUILE), Vector2(TAILLE_SALLE) - Vector2(TUILE, TUILE) * 2))
+
+
+func _poser_pnjs() -> void:
+	for ligne in pnjs:
+		var parties := ligne.split("|")
+		var tete := parties[0].strip_edges().split(" ")
+		if parties.size() != 3 or tete.size() != 4:
+			push_warning("Exterieur : habitant mal écrit : " + ligne)
+			continue
+		var texte := PackedStringArray()
+		for phrase in parties[2].split("//"):
+			texte.append(phrase.strip_edges())
+		var pnj := Pnj.new()
+		pnj.position = Vector2(int(tete[1]) * TUILE + 8, int(tete[2]) * TUILE + 13)
+		add_child(pnj)
+		pnj.initialiser(tete[0], parties[1].strip_edges(), texte, tete[3], grille)
 
 
 func _creer_collisions() -> void:

@@ -47,8 +47,8 @@ put(place, 'b', (24, 12), (24, 13))
 for (x, y) in [(0, 2), (0, 4), (0, 9), (23, 2), (23, 4), (23, 9)]:
     put(place, 'P' if y == 4 else 'A', (x, y))
 put(place, 'b', (0, 11), (1, 11), (23, 11), (24, 11))
-# Sorties provisoirement fermées (écrans voisins pas encore construits)
-put(place, 'b', (0, 6), (0, 7), (0, 8), (24, 6), (24, 7), (24, 8), (11, 0), (12, 0), (13, 0))
+# Sortie nord provisoirement fermée (l'écran voisin n'existe pas encore) ; ouest et est sont ouvertes
+put(place, 'b', (11, 0), (12, 0), (13, 0))   # nord encore fermé (grand chemin pas construit)
 # Maisons (portes en bas : colonnes 4 et 20)
 put(place, 'M', (3, 2)); put(place, 'N', (18, 2))
 # Statue du coq au centre, bannières de part et d'autre
@@ -63,8 +63,62 @@ put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10),
 # Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
 animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 5', 'd 17 8']
 
+def bordure(g, haut=True, bas=True):
+    """Arbres en haut et en bas de l'écran."""
+    for x in range(0, 24, 2):
+        if haut: put(g, 'A' if x % 4 == 0 else 'a', (x, 0))
+        if bas: put(g, 'a' if x % 4 == 0 else 'A', (x, 12))
+    put(g, 'b', (24, 12), (24, 13), (24, 0), (24, 1))
+
+
+# --- VILLAGE OUEST (1,2) : deux maisons au nord, un coin potager/marché au sud.
+#     Entrée par l'est (la place). L'ouest mène à la ferme (pas encore construite) : fermé par des buissons.
+ouest = vide()
+chemin(ouest, 0, 24, 6, 8)
+chemin(ouest, 4, 5, 5, 5); chemin(ouest, 13, 14, 5, 5)       # devant les portes
+bordure(ouest)
+put(ouest, 'b', (0, 6), (0, 7), (0, 8))                      # ferme pas encore construite
+put(ouest, 'M', (3, 2)); put(ouest, 'N', (12, 2))
+for (x, y) in [(0, 2), (0, 4), (21, 2), (23, 4), (0, 10), (22, 10)]:
+    put(ouest, 'A' if x % 2 == 0 else 'a', (x, y))
+put(ouest, 'P', (8, 2), (18, 3))
+put(ouest, 'E', (13, 10)); put(ouest, 'o', (10, 11), (17, 10), (17, 11))
+put(ouest, 'j', (9, 5), (16, 5))
+put(ouest, 'f', (2, 6 - 1), (7, 4), (19, 5), (3, 11)); put(ouest, 'g', (8, 5), (10, 3), (20, 4), (6, 11), (5, 10))
+put(ouest, 'w', (2, 5), (11, 4), (18, 5), (4, 10), (21, 12))
+pnjs_ouest = [
+    "Woman 10 9 haut | Colette | Oh, tu es la nouvelle recrue ! Tout le village parle de ton épreuve d'adoubement. // On raconte que le donjon sous le temple a la forme d'un grand coq. // Un coq dans un donjon... Moi, je préfère ceux de ma basse-cour !",
+    "OldMan 8 6 droite | Vieux Gaspard | Le coq chante chaque aube depuis mille ans. // S'il se taisait un jour, le royaume tremblerait. // Ton père tenait la lance avant toi. Garde-la bien, petite.",
+    "Boy 18 5 gauche | Tom | Tu as une vraie lance de la garde ! Tu me la prêtes ? // ... Non ? Tant pis. // Un conseil : n'embête pas les poules. Elles se vengent.",
+]
+animaux_ouest = ['c 6 10', 'h 20 9', 'c 15 12']
+
+# --- VILLAGE EST (3,2) : la CASERNE de la garde royale (bâtiment beige au nord, bannières rouges).
+#     Entrée par l'ouest (la place). L'est mène à la maison du héros (pas encore construite) : fermé.
+est = vide()
+chemin(est, 0, 24, 6, 8)
+chemin(est, 11, 13, 5, 5)                                     # devant la porte de la caserne
+bordure(est)
+put(est, 'b', (24, 6), (24, 7), (24, 8))                      # maison du héros pas encore construite
+put(est, 'N', (10, 2)); put(est, 'j', (8, 2), (15, 2))        # caserne : maison beige + bannières
+put(est, 'o', (6, 3), (6, 4), (18, 3), (19, 4))
+for (x, y) in [(0, 2), (0, 4), (2, 9), (22, 2), (22, 9), (20, 11)]:
+    put(est, 'A' if y % 4 == 0 else 'a', (x, y))
+put(est, 'P', (3, 2), (21, 5))
+put(est, 'E', (4, 10)); put(est, 'o', (8, 10), (19, 9))
+put(est, 'g', (9, 5), (16, 5), (13, 10), (2, 6)); put(est, 'f', (7, 5), (17, 4), (12, 11))
+put(est, 'w', (8, 4), (15, 4), (14, 10), (23, 10), (1, 7))
+pnjs_est = [
+    "KnightGold 15 5 gauche | Capitaine Aubrac | Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend au temple, au nord du village. // Deux ailes et un corps : voilà la forme du donjon. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur.",
+    "Villager3 7 7 droite | Soldat Merle | Dix ans de garde et je n'ai jamais vu le fond du donjon. // Les anciens disent que les plumes de l'aile gauche sont de plus en plus longues. Je ne sais pas ce que ça veut dire !",
+    "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.",
+]
+animaux_est = ['d 20 7', 'c 12 11']
+
 ecrans = [
     ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place}),
+    ('VillageOuest', (1, 2), ouest, {'animaux': animaux_ouest, 'pnjs': pnjs_ouest}),
+    ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est}),
 ]
 depart = (2 * 400 + 12 * 16 + 8, 2 * 224 + 10 * 16 + 3)   # nouvelle partie : au sud de la statue
 
@@ -179,6 +233,11 @@ def apercu(fichier):
                 if touffe(g, x, y, gx, couvertes):
                     t = [(3, 10), (7, 10), (9, 10)][(x * 7 + y * 3) % 3]
                     region("NATURE", (t[0], t[1], 1, 1), (ox + x * 16, oy + y * 16))
+        for ligne in props.get('pnjs', []):
+            tete = ligne.split('|')[0].split()
+            sheet = Image.open(os.path.join(RACINE, "Assets/Ninja_adventure/Actor/Character/%s/SeparateAnim/Idle.png" % tete[0])).convert("RGBA")
+            f = ["bas", "haut", "gauche", "droite"].index(tete[3])
+            img.alpha_composite(sheet.crop((f * 16, 0, f * 16 + 16, 16)), (ox + int(tete[1]) * 16, oy + int(tete[2]) * 16 - 3))
         for ligne in props.get('animaux', []):
             c, x, y = ligne.split()
             fich = {"c": "Chicken/SpriteSheetWhite", "h": "Chicken/SpriteSheetBrown", "k": "Cat/SpriteSheet", "d": "Dog/SpriteSheet"}[c]

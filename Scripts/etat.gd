@@ -8,11 +8,13 @@ extends Node
 signal drapeau_change(nom: String)   # un drapeau vient d'être levé
 signal message(texte: String)        # un message à afficher à l'écran
 signal secousse                      # l'écran tremble (une porte s'ouvre...)
+signal dialogue_demande(nom: String, lignes: PackedStringArray)   # un habitant parle (boîte de dialogue)
 signal repere(retour: Vector2)       # une sentinelle a vu le joueur : un garde le ramène à `retour`
 
 const FICHIER := "user://sauvegarde.json"
 
 var drapeaux := {}
+var en_dialogue := false              # vrai pendant une conversation (le joueur est figé)
 var salle_courante := Vector2i.ZERO   # case de la grille où se trouve la caméra (mise à jour par world.gd)
 var position_sauvee := Vector2.ZERO   # où reprendre la partie (Vector2.ZERO = nouvelle partie)
 var scene_sauvee := ""                # dans quelle scène (donjon ou village) reprendre la partie

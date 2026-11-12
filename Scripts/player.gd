@@ -41,7 +41,11 @@ func _physics_process(delta: float) -> void:
 		_frapper_ce_quon_touche()
 		return  # pas de déplacement pendant le coup
 	if Input.is_action_just_pressed("attack"):
-		_attaquer()
+		var habitant := _habitant_proche()
+		if habitant:
+			habitant.parler(self)   # près d'un habitant, la touche d'action sert à PARLER
+		else:
+			_attaquer()
 		return
 	# Vecteur d'entrée : (-1..1, -1..1) selon les touches pressées
 	var entree := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -52,6 +56,14 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_pousser_les_blocs(entree, delta)
 	_mettre_a_jour_animation(entree)
+
+
+# Un habitant du village assez près pour lui parler ?
+func _habitant_proche() -> Pnj:
+	for n in get_tree().get_nodes_in_group("pnj"):
+		if n.peut_parler(self):
+			return n
+	return null
 
 
 # Pousse le joueur (sans le blesser) : utilisé par les poules en colère.
