@@ -37,6 +37,9 @@ func _process(_delta: float) -> void:
 	if en_transition:
 		return
 	var nouvelle := _salle_du_joueur()
+	if nouvelle == SORTIE_DONJON and Etat.est("fragment_gauche") and not _vue_aerienne_vue:
+		_vue_aerienne("gauche")   # on sort du donjon avec l'aile : vue du ciel
+		return
 	if nouvelle != salle_actuelle:
 		_glisser_vers(nouvelle)
 
@@ -261,7 +264,7 @@ func _creer_menu_dev() -> void:
 	grille.columns = 4
 	boite.add_child(grille)
 	var bouton_cine := Button.new()
-	bouton_cine.text = "Cinématique aile gauche"
+	bouton_cine.text = "Vue aérienne aile gauche"
 	bouton_cine.add_theme_font_size_override("font_size", 8)
 	bouton_cine.focus_mode = Control.FOCUS_NONE
 	bouton_cine.pressed.connect(_dev_cinematique)
@@ -279,7 +282,7 @@ func _creer_menu_dev() -> void:
 
 func _dev_cinematique() -> void:
 	_menu_dev.visible = false
-	_cinematique_aile("gauche")
+	_vue_aerienne("gauche")
 
 
 func _teleporter(salle: Room) -> void:
@@ -295,27 +298,71 @@ func _teleporter(salle: Room) -> void:
 	Etat.annoncer("[dev] " + salle.name)
 
 
-# --- Cinématique de fin d'aile ----------------------------------------------------------
-# Quand on ramasse un fragment d'aile, le grand blason apparaît : le coq en pierre, ses ailes
-# vides. Le fragment arrive À LA VERTICALE (comme l'aile qu'on vient de parcourir : la racine
-# en bas, les plumes dressées), pivote d'un quart de tour autour de sa racine et s'emboîte.
+# --- Fin d'aile : retour à l'entrée, puis VUE AÉRIENNE en sortant du donjon ---------------
+# 1) On ramasse le fragment : une force ramène le joueur à l'Entrée, la grande porte du sud du
+#    vestibule s'ouvre (porte H, drapeau fragment_gauche).
+# 2) Quand le joueur SORT par cette porte, la caméra s'envole : vu du ciel, le plan des salles
+#    qu'il a parcourues dessine une aile. L'aile pivote et rejoint le corps du donjon
+#    (le grand blason de pierre, pas encore construit), puis devient l'aile rouge du blason.
 # Images : Assets/Gemini/embleme/blason_*.png, fabriquées par Outils/fabriquer_objets.py.
+# Le plan vu du ciel est fabriqué EN CODE à partir des plans (`layout`) des salles : si on
+# modifie le donjon, la vue aérienne suit toute seule.
 const DOSSIER_BLASON := "res://Assets/Gemini/embleme/"
 const CENTRE_BLASON := Vector2(200, 112)   # centre du blason à l'écran (l'écran fait 400x224)
 const TAILLE_BLASON := Vector2(244, 132)   # taille de blason_socle.png
-# Racine de chaque aile dans l'image (affichée par fabriquer_objets.py) = point autour duquel elle pivote
+# Racine de chaque aile dans l'image (affichée par fabriquer_objets.py) = point où l'aile s'accroche au corps
 const PIVOTS := {"gauche": Vector2(98, 61), "droite": Vector2(146, 61)}
-const SON_APPARITION := "res://Assets/Ninja_adventure/Audio/Sounds/Magic & Skill/Spirit.wav"
+const SORTIE_DONJON := Vector2i(0, 2)      # l'écran sous le vestibule = dehors
+const SON_ENVOL := "res://Assets/Ninja_adventure/Audio/Sounds/Whoosh & Slash/Launch.wav"
+const SON_REVELATION := "res://Assets/Ninja_adventure/Audio/Jingles/Secret1.wav"
 const SON_PIVOT := "res://Assets/Ninja_adventure/Audio/Sounds/Whoosh & Slash/Whoosh.wav"
 const SON_EMBOITE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact5.wav"
 const JINGLE_BLASON := "res://Assets/Ninja_adventure/Audio/Jingles/Secret2.wav"
+# Couleurs du plan vu du ciel
+const CIEL_HERBE := Color(0.149, 0.259, 0.173)
+const CIEL_SOL := Color(0.808, 0.761, 0.643)
+const CIEL_MUR := Color(0.282, 0.259, 0.329)
+const ECHELLE_AILE := Vector2(0.5, 1.15)   # forme finale du plan pour épouser l'empreinte de l'aile (x = épine, y = plumes)
+const CIEL_OR := Color(0.980, 0.784, 0.314)
 var _musique: AudioStreamPlayer
+var _vue_aerienne_vue := false
 
 
 func _sur_drapeau(nom: String) -> void:
 	if nom == "fragment_gauche":
-		await get_tree().create_timer(1.6).timeout   # laisser le temps au jingle et au message
-		_cinematique_aile("gauche")
+		await get_tree().create_timer(1.8).timeout   # laisser le temps au jingle et au message
+		_retour_entree()
+
+
+# Une force ramène le joueur à l'Entrée (pas besoin de refaire tout le chemin à pied).
+func _retour_entree() -> void:
+	if en_transition:
+		return
+	en_transition = true
+	joueur.set_physics_process(false)
+	var t := create_tween()
+	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
+	await t.finished
+	for enfant in get_children():
+		if enfant is Room and enfant.name == "Entree":
+			joueur.position = enfant.point_arrivee()
+	joueur.velocity = Vector2.ZERO
+	_placer_camera()
+	await get_tree().create_timer(0.4).timeout
+	t = create_tween()
+	t.tween_property(_fondu, "modulate:a", 0.0, 0.6)
+	await t.finished
+	joueur.set_physics_process(true)
+	en_transition = false
+	Etat.annoncer("Une force t'a ramené à l'entrée. La grande porte du vestibule est ouverte : sors du donjon !")
+
+
+# Caméra et obscurité calées sur la salle où se trouve le joueur (sans glissement).
+func _placer_camera() -> void:
+	salle_actuelle = _salle_du_joueur()
+	Etat.salle_courante = salle_actuelle
+	camera.position = _centre_salle(salle_actuelle)
+	_regler_obscurite(salle_actuelle)
 
 
 # Charge une image ; si Godot ne l'a pas encore importée, la lit directement dans le fichier.
@@ -340,129 +387,197 @@ func _jouer_son(chemin: String, volume_db := 0.0) -> void:
 	lecteur.finished.connect(lecteur.queue_free)
 
 
-func _cinematique_aile(cote: String) -> void:
+func _sprite(texture: Texture2D, pos: Vector2, parent: Node) -> Sprite2D:
+	var s := Sprite2D.new()
+	s.texture = texture
+	s.centered = false
+	s.position = pos
+	parent.add_child(s)
+	return s
+
+
+# Fabrique le plan du donjon vu du ciel : 1 pixel par case, sol clair, murs sombres (seulement
+# les murs proches d'un sol, pour que la FORME des salles se voie), transparent autour.
+# Renvoie {"carte": texture, "contour": texture (lisere doré de la silhouette), "coin": case (0,0) de la grille sur l'image}.
+func _plan_vu_du_ciel() -> Dictionary:
+	var salles: Array[Room] = []
+	var bas := Vector2i(1000, 1000)    # plus petite case de la grille
+	var haut := Vector2i(-1000, -1000) # plus grande case de la grille
+	for enfant in get_children():
+		if enfant is Room:   # (aile droite plus tard : ne garder que les salles de l'aile voulue)
+			salles.append(enfant)
+			bas = Vector2i(mini(bas.x, enfant.grille.x), mini(bas.y, enfant.grille.y))
+			haut = Vector2i(maxi(haut.x, enfant.grille.x), maxi(haut.y, enfant.grille.y))
+	var cases := Vector2i(25, 14)   # cases par salle
+	var marge := 4
+	var taille := (haut - bas + Vector2i.ONE) * cases + Vector2i(marge, marge) * 2
+	# 1 = sol, 2 = mur
+	var plan := PackedByteArray()
+	plan.resize(taille.x * taille.y)
+	for salle in salles:
+		var base := (salle.grille - bas) * cases + Vector2i(marge, marge)
+		for y in salle.layout.size():
+			for x in salle.layout[y].length():
+				if not "#R".contains(salle.layout[y][x]):
+					plan[(base.y + y) * taille.x + base.x + x] = 1
+	for y in taille.y:
+		for x in taille.x:
+			if plan[y * taille.x + x] == 0 and _voisin(plan, taille, x, y, 2, 1):
+				plan[y * taille.x + x] = 2
+	var carte := Image.create(taille.x, taille.y, false, Image.FORMAT_RGBA8)
+	var contour := Image.create(taille.x, taille.y, false, Image.FORMAT_RGBA8)
+	for y in taille.y:
+		for x in taille.x:
+			var v := plan[y * taille.x + x]
+			if v == 1:
+				carte.set_pixel(x, y, CIEL_SOL)
+			elif v == 2:
+				carte.set_pixel(x, y, CIEL_MUR)
+			elif _voisin(plan, taille, x, y, 1, 2):   # le reste est transparent (on voit l'herbe dessous)
+				contour.set_pixel(x, y, CIEL_OR)
+	return {
+		"carte": ImageTexture.create_from_image(carte),
+		"contour": ImageTexture.create_from_image(contour),
+		"coin": Vector2(-bas * cases + Vector2i(marge, marge)),
+		"taille": Vector2(taille),
+	}
+
+
+# Y a-t-il une case de valeur `valeur` à moins de `rayon` cases de (x, y) ?
+func _voisin(plan: PackedByteArray, taille: Vector2i, x: int, y: int, rayon: int, valeur: int) -> bool:
+	for dy in range(-rayon, rayon + 1):
+		for dx in range(-rayon, rayon + 1):
+			var nx := x + dx
+			var ny := y + dy
+			if nx >= 0 and ny >= 0 and nx < taille.x and ny < taille.y and plan[ny * taille.x + nx] == valeur:
+				return true
+	return false
+
+
+func _vue_aerienne(cote: String) -> void:
 	if en_transition:
 		return
 	en_transition = true
+	_vue_aerienne_vue = true
 	joueur.set_physics_process(false)
 	joueur.velocity = Vector2.ZERO
 	var droite := cote == "droite"
-	var origine := CENTRE_BLASON - TAILLE_BLASON / 2.0   # coin haut-gauche du blason à l'écran
-	var pivot: Vector2 = PIVOTS[cote]
 
-	# 1) La scène s'assombrit, la musique se tait
+	# 1) Fondu au noir ; pendant ce temps, on fabrique le plan vu du ciel
+	_jouer_son(SON_ENVOL)
+	var t := create_tween()
+	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
+	if _musique:
+		t.parallel().tween_property(_musique, "volume_db", -40.0, 0.6)
+	await t.finished
+	var plan := _plan_vu_du_ciel()
 	var calque := CanvasLayer.new()
 	calque.layer = 2
 	add_child(calque)
-	var fond := ColorRect.new()
-	fond.color = Color(0.03, 0.03, 0.08)
-	fond.size = Vector2(TAILLE_SALLE)
-	fond.modulate.a = 0.0
-	calque.add_child(fond)
-	# Halo doré derrière le blason (dégradé rond, en mode "ajout de lumière")
-	var halo := Sprite2D.new()
-	var degrade := Gradient.new()
-	degrade.set_color(0, Color(1.0, 0.75, 0.35, 0.55))
-	degrade.set_color(1, Color(1.0, 0.75, 0.35, 0.0))
-	var tex_halo := GradientTexture2D.new()
-	tex_halo.gradient = degrade
-	tex_halo.width = 256
-	tex_halo.height = 160
-	tex_halo.fill = GradientTexture2D.FILL_RADIAL
-	tex_halo.fill_from = Vector2(0.5, 0.5)
-	tex_halo.fill_to = Vector2(1.0, 0.5)
-	halo.texture = tex_halo
-	halo.position = CENTRE_BLASON
-	var additif := CanvasItemMaterial.new()
-	additif.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	halo.material = additif
-	halo.modulate.a = 0.0
-	calque.add_child(halo)
-	# Le blason de pierre (avec les ailes déjà gagnées, en rouge)
-	var socle := Sprite2D.new()
-	socle.texture = _texture(DOSSIER_BLASON + "blason_socle.png")
-	socle.centered = false
-	socle.position = origine
+	var herbe := ColorRect.new()
+	herbe.color = CIEL_HERBE
+	herbe.size = Vector2(TAILLE_SALLE)
+	calque.add_child(herbe)
+	# Le corps du donjon (le grand blason de pierre), invisible au début
+	var origine := CENTRE_BLASON - TAILLE_BLASON / 2.0
+	var socle := _sprite(_texture(DOSSIER_BLASON + "blason_socle.png"), origine, calque)
 	socle.modulate.a = 0.0
-	calque.add_child(socle)
-	var autre := "gauche" if droite else "droite"
-	if Etat.est("fragment_" + autre):
-		var deja := Sprite2D.new()
-		deja.texture = _texture(DOSSIER_BLASON + "blason_aile_" + autre + ".png")
-		deja.centered = false
-		socle.add_child(deja)
-	# Le fragment : son origine est la racine de l'aile, pour pivoter autour d'elle
-	var aile := Sprite2D.new()
-	aile.texture = _texture(DOSSIER_BLASON + "blason_aile_" + cote + ".png")
-	aile.centered = false
-	aile.offset = -pivot
-	aile.rotation = -PI / 2 if droite else PI / 2   # à la verticale : plumes vers le haut
-	aile.position = Vector2(CENTRE_BLASON.x, 260)   # sous l'écran
-	aile.scale = Vector2(0.5, 0.5)
-	aile.modulate = Color(1.6, 1.4, 0.9, 0.0)        # éclatant pendant le vol
-	calque.add_child(aile)
+	if Etat.est("fragment_" + ("gauche" if droite else "droite")):
+		_sprite(_texture(DOSSIER_BLASON + "blason_aile_" + ("gauche" if droite else "droite") + ".png"), Vector2.ZERO, socle)
+	# Le plan de l'aile : son point d'accroche (pivot) = le centre de l'Entrée (racine de l'aile)
+	var racine: Vector2 = plan["coin"] + Vector2(12.5, 7)
+	var carte := _sprite(plan["carte"], Vector2.ZERO, calque)
+	carte.offset = -racine
+	var zoom := 1.6
+	carte.scale = Vector2(zoom, zoom)
+	carte.position = Vector2(TAILLE_SALLE) / 2.0 + (racine - plan["taille"] / 2.0) * zoom   # plan centré à l'écran
+	var lisere := _sprite(plan["contour"], Vector2.ZERO, carte)
+	lisere.offset = -racine
+	lisere.modulate.a = 0.0
+	# Le joueur : un point qui clignote, à la sortie du vestibule
+	var point := ColorRect.new()
+	point.color = Color(1.0, 0.25, 0.2)
+	point.size = Vector2(2, 2)
+	point.position = plan["coin"] + Vector2(11.5, 14 + 13) - racine
+	carte.add_child(point)
+	var clignote := create_tween().set_loops()
+	clignote.tween_property(point, "modulate:a", 0.2, 0.3)
+	clignote.tween_property(point, "modulate:a", 1.0, 0.3)
+	# L'aile du blason (rouge), qui remplacera le plan une fois emboîtée
+	var pivot: Vector2 = PIVOTS[cote]
+	var aile := _sprite(_texture(DOSSIER_BLASON + "blason_aile_" + cote + ".png"), origine, calque)
+	aile.modulate.a = 0.0
 	var flash := ColorRect.new()
 	flash.color = Color(1.0, 0.95, 0.8)
 	flash.size = Vector2(TAILLE_SALLE)
 	flash.modulate.a = 0.0
 	calque.add_child(flash)
 
-	var t := create_tween()
-	t.tween_property(fond, "modulate:a", 0.94, 0.7)
-	if _musique:
-		t.parallel().tween_property(_musique, "volume_db", -40.0, 0.7)
-	t.tween_property(socle, "modulate:a", 1.0, 0.9)
-	t.parallel().tween_property(halo, "modulate:a", 0.5, 0.9)
+	# 2) Vu du ciel : on découvre le plan des salles parcourues
+	t = create_tween()
+	t.tween_property(_fondu, "modulate:a", 0.0, 1.0)
 	await t.finished
-	Etat.annoncer("Le grand blason de la Garde...")
-	await get_tree().create_timer(1.0).timeout
+	Etat.annoncer("Vu du ciel, les salles que tu as parcourues dessinent...")
+	await get_tree().create_timer(2.6).timeout
+	_jouer_son(SON_REVELATION)
+	t = create_tween()
+	t.tween_property(lisere, "modulate:a", 1.0, 0.5)
+	Etat.annoncer("... une AILE ! L'entrée en est la racine, chaque plume en est une plume.")
+	var pulse := create_tween().set_loops()
+	pulse.tween_property(lisere, "modulate", Color(1.5, 1.4, 1.0), 0.5)
+	pulse.tween_property(lisere, "modulate", Color(1, 1, 1), 0.5)
+	await get_tree().create_timer(3.2).timeout
 
-	# 2) L'aile monte à la verticale jusqu'à sa place
-	_jouer_son(SON_APPARITION)
-	t = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	t.tween_property(aile, "modulate:a", 1.0, 0.4)
-	t.parallel().tween_property(aile, "position", origine + pivot, 1.4)
-	t.parallel().tween_property(aile, "scale", Vector2.ONE, 1.4)
+	# 3) On prend de la hauteur : le corps du donjon apparaît, l'aile s'en approche (encore à la verticale)
+	var accroche := origine + pivot   # où la racine de l'aile s'emboîte sur le corps
+	var petit := 0.62
+	t = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t.tween_property(carte, "scale", Vector2(petit, petit), 1.6)
+	t.parallel().tween_property(carte, "position", accroche + Vector2(18 if droite else -18, 22), 1.6)
+	t.parallel().tween_property(socle, "modulate:a", 1.0, 1.6)
+	Etat.annoncer("... et elle doit rejoindre le corps du donjon.")
 	await t.finished
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(0.6).timeout
 
-	# 3) Elle pivote d'un quart de tour autour de sa racine... et s'emboîte (léger dépassement)
+	# 4) L'aile pivote d'un quart de tour autour de sa racine et s'emboîte
 	_jouer_son(SON_PIVOT)
 	t = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	t.tween_property(aile, "rotation", 0.0, 1.1)
+	t.tween_property(carte, "rotation", PI / 2 if droite else -PI / 2, 1.2)
+	# en pivotant, le plan prend la forme de l'aile du blason (plus court le long de l'épine, plumes plus longues)
+	t.parallel().tween_property(carte, "scale", ECHELLE_AILE, 1.2)
+	t.parallel().tween_property(carte, "position", accroche, 1.2)
 	await t.finished
 
-	# 4) Clac ! Éclair, secousse, l'aile reprend sa couleur
+	# 5) Clac ! Éclair, secousse : le plan devient l'aile rouge du blason
+	clignote.kill()
+	pulse.kill()
 	_jouer_son(SON_EMBOITE)
 	_jouer_son(JINGLE_BLASON, -2.0)
-	flash.modulate.a = 0.8
+	flash.modulate.a = 0.85
 	t = create_tween()
-	t.tween_property(flash, "modulate:a", 0.0, 0.5)
-	t.parallel().tween_property(aile, "modulate", Color.WHITE, 0.8)
-	t.parallel().tween_property(halo, "modulate:a", 1.0, 0.3)
-	t.tween_property(halo, "modulate:a", 0.6, 0.8)
+	t.tween_property(flash, "modulate:a", 0.0, 0.6)
+	t.parallel().tween_property(carte, "modulate:a", 0.0, 0.8)
+	t.parallel().tween_property(aile, "modulate:a", 1.0, 0.8)
 	var secousse := create_tween()
 	for i in 6:
 		secousse.tween_property(calque, "offset", Vector2(randf_range(-3, 3), randf_range(-2, 2)), 0.04)
 	secousse.tween_property(calque, "offset", Vector2.ZERO, 0.05)
+	var autre := "gauche" if droite else "droite"
 	if Etat.est("fragment_" + autre):
-		Etat.annoncer("Les deux ailes ont rejoint le blason ! L'épreuve finale t'attend.")
+		Etat.annoncer("Les deux ailes ont rejoint le corps du donjon ! L'épreuve finale t'attend.")
 	else:
-		Etat.annoncer("L'aile " + cote + " a rejoint le grand blason ! Il manque encore l'aile " + autre + ".")
-	await get_tree().create_timer(4.0).timeout
+		Etat.annoncer("L'aile " + cote + " a rejoint le corps du donjon ! Il manque encore l'aile " + autre + ".")
+	await get_tree().create_timer(4.5).timeout
 
-	# 5) Fondu au noir, retour à l'entrée du donjon
+	# 6) Fondu au noir, retour dans le vestibule (le corps du donjon n'est pas encore construit)
 	t = create_tween()
 	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
 	await t.finished
 	calque.queue_free()
 	for enfant in get_children():
-		if enfant is Room and enfant.name == "Entree":
-			joueur.position = enfant.point_arrivee()
-	salle_actuelle = _salle_du_joueur()
-	Etat.salle_courante = salle_actuelle
-	camera.position = _centre_salle(salle_actuelle)
-	_regler_obscurite(salle_actuelle)
+		if enfant is Room and enfant.grille == SORTIE_DONJON - Vector2i(0, 1):
+			joueur.position = enfant.position + Vector2(12 * 16 + 8, 10 * 16 + 3)
+	_placer_camera()
 	await get_tree().create_timer(0.4).timeout
 	t = create_tween()
 	t.tween_property(_fondu, "modulate:a", 0.0, 0.6)
