@@ -31,7 +31,7 @@ var _papillons: Array = []  # [centre relatif à la caméra, phase, couleur]
 
 func _ready() -> void:
 	z_index = 5   # au-dessus du décor et du joueur (les ombres de nuages passent sur tout)
-	for i in 2:
+	for i in 0:   # ombres de nuages désactivées (effet de flou)
 		var nuage := Sprite2D.new()
 		nuage.texture = load(NUAGE)
 		nuage.scale = Vector2(4, 3)
