@@ -66,7 +66,7 @@ layout = PackedStringArray("###########...###########", "###########...#########
 [node name="Plume3a" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, -1)
 teinte = Color(1.04, 0.98, 0.9, 1)
-melodie = "132"
+melodie = 132
 drapeau_melodie = "p3_chant1"
 drapeau_porte = "p3_chant1"
 indice = "Frappe la statue du coq : écoute son chant, puis rejoue-le sur les cloches."
@@ -75,7 +75,7 @@ layout = PackedStringArray("###########DDD###########", "###########DDD#########
 [node name="Plume3b" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, -2)
 teinte = Color(1.02, 0.96, 0.92, 1)
-melodie = "2413"
+melodie = 2413
 drapeau_melodie = "p3_chant2"
 drapeau_porte = "p3_chant2"
 layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##.O.....B......#3#....##", "##...............X...V.##", "##...2.................##", "##.....................##", "##......#.......#......##", "##.....................##", "##.....................##", "##...1......C......4...##", "##.........TTT.........##", "##.V.......TTT.......V.##", "###########...###########", "###########...###########")
@@ -84,7 +84,7 @@ layout = PackedStringArray("###########DDD###########", "###########DDD#########
 grille = Vector2i(3, -3)
 teinte = Color(1.0, 1.0, 1.0, 1)
 sombre = true
-melodie = "31524"
+melodie = 31524
 drapeau_melodie = "p3_chant3"
 drapeau_porte = "p3_chant3"
 drapeau_gemme = "plume3"
@@ -93,6 +93,47 @@ layout = PackedStringArray("#########################", "#######################
 
 [node name="Epine4" parent="." instance=ExtResource("2")]
 grille = Vector2i(4, 0)
+teinte = Color(0.86, 0.9, 0.96, 1)
+drapeau_porte = "plume4"
+layout = PackedStringArray("###########...###########", "###########...###########", "###########...###########", "###########...###########", "###########...###########", "......B...........B....D.", ".......................D.", "..TTTTTTTTT...TTTTTTTTTD.", ".......................D.", "#########################", "#########################", "#########################", "#########################", "#########################")
+
+[node name="Plume4a" parent="." instance=ExtResource("2")]
+grille = Vector2i(4, -1)
+teinte = Color(0.94, 0.96, 1.04, 1)
+retour = Vector2(1800, -30)
+drapeau_repos = "plume4"
+indice = "Une sentinelle ! Ne marche pas dans son regard. Les piliers font de l'ombre."
+layout = PackedStringArray("###########...###########", "###########...###########", "##.B.................B.##", "#######.......###########", "#######....#..###########", "######>....#..###########", "#######....#..###########", "#######.......###########", "##..V...............V..##", "##......S.......S......##", "##.....................##", "##.V.................V.##", "###########...###########", "###########...###########")
+
+[node name="Plume4b" parent="." instance=ExtResource("2")]
+grille = Vector2i(4, -2)
+teinte = Color(0.96, 0.95, 1.02, 1)
+retour = Vector2(1800, -30)
+drapeau_repos = "plume4"
+periodes_sentinelles = PackedFloat32Array(2, 3)
+indice = "Elles tournent la tête : observe leur rythme. Maj ou K pour courir."
+layout = PackedStringArray("###########...###########", "###########...###########", "######.............######", "######......v......######", "######.............######", "######.............######", "######......^......######", "######.............######", "######.............######", "#######.#########.#######", "##V...................V##", "##.V.....B.....B.....V.##", "###########...###########", "###########...###########")
+
+[node name="Plume4c" parent="." instance=ExtResource("2")]
+grille = Vector2i(4, -3)
+teinte = Color(0.98, 0.94, 1.0, 1)
+retour = Vector2(1800, -30)
+drapeau_repos = "plume4"
+layout = PackedStringArray("###########...###########", "###########...###########", "##.B.................B.##", "#######.#################", "#######.#################", "#####>.....X.############", "############.############", "############.############", "##.V....S.......S....V.##", "##.....................##", "##.....................##", "##.V.................V.##", "###########...###########", "###########...###########")
+
+[node name="Plume4d" parent="." instance=ExtResource("2")]
+grille = Vector2i(4, -4)
+teinte = Color(1.0, 1.0, 1.0, 1)
+sombre = true
+retour = Vector2(1800, -30)
+drapeau_repos = "plume4"
+drapeau_gemme = "plume4"
+duree_braseros = 14.0
+indice = "Dans le noir, les sentinelles fixent la flamme la plus proche."
+layout = PackedStringArray("#########################", "#########################", "##.V.................V.##", "##..........G..........##", "##........TTTTT........##", "############.############", "##V...................V##", "##.....................##", "##......>.......<......##", "##.....................##", "##.....................##", "##L...................L##", "###########...###########", "###########...###########")
+
+[node name="Epine5" parent="." instance=ExtResource("2")]
+grille = Vector2i(5, 0)
 teinte = Color(0.86, 0.9, 0.96, 1)
 layout = PackedStringArray("#########################", "#########################", "#########################", "#########################", "#########################", "......B...........B....##", ".......................##", "..TTTTTTTTT...TTTTTTTTT##", ".......................##", "#########################", "#########################", "#########################", "#########################", "#########################")
 

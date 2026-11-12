@@ -14,6 +14,7 @@ class_name Room
 #   P  = bouton de sol : s'enfonce quand un bloc est dessus (voir `drapeau_plaque`)
 #   1 à 5 = cloche à frapper à la lance (le chiffre = sa note, 1 = la plus grave)
 #   C  = statue du coq chanteur : frappée, elle joue la `melodie` de la salle
+#   ^ v < > = sentinelle (statue de garde) qui regarde dans cette direction (voir `periodes_sentinelles`)
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
@@ -27,6 +28,9 @@ const SOLIDES := "#SOB"
 const EPAISSEUR := 2
 # Son d'une fausse note (pack Ninja Adventure)
 const SON_ERREUR := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Cancel.wav"
+# Regard des sentinelles : portée (en cases) et couleur des cases surveillées
+const PORTEE_REGARD := 7
+const COULEUR_REGARD := Color(1.0, 0.85, 0.3, 0.28)
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
 const COLONNES_TORCHES := [4, 20]
 const COLONNES_BANNIERES := [7, 17]
@@ -48,6 +52,11 @@ const COLONNES_BANNIERES := [7, 17]
 @export var melodie := ""          # notes à rejouer sur les cloches, dans l'ordre (ex. "132")
 @export var drapeau_melodie := ""  # levé quand on a rejoué toute la mélodie sans faute
 @export var indice := ""           # message affiché la première fois qu'on entre dans la salle
+# Sentinelles : temps (s) entre deux quarts de tour de chaque sentinelle, dans l'ordre de lecture du plan
+# (de gauche à droite, de haut en bas). 0 ou absent = elle ne tourne pas.
+@export var periodes_sentinelles: PackedFloat32Array
+@export var retour := Vector2.ZERO   # où un garde ramène le joueur repéré (position dans le monde)
+@export var drapeau_repos := ""      # quand ce drapeau est levé, les sentinelles ne surveillent plus
 
 # Cache des images déjà chargées (partagé entre toutes les salles)
 static var _cache := {}
@@ -69,6 +78,10 @@ var _portes: Array[Porte] = []
 var _cloches := {}         # { note (int) : Cloche }
 var _progression := 0      # combien de notes de la mélodie ont déjà été rejouées
 var _en_chant := false     # vrai pendant que la statue chante
+var _sentinelles: Array[Sentinelle] = []
+var _regards := {}         # { case : vrai si la sentinelle va bientôt tourner } = cases surveillées
+var _calque_regards: Node2D   # dessine les cases surveillées par-dessus le sol
+var _repere := false       # le joueur vient d'être repéré (on attend que le garde le ramène)
 
 
 func _ready() -> void:
@@ -94,6 +107,9 @@ func _process(delta: float) -> void:
 	# Les lueurs vacillent doucement
 	for i in _lumieres.size():
 		_lumieres[i].modulate.a = 0.8 + 0.2 * sin(_temps * 7.0 + i * 1.7) * sin(_temps * 3.1 + i)
+	# Les sentinelles ne surveillent que la salle où se trouve le joueur
+	if not _sentinelles.is_empty() and grille == Etat.salle_courante:
+		_surveiller(delta)
 
 
 # --- Chargement ---------------------------------------------------------------
@@ -154,6 +170,11 @@ func _creer_decor() -> void:
 	_poser_objets()
 	_poser_portes()
 	_poser_details()
+	if not _sentinelles.is_empty():
+		_calque_regards = Node2D.new()
+		_calque_regards.z_index = 1
+		_calque_regards.draw.connect(_dessiner_regards)
+		add_child(_calque_regards)
 
 
 # Tuile de sol : damier discret de deux tons (comme Zelda SNES), avec de rares dalles fissurées/usées.
@@ -259,6 +280,16 @@ func _poser_objets() -> void:
 					cloche.initialiser(self, int(layout[y][x]), sombre)
 					_cloches[int(layout[y][x])] = cloche
 					_occupe[Vector2i(x, y)] = cloche
+				"^", "v", "<", ">":
+					var sentinelle := Sentinelle.new()
+					sentinelle.position = pos
+					add_child(sentinelle)
+					var directions := {"^": Vector2i.UP, "v": Vector2i.DOWN, "<": Vector2i.LEFT, ">": Vector2i.RIGHT}
+					var n := _sentinelles.size()
+					var periode: float = periodes_sentinelles[n] if n < periodes_sentinelles.size() else 0.0
+					sentinelle.initialiser(Vector2i(x, y), directions[layout[y][x]], periode, _image("statue_chevalier"), sombre)
+					_sentinelles.append(sentinelle)
+					_occupe[Vector2i(x, y)] = sentinelle
 				"C":
 					var chanteur := Chanteur.new()
 					chanteur.position = pos
@@ -352,16 +383,110 @@ func reinitialiser() -> void:
 		bloc.reinitialiser()
 	_maj_boutons()
 	_progression = 0
+	for sentinelle in _sentinelles:
+		sentinelle.reinitialiser()
+	for brasero in _braseros:
+		if brasero.allume and not brasero.verrouille:
+			brasero.eteindre()
+	_repere = false
 
 
 # Appelé par un brasero qui vient de s'allumer : si tous brûlent en même temps, c'est gagné.
 func verifier_braseros() -> void:
+	if drapeau_braseros == "":
+		return   # braseros sans énigme (ex. pour détourner le regard des sentinelles)
 	for brasero in _braseros:
 		if not brasero.allume:
 			return
 	for brasero in _braseros:
 		brasero.verrouiller()
 	Etat.poser(drapeau_braseros)
+
+
+# --- Sentinelles -----------------------------------------------------------------
+
+# Chaque image : les sentinelles tournent la tête (ou fixent la flamme la plus proche),
+# on calcule les cases qu'elles voient, et si le joueur est sur l'une d'elles, il est repéré.
+func _surveiller(delta: float) -> void:
+	_regards.clear()
+	var au_repos := Etat.est(drapeau_repos)
+	for sentinelle in _sentinelles:
+		if au_repos:
+			sentinelle.endormir()
+			continue
+		sentinelle.avancer(delta)
+		sentinelle.regarder(_direction_attiree(sentinelle))
+		var bientot := sentinelle.va_tourner()
+		for c in _cases_vues(sentinelle.case, sentinelle.direction):
+			_regards[c] = bientot
+	_calque_regards.queue_redraw()
+	if au_repos or _repere:
+		return
+	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
+	if joueur == null:
+		return
+	var pied := to_local(joueur.global_position) + Vector2(0, 5)   # les pieds du joueur
+	if _regards.has(Vector2i(floori(pied.x / TUILE), floori(pied.y / TUILE))):
+		_repere = true
+		Etat.repere.emit(retour)
+
+
+# Une flamme allumée attire le regard : la sentinelle fixe le brasero allumé le plus proche.
+func _direction_attiree(sentinelle: Sentinelle) -> Vector2i:
+	var meilleur: Brasero = null
+	var meilleure_distance := INF
+	for brasero in _braseros:
+		var d := Vector2(sentinelle.case).distance_squared_to(brasero.position / TUILE)
+		if brasero.allume and d < meilleure_distance:
+			meilleur = brasero
+			meilleure_distance = d
+	if meilleur == null:
+		return sentinelle.direction_normale()
+	var vers := meilleur.position / TUILE - Vector2(sentinelle.case)
+	if absf(vers.x) >= absf(vers.y):
+		return Vector2i(signi(roundi(vers.x)), 0)
+	return Vector2i(0, signi(roundi(vers.y)))
+
+
+# Les cases vues : un cône qui s'élargit (1, 3, 3, puis 5 cases de large), arrêté par tout obstacle.
+func _cases_vues(depuis: Vector2i, dir: Vector2i) -> Array[Vector2i]:
+	var vues: Array[Vector2i] = []
+	var cote := Vector2i(-dir.y, dir.x)   # perpendiculaire au regard
+	for distance in range(1, PORTEE_REGARD + 1):
+		var demi := mini(2, int(distance / 2.0))
+		for decalage in range(-demi, demi + 1):
+			var c := depuis + dir * distance + cote * decalage
+			if not _opaque(c) and _ligne_libre(depuis, c, distance * 4):
+				vues.append(c)
+	return vues
+
+
+# Vrai si rien ne bloque la vue entre deux cases (on avance par petits pas sur la ligne).
+func _ligne_libre(a: Vector2i, b: Vector2i, pas: int) -> bool:
+	for i in range(1, pas):
+		var t := float(i) / pas
+		var c := Vector2i(floori(a.x + (b.x - a.x) * t + 0.5), floori(a.y + (b.y - a.y) * t + 0.5))
+		if c != a and c != b and _opaque(c):
+			return false
+	return true
+
+
+# Une case cache la vue : murs, statues, braseros, et tout ce qui occupe une case (blocs, pots, portes...).
+func _opaque(c: Vector2i) -> bool:
+	if c.y < 0 or c.y >= layout.size() or c.x < 0 or c.x >= layout[c.y].length():
+		return true
+	return "#SOBK".contains(layout[c.y][c.x]) or _occupe.has(c)
+
+
+# Dessine les cases surveillées (elles clignotent juste avant que la sentinelle tourne).
+func _dessiner_regards() -> void:
+	for c in _regards:
+		var couleur := COULEUR_REGARD
+		if _repere:
+			couleur = Color(1.0, 0.2, 0.15, 0.45)
+		elif _regards[c] and int(_temps * 8.0) % 2 == 0:
+			couleur.a *= 0.4
+		_calque_regards.draw_rect(Rect2(Vector2(c * TUILE), Vector2(TUILE, TUILE)), couleur)
 
 
 # --- Énigme du chant du coq ----------------------------------------------------

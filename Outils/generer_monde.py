@@ -47,7 +47,8 @@ def epine(est_ferme=False, porte_est=False, tige=True):
 e1 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 1 est obtenue
 e2 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 2 est obtenue
 e3 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 3 est obtenue
-e4 = epine(est_ferme=True, tige=False)  # provisoire (plumes 4 et 5 à construire)
+e4 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 4 est obtenue
+e5 = epine(est_ferme=True, tige=False)  # provisoire (plume 5 à construire)
 
 # --- Plume 1 : bloc + bouton (leçon : pousser un bloc ; le pot sert à dégager le chemin)
 p1 = vide(); sol(p1, 2, 22, 2, 11); sol(p1, 11, 13, 12, 13)
@@ -110,6 +111,40 @@ put(p3c, 'C', (12, 9))
 put(p3c, '3', (4, 7)); put(p3c, '1', (8, 10)); put(p3c, '5', (16, 10)); put(p3c, '2', (20, 7)); put(p3c, '4', (16, 6))
 put(p3c, 'V', (3, 11), (21, 11))
 
+# --- PLUME 4 : « LES SENTINELLES ». Des statues de garde (^ v < >) surveillent les cases éclairées devant elles.
+#     Le regard s'arrête aux obstacles. Repéré = un garde te ramène à l'entrée de la plume (bas de 4a).
+def plume_ouverte(g):
+    """Salle d'une plume ouverte en bas et en haut (pas de grille : les sentinelles suffisent)."""
+    sol(g, 11, 13, 12, 13); sol(g, 11, 13, 0, 1)
+
+# 4a (en bas) : leçon. Une sentinelle fixe surveille le passage ; on passe dans l'ombre du pilier (à droite).
+p4a = vide(); plume_ouverte(p4a); sol(p4a, 2, 22, 2, 11)
+for y in range(3, 8):
+    for x in list(range(2, 7)) + list(range(14, 23)): p4a[y][x] = '#'
+put(p4a, '>', (6, 5)); put(p4a, '#', (11, 4), (11, 5), (11, 6))
+put(p4a, 'B', (3, 2), (21, 2)); put(p4a, 'V', (3, 11), (21, 11), (4, 8), (20, 8)); put(p4a, 'S', (8, 9), (16, 9))
+
+# 4b : deux sentinelles qui tournent la tête (toutes les 2 s et toutes les 3 s) : observer le rythme, courir au bon moment.
+p4b = vide(); plume_ouverte(p4b); sol(p4b, 6, 18, 2, 8); sol(p4b, 2, 22, 10, 11)
+for x in (7, 17): p4b[9][x] = '.'
+put(p4b, '^', (12, 6)); put(p4b, 'v', (12, 3))
+put(p4b, 'V', (3, 11), (21, 11), (2, 10), (22, 10)); put(p4b, 'B', (9, 11), (15, 11))
+
+# 4c : un long couloir surveillé : pousser le bloc devant soi pour rester caché derrière lui.
+p4c = vide(); plume_ouverte(p4c); sol(p4c, 2, 22, 8, 11); sol(p4c, 2, 22, 2, 2)
+sol(p4c, 12, 12, 6, 7); sol(p4c, 6, 12, 5, 5); sol(p4c, 7, 7, 3, 4)
+put(p4c, '>', (5, 5)); put(p4c, 'X', (11, 5))
+put(p4c, 'V', (3, 11), (21, 11), (3, 8), (21, 8)); put(p4c, 'S', (8, 8), (16, 8)); put(p4c, 'B', (3, 2), (21, 2))
+
+# 4d (la pointe) : SALLE SOMBRE. Deux sentinelles gardent le passage vers la plume.
+#     Une flamme attire leur regard : allumer les DEUX braseros (L) pour qu'elles regardent chacune de leur côté.
+p4d = vide(); sol(p4d, 2, 22, 6, 11); sol(p4d, 11, 13, 12, 13); sol(p4d, 2, 22, 2, 4); sol(p4d, 12, 12, 5, 5)
+put(p4d, '>', (8, 8)); put(p4d, '<', (16, 8)); put(p4d, 'L', (2, 11), (22, 11)); put(p4d, 'G', (12, 3))
+put(p4d, 'V', (3, 2), (21, 2), (2, 6), (22, 6))
+for x in range(10, 15): put(p4d, 'T', (x, 4))
+RETOUR_P4 = 'Vector2(1800, -30)'   # entrée de la plume 4 (bas de l'écran 4a, case (12,12))
+REPOS_P4 = 'plume4'                # une fois la plume obtenue, les sentinelles ne surveillent plus
+
 salles = [
     ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal'}),
     ('Entree', (0, 0), ent, (1.0, 0.96, 0.88), {}),
@@ -125,7 +160,17 @@ salles = [
     ('Plume3c', (3, -3), p3c, (1.0, 1.0, 1.0), {'sombre': 'true', 'melodie': '31524', 'drapeau_melodie': 'p3_chant3',
         'drapeau_porte': 'p3_chant3', 'drapeau_gemme': 'plume3',
         'indice': 'Dans le noir, guette les cloches qui s\'allument quand le coq chante.'}),
-    ('Epine4', (4, 0), e4, (0.86, 0.90, 0.96), {}),
+    ('Epine4', (4, 0), e4, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume4'}),
+    ('Plume4a', (4, -1), p4a, (0.94, 0.96, 1.04), {'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4,
+        'indice': 'Une sentinelle ! Ne marche pas dans son regard. Les piliers font de l\'ombre.'}),
+    ('Plume4b', (4, -2), p4b, (0.96, 0.95, 1.02), {'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4,
+        'periodes_sentinelles': 'PackedFloat32Array(2, 3)',
+        'indice': 'Elles tournent la tête : observe leur rythme. Maj ou K pour courir.'}),
+    ('Plume4c', (4, -3), p4c, (0.98, 0.94, 1.0), {'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4}),
+    ('Plume4d', (4, -4), p4d, (1.0, 1.0, 1.0), {'sombre': 'true', 'retour': RETOUR_P4, 'drapeau_repos': REPOS_P4,
+        'drapeau_gemme': 'plume4', 'duree_braseros': '14.0',
+        'indice': 'Dans le noir, les sentinelles fixent la flamme la plus proche.'}),
+    ('Epine5', (5, 0), e5, (0.86, 0.90, 0.96), {}),
 ]
 depart = (200, 224 + 180)   # le joueur commence dans le vestibule (0,1)
 
@@ -145,7 +190,9 @@ for nom, (gx, gy), g, c, ex in salles:
     out += '\n[node name="%s" parent="." instance=ExtResource("2")]\n' % nom
     if (gx, gy) != (0, 0): out += 'grille = Vector2i(%d, %d)\n' % (gx, gy)
     out += 'teinte = Color(%s, %s, %s, 1)\n' % c
-    for k, v in ex.items(): out += ('%s = %s\n' % (k, v)) if v == 'true' else ('%s = "%s"\n' % (k, v))
+    for k, v in ex.items():
+        brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(')) or v.replace('.', '').isdigit()
+        out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v))
     out += 'layout = %s\n' % sortie(g)
 out += '''
 [node name="Player" parent="." instance=ExtResource("3")]

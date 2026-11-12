@@ -256,5 +256,21 @@
   `generer_monde.py` : Épine3 (3,0) porte est = drapeau `plume3` -> Épine4 (4,0) provisoire fermée ; Plume3a (3,-1) « 132 », Plume3b (3,-2) « 2413 », Plume3c (3,-3) sombre « 31524 » + plume dorée.
   Drapeaux : p3_chant1, p3_chant2, p3_chant3, plume3. Godot n'a pas pu être lancé côté Claude (non autorisé) : code relu à la main seulement.
 
-## PROCHAINE ÉTAPE : Étape 6g
-- L'utilisateur teste la plume 3 (Pull, F5) : son des cloches (hauteurs, volume), lisibilité dans le noir, difficulté. Puis plume 4 (sentinelles), puis plume 5 (miroirs + fragment). Ensuite rééquilibrage de toute l'aile.
+- 2026-11-12 : **PLUME 3 TESTÉE : "ça fonctionne"**. Demande : fonction COURIR.
+- 2026-11-12 : **ÉTAPE 6g écrite (non testée dans Godot)** = COURSE + PLUME 4 « LES SENTINELLES ».
+  COURSE : action `run` (Maj ou K) dans project.godot ; `player.gd` : vitesse x `FACTEUR_COURSE` (1.7), animation plus rapide.
+  SENTINELLES : `Scripts/sentinelle.gd` (class Sentinelle, lettres `^ v < >`, image `statue_chevalier` + triangle « œil », quart de tour horaire toutes les `periode` s, clignote 0.6 s avant).
+  `room.gd` : exports `periodes_sentinelles` (PackedFloat32Array, ordre de lecture du plan), `retour` (Vector2, position monde), `drapeau_repos` (sentinelles endormies) ;
+  `_surveiller` (seulement dans la salle courante), `_cases_vues` = cône portée 7 (largeur 1, 3, 3, puis 5), arrêté par `_opaque` (#SOBK + tout ce qui est dans `_occupe` : blocs, pots, portes, braseros...),
+  `_dessiner_regards` (draw_rect jaune translucide sur un calque, signal draw), pieds du joueur dans une case vue -> `Etat.repere.emit(retour)`.
+  Une FLAMME allumée attire le regard : chaque sentinelle fixe le brasero `L` allumé le plus proche. `verifier_braseros` ne fait rien si `drapeau_braseros` est vide (braseros « leurres »).
+  `world.gd::_raccompagner` : alerte (Alert/Alert.wav), message, fondu au noir (`_fondu`), joueur ramené à `retour`, salle remise à zéro (blocs, sentinelles, braseros), fondu retour.
+  SALLES : Plume4a (4,-1) 1 sentinelle fixe, passer dans l'ombre du pilier ; Plume4b (4,-2) 2 sentinelles qui tournent (2 s et 3 s) ; Plume4c (4,-3) couloir surveillé, pousser le bloc devant soi ;
+  Plume4d (4,-4) SOMBRE : allumer les 2 braseros pour que chaque sentinelle regarde de son côté, puis monter vers la plume (drapeau `plume4`, qui endort aussi les sentinelles des 4 salles).
+  Retour = Vector2(1800, -30) (bas de 4a). Épine4 porte est = `plume4` -> Épine5 (5,0) provisoire fermée.
+  Outil `Outils/simuler_sentinelles.py` : même règle de regard en Python, vérifie qu'un passage existe (4a-4d vérifiées ; 4c impossible SANS pousser le bloc, voulu).
+  `generer_monde.py` : valeurs Vector2(...)/PackedFloat32Array(...)/nombres écrites sans guillemets.
+
+## PROCHAINE ÉTAPE : Étape 6h
+- L'utilisateur teste la course et la plume 4 (Pull, F5) : lisibilité des cônes (couleur, clignotement), difficulté de 4b, le noir de 4d (cônes visibles seulement près des lumières).
+  Puis plume 5 « Le pivot » (miroirs + rayon, 5 écrans) + fragment en (5,-5). Ensuite rééquilibrage de toute l'aile.

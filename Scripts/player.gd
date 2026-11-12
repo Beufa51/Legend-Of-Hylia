@@ -4,6 +4,7 @@ extends CharacterBody2D
 # donc rien à configurer à la main dans l'éditeur.
 
 const VITESSE := 70.0  # pixels par seconde
+const FACTEUR_COURSE := 1.7  # vitesse multipliée quand on court (touche Maj ou K)
 const DOSSIER := "res://Assets/Ninja_adventure/Actor/Character/Knight/SeparateAnim/"
 # Ordre des colonnes dans les planches : bas, haut, gauche, droite
 const DIRECTIONS := ["bas", "haut", "gauche", "droite"]
@@ -43,7 +44,9 @@ func _physics_process(delta: float) -> void:
 		return
 	# Vecteur d'entrée : (-1..1, -1..1) selon les touches pressées
 	var entree := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	velocity = entree * VITESSE
+	var court := Input.is_action_pressed("run")
+	velocity = entree * VITESSE * (FACTEUR_COURSE if court else 1.0)
+	sprite.speed_scale = 1.6 if court else 1.0   # les jambes vont plus vite quand on court
 	move_and_slide()
 	_pousser_les_blocs(entree, delta)
 	_mettre_a_jour_animation(entree)

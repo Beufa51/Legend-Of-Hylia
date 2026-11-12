@@ -6,6 +6,7 @@ extends Node
 signal drapeau_change(nom: String)   # un drapeau vient d'être levé
 signal message(texte: String)        # un message à afficher à l'écran
 signal secousse                      # l'écran tremble (une porte s'ouvre...)
+signal repere(retour: Vector2)       # une sentinelle a vu le joueur : un garde le ramène à `retour`
 
 var drapeaux := {}
 var salle_courante := Vector2i.ZERO   # case de la grille où se trouve la caméra (mise à jour par world.gd)

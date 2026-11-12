@@ -29,6 +29,7 @@ func _ready() -> void:
 	add_child(_modulation)
 	_regler_obscurite(salle_actuelle)
 	Etat.secousse.connect(_secouer)
+	Etat.repere.connect(_raccompagner)
 
 
 func _process(_delta: float) -> void:
@@ -106,6 +107,13 @@ var _tween_message: Tween
 func _creer_messages() -> void:
 	var calque := CanvasLayer.new()
 	add_child(calque)
+	# Écran noir pour les fondus (sous le texte, pour que le message reste lisible)
+	_fondu = ColorRect.new()
+	_fondu.color = Color.BLACK
+	_fondu.size = Vector2(TAILLE_SALLE)
+	_fondu.modulate.a = 0.0
+	_fondu.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	calque.add_child(_fondu)
 	_etiquette = Label.new()
 	_etiquette.position = Vector2(0, 205)
 	_etiquette.size = Vector2(400, 16)
@@ -118,7 +126,7 @@ func _creer_messages() -> void:
 	Etat.message.connect(_afficher_message)
 	# Rappel des touches au début
 	await get_tree().create_timer(0.8).timeout
-	Etat.annoncer(Noms.VILLAGE + " — Flèches/ZQSD : bouger    Espace/J : lance    R : recommencer la salle")
+	Etat.annoncer(Noms.VILLAGE + " — Flèches/ZQSD : bouger   Maj/K : courir   Espace/J : lance   R : recommencer")
 	await get_tree().create_timer(5.5).timeout
 	if not Etat.est("vestibule_cristal"):
 		Etat.annoncer("Frappe le cristal bleu avec ta lance pour ouvrir la porte")
@@ -169,3 +177,47 @@ func _secouer() -> void:
 	for i in 6:
 		tween.tween_property(camera, "offset", Vector2(randf_range(-3, 3), randf_range(-2, 2)), 0.04)
 	tween.tween_property(camera, "offset", Vector2.ZERO, 0.05)
+
+
+# --- Repéré par une sentinelle ---------------------------------------------------
+const SON_ALERTE := "res://Assets/Ninja_adventure/Audio/Sounds/Alert/Alert.wav"
+var _fondu: ColorRect
+var _raccompagnement := false
+
+
+# Un garde ramène le joueur à l'entrée de la plume : alerte, fondu au noir, retour, la salle est remise à zéro.
+func _raccompagner(retour: Vector2) -> void:
+	if _raccompagnement:
+		return
+	_raccompagnement = true
+	en_transition = true
+	joueur.set_physics_process(false)
+	var salle_reperee := salle_actuelle
+	var flux = load(SON_ALERTE)
+	if flux != null:
+		var lecteur := AudioStreamPlayer.new()
+		lecteur.stream = flux
+		add_child(lecteur)
+		lecteur.play()
+		lecteur.finished.connect(lecteur.queue_free)
+	Etat.annoncer("Repéré ! Un garde te raccompagne à l'entrée de la plume.")
+	await get_tree().create_timer(0.7).timeout
+	var tween := create_tween()
+	tween.tween_property(_fondu, "modulate:a", 1.0, 0.4)
+	await tween.finished
+	joueur.position = retour
+	joueur.velocity = Vector2.ZERO
+	for enfant in get_children():
+		if enfant is Room and enfant.grille == salle_reperee:
+			enfant.reinitialiser()
+	salle_actuelle = _salle_du_joueur()
+	Etat.salle_courante = salle_actuelle
+	camera.position = _centre_salle(salle_actuelle)
+	_regler_obscurite(salle_actuelle)
+	await get_tree().create_timer(0.4).timeout
+	tween = create_tween()
+	tween.tween_property(_fondu, "modulate:a", 0.0, 0.4)
+	await tween.finished
+	joueur.set_physics_process(true)
+	en_transition = false
+	_raccompagnement = false
