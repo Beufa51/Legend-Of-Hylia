@@ -46,6 +46,14 @@
 - Résolution : 320x180 (16:9), fenêtre 1280x720, stretch viewport, filtre Nearest. Tuiles 16x16.
 - Workflow Git : l'utilisateur utilise GitHub Desktop ; toujours "Pull" avant de travailler, "Push" après.
 
+- Histoire : préquelle d'un garde royal (inspiré de l'esprit Zelda OoT). Noms de TRAVAIL :
+  village **Cocoricou**, royaume **Hylio**. Ils restent trop proches de Zelda : avant toute publication
+  publique, les remplacer par des noms 100 % originaux (les centraliser dans un seul fichier pour
+  les changer facilement). Sinon garder le dépôt privé.
+- Graphismes : pack Ninja Adventure (téléchargé) + perso créé dans un générateur (planche ~27x27 px,
+  licence du générateur à vérifier ; original à mettre dans `assets/`). On fait marcher d'abord un perso
+  Ninja Adventure (16x16), le perso maison viendra après si le style colle.
+
 ## Points ouverts / à décider
 - [ ] Titre/univers : l'utilisateur a proposé "La Legend d'Hylia" → refusé car Hylia et
       "Legend of..." viennent de Zelda (Nintendo). Trouver un nom 100 % original.
