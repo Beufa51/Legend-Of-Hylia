@@ -24,6 +24,9 @@ func _ready() -> void:
 	# On place la salle à sa case de la grille (chaque case = 320x180 pixels)
 	position = Vector2(grille * TAILLE_SALLE)
 	_creer_collisions()
+	# DIAGNOSTIC (à retirer) : affiche dans l'onglet Sortie ce que la salle a reçu
+	print("Room ", name, " : ", layout.size(), " lignes, position ", position, ", visible=", is_visible_in_tree())
+	queue_redraw()
 
 
 # Dessine chaque case de la salle (sol ou mur) avec la tuile correspondante.

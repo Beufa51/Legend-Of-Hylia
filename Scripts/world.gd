@@ -13,6 +13,8 @@ var en_transition := false
 
 
 func _ready() -> void:
+	# DIAGNOSTIC (à retirer) : fond rouge vif là où aucune salle n'est dessinée
+	RenderingServer.set_default_clear_color(Color.RED)
 	salle_actuelle = _salle_du_joueur()
 	camera.position = _centre_salle(salle_actuelle)
 
