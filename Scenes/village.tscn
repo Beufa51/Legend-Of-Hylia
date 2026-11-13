@@ -52,9 +52,13 @@ layout = PackedStringArray("A...A......:::..A...A...b", "..a...a....:::....a...a
 
 [node name="Parvis" parent="." instance=ExtResource("2")]
 grille = Vector2i(2, 0)
-passages = PackedStringArray("12 6 ! Les grandes portes du corps du donjon sont scellées. Il faut d'abord rapporter les deux ailes du blason.")
+passages = PackedStringArray("12 6 $stele")
 musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
-layout = PackedStringArray("A.a.A.a.A.....a.A.a.A.a.b", ".a.A.a.A.a.....A.a.A.a..b", "a..P................P.A..", ".......j.K.......j.......", "A.....o...........o...a..", "............:............", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "........f..:::..f.....a..", "a.....w....:::.....w.....", ".A.a.A.a.A.:::.a.A.aaA...", "a.A.a.A.a..:::A.a.A.a.A.b", "...........:::..........b")
+drapeau_revele = "corps_revele"
+layout_revele = PackedStringArray("A.a.A.a...........a.A.a.b", ".a.A.a.A.U.......a.A.a..b", "a.....................A..", ".........................", "A......j.........j....a..", "......o...y.:.g...o......", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "........f..:::..f.....a..", "a.....w....:::.....w.....", ".A.a.A.a.A.:::.a.A.aaA...", "a.A.a.A.a..:::A.a.A.a.A.b", "...........:::..........b")
+passages_revele = PackedStringArray("12 4 ! Le corps du coq... L'épreuve finale se prépare (prochaine étape de la construction).", "10 6 $stele")
+indice = "Une stèle se dresse devant la forêt. Un coq y est gravé, ses ailes creusées dans la pierre..."
+layout = PackedStringArray("A.a.A.a.A.....a.A.a.A.a.b", ".a.A.a.A.a.A.a.A.a.A.a..b", "a.....................A..", ".......a.A.a.A.a.A.......", "A......j.........j....a..", "......o.....Y.g...o......", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "........f..:::..f.....a..", "a.....w....:::.....w.....", ".A.a.A.a.A.:::.a.A.aaA...", "a.A.a.A.a..:::A.a.A.a.A.b", "...........:::..........b")
 
 [node name="TempleDroit" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, 0)

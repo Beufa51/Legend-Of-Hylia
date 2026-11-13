@@ -28,9 +28,21 @@ const DOSSIER := "res://Assets/Gemini/tuiles/"
 # Mini-jeu de cet écran : "tir" (stand de tir) ou "poules" (chasse aux poules). Un habitant le lance (4e partie de sa ligne dans `pnjs`).
 @export var minijeu := ""
 var interieur := false             # vrai dans une maison (pas de vent ni de feuilles)
+# RÉVÉLATION : quand ce drapeau est levé, l'écran utilise `layout_revele` et `passages_revele` à la place
+# (ex. le parvis : la forêt s'est écartée et le corps du coq est apparu, voir world.gd::_ceremonie_stele).
+@export var drapeau_revele := ""
+@export var layout_revele: PackedStringArray
+@export var passages_revele: PackedStringArray
 
 # Cache des images déjà chargées (partagé entre tous les écrans)
 static var _cache := {}
+
+
+# Si le drapeau de révélation est levé, on prend le plan « révélé » (à appeler AVANT de construire l'écran).
+func _appliquer_revelation() -> void:
+	if drapeau_revele != "" and Etat.est(drapeau_revele) and not layout_revele.is_empty():
+		layout = layout_revele
+		passages = passages_revele
 
 
 # Remet l'écran dans son état de départ (touche R). Rien à faire par défaut.
@@ -131,7 +143,9 @@ func _poser_passages() -> void:
 		collision.shape = forme
 		zone.add_child(collision)
 		add_child(zone)
-		if m[2].begins_with("$records"):   # tableau d'honneur : records et rubans des mini-jeux
+		if m[2].begins_with("$stele"):   # la stèle du coq (parvis) : on y pose les deux ailes (en montant vers elle)
+			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.stele_touchee.emit())
+		elif m[2].begins_with("$records"):   # tableau d'honneur : records et rubans des mini-jeux
 			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.annoncer(Etat.texte_records()))
 		elif m[2].begins_with("!"):
 			var texte := m[2].substr(1).strip_edges()

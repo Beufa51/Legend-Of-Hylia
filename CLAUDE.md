@@ -535,6 +535,21 @@
   Les plans 5d et 5e ont été choisis par RECHERCHE AUTOMATIQUE (milliers de dispositions testées, contrainte « impossible sans le cristal »).
   À TESTER : toute l'aile droite (D1 à D5), sortie avec le fragment -> vue aérienne droite -> village (TempleDroit). Ensuite : rééquilibrage des énigmes, CORPS du donjon (épreuve finale).
 
+- 2026-11-13 : plume D5 TESTÉE par l'utilisateur : « j'ai réussi mais il faudra revoir ça » (trop dure / pas assez lisible ; solutions détaillées données en chat). À REVOIR lors du rééquilibrage des énigmes.
+  Pistes : indices plus précis, raccourcir D5b, panneau expliquant « un plot baissé = passage qui ne retourne aucune dalle / qui arrête la glissade ».
+
+- 2026-11-13 : VISION DE LA FIN (utilisateur) : les 2 ailes s'insèrent dans une STÈLE du coq ; ça ouvre les ARBRES derrière (qui cachaient le CORPS du coq) ; les 3 parties se rassemblent, vues en MODE 7 ;
+  dedans : (peut-être une énigme finale puis) un GARDIEN : le joueur CHOISIT de le combattre (combat de boss) ou de REFUSER (« un garde ne choisit pas toujours la violence ») ; les DEUX issues sont des victoires.
+  Découpage : A = stèle + forêt + mode 7 (fait) ; B = intérieur du corps + Gardien + choix + boss ; C = fin (adoubement au village, générique).
+- 2026-11-13 : **ÉTAPE 13a écrite (non testée dans Godot, aperçus PIL vérifiés, shader simulé en Python)** = LA STÈLE ET LE MODE 7.
+  `Outils/fabriquer_stele.py` -> `v_stele_vide.png` / `v_stele_pleine.png` (36x48, coq du blason gravé ; lettres extérieures `Y` / `y`, emprise 1x1). PARVIS (generer_village.py) : `parvis_commun()` ;
+  AVANT = forêt dense (rangées 1-4) + stèle `Y` en (12,5), passage "12 6 $stele" ; APRÈS (`drapeau_revele = corps_revele`) = forêt retirée, temple `U` (corps du coq) en (9,1), porte (12,4) (pour l'instant un message), stèle pleine `y` en (10,5).
+  `ecran.gd` : exports `drapeau_revele`, `layout_revele`, `passages_revele` + `_appliquer_revelation()` (appelé par `exterieur.gd::_ready`) ; passage `$stele` -> `Etat.stele_touchee`.
+  `world.gd::_ceremonie_stele` (seulement en MONTANT vers la stèle) : sans les 2 fragments = message ; sinon les 2 ailes volent dans la stèle, clac + jingle, 3 secousses, fondu,
+  `Scripts/mode7.gd` (class Mode7 : SubViewport = carte 512x384 (herbe, chemin, forêt, blason_socle + les 2 ailes qui glissent vers le corps) + SHADER canvas_item de perspective (ciel dégradé, brume) ; caméra en ORBITE autour du coq `_voler(Vector3(angle, distance, altitude))`, ~11 s),
+  puis `Etat.noter("corps_revele")` et rechargement du village au Parvis (12,7). F1 -> « Test stèle » (donne les 2 fragments, remet la forêt).
+  À VÉRIFIER : shader dans le rendu Compatibilité, lisibilité du mode 7. PROCHAINE ÉTAPE : B (intérieur du corps, Gardien, choix combattre/refuser, boss).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
