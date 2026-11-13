@@ -248,7 +248,7 @@ put(p5e, 'o', (22, 7), (11, 9)); put(p5e, 'u', (9, 10), (12, 7)); put(p5e, 'K', 
 put(p5e, 'B', (9, 2), (15, 2))
 
 salles = [
-    ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'drapeau_porte2': 'fragment_droite',
+    ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'escaliers_descente': 'PackedStringArray("11 9")', 'drapeau_porte2': 'fragment_droite',
         'drapeau_coffre': 'd_cle_vestibule', 'drapeau_cle': 'd_cle_vestibule', 'drapeau_serrure': 'd_porte_vestibule',
         'indice': "L'aile droite du blason. La porte est fermée à clé... ce coffre, peut-être ? Un coup de lance l'ouvre."}),
     ('Entree', (0, 0), ent, (1.0, 0.94, 0.92), {'drapeau_levier': 'd_levier_entree', 'drapeau_porte': 'd_levier_entree',
@@ -314,7 +314,7 @@ for nom, (gx, gy), g, c, ex in salles:
     out += 'teinte = Color(%s, %s, %s, 1)\n' % c
     for k, v in ex.items():
         # Même règle que generer_monde.py : les mélodies ("132") restent des TEXTES.
-        brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(')) or ('.' in v and v.replace('.', '').isdigit())
+        brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v.replace('"', '\\"')))
     out += 'layout = %s\n' % sortie(g)
 out += '''

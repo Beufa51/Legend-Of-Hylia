@@ -51,8 +51,8 @@ def room(lay, out):
         for x in range(W):
             ch = lay[y][x]
             if ch == "T": P("tapis_milieu", x, y)
-            elif ch == "S": P("statue_chevalier", x, y, 0, T - 30)
-            elif ch == "O": P("statue_oiseau", x, y, 0, T - 30)
+            elif ch == "S": P("statue_chevalier", x, y, -3, T - 34)
+            elif ch == "O": P("statue_oiseau", x, y, -3, T - 34)
             elif ch == "V": P("vase_1", x, y, 0, -1)
             elif ch == "B": P("brasero_2", x, y, -2, -10)
             elif ch == "Q": P("coffre_1", x, y, -2, -6)
