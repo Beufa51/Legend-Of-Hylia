@@ -83,6 +83,7 @@ const ANIMAUX := {
 
 var _solides := {}   # cases bloquées par un objet
 var _couvertes := {} # cases recouvertes par un objet (bloquant ou non) : pas de touffe d'herbe dessus
+var _objets := {}          # { case du coin haut-gauche : Sprite2D } des grands objets (pour la forêt qui s'écarte)
 var _hauts: Array = []     # [sprite, ligne de base (y local)] : arbres, maisons... le héros passe DERRIÈRE quand il est plus haut qu'eux
 var _plantes: Array = []   # [sprite, amplitude, phase] : ce qui se balance au vent
 var _temps := 0.0
@@ -200,6 +201,7 @@ func _nom_chemin(x: int, y: int) -> String:
 func _poser_objet_g(def: Array, cellule: Vector2i) -> void:
 	var emprise: Vector2i = def[1]
 	var image := _poser_sprite(def[0], cellule, emprise, def[3])
+	_objets[cellule] = image
 	if def[2] and image.texture.get_height() >= 24:   # grand objet : le héros doit pouvoir passer derrière
 		_hauts.append([image, (cellule.y + emprise.y) * TUILE])
 	for dx in emprise.x:
@@ -321,3 +323,30 @@ func point_arrivee() -> Vector2:
 					meilleure = c
 					distance = d
 	return position + Vector2(meilleure * TUILE) + Vector2(8, 3)
+
+
+# --- La forêt qui s'écarte (parvis, cérémonie de la stèle : world.gd::_ceremonie_stele) -------------------
+# Les arbres dont le coin est dans `zone` glissent sur le côté (à gauche s'ils sont à gauche de `axe_x`, sinon à droite)
+# en s'effaçant. (Les collisions ne changent pas : la scène est rechargée juste après, avec son plan « révélé ».)
+func ecarter_foret(zone: Rect2i, axe_x: float, duree := 2.2) -> void:
+	for cellule in _objets:
+		if not zone.has_point(cellule):
+			continue
+		var arbre: Sprite2D = _objets[cellule]
+		_plantes = _plantes.filter(func(p): return p[0] != arbre)   # il ne se balance plus au vent
+		var sens := -1.0 if arbre.position.x + arbre.texture.get_width() / 2.0 < axe_x else 1.0
+		var t := create_tween().set_parallel().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		t.tween_property(arbre, "position:x", arbre.position.x + sens * 110.0, duree)
+		t.tween_property(arbre, "modulate:a", 0.0, duree * 0.6).set_delay(duree * 0.4)
+
+
+# Fait apparaître doucement un grand objet (ex. le temple du corps du coq), DERRIÈRE les arbres qui s'écartent.
+func faire_apparaitre(lettre: String, cellule: Vector2i, duree := 2.0) -> void:
+	var def: Array = OBJETS_G[lettre]
+	var sprite := _poser_sprite(def[0], cellule, def[1])
+	var premier := get_child_count() - 1
+	for c in _objets:
+		premier = mini(premier, _objets[c].get_index())
+	move_child(sprite, premier)
+	sprite.modulate.a = 0.0
+	create_tween().tween_property(sprite, "modulate:a", 1.0, duree)
