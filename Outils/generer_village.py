@@ -43,7 +43,6 @@ for (x, y) in [(0, 2), (0, 4), (0, 9), (23, 2), (23, 4), (23, 9)]:
     put(place, 'P' if y == 4 else 'A', (x, y))
 put(place, 'b', (0, 11), (1, 11), (23, 11), (24, 11))
 # Sortie nord provisoirement fermée (l'écran voisin n'existe pas encore) ; ouest et est sont ouvertes
-put(place, 'b', (11, 0), (12, 0), (13, 0))   # nord encore fermé (grand chemin pas construit)
 # Maisons (portes en bas : colonnes 4 et 20)
 put(place, 'M', (3, 2)); put(place, 'T', (18, 2))   # maisons 5x4 : portes en (5,5) et (20,5)
 # Statue du coq au centre, bannières de part et d'autre
@@ -195,12 +194,57 @@ int_stand = interieur(12, [('t', 9, 7), ('o', 7, 5), ('q', 16, 5), ('p', 7, 9), 
 for x in (9, 11, 13, 15): int_stand[5][x] = 'c'
 pnjs_int_stand = ["Villager4 14 8 gauche | Maître Tirard | Approchez, approchez ! Le grand jeu du stand de la Garde ! // Des pots vont apparaître sur l'étagère du fond. Casse-les à coups de lance avant qu'ils ne disparaissent ! // 30 secondes, 8 pots pour le bronze, 14 pour l'argent, 20 pour l'or. Prête ? C'est parti ! | tir"]
 
+
+# --- LE CHEMIN DU TEMPLE : GRAND CHEMIN (2,1) -> PARVIS (2,0) -> TEMPLE DE L'AILE GAUCHE (1,0)
+def foret_cotes(g, x0, x1):
+    """Remplit de forêt les colonnes en dehors du passage x0..x1 (chemin qui traverse tout l'écran)."""
+    for y in range(0, 13, 2):
+        for x in range(0, 24, 2):
+            if x + 1 < x0 or x > x1:
+                put(g, 'A' if (x // 2 + y // 2) % 2 == 0 else 'a', (x, y if (x // 2) % 2 == 0 else min(y + 1, 12)))
+    put(g, 'b', (24, 0), (24, 1), (24, 12), (24, 13))
+
+grand = vide()
+chemin(grand, 11, 13, 0, 13)
+foret_cotes(grand, 9, 15)
+put(grand, 'f', (9, 4), (15, 8)); put(grand, 'g', (9, 9), (15, 3)); put(grand, 'w', (9, 6), (15, 10), (9, 12))
+put(grand, 'n', (10, 7))                                       # panneau (décor)
+animaux_grand = ['c 10 4']
+
+parvis = vide()
+chemin(parvis, 11, 13, 6, 13)                                  # vient du sud
+chemin(parvis, 0, 13, 6, 8)                                    # vers l'ouest : temple de l'aile gauche
+chemin(parvis, 12, 12, 5, 5)                                   # devant la porte du CORPS
+put(parvis, 'K', (9, 2))                                       # le CORPS du donjon : grand bâtiment scellé (porte en (12,5))
+put(parvis, 'j', (7, 3), (17, 3)); put(parvis, 'o', (6, 4), (18, 4))
+bordure(parvis, trou=(11, 13))
+for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 4), (22, 9), (20, 11)]:
+    put(parvis, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+put(parvis, 'b', (24, 6), (24, 7), (24, 8))                    # l'est : le temple de l'aile droite (plus tard)
+put(parvis, 'P', (20, 2), (3, 2)); put(parvis, 'f', (8, 9), (16, 9)); put(parvis, 'g', (10, 5), (14, 5)); put(parvis, 'w', (6, 10), (19, 10))
+passages_parvis = ["12 5 ! Les grandes portes du corps du donjon sont scellées. Il faut d'abord rapporter les deux ailes du blason."]
+
+temple_g = vide()
+chemin(temple_g, 11, 24, 6, 8)                                 # vient de l'est (le parvis)
+chemin(temple_g, 12, 12, 5, 5)                                 # devant la porte du temple
+put(temple_g, 'K', (9, 2))                                     # temple de l'aile gauche : porte en (12,5) -> donjon
+put(temple_g, 'j', (7, 3), (17, 3)); put(temple_g, 'o', (6, 4), (18, 4))
+bordure(temple_g)
+put(temple_g, 'b', (0, 6), (0, 7), (0, 8))                     # l'ouest : fermé
+for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 9), (3, 9)]:
+    put(temple_g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+put(temple_g, 'P', (20, 2), (3, 2)); put(temple_g, 'f', (8, 9), (16, 9)); put(temple_g, 'g', (10, 5), (14, 5)); put(temple_g, 'w', (6, 10), (19, 10))
+passages_temple_g = ["12 5 @donjon:Vestibule 12 10 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."]
+
 ecrans = [
     ('Ferme', (0, 2), ferme, {'pnjs': pnjs_ferme, 'passages': passages_ferme, 'minijeu': 'poules'}),
     ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place, 'passages': ferme_place}),
     ('VillageOuest', (1, 2), ouest, {'animaux': animaux_ouest, 'pnjs': pnjs_ouest, 'passages': ferme_ouest}),
     ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est, 'passages': passages_est}),
     ('MaisonHeros', (4, 2), heros, {'animaux': animaux_heros, 'passages': passages_heros}),
+    ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand}),
+    ('Parvis', (2, 0), parvis, {'passages': passages_parvis}),
+    ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
 ]
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
 interieurs = [
@@ -212,7 +256,7 @@ interieurs = [
 depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans la maison du héros, à côté du lit
 
 
-for _g in (place, ouest, est, heros, ferme):
+for _g in (place, ouest, est, heros, ferme, parvis, temple_g):
     degager_maisons(_g)
 
 

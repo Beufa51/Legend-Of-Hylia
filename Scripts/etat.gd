@@ -21,6 +21,10 @@ var records := {}                     # meilleurs scores des mini-jeux : { "tir"
 var en_dialogue := false              # vrai pendant une conversation (le joueur est figé)
 var salle_courante := Vector2i.ZERO   # case de la grille où se trouve la caméra (mise à jour par world.gd)
 var position_sauvee := Vector2.ZERO   # où reprendre la partie (Vector2.ZERO = nouvelle partie)
+var arrivee_ecran := ""               # changement de scène (village <-> donjon) : nom de l'écran où poser le joueur dans la nouvelle scène
+var arrivee_case := Vector2i.ZERO
+var arrivee_texte := ""
+var passage_texte := ""               # message à afficher après le prochain passage (écrit par ecran.gd juste avant le signal)
 var scene_sauvee := ""                # dans quelle scène (donjon ou village) reprendre la partie
 
 

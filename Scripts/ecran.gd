@@ -136,7 +136,12 @@ func _poser_passages() -> void:
 			var d := m[2].split(" ")
 			var cible := d[0]
 			var case := Vector2i(int(d[1]), int(d[2]))
-			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.passage.emit(cible, case))
+			var message := " ".join(d.slice(3))   # texte facultatif affiché à l'arrivée
+			# cible "@donjon:Ecran" ou "@village:Ecran" = changement de scène (voir world.gd::_changer_de_scene)
+			zone.body_entered.connect(func(corps):
+				if corps.is_in_group("joueur"):
+					Etat.passage_texte = message
+					Etat.passage.emit(cible, case))
 
 
 # Crée le mini-jeu de l'écran (export `minijeu`)

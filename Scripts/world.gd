@@ -23,6 +23,10 @@ var en_transition := false
 func _ready() -> void:
 	if Etat.position_sauvee != Vector2.ZERO and Etat.scene_sauvee == scene_file_path:
 		joueur.position = Etat.position_sauvee   # partie sauvegardée : on reprend là où on était
+	if Etat.arrivee_ecran != "":   # on arrive d'une autre scène (village <-> donjon)
+		for e in get_children():
+			if e is Ecran and e.name == Etat.arrivee_ecran:
+				joueur.position = e.position + Vector2(Etat.arrivee_case * Ecran.TUILE) + Vector2(8, 3)
 	_lancer_musique()
 	_creer_messages()
 	Etat.drapeau_change.connect(_jouer_jingle)
@@ -34,7 +38,7 @@ func _ready() -> void:
 	_regler_obscurite(salle_actuelle)
 	Etat.secousse.connect(_secouer)
 	Etat.repere.connect(_raccompagner)
-	Etat.passage.connect(func(ecran, case): _ramener(ecran, case, ""))
+	Etat.passage.connect(func(ecran, case): _ramener(ecran, case, Etat.passage_texte))
 	Etat.drapeau_change.connect(_sur_drapeau)
 	_creer_hud()
 	add_child(Dialogue.new())   # boîte de dialogue des habitants
@@ -45,14 +49,25 @@ func _ready() -> void:
 		_ambiance = ambiance
 		_regler_obscurite(salle_actuelle)   # (si on reprend la partie dans une maison)
 	Etat.memoriser_position(joueur.position)   # la sauvegarde retient la scène où l'on est
+	if Etat.arrivee_ecran != "":   # fondu d'arrivée + message
+		var texte := Etat.arrivee_texte
+		Etat.arrivee_ecran = ""
+		Etat.arrivee_texte = ""
+		_fondu.modulate.a = 1.0
+		create_tween().tween_property(_fondu, "modulate:a", 0.0, 0.8)
+		if texte != "":
+			get_tree().create_timer(1.0).timeout.connect(func(): Etat.annoncer(texte))
 
 
 func _process(_delta: float) -> void:
 	if en_transition:
 		return
 	var nouvelle := _salle_du_joueur()
-	if donjon and nouvelle == SORTIE_DONJON and Etat.est("fragment_gauche") and not Etat.est("vue_aerienne_gauche"):
-		_vue_aerienne("gauche")   # on sort du donjon avec l'aile : vue du ciel
+	if donjon and nouvelle == SORTIE_DONJON and Etat.est("fragment_gauche"):
+		if not Etat.est("vue_aerienne_gauche"):
+			_vue_aerienne("gauche")   # on sort du donjon avec l'aile : vue du ciel
+		else:
+			_ramener("@village:TempleGauche", Vector2i(12, 6), "")   # sorties suivantes : on retourne directement au village
 		return
 	if nouvelle != salle_actuelle:
 		_glisser_vers(nouvelle)
@@ -313,6 +328,16 @@ func _creer_menu_dev() -> void:
 	_menu_dev = panneau
 
 
+# Passe du village au donjon (ou l'inverse). `cible` = "@donjon:Ecran" ou "@village:Ecran" ; le joueur arrive dans cet écran, à cette case.
+func _changer_de_scene(cible: String, case: Vector2i, texte: String) -> void:
+	var morceaux := cible.substr(1).split(":")
+	Etat.arrivee_ecran = morceaux[1]
+	Etat.arrivee_case = case
+	Etat.arrivee_texte = texte
+	Etat.position_sauvee = Vector2.ZERO   # la position sera mémorisée à l'arrivée
+	get_tree().change_scene_to_file("res://Scenes/world.tscn" if morceaux[0] == "donjon" else "res://Scenes/village.tscn")
+
+
 func _dev_nouvelle_partie() -> void:
 	Etat.effacer()
 	get_tree().change_scene_to_file("res://Scenes/demarrage.tscn")
@@ -393,6 +418,9 @@ func _ramener(nom_salle: String, case: Vector2i, texte: String) -> void:
 	var t := create_tween()
 	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
 	await t.finished
+	if nom_salle.begins_with("@"):   # "@donjon:Vestibule" / "@village:TempleGauche" : autre scène
+		_changer_de_scene(nom_salle, case, texte)
+		return
 	for enfant in get_children():
 		if enfant is Ecran and enfant.name == nom_salle:
 			joueur.position = enfant.position + Vector2(case * Ecran.TUILE) + Vector2(8, 3)
@@ -628,20 +656,8 @@ func _vue_aerienne(cote: String) -> void:
 	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
 	await t.finished
 	calque.queue_free()
-	for enfant in get_children():
-		if enfant is Room and enfant.grille == SORTIE_DONJON - Vector2i(0, 1):
-			joueur.position = enfant.position + Vector2(12 * 16 + 8, 10 * 16 + 3)
-	_placer_camera()
-	Etat.memoriser_position(joueur.position)
-	_hud.visible = true
-	await get_tree().create_timer(0.4).timeout
-	t = create_tween()
-	t.tween_property(_fondu, "modulate:a", 0.0, 0.6)
-	if _musique:
-		t.parallel().tween_property(_musique, "volume_db", VOLUME_MUSIQUE_DB, 1.5)
-	await t.finished
-	joueur.set_physics_process(true)
-	en_transition = false
+	# Retour au village, devant le temple (la scène change : la musique et l'état sont rechargés)
+	_changer_de_scene("@village:TempleGauche", Vector2i(12, 6), "Tu ressors du temple, l'aile à la main. Retourne voir le capitaine Aubrac !")
 
 
 # --- HUD : les 5 plumes de l'aile, en haut à gauche ------------------------------------
