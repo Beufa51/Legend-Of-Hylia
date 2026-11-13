@@ -647,6 +647,18 @@
   pignon de planches sous la crête (le creux du toit laissait voir l'herbe). Sprites 128x127, emprise 7x4 INCHANGÉE (exterieur.gd/generer_village.py non modifiés) ; le toit dépasse d'environ 15 px au-dessus de l'écran pour les maisons de la rangée 3.
   Restent dans l'ancien style : temple/corps du coq (`U`, `Z`), étal `E`, tonneau, caisse, bannière, clôture, puits, panneau, intérieurs. ORDRE DES OUTILS village : ... traiter_pixel_crawler -> fabriquer_maisons_pixelcrawler -> fabriquer_riviere -> generer_village.
 
+- 2026-11-13 : l'utilisateur ajoute `Assets/TILESET VILLAGE TOP DOWN/` (Jadson Holanda : herbe/terre 16 px, 3 arbres ronds 48x48, HOUSE 1 80x112 / HOUSE 2 128x112 / CHURCH 128x112, clôtures, puits, pont, escalier, TERRASSES à falaise, eau ; pas de fichier de licence dans le dossier : À VÉRIFIER) :
+  « c'est mieux, inspire-toi de l'image (`(THANK YOU).png`), je veux du RELIEF dans le village ». **ÉTAPE 14f écrite (non testée dans Godot ; aperçus PIL fidèles vérifiés, `verifier_carte.py` OK)** :
+  1) `Outils/traiter_village_jadson.py` (APRÈS les autres traiter_*/fabriquer_maisons, AVANT fabriquer_riviere + generer_village) remplace sol (herbe franche + 6 variantes à détails `v_herbe_sol_1..6`, chemin de terre autotile), arbres (`v_arbre_a/b`, `v_sapin` = vert/roux/fleuri, 48x48 = emprise 3x3), buissons, fleurs, roche, souche, clôture, puits, MAISONS (HOUSE 1/2 recolorées),
+     temple (`v_temple_entree` = l'église), et fabrique le RELIEF : `v_ter_<rangée 0-3><colonne 0-2>` (12 morceaux de terrasse, centre = herbe unie) et `v_escalier`.
+  2) `exterieur.gd` : emprises maisons M/S/L/K/U 8x3, N/T/R 5x3 (porte colonne 2 ; temple colonne 3), arbres 3x3, roche 1x1, 24 « hasards » de sol (1 case sur 4 avec détail) ; NOUVEAUX exports `terrasses` ("x y largeur hauteur", largeur >= 3, hauteur >= 4) et `escaliers` ("x y" = coin haut-gauche, 2x4 cases) -> `_poser_relief` :
+     dessus marchable, bord + falaise solides, les escaliers percent la falaise (seul accès).
+  3) `generer_village.py` : maisons et portes aux MÊMES coordonnées qu'avant (helpers `maison`/`grande` adaptés), `bordure` = une rangée d'arbres 3x3 en haut/bas, `nettoyer_arbres` retire les arbres 3x3 gênants (chemin, eau, terrasse, hors écran, chevauchement), `cases_relief`.
+     RELIEF placé dans : Verger (terrasse à droite), TerrainGarde (estrade d'entraînement à gauche), RouteSud (canyon à 2 terrasses). Les autres écrans sont à plat : en ajouter = `terrasses`/`escaliers` dans `ecrans` + `RELIEF`.
+  4) `fabriquer_riviere.py` recoloré (eau du pack). `verifier_carte.py` et `apercu_village.py` gèrent le relief. Ferme : fermière en (12,5), départs des poules déplacés.
+  ORDRE DES OUTILS village : traiter_village -> traiter_village2 -> fabriquer_maisons -> traiter_pack_aesthetic -> traiter_pixel_crawler -> fabriquer_maisons_pixelcrawler -> traiter_village_jadson -> fabriquer_riviere -> generer_village -> verifier_carte.
+  Restent à l'ancien style : tonneau, caisse, bannière, étal, panneau, corps du coq (`Z`), intérieurs ; le pont du pack (arqué, horizontal) n'est pas utilisé (pont maison). Idées : terrasses avec maisons dessus, falaises en lisière, escaliers vers un secret.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
