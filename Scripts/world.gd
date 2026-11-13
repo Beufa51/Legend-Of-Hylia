@@ -112,6 +112,27 @@ func _montrer_indice(salle: Vector2i) -> void:
 
 
 # Joue la musique en boucle (volume baissé pour ne pas couvrir les futurs bruitages).
+const MUSIQUE_INTERIEUR := "res://Assets/Ninja_adventure/Audio/Musics/27 - Chill.ogg"
+var _piste_courante := ""
+
+
+# Passe à une autre musique en fondu (rien si c'est déjà celle qui joue).
+func _changer_musique(chemin: String) -> void:
+	if _musique == null or chemin == _piste_courante or not ResourceLoader.exists(chemin):
+		return
+	_piste_courante = chemin
+	var flux = load(chemin)
+	flux.loop = true
+	var t := create_tween()
+	t.tween_property(_musique, "volume_db", -40.0, 0.4)
+	await t.finished
+	if chemin != _piste_courante:
+		return   # on a déjà changé d'avis entre-temps
+	_musique.stream = flux
+	_musique.play()
+	create_tween().tween_property(_musique, "volume_db", VOLUME_MUSIQUE_DB, 0.6)
+
+
 func _lancer_musique() -> void:
 	var flux = load(musique)
 	if flux == null:
@@ -124,6 +145,7 @@ func _lancer_musique() -> void:
 	add_child(lecteur)
 	lecteur.play()
 	_musique = lecteur
+	_piste_courante = musique
 
 
 # Touche R : recommence la salle où l'on est (les blocs reviennent à leur place).
@@ -207,10 +229,16 @@ const COULEUR_NUIT := Color(0.05, 0.055, 0.11)   # plus sombre = plus noir (1,1,
 func _regler_obscurite(salle: Vector2i) -> void:
 	var noir := false
 	var dedans := false
+	var piste := musique
 	for enfant in get_children():
 		if enfant is Ecran and enfant.grille == salle:
 			noir = enfant.sombre
 			dedans = enfant.interieur
+			if enfant.musique_ecran != "":
+				piste = enfant.musique_ecran
+			elif dedans and not donjon:
+				piste = MUSIQUE_INTERIEUR
+	_changer_musique(piste)
 	if _ambiance:   # pas de vent ni de feuilles dans une maison
 		_ambiance.visible = not dedans
 		_ambiance.process_mode = Node.PROCESS_MODE_DISABLED if dedans else Node.PROCESS_MODE_INHERIT
