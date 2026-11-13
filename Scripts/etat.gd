@@ -24,6 +24,7 @@ var position_sauvee := Vector2.ZERO   # où reprendre la partie (Vector2.ZERO = 
 var arrivee_ecran := ""               # changement de scène (village <-> donjon) : nom de l'écran où poser le joueur dans la nouvelle scène
 var arrivee_case := Vector2i.ZERO
 var arrivee_texte := ""
+var arrivee_direction := ""           # direction regardée à l'arrivée (ex. "haut" : on entre dans le bâtiment)
 var passage_texte := ""               # message à afficher après le prochain passage (écrit par ecran.gd juste avant le signal)
 var scene_sauvee := ""                # dans quelle scène (donjon ou village) reprendre la partie
 

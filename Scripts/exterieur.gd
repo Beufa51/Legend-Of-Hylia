@@ -62,9 +62,10 @@ const OBJETS_G := {
 	"S": ["v_maison_pierre", Vector2i(7, 4), true, 0.0],
 	"K": ["v_maison_caserne", Vector2i(7, 4), true, 0.0],   # la caserne est plus large (7x4)
 	"L": ["v_maison_bois", Vector2i(7, 4), true, 0.0],
+	"U": ["v_temple_entree", Vector2i(7, 4), true, 0.0],   # entrée du temple du donjon : arche de pierre + ouverture sombre + marches (porte en colonne 3)
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
-const PORTES_MAISONS := {"M": 3, "N": 3, "T": 3, "R": 3, "S": 3, "K": 3, "L": 3}
+const PORTES_MAISONS := {"M": 3, "N": 3, "T": 3, "R": 3, "S": 3, "K": 3, "L": 3, "U": 3}
 # Touffes d'herbe semées automatiquement (images Gemini)
 const TOUFFES_G := ["v_herbe_1", "v_herbe_2"]
 # Animaux : lettre -> [planche, vitesse (px/s), peureux ?, son quand on le frappe]

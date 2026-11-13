@@ -64,7 +64,7 @@ put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10),
 # Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
 animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 5', 'd 17 8']
 
-TAILLES_MAISONS = {'M': (7, 4), 'N': (7, 4), 'T': (7, 4), 'R': (7, 4), 'S': (7, 4), 'L': (7, 4), 'K': (7, 4)}
+TAILLES_MAISONS = {'M': (7, 4), 'N': (7, 4), 'T': (7, 4), 'R': (7, 4), 'S': (7, 4), 'L': (7, 4), 'K': (7, 4), 'U': (7, 4)}
 
 def degager_maisons(g):
     """Retire du plan tout décor (fleurs, tonneaux...) posé SOUS une maison."""
@@ -234,7 +234,7 @@ passages_parvis = ["12 6 ! Les grandes portes du corps du donjon sont scellées.
 temple_g = vide()
 chemin(temple_g, 11, 24, 6, 8)                                 # vient de l'est (le parvis)
 chemin(temple_g, 12, 12, 5, 5)                                 # devant la porte du temple
-grande(temple_g, 9, 2)                                     # temple de l'aile gauche : porte en (12,5) -> donjon
+put(temple_g, 'U', (9, 3))                                     # temple de l'aile gauche (arche + marches) : porte en (12,6) -> donjon
 put(temple_g, 'j', (7, 3), (17, 3)); put(temple_g, 'o', (6, 4), (18, 4))
 bordure(temple_g)
 put(temple_g, 'b', (0, 6), (0, 7), (0, 8))                     # l'ouest : fermé

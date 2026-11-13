@@ -5,6 +5,7 @@ class_name Pnj
 # Planche du pack : Idle.png = 4 images de 16x16 côte à côte (bas, haut, gauche, droite).
 
 const DOSSIER := "res://Assets/Ninja_adventure/Actor/Character/%s/SeparateAnim/Idle.png"
+const HEROS := "res://Assets/Heros/pnj_%s.png"   # habitants dans le style du héros (Outils/preparer_pnj.py) : cases de 32 px, 4 directions ; prioritaires sur l'ancien pack
 const DIRECTIONS := ["bas", "haut", "gauche", "droite"]
 const PORTEE_PAROLE := 26.0   # px : distance maximale pour parler
 const PORTEE_REGARD := 70.0   # px : il tourne la tête vers le joueur en dessous de cette distance
@@ -31,9 +32,13 @@ func initialiser(perso: String, nom: String, dialogues: Array, direction: String
 	collision.shape = forme
 	add_child(collision)
 	_sprite = Sprite2D.new()
-	_sprite.texture = load(DOSSIER % perso)
+	if ResourceLoader.exists(HEROS % perso):
+		_sprite.texture = load(HEROS % perso)
+		_sprite.position = Vector2(0, -10)   # case de 32 px : les pieds au niveau de la collision
+	else:
+		_sprite.texture = load(DOSSIER % perso)
+		_sprite.position = Vector2(0, -5)
 	_sprite.hframes = 4
-	_sprite.position = Vector2(0, -5)
 	_sprite.frame = _direction
 	add_child(_sprite)
 	_chrono = 2.0 + randf() * 4.0

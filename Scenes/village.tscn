@@ -61,7 +61,7 @@ grille = Vector2i(1, 0)
 passages = PackedStringArray("12 6 @donjon:Vestibule 12 10 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir.")
 musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
 indice = "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."
-layout = PackedStringArray("A.a.A.a.A.a.A.a.A.a.A.a.b", ".a.A.a.A.a.A.a.A.a.A.a..b", "a..P................P.A..", ".......j.K.......j.......", "A.....o...........o......", "............:............", "b..........::::::::::::::", "b..........::::::::::::::", "b..........::::::::::::::", "...A....f.......f.....a..", "a.....w............w.....", ".A.a.A.a.A.a.A.a.A.a.A...", "a.A.a.A.a.A.a.A.a.A.a.A.b", "........................b")
+layout = PackedStringArray("A.a.A.a.A.a.A.a.A.a.A.a.b", ".a.A.a.A.a.A.a.A.a.A.a..b", "a..P................P.A..", ".......j.U.......j.......", "A.....o...........o......", "............:............", "b..........::::::::::::::", "b..........::::::::::::::", "b..........::::::::::::::", "...A....f.......f.....a..", "a.....w............w.....", ".A.a.A.a.A.a.A.a.A.a.A...", "a.A.a.A.a.A.a.A.a.A.a.A.b", "........................b")
 
 [node name="InterieurHeros" parent="." instance=ExtResource("4")]
 grille = Vector2i(4, 5)

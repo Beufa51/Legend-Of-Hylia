@@ -460,6 +460,11 @@
   la caserne/temple `K` 7x4 (sprite 112x110). `generer_village.py` : helpers `maison(g, lettre, x_ancien, y_ancien)` (décale de (-1,+1)) et `grande(g, x, y)` ; TOUTES les portes sont une rangée plus bas (ex. (5,6) au lieu de (5,5)), arrivées dehors en rangée 7 ;
   `world.gd` : retour du donjon en (12,7). `exterieur.gd` : emprise 7x4, PORTES_MAISONS colonne 3. Reste à faire : transition d'entrée crédible (porte qui s'ouvre + bruit), entrée du donjon refaite (arche), habitants style héros, aile droite.
 
+- 2026-11-13 : **ÉTAPE 10e écrite (non testée dans Godot)** : (1) TRANSITION DE PORTE crédible : `world.gd::_passer_porte` (bruit de porte `Assets/Sons/porte.wav` fabriqué par `Outils/fabriquer_sons.py`, un pas de 12 px vers l'intérieur/extérieur avec animation de marche, puis fondu, arrivée dans le bon sens via `Etat.arrivee_direction`) ;
+  (2) ENTRÉE DU TEMPLE refaite : lettre `U` (`Outils/fabriquer_temple.py` -> `v_temple_entree.png` 112x96 : arche de pierre verte du pack Aesthetic, ouverture sombre, 3 marches ; emprise 7x4, porte colonne 3) dans `TempleGauche` ;
+  (3) HABITANTS style héros : `Outils/preparer_pnj.py` recolore la planche du héros en 9 variantes (`Assets/Heros/pnj_<NomNinja>.png` : Woman, OldMan, Boy (plus petit), KnightGold, Villager..5) ; `pnj.gd` les utilise si le fichier existe (sinon ancien pack). LIMITE : tous ont le même corps/visage (barbu) = simple recoloration -> pour de vrais personnages variés, il faut d'autres planches LPC (générateur LPC).
+  RESTE : aile droite (Opus), secrets, récompenses, contrôles tactiles, corps du donjon.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
