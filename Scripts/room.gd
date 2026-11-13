@@ -105,6 +105,7 @@ var _orange_leves := true  # vrai = les plots orange bloquent, les bleus sont ba
 var _dalles := {}          # { case : Dalle } dalles fragiles
 var _case_pied := Vector2i(-1, -1)   # case où le joueur avait les pieds à l'image précédente
 var _tombe := false        # le joueur est en train de tomber (on attend le retour)
+var _regle_dite := false   # la règle des dalles a été expliquée (au 1er pas sur une dalle)
 
 
 func _ready() -> void:
@@ -486,17 +487,53 @@ func _suivre_pas() -> void:
 	_case_pied = c
 	if _dalles.has(avant):
 		_dalles[avant].effondrer()
+	var restantes := _dalles_intactes()
 	if not _dalles.has(c):
+		# ERREUR n°1 : on est sorti du champ de dalles sans les avoir toutes foulées
+		if _dalles.has(avant) and restantes > 0 and not _dalles_resolues():
+			_reformer_dalles("Raté : il restait %d dalle%s intacte%s. Les dalles se reforment : recommence !" % [restantes, "s" if restantes > 1 else "", "s" if restantes > 1 else ""])
 		return
 	var dalle: Dalle = _dalles[c]
+	if _dalles_resolues():
+		return
+	if not _regle_dite:
+		_regle_dite = true
+		Etat.annoncer("Chaque dalle s'effondre quand tu la quittes. Marche sur TOUTES les dalles, une seule fois chacune !")
 	dalle.marquer()
-	for d in _dalles.values():
-		if d.etat == Dalle.INTACTE and not d.solide:   # une dalle encore jamais foulée
-			return
-	if drapeau_fragile != "" and not Etat.est(drapeau_fragile):
+	restantes = _dalles_intactes()
+	if restantes == 0:
 		for d in _dalles.values():
 			d.raffermir()
 		Etat.poser(drapeau_fragile)
+		return
+	# ERREUR n°2 : impasse, aucune dalle intacte à côté de celle où l'on est
+	for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+		if _dalles.has(c + d) and _dalles[c + d].etat == Dalle.INTACTE:
+			return
+	_reformer_dalles("Impasse ! Il restait %d dalle%s. Les dalles se reforment : repars d'ici." % [restantes, "s" if restantes > 1 else ""])
+
+
+func _dalles_intactes() -> int:
+	var n := 0
+	for d in _dalles.values():
+		if d.etat == Dalle.INTACTE and not d.solide:
+			n += 1
+	return n
+
+
+func _dalles_resolues() -> bool:
+	return drapeau_fragile == "" or Etat.est(drapeau_fragile)
+
+
+# Erreur : toutes les dalles se reforment (elles remontent des trous) ; si le joueur est sur une dalle,
+# elle compte comme son nouveau point de départ.
+func _reformer_dalles(texte: String) -> void:
+	_jouer_son(SON_ERREUR, -6.0)
+	Etat.annoncer(texte)
+	for d in _dalles.values():
+		d.reparer(true)
+	if _dalles.has(_case_pied):
+		_dalles[_case_pied].marquer()
 
 
 # Un coup sur le cristal commutateur : les plots levés se baissent, les baissés se lèvent.

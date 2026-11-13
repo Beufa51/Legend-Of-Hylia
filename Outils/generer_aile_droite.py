@@ -75,7 +75,7 @@ put(p1, 'V', (3, 11), (21, 11), (3, 6), (21, 6)); put(p1, 'S', (6, 7)); put(p1, 
 for x in range(10, 15): put(p1, 'T', (x, 11))
 
 # --- PLUME D2 : « LE SOL FRAGILE ». Les dalles z s'effondrent quand on les quitte : il faut passer sur TOUTES,
-#     une seule fois chacune (sinon on reste coincé : R pour recommencer ; tomber dans un trou = retour en bas).
+#     une seule fois chacune. Erreur (sortir du champ trop tôt, ou impasse) = les dalles se reforment ; tomber dans un trou = retour en bas.
 def retour_d2(n):   # bas de l'écran n de la plume D2 (case (12,12)), en position dans le monde
     return 'Vector2(%d, %d)' % (-2 * 400 + 12 * 16 + 8, -224 * n + 194)
 
@@ -86,8 +86,8 @@ for y in range(4, 8):
     for x in range(10, 15): p2a[y][x] = 'z'
 put(p2a, 'V', (3, 11), (21, 11), (3, 2), (21, 2)); put(p2a, 'S', (8, 9)); put(p2a, 'O', (16, 9)); put(p2a, 'B', (5, 9), (19, 9))
 
-# D2b (la pointe) : 34 dalles autour de 2 piliers ; on entre par le bas, on doit finir devant la grille de l'alcôve
-#     (colonnes 11-13). Seulement 20 chemins possibles (vérifié par un solveur).
+# D2b (la pointe) : 34 dalles autour de 2 piliers ; on entre par le bas. Dès que toutes sont foulées, la grille de l'alcôve
+#     s'ouvre et les dalles se raffermissent (on peut alors marcher partout). Solutions vérifiées par un solveur.
 p2b = vide(); sol(p2b, 2, 22, 2, 4); sol(p2b, 2, 22, 10, 11); sol(p2b, 11, 13, 12, 13)
 for x in range(2, 23): p2b[5][x] = '#'
 for x in (11, 12, 13): p2b[5][x] = 'D'
@@ -107,9 +107,9 @@ salles = [
         'indice': "Ce cristal commande les plots de couleur : un coup de lance, et les levés se baissent... et les baissés se lèvent !"}),
     ('Epine2', (-2, 0), e2, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD2'}),
     ('PlumeD2a', (-2, -1), p2a, (1.0, 0.97, 0.92), {'drapeau_fragile': 'd2_sol1', 'drapeau_porte': 'd2_sol1', 'retour': retour_d2(1),
-        'indice': "Ces dalles sont fragiles : elles s'effondrent derrière toi. Passe sur TOUTES pour ouvrir la grille. Coincé ? R pour recommencer."}),
+        'indice': "Dalles fragiles : chacune s'effondre quand tu la quittes. Passe sur TOUTES, une seule fois chacune, pour ouvrir la grille."}),
     ('PlumeD2b', (-2, -2), p2b, (0.98, 0.95, 0.9), {'drapeau_fragile': 'd2_sol2', 'drapeau_porte': 'd2_sol2', 'retour': retour_d2(2),
-        'drapeau_gemme': 'plumeD2', 'indice': "Cette fois, il faut finir devant la grille. Réfléchis avant de faire le premier pas..."}),
+        'drapeau_gemme': 'plumeD2', 'indice': "Plus de dalles, et deux piliers au milieu. Choisis bien ta première dalle et trace ton chemin avant de partir..."}),
     ('Epine3', (-3, 0), e3, (0.90, 0.88, 0.98), {}),
 ]
 depart = (200, 224 + 180)   # (seulement si on lance la scène directement : sinon on arrive par le temple)

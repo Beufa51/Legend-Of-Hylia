@@ -480,6 +480,11 @@
   SALLES : Epine2 (-2,0) porte ouest = `plumeD2` (tige ouverte) ; PlumeD2a (-2,-1) leçon 5x4 dalles (`d2_sol1` ouvre la grille du haut) ; PlumeD2b (-2,-2) 34 dalles + 2 piliers, il faut FINIR devant la grille de l'alcôve (20 solutions, `d2_sol2`) -> plume `plumeD2` ;
   Epine3 (-3,0) provisoire (cul-de-sac). Retours = bas de l'écran courant (`retour_d2(n)`). À vérifier au test : sensation de la règle des 3 px, lisibilité dalle/trou.
 
+- 2026-11-13 : retour D2 : « règles pas claires, les dalles ne se réinitialisent pas quand on se trompe ». **CORRECTION 11c (non testée dans Godot)** : `room.gd::_suivre_pas` détecte les ERREURS et reforme
+  les dalles (`_reformer_dalles` : son Cancel, message, dalles qui remontent des trous via `Dalle.reparer(true)`, la dalle sous le joueur = nouveau départ) : (1) sortir du champ avant d'avoir tout foulé ;
+  (2) impasse (aucune dalle intacte à côté). Règle annoncée au 1er pas sur une dalle (« Chaque dalle s'effondre quand tu la quittes... »). Indices D2a/D2b réécrits (D2b n'exige PAS de finir devant la grille :
+  dès que tout est foulé, grille ouverte + dalles raffermies). La chute (trou) ramène toujours au bas de la salle.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.

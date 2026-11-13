@@ -19,6 +19,7 @@ var solide := false   # vrai quand l'énigme est résolue : la dalle ne s'effond
 var _dalle: Node2D
 var _trou: Node2D
 var _lueur: ColorRect
+var _tween: Tween     # animation de chute en cours (arrêtée si la dalle se reforme)
 
 
 func initialiser(case: Vector2i) -> void:
@@ -84,6 +85,7 @@ func effondrer() -> void:
 	_trou.visible = true
 	move_child(_trou, 0)   # le trou sous la dalle qui tombe
 	var t := create_tween()
+	_tween = t
 	t.tween_property(_dalle, "position", Vector2(1, 0), 0.04)
 	t.tween_property(_dalle, "position", Vector2(-1, 0), 0.04)
 	t.tween_property(_dalle, "position", Vector2.ZERO, 0.04)
@@ -92,12 +94,23 @@ func effondrer() -> void:
 	t.parallel().tween_property(_dalle, "modulate:a", 0.0, 0.22)
 
 
-# Remet la dalle intacte (touche R, chute).
-func reparer() -> void:
+# Remet la dalle intacte (touche R, chute, erreur). `anime` : elle remonte du trou.
+func reparer(anime := false) -> void:
+	var etait_trou := etat == TROU
 	etat = INTACTE
+	if _tween != null and _tween.is_valid():
+		_tween.kill()
 	_dalle.position = Vector2.ZERO
 	_dalle.scale = Vector2.ONE
 	_dalle.modulate.a = 1.0
+	if anime and etait_trou:
+		_dalle.scale = Vector2(0.2, 0.2)
+		_dalle.position = Vector2(6.4, 7.0)
+		_dalle.modulate.a = 0.0
+		_tween = create_tween()
+		_tween.tween_property(_dalle, "scale", Vector2.ONE, 0.3)
+		_tween.parallel().tween_property(_dalle, "position", Vector2.ZERO, 0.3)
+		_tween.parallel().tween_property(_dalle, "modulate:a", 1.0, 0.3)
 	_trou.visible = false
 	_lueur.color = Color(LUEUR, 0.0)
 

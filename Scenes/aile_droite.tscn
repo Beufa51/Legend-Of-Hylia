@@ -47,7 +47,7 @@ teinte = Color(1.0, 0.97, 0.92, 1)
 drapeau_fragile = "d2_sol1"
 drapeau_porte = "d2_sol1"
 retour = Vector2(-600, -30)
-indice = "Ces dalles sont fragiles : elles s'effondrent derrière toi. Passe sur TOUTES pour ouvrir la grille. Coincé ? R pour recommencer."
+indice = "Dalles fragiles : chacune s'effondre quand tu la quittes. Passe sur TOUTES, une seule fois chacune, pour ouvrir la grille."
 layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##.V.................V.##", "##.....................##", "##########zzzzz##########", "##########zzzzz##########", "##########zzzzz##########", "##########zzzzz##########", "##.....................##", "##...B..S.......O..B...##", "##.....................##", "##.V.................V.##", "###########...###########", "###########...###########")
 
 [node name="PlumeD2b" parent="." instance=ExtResource("2")]
@@ -57,7 +57,7 @@ drapeau_fragile = "d2_sol2"
 drapeau_porte = "d2_sol2"
 retour = Vector2(-600, -254)
 drapeau_gemme = "plumeD2"
-indice = "Cette fois, il faut finir devant la grille. Réfléchis avant de faire le premier pas..."
+indice = "Plus de dalles, et deux piliers au milieu. Choisis bien ta première dalle et trace ton chemin avant de partir..."
 layout = PackedStringArray("#########################", "#########################", "##...S.............O...##", "##.......B..G..B.......##", "##........TTTTT........##", "###########DDD###########", "########zzzzzzzzz########", "########zz#zzzzzz########", "########zzzzzz#zz########", "########zzzzzzzzz########", "##.V.................V.##", "##.V.................V.##", "###########...###########", "###########...###########")
 
 [node name="Epine3" parent="." instance=ExtResource("2")]
