@@ -226,42 +226,107 @@ def statue_coq():
     return img
 
 
+def _lettre(img, x, y, car, couleur):
+    """Dessine une lettre de 3x5 pixels (N, E, S, O) avec son coin haut-gauche en (x, y)."""
+    glyphes = {"N": ["X..X", "XX.X", "X.XX", "X..X", "X..X"], "E": ["XXX", "X..", "XX.", "X..", "XXX"],
+               "S": [".XX", "X..", ".X.", "..X", "XX."], "O": [".X.", "X.X", "X.X", "X.X", ".X."]}
+    for j, ligne in enumerate(glyphes[car]):
+        for i, c in enumerate(ligne):
+            if c == "X": img.putpixel((x + i, y + j), couleur)
+
+
 def girouette_mat():
-    """48x64 : socle de pierre, mât de fer avec ses 4 branches (N/S/E/O). Le coq est une image à part (il tourne)."""
+    """48x64 : socle de pierre à deux marches, mât de fer avec deux bagues et une boule dorée, croix des points cardinaux
+    (plaques N, E, S, O). Le coq (image à part, il tourne) se pose en haut, ses pieds en (24, 17)."""
+    from PIL import ImageDraw
     img = Image.new("RGBA", (48, 64))
-    _bloc(img, 5, 54, 42, 63)     # marche
-    _bloc(img, 14, 46, 33, 55)    # socle
-    FER, FER_C = (92, 88, 104, 255), (150, 146, 164, 255)
-    for y in range(16, 47):       # le mât
-        img.putpixel((22, y), CONTOUR); img.putpixel((23, y), FER_C); img.putpixel((24, y), FER); img.putpixel((25, y), CONTOUR)
-    for x in range(14, 34):       # branche des points cardinaux
-        img.putpixel((x, 29), CONTOUR); img.putpixel((x, 30), FER_C if x < 24 else FER); img.putpixel((x, 31), CONTOUR)
-    for x in (13, 34):            # boules au bout
-        for dy in (-1, 0, 1):
-            for dx in (-1, 0, 1):
-                img.putpixel((x + dx, 30 + dy), FER_C if dx + dy < 0 else FER)
-    for dx in (-1, 0, 1):         # pointe du haut
-        img.putpixel((23 + dx, 15), CONTOUR)
+    d = ImageDraw.Draw(img)
+    PIERRE, PIERRE_C, PIERRE_F = (150, 146, 160, 255), (188, 184, 198, 255), (96, 92, 108, 255)
+    # marches : deux ellipses de pierre (vue de dessus en 3/4) avec un flanc
+    for (cx, cy, rx, ry, haut) in [(24, 55, 22, 8, 5), (24, 48, 14, 6, 5)]:
+        d.ellipse((cx - rx, cy - ry + haut, cx + rx, cy + ry + haut), fill=PIERRE_F, outline=CONTOUR)   # flanc
+        d.rectangle((cx - rx + 1, cy, cx + rx - 1, cy + haut), fill=PIERRE_F)
+        d.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=PIERRE, outline=CONTOUR)                   # dessus
+        d.ellipse((cx - rx + 2, cy - ry + 1, cx + rx - 2, cy + ry - 2), outline=PIERRE_C)               # liseré clair
+        for k in range(-rx + 5, rx - 3, 7):                                                           # joints des pierres sur le flanc
+            d.line((cx + k, cy + ry - 1, cx + k, cy + ry + haut - 1), fill=(70, 66, 82, 255))
+    # le mât : dégradé de fer, quatre pixels de large
+    FER = [CONTOUR, (176, 172, 192, 255), (128, 124, 146, 255), CONTOUR]
+    for y in range(18, 49):
+        for i, c in enumerate(FER): img.putpixel((22 + i, y), c)
+    OR, OR_C, OR_F = (240, 196, 64, 255), (255, 236, 150, 255), (170, 120, 30, 255)
+    for y in (44,):               # une bague dorées sur le mât
+        for x in range(21, 27): img.putpixel((x, y), OR if x > 22 else OR_C)
+        for x in range(21, 27): img.putpixel((x, y + 1), OR_F)
+    # croix des points cardinaux (rangée 31-33) : bras est/ouest avec plaque, petits bras nord/sud
+    for x in range(10, 38):
+        img.putpixel((x, 31), CONTOUR); img.putpixel((x, 32), FER[1] if x < 24 else FER[2]); img.putpixel((x, 33), CONTOUR)
+    for cx, car in ((8, "O"), (39, "E")):   # plaques aux extrémités (O = ouest)
+        d.rectangle((cx - 4, 28, cx + 4, 36), fill=(58, 40, 24, 255), outline=CONTOUR)
+        d.rectangle((cx - 3, 29, cx + 3, 35), fill=(96, 66, 36, 255))
+        _lettre(img, cx - 1, 30, car, OR_C)
+    # plaques N (au-dessus de la croix) et S (en dessous) sur le mât
+    d.rectangle((19, 24, 28, 30), fill=(58, 40, 24, 255), outline=CONTOUR); _lettre(img, 21, 25, "N", OR_C)
+    d.rectangle((19, 35, 28, 41), fill=(58, 40, 24, 255), outline=CONTOUR); _lettre(img, 22, 36, "S", OR_C)
+    # boule dorée au sommet, là où tourne le coq
+    d.ellipse((20, 17, 27, 23), fill=OR, outline=CONTOUR)
+    d.rectangle((22, 18, 23, 19), fill=OR_C)
     return img
 
 
 def girouette_coq():
-    """Le coq de la girouette (regarde à droite), 28 px de large, rouge héraldique."""
-    coq = Image.open(os.path.join(RACINE, "Assets/Gemini/embleme/coq_rouge.png")).convert("RGBA")
-    petit = coq.resize((26, round(26 * coq.height / coq.width)), Image.LANCZOS)
-    w, h = petit.size
-    img = Image.new("RGBA", (w + 2, h + 2))
-    plein = lambda x, y: 0 <= x < w and 0 <= y < h and petit.getpixel((x, y))[3] > 110
-    for y in range(-1, h + 1):
-        for x in range(-1, w + 1):
+    """Le coq de la girouette, de PROFIL (regarde à droite), dessiné à la main : crête, bec doré, barbillon, aile, queue en panache.
+    32 px de large (l'axe du mât est au milieu), pieds posés sur un petit perchoir de fer en bas de l'image."""
+    from PIL import ImageDraw
+    W, H = 32, 31
+    forme = Image.new("RGBA", (W, H))
+    d = ImageDraw.Draw(forme)
+    R, RC, RF = (196, 38, 46, 255), (236, 92, 70, 255), (128, 22, 36, 255)
+    OR, ORF = (244, 196, 60, 255), (176, 122, 30, 255)
+    VERT = (46, 120, 88, 255)
+    # queue : trois plumes en arc (la plus longue derrière), la dernière verte comme chez les vrais coqs
+    d.polygon([(10, 19), (3, 15), (1, 8), (2, 3), (6, 6), (9, 11), (12, 16)], fill=VERT)
+    d.polygon([(11, 19), (5, 11), (6, 4), (10, 4), (12, 10), (14, 16)], fill=RF)
+    d.polygon([(12, 19), (8, 12), (11, 6), (14, 8), (15, 14), (16, 18)], fill=R)
+    # corps, poitrail, cou et tête
+    d.ellipse((9, 14, 24, 26), fill=R)
+    d.ellipse((17, 11, 26, 21), fill=R)
+    d.ellipse((19, 5, 27, 13), fill=R)
+    # crête : trois bosses
+    for (cx, cy) in ((20, 4), (23, 3), (26, 4)):
+        d.ellipse((cx - 2, cy - 2, cx + 1, cy + 1), fill=RC)
+    # bec doré et barbillon
+    d.polygon([(27, 8), (31, 10), (27, 12)], fill=OR)
+    d.ellipse((25, 12, 28, 16), fill=RC)
+    # pattes dorées
+    for px in (14, 19):
+        d.line((px, 25, px, 28), fill=OR); d.line((px - 1, 28, px + 1, 28), fill=ORF)
+    corps = forme
+    # ombrage : reflet en haut des formes, ombre en bas, contour sombre
+    out = Image.new("RGBA", (W + 2, H + 2))
+    plein = lambda x, y: 0 <= x < W and 0 <= y < H and corps.getpixel((x, y))[3] > 0
+    for y in range(-1, H + 1):
+        for x in range(-1, W + 1):
             if plein(x, y):
-                c = (236, 92, 70, 255) if not plein(x, y - 1) else (176, 34, 44, 255) if (x + y) % 4 else (132, 20, 34, 255)
-            elif any(plein(x + dx, y + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
-                c = (40, 8, 12, 255)
-            else:
-                continue
-            img.putpixel((x + 1, y + 1), c)
-    return img
+                c = corps.getpixel((x, y))
+                if c == R and not plein(x, y - 1): c = RC
+                elif c == R and not plein(x, y + 2): c = RF
+                out.putpixel((x + 1, y + 1), c)
+            elif any(plein(x + a, y + b) for a in (-1, 0, 1) for b in (-1, 0, 1) if a == 0 or b == 0):
+                out.putpixel((x + 1, y + 1), (44, 8, 14, 255))
+    od = ImageDraw.Draw(out)
+    od.rectangle((24 + 1, 9 + 1, 25 + 1, 10 + 1), fill=(255, 255, 255, 255))   # œil
+    od.point((25 + 1, 10 + 1), fill=(20, 10, 10, 255))
+    od.arc((11, 17, 21, 25), 200, 340, fill=RF)                                 # ligne de l'aile
+    od.arc((13, 19, 22, 26), 200, 340, fill=RF)
+    # perchoir : barre de fer sous les pattes
+    perch = Image.new("RGBA", (W + 2, H + 5))
+    perch.alpha_composite(out, (0, 0))
+    pd = ImageDraw.Draw(perch)
+    pd.rectangle((6, H + 2, 28, H + 3), fill=(128, 124, 146, 255))
+    pd.line((6, H + 1, 28, H + 1), fill=(188, 184, 198, 255))
+    pd.line((6, H + 4, 28, H + 4), fill=CONTOUR)
+    return perch
 
 
 def puits():
