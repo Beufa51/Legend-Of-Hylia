@@ -43,7 +43,6 @@ for (x, y) in [(0, 2), (0, 4), (0, 9), (23, 2), (23, 4), (23, 9)]:
     put(place, 'P' if y == 4 else 'A', (x, y))
 put(place, 'b', (0, 11), (1, 11), (23, 11), (24, 11))
 # Sortie nord provisoirement fermée (l'écran voisin n'existe pas encore) ; ouest et est sont ouvertes
-put(place, 'b', (11, 0), (12, 0), (13, 0))   # nord encore fermé (grand chemin pas construit)
 # Maisons (portes en bas : colonnes 4 et 20)
 put(place, 'M', (3, 2)); put(place, 'T', (18, 2))   # maisons 5x4 : portes en (5,5) et (20,5)
 # Statue du coq au centre, bannières de part et d'autre
@@ -101,9 +100,9 @@ put(ouest, 'j', (9, 5), (16, 5))
 put(ouest, 'f', (2, 6 - 1), (7, 4), (19, 5), (3, 11)); put(ouest, 'g', (8, 5), (10, 3), (20, 4), (6, 11), (5, 10))
 put(ouest, 'w', (2, 5), (11, 4), (18, 5), (4, 10), (21, 12))
 pnjs_ouest = [
-    "Woman 10 9 haut | Colette | Oh, tu es la nouvelle recrue ! Tout le village parle de ton épreuve d'adoubement. // On raconte que le donjon sous le temple a la forme d'un grand coq. // Un coq dans un donjon... Moi, je préfère ceux de ma basse-cour !",
-    "OldMan 8 6 droite | Vieux Gaspard | Le coq chante chaque aube depuis mille ans. // S'il se taisait un jour, le royaume tremblerait. // Ton père tenait la lance avant toi. Garde-la bien, petite.",
-    "Boy 18 5 gauche | Tom | Tu as une vraie lance de la garde ! Tu me la prêtes ? // ... Non ? Tant pis. // Un conseil : n'embête pas les poules. Elles se vengent.",
+    "Woman 10 9 haut | Colette | [fragment_gauche] Tu as rapporté l'aile ?! Vue du ciel, elle a la forme d'une plume géante, dit-on. // Moi, je savais bien que tu réussirais. ## [plume2] Il paraît que tu as allumé des braseros dans le noir ? Tu n'as pas peur de te brûler les moustaches ! ## Oh, tu es la nouvelle recrue ! Tout le village parle de ton épreuve d'adoubement. // On raconte que le donjon sous le temple a la forme d'un grand coq. // Un coq dans un donjon... Moi, je préfère ceux de ma basse-cour !",
+    "OldMan 8 6 droite | Vieux Gaspard | [fragment_gauche] Une aile entière... Ton père n'a jamais dépassé la quatrième plume. // Il serait fier. Moi aussi, petite. ## [plume3] Tu as réveillé le chant du coq, alors ? // Les cloches ne mentent jamais : écoute bien avant de frapper. ## Le coq chante chaque aube depuis mille ans. // S'il se taisait un jour, le royaume tremblerait. // Ton père tenait la lance avant toi. Garde-la bien, petite.",
+    "Boy 18 5 gauche | Tom | [plume4] On dit que des statues de pierre surveillent la quatrième plume ! // Moi, je me serais caché derrière un pilier. Et toi ? ## Tu as une vraie lance de la garde ! Tu me la prêtes ? // ... Non ? Tant pis. // Un conseil : n'embête pas les poules. Elles se vengent.",
 ]
 animaux_ouest = ['c 6 10', 'h 20 9', 'c 15 12']
 
@@ -122,8 +121,8 @@ put(est, 'E', (4, 10)); put(est, 'o', (8, 10), (19, 9))
 put(est, 'g', (9, 5), (16, 5), (13, 10), (2, 6)); put(est, 'f', (7, 5), (17, 4), (12, 11))
 put(est, 'w', (8, 4), (15, 4), (14, 10), (23, 10), (1, 7))
 pnjs_est = [
-    "KnightGold 16 6 gauche | Capitaine Aubrac | Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend au temple, au nord du village. // Deux ailes et un corps : voilà la forme du donjon. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur.",
-    "Villager3 7 7 droite | Soldat Merle | Dix ans de garde et je n'ai jamais vu le fond du donjon. // Les anciens disent que les plumes de l'aile gauche sont de plus en plus longues. Je ne sais pas ce que ça veut dire !",
+    "KnightGold 16 6 gauche | Capitaine Aubrac | [fragment_gauche] Une aile complète ! Je n'y croyais plus. // Mais ce n'est que la moitié du blason : l'aile droite t'attend, et au centre, l'épreuve finale. // Repose-toi, recrue. Tu l'as mérité. ## [capitaine_vu] Alors, cette épreuve ? Le temple est au nord du village. // Souviens-toi : observer, réfléchir, et frapper seulement ce qui doit l'être. ## Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend au temple, au nord du village. // Deux ailes et un corps : voilà la forme du donjon. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur. >> capitaine_vu",
+    "Villager3 7 7 droite | Soldat Merle | [plume4] La quatrième plume ? Des sentinelles qui tournent la tête ? Brr. Reste dans l'ombre, c'est le conseil d'un vétéran. ## Dix ans de garde et je n'ai jamais vu le fond du donjon. // Les anciens disent que les plumes de l'aile gauche sont de plus en plus longues. Je ne sais pas ce que ça veut dire !",
     "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.",
 ]
 animaux_est = ['d 20 7', 'c 12 11']
@@ -181,7 +180,7 @@ def interieur(porte, meubles, haut, gauche=6, droite=17, bas=10):
 
 int_heros = interieur(12, [('L', 7, 5), ('S', 14, 5), ('q', 11, 5), ('t', 9, 7), ('T', 14, 8), ('C', 13, 8), ('o', 7, 9), ('p', 16, 7)],
                       ['w', 'y', 'z', 'v', 'x'])
-pnjs_int_heros = ["Woman 10 7 bas | Maman | Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'ouest, tout près d'ici. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
+pnjs_int_heros = ["Woman 10 7 bas | Maman | [fragment_gauche] Ma fille, la moitié du blason ! Je vais préparer un grand repas. // Mais d'abord, va te reposer. ## [capitaine_vu] Le capitaine t'a parlé ? Alors file au temple, et fais attention à toi ! ## Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'ouest, tout près d'ici. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
 int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 5), ('F', 7, 8), ('M', 9, 8), ('D', 15, 8)],
                         ['w', 'z', 'x', 'w', 'x'])
 pnjs_int_caserne = ["Villager3 14 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
@@ -195,12 +194,57 @@ int_stand = interieur(12, [('t', 9, 7), ('o', 7, 5), ('q', 16, 5), ('p', 7, 9), 
 for x in (9, 11, 13, 15): int_stand[5][x] = 'c'
 pnjs_int_stand = ["Villager4 14 8 gauche | Maître Tirard | Approchez, approchez ! Le grand jeu du stand de la Garde ! // Des pots vont apparaître sur l'étagère du fond. Casse-les à coups de lance avant qu'ils ne disparaissent ! // 30 secondes, 8 pots pour le bronze, 14 pour l'argent, 20 pour l'or. Prête ? C'est parti ! | tir"]
 
+
+# --- LE CHEMIN DU TEMPLE : GRAND CHEMIN (2,1) -> PARVIS (2,0) -> TEMPLE DE L'AILE GAUCHE (1,0)
+def foret_cotes(g, x0, x1):
+    """Remplit de forêt les colonnes en dehors du passage x0..x1 (chemin qui traverse tout l'écran)."""
+    for y in range(0, 13, 2):
+        for x in range(0, 24, 2):
+            if x + 1 < x0 or x > x1:
+                put(g, 'A' if (x // 2 + y // 2) % 2 == 0 else 'a', (x, y if (x // 2) % 2 == 0 else min(y + 1, 12)))
+    put(g, 'b', (24, 0), (24, 1), (24, 12), (24, 13))
+
+grand = vide()
+chemin(grand, 11, 13, 0, 13)
+foret_cotes(grand, 9, 15)
+put(grand, 'f', (9, 4), (15, 8)); put(grand, 'g', (9, 9), (15, 3)); put(grand, 'w', (9, 6), (15, 10), (9, 12))
+put(grand, 'n', (10, 7))                                       # panneau (décor)
+animaux_grand = ['c 10 4']
+
+parvis = vide()
+chemin(parvis, 11, 13, 6, 13)                                  # vient du sud
+chemin(parvis, 0, 13, 6, 8)                                    # vers l'ouest : temple de l'aile gauche
+chemin(parvis, 12, 12, 5, 5)                                   # devant la porte du CORPS
+put(parvis, 'K', (9, 2))                                       # le CORPS du donjon : grand bâtiment scellé (porte en (12,5))
+put(parvis, 'j', (7, 3), (17, 3)); put(parvis, 'o', (6, 4), (18, 4))
+bordure(parvis, trou=(11, 13))
+for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 4), (22, 9), (20, 11)]:
+    put(parvis, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+put(parvis, 'b', (24, 6), (24, 7), (24, 8))                    # l'est : le temple de l'aile droite (plus tard)
+put(parvis, 'P', (20, 2), (3, 2)); put(parvis, 'f', (8, 9), (16, 9)); put(parvis, 'g', (10, 5), (14, 5)); put(parvis, 'w', (6, 10), (19, 10))
+passages_parvis = ["12 5 ! Les grandes portes du corps du donjon sont scellées. Il faut d'abord rapporter les deux ailes du blason."]
+
+temple_g = vide()
+chemin(temple_g, 11, 24, 6, 8)                                 # vient de l'est (le parvis)
+chemin(temple_g, 12, 12, 5, 5)                                 # devant la porte du temple
+put(temple_g, 'K', (9, 2))                                     # temple de l'aile gauche : porte en (12,5) -> donjon
+put(temple_g, 'j', (7, 3), (17, 3)); put(temple_g, 'o', (6, 4), (18, 4))
+bordure(temple_g)
+put(temple_g, 'b', (0, 6), (0, 7), (0, 8))                     # l'ouest : fermé
+for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 9), (3, 9)]:
+    put(temple_g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+put(temple_g, 'P', (20, 2), (3, 2)); put(temple_g, 'f', (8, 9), (16, 9)); put(temple_g, 'g', (10, 5), (14, 5)); put(temple_g, 'w', (6, 10), (19, 10))
+passages_temple_g = ["12 5 @donjon:Vestibule 12 10 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."]
+
 ecrans = [
     ('Ferme', (0, 2), ferme, {'pnjs': pnjs_ferme, 'passages': passages_ferme, 'minijeu': 'poules'}),
     ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place, 'passages': ferme_place}),
     ('VillageOuest', (1, 2), ouest, {'animaux': animaux_ouest, 'pnjs': pnjs_ouest, 'passages': ferme_ouest}),
     ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est, 'passages': passages_est}),
     ('MaisonHeros', (4, 2), heros, {'animaux': animaux_heros, 'passages': passages_heros}),
+    ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand}),
+    ('Parvis', (2, 0), parvis, {'passages': passages_parvis}),
+    ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
 ]
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
 interieurs = [
@@ -212,7 +256,7 @@ interieurs = [
 depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans la maison du héros, à côté du lit
 
 
-for _g in (place, ouest, est, heros, ferme):
+for _g in (place, ouest, est, heros, ferme, parvis, temple_g):
     degager_maisons(_g)
 
 

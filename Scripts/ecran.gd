@@ -85,13 +85,29 @@ func _poser_pnjs() -> void:
 		if not parties.size() in [3, 4] or tete.size() != 4:
 			push_warning("Ecran : habitant mal écrit : " + ligne)
 			continue
-		var texte := PackedStringArray()
-		for phrase in parties[2].split("//"):
-			texte.append(phrase.strip_edges())
+		# La partie texte peut contenir plusieurs VERSIONS séparées par « ## » (la première dont la condition est vraie est dite) :
+		#   "[drapeau] phrase // phrase >> autre_drapeau ## [!drapeau] phrase ## phrase par défaut"
+		#   [drapeau] = seulement si ce drapeau est levé ; [!drapeau] = seulement s'il ne l'est PAS ; sans crochets = par défaut.
+		#   ">> nom" à la fin d'une version : ce drapeau est levé (en silence) quand la conversation se termine.
+		var versions: Array = []
+		for bloc in parties[2].split("##"):
+			bloc = bloc.strip_edges()
+			var condition := ""
+			if bloc.begins_with("["):
+				condition = bloc.substr(1, bloc.find("]") - 1).strip_edges()
+				bloc = bloc.substr(bloc.find("]") + 1).strip_edges()
+			var pose := ""
+			if ">>" in bloc:
+				pose = bloc.get_slice(">>", 1).strip_edges()
+				bloc = bloc.get_slice(">>", 0).strip_edges()
+			var texte := PackedStringArray()
+			for phrase in bloc.split("//"):
+				texte.append(phrase.strip_edges())
+			versions.append({"condition": condition, "texte": texte, "pose": pose})
 		var pnj := Pnj.new()
 		pnj.position = Vector2(int(tete[1]) * TUILE + 8, int(tete[2]) * TUILE + 13)
 		add_child(pnj)
-		pnj.initialiser(tete[0], parties[1].strip_edges(), texte, tete[3], grille)
+		pnj.initialiser(tete[0], parties[1].strip_edges(), versions, tete[3], grille)
 		if parties.size() == 4:
 			pnj.minijeu = parties[3].strip_edges()
 
@@ -120,7 +136,12 @@ func _poser_passages() -> void:
 			var d := m[2].split(" ")
 			var cible := d[0]
 			var case := Vector2i(int(d[1]), int(d[2]))
-			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.passage.emit(cible, case))
+			var message := " ".join(d.slice(3))   # texte facultatif affiché à l'arrivée
+			# cible "@donjon:Ecran" ou "@village:Ecran" = changement de scène (voir world.gd::_changer_de_scene)
+			zone.body_entered.connect(func(corps):
+				if corps.is_in_group("joueur"):
+					Etat.passage_texte = message
+					Etat.passage.emit(cible, case))
 
 
 # Crée le mini-jeu de l'écran (export `minijeu`)

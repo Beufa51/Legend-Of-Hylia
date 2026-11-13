@@ -11,16 +11,16 @@ const PORTEE_REGARD := 70.0   # px : il tourne la tête vers le joueur en dessou
 
 var nom_affiche := ""
 var minijeu := ""           # si non vide : une fois la conversation finie, ce mini-jeu démarre (voir minijeu.gd)
-var lignes: PackedStringArray
+var versions: Array = []     # [{condition, texte, pose}] : voir ecran.gd (dialogues conditionnés par les drapeaux)
 var _sprite: Sprite2D
 var _direction := 0           # index dans DIRECTIONS
 var _chrono := 3.0            # avant de regarder ailleurs, au repos
 var _ecran := Vector2i.ZERO   # case de la grille de l'écran où il vit (inutile d'animer les autres)
 
 
-func initialiser(perso: String, nom: String, texte: PackedStringArray, direction: String, ecran: Vector2i) -> void:
+func initialiser(perso: String, nom: String, dialogues: Array, direction: String, ecran: Vector2i) -> void:
 	nom_affiche = nom
-	lignes = texte
+	versions = dialogues
 	_ecran = ecran
 	_direction = maxi(DIRECTIONS.find(direction), 0)
 	add_to_group("pnj")
@@ -63,8 +63,26 @@ func peut_parler(joueur: Node2D) -> bool:
 	return joueur.global_position.distance_to(global_position) < PORTEE_PAROLE
 
 
+# La version du dialogue à dire maintenant : la première dont la condition est vraie.
+func _version_courante() -> Dictionary:
+	for v in versions:
+		var c: String = v["condition"]
+		var ok := true
+		if c.begins_with("!"):
+			ok = not Etat.est(c.substr(1))
+		elif c != "":
+			ok = Etat.est(c)
+		if ok:
+			return v
+	return versions[0]
+
+
 func parler(joueur: Node2D) -> void:
 	_regarder(joueur.global_position)
+	var v := _version_courante()
+	var pose: String = v["pose"]
+	if pose != "":
+		Etat.dialogue_fini.connect(func(): Etat.noter(pose), CONNECT_ONE_SHOT)
 	if minijeu != "":
 		Etat.dialogue_fini.connect(func(): Etat.minijeu_demande.emit(minijeu), CONNECT_ONE_SHOT)
-	Etat.dialogue_demande.emit(nom_affiche, lignes)
+	Etat.dialogue_demande.emit(nom_affiche, v["texte"])
