@@ -172,8 +172,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("reset") and not en_transition and not Etat.en_dialogue:
 		for enfant in get_children():
 			if enfant is Ecran and enfant.grille == salle_actuelle:
-				if enfant is Room and enfant.a_de_la_glace() and enfant.retour != Vector2.ZERO:
-					_raccompagner(enfant.retour, "recommencer")   # sur la glace, on peut être coincé : retour au début
+				if enfant is Room and enfant.recommence_au_debut() and enfant.retour != Vector2.ZERO:
+					_raccompagner(enfant.retour, "recommencer")   # glace, reflet : on peut être coincé -> retour au début
 				else:
 					enfant.reinitialiser()
 

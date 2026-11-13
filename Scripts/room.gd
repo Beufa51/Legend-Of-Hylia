@@ -28,6 +28,8 @@ class_name Room
 #   Z  = pics qui sortent du sol en boucle (sortis = retour à `retour`)              ~ = eau (bloque)
 #   i  = GLACE : le joueur (et un bloc poussé) glisse tout droit jusqu'à un obstacle ou jusqu'au sol normal
 #        (un plot baissé n'est pas de la glace : on s'arrête dessus). R = retour au début de la salle.
+#   r  = départ du REFLET (double fantôme aux gestes inversés gauche/droite, voir reflet.gd) ; il appuie aussi sur les boutons P
+#   a  = dalle du reflet : quand TOUTES sont occupées en même temps (par le joueur ou le reflet) -> `drapeau_reflet`
 # Portes : un groupe 3x2 sur le mur du HAUT = arche animée (herse, ou bois pour E) ; 3x1 dans un mur intérieur
 # = herse basse ; les autres (bas, côtés) gardent l'ancienne grille.
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
@@ -79,6 +81,7 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 @export var drapeau_cle := ""        # la clé qui ouvre les portes à serrure E de cette salle
 @export var drapeau_serrure := ""    # levé quand une porte E est ouverte (elle s'ouvre avec ce drapeau)
 @export var periode_pics := 2.4      # durée d'un cycle des pics Z (secondes)
+@export var drapeau_reflet := ""     # levé quand toutes les dalles du reflet `a` sont occupées en même temps
 
 # Lueur des flammes (texture et matériau partagés par toutes les lumières)
 static var _tex_lumiere: GradientTexture2D
@@ -127,6 +130,10 @@ var _pics := {}            # { case : Pics }
 var _pique := false        # le joueur vient d'être touché par des pics (on attend le retour)
 var _chargement := true    # vrai pendant _ready : les portes déjà ouvertes s'ouvrent sans bruit
 var _a_glace := false      # la salle contient de la glace (lettre i)
+var _case_reflet := Vector2i(-1, -1)   # départ du reflet (lettre r) ; -1 = pas de reflet
+var _reflet: Reflet
+var _dalles_reflet := {}   # { case : Sprite2D }
+var _etait_courante := false
 
 
 func _ready() -> void:
@@ -170,6 +177,8 @@ func _process(delta: float) -> void:
 		_surveiller_pics()
 	if _a_glace:
 		_annoncer_glace()
+	if _case_reflet.x >= 0:
+		_gerer_reflet()
 
 
 # --- Chargement ---------------------------------------------------------------
@@ -336,6 +345,14 @@ func _poser_objets() -> void:
 						# bord de l'eau : une marche sombre et un reflet clair
 						_poser_rect(pos, Vector2(TUILE, 2), Color(0.1, 0.12, 0.2))
 						_poser_rect(pos + Vector2(0, 2), Vector2(TUILE, 1), Color(0.55, 0.85, 0.95, 0.8))
+				"r":
+					_case_reflet = Vector2i(x, y)
+				"a":
+					_dalles_reflet[Vector2i(x, y)] = _poser("dalle_reflet", pos)
+					if sombre:   # on doit les voir dans le noir
+						var lueur := Lumiere.creer(Color(0.5, 0.8, 1.0), 0.35, 0.5)
+						lueur.position = pos + Vector2(8, 8)
+						add_child(lueur)
 				"z":
 					var dalle := Dalle.new()
 					add_child(dalle)
@@ -489,7 +506,7 @@ func liberer(cellule: Vector2i) -> void:
 func case_libre(cellule: Vector2i) -> bool:
 	if cellule.y < 0 or cellule.y >= layout.size() or cellule.x < 0 or cellule.x >= layout[cellule.y].length():
 		return false
-	return ".TPFXVouzi".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
+	return ".TPFXVouziar".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
 
 
 # Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
@@ -498,7 +515,7 @@ func verifier_plaques() -> void:
 	if drapeau_plaque == "" or _plaques.is_empty():
 		return
 	for plaque in _plaques:
-		if not (_occupe.get(plaque) is Bloc):
+		if not (_occupe.get(plaque) is Bloc or _reflet_sur(plaque)):
 			return
 	Etat.poser(drapeau_plaque)
 
@@ -506,12 +523,14 @@ func verifier_plaques() -> void:
 # Chaque bouton s'enfonce quand un bloc est dessus, et remonte sinon.
 func _maj_boutons() -> void:
 	for cellule in _boutons:
-		var appuye: bool = _occupe.get(cellule) is Bloc
+		var appuye: bool = _occupe.get(cellule) is Bloc or _reflet_sur(cellule)
 		_boutons[cellule].texture = _image("bouton_enfonce" if appuye else "bouton")
 
 
 # Touche R : les blocs reviennent à leur place de départ.
 func reinitialiser() -> void:
+	if _reflet != null and is_instance_valid(_reflet):
+		_reflet.reinitialiser()
 	for bloc in _blocs:
 		bloc.reinitialiser()
 	_maj_boutons()
@@ -574,6 +593,54 @@ func _dalles_resolues() -> bool:
 
 func a_de_la_glace() -> bool:
 	return _a_glace
+
+
+# Salle où la touche R ramène le joueur au début (on peut s'y coincer : glace, reflet décalé).
+func recommence_au_debut() -> bool:
+	return _a_glace or (_case_reflet.x >= 0 and not Etat.est(drapeau_reflet))
+
+
+# --- Reflet ----------------------------------------------------------------------
+
+# Le reflet est créé à la 1re image où le joueur est dans la salle (il copie son apparence),
+# remis à son départ à chaque entrée dans la salle ; il presse les boutons et occupe les dalles du reflet.
+func _gerer_reflet() -> void:
+	var courante := grille == Etat.salle_courante
+	var resolu := Etat.est(drapeau_reflet)
+	if courante and not _etait_courante and not resolu:
+		var joueur := get_tree().get_first_node_in_group("joueur")
+		if _reflet == null and joueur != null:
+			_reflet = Reflet.new()
+			add_child(_reflet)
+			_reflet.initialiser(self, _case_reflet, joueur, sombre)
+		elif _reflet != null and is_instance_valid(_reflet):
+			_reflet.reinitialiser()
+	_etait_courante = courante
+	if not courante or _reflet == null or not is_instance_valid(_reflet):
+		return
+	# Boutons : le reflet les enfonce (un bouton enfoncé une fois suffit à ouvrir pour de bon)
+	if not _boutons.is_empty():
+		verifier_plaques()
+	# Dalles du reflet : allumées quand quelqu'un est dessus ; toutes à la fois = gagné
+	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
+	var case_joueur := case_des_pieds(joueur.global_position) if joueur != null else Vector2i(-99, -99)
+	var toutes := not _dalles_reflet.is_empty()
+	for c in _dalles_reflet:
+		var occupee: bool = c == case_joueur or _reflet_sur(c)
+		_dalles_reflet[c].texture = _image("dalle_reflet_on" if occupee else "dalle_reflet")
+		toutes = toutes and occupee
+	if toutes and not resolu and drapeau_reflet != "":
+		Etat.poser(drapeau_reflet)
+		_reflet.disparaitre()
+		Etat.annoncer("Le reflet se fond dans la lumière...")
+
+
+# Le reflet a-t-il les pieds sur cette case ?
+func _reflet_sur(c: Vector2i) -> bool:
+	if _reflet == null or not is_instance_valid(_reflet) or not _reflet.is_physics_processing():
+		return false
+	var pied := _reflet.position + Vector2(0, 5)
+	return Vector2i(floori(pied.x / TUILE), floori(pied.y / TUILE)) == c
 
 
 # La salle prévient le joueur qu'il est sur un terrain glacé (seulement la salle où il se trouve).
