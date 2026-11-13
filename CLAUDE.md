@@ -550,6 +550,17 @@
   puis `Etat.noter("corps_revele")` et rechargement du village au Parvis (12,7). F1 -> « Test stèle » (donne les 2 fragments, remet la forêt).
   À VÉRIFIER : shader dans le rendu Compatibilité, lisibilité du mode 7. PROCHAINE ÉTAPE : B (intérieur du corps, Gardien, choix combattre/refuser, boss).
 
+- 2026-11-13 : retour 13a : « s'affiche, mais pas ce que j'avais en tête ». (1) les ailes ne vont pas au bon endroit sur la stèle + l'ASSET DE LA STÈLE ne plaît pas -> À REFAIRE plus tard ;
+  (2) la FORÊT doit s'ÉCARTER DEVANT LE HÉROS (en direct) pour rejoindre le corps, qui doit être un BÂTIMENT ; (3) en mode 7, il faut voir les BÂTIMENTS du donjon (la forme des salles) se soulever, se remettre
+  dans le bon sens et rejoindre le corps ; vu de haut, les BÂTIMENTS dessinent le coq (pas juste l'image du coq).
+  **CORRECTION 13b écrite (non testée dans Godot, séquence simulée image par image en Python)** :
+  `Outils/fabriquer_plans_mode7.py` -> `Assets/Gemini/embleme/plan_aile_gauche.png` / `plan_aile_droite.png` (VRAI plan des salles lu dans world.tscn / aile_droite.tscn, 2 px/case, murs en relief, sols dallés ; à relancer si les ailes changent),
+  `plan_corps.png` (silhouette de pierre du coq du blason = bâtiment : enceinte + cloisons tous les 9 px), `plans_mode7.json` (racines = centre de l'Entrée : gauche (25,154), droite (275,154)).
+  `mode7.gd` RÉÉCRIT : carte 1024x768 (herbe, forêt, grand chemin, corps en (268,128) avec ombre, ailes posées à l'ouest/est (230,250)/(794,250)) ; échelle du shader 160 ; séquence : approche -> les ailes SE SOULÈVENT (grossissent + ombre qui s'éloigne, `_poser_aile`)
+  -> pivotent d'un quart de tour et volent aux épaules du corps (PIVOTS (196,122)/(292,122), forme finale `ECHELLE_EMBOITEE` (0.4, 1.0)) -> se reposent (clac) -> montée -> FONDU vers une VRAIE VUE DE DESSUS (Sprite2D = texture du SubViewport, région du coq) : le coq de bâtiments.
+  PARVIS : `exterieur.gd::ecarter_foret(zone, axe_x)` (les arbres glissent sur les côtés en s'effaçant) + `faire_apparaitre(lettre, case)` (le temple `U` du corps apparaît derrière) appelés par `world.gd::_ceremonie_stele` après les secousses, AVANT le mode 7.
+  Le parvis révélé n'a plus les arbres des colonnes 7-18, rangées 0-3 (mêmes que ceux qui s'écartent).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.

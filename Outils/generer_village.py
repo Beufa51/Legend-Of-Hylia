@@ -242,8 +242,8 @@ passages_parvis = ["12 6 $stele"]
 # APRÈS (drapeau corps_revele) : la forêt s'est écartée, le CORPS DU COQ (grand temple, porte en (12,4)) se dresse ;
 #         la stèle, avec les deux ailes, s'est rangée à gauche du passage.
 parvis_revele = parvis_commun()
-for y in range(0, 5):
-    for x in range(8, 17): parvis_revele[y][x] = '.'
+for y in range(0, 4):                       # mêmes arbres que ceux qui s'écartent pendant la cérémonie (world.gd : colonnes 7-18, rangées 0-3)
+    for x in range(7, 19): parvis_revele[y][x] = '.'
 put(parvis_revele, 'U', (9, 1)); chemin(parvis_revele, 12, 12, 5, 5); put(parvis_revele, 'y', (10, 5))
 passages_parvis_revele = ["12 4 ! Le corps du coq... L'épreuve finale se prépare (prochaine étape de la construction).", "10 6 $stele"]
 

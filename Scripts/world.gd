@@ -839,8 +839,9 @@ func _maj_hud() -> void:
 
 # --- La STÈLE DU COQ (parvis) : les deux ailes s'y emboîtent, la forêt s'écarte, le corps du coq apparaît ---------
 # Lancée par le passage "$stele" (ecran.gd), seulement quand le joueur MONTE vers la stèle.
-# 1) les deux fragments volent du joueur vers la stèle ; 2) la terre tremble ; 3) vue MODE 7 (mode7.gd) : les deux
-# ailes rejoignent le corps ; 4) on revient au parvis, rechargé avec son plan « révélé » (drapeau `corps_revele`).
+# 1) les deux fragments volent du joueur vers la stèle ; 2) la terre tremble, la FORÊT S'ÉCARTE devant le héros et le
+# corps du coq apparaît ; 3) vue MODE 7 (mode7.gd) : les bâtiments des deux ailes se soulèvent, pivotent et s'emboîtent
+# sur le bâtiment du corps ; de haut, ils dessinent le coq ; 4) on revient au parvis, rechargé avec son plan « révélé ».
 const STELE_CASE := Vector2i(12, 5)          # case de la stèle sur l'écran Parvis
 const SON_GRONDEMENT := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact.wav"
 
@@ -885,12 +886,21 @@ func _ceremonie_stele() -> void:
 		sprite.queue_free()
 	_jouer_son(SON_EMBOITE)
 	_jouer_son(JINGLE_BLASON, -2.0)
-	# 2) La terre tremble : derrière la stèle, la forêt frémit
+	# 2) La terre tremble... et la forêt s'écarte devant le héros : le corps du coq apparaît derrière
 	Etat.annoncer("Clac ! La stèle s'illumine... la terre se met à trembler !")
 	for i in 3:
 		_jouer_son(SON_GRONDEMENT, -6.0)
 		_secouer()
 		await get_tree().create_timer(0.45).timeout
+	if parvis is Exterieur:
+		_jouer_son(SON_ENVOL, -4.0)
+		parvis.ecarter_foret(Rect2i(7, 0, 12, 4), (STELE_CASE.x + 0.5) * Ecran.TUILE)   # arbres des colonnes 7-18, rangées 0-3
+		parvis.faire_apparaitre("U", Vector2i(9, 1))
+		Etat.annoncer("La forêt s'écarte devant toi... Derrière, un immense bâtiment : le CORPS DU COQ !")
+		for i in 4:
+			_secouer()
+			await get_tree().create_timer(0.6).timeout
+		await get_tree().create_timer(1.2).timeout
 	t = create_tween()
 	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
 	await t.finished
