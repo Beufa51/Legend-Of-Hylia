@@ -448,6 +448,10 @@
   Liste A : points 1 (tests utilisateur), 2, 3 faits ; 4 fait à moitié (musique d'intérieur OK, SECRETS bois/cascade PAS faits) ; 5 fait (affichage rubans/records, récompenses utiles PAS faites).
   À FAIRE : retester collisions arbres (si besoin élargir l'emprise des arbres ou ajouter une 5e valeur « emprise de collision » dans OBJETS_G) ; remplacer les PNJ ; secrets ; récompenses ; aile droite ; contrôles tactiles.
 
+- 2026-11-13 : l'utilisateur ajoute `Assets/Midi files/` (28 MIDI). Godot ne lit PAS le MIDI -> `Outils/rendre_musiques.py` (FluidSynth + FluidR3_GM + ffmpeg) -> `Assets/Musique/NN_nom.ogg` (28 fichiers, ~21 Mo, rendus SANS écoute côté Claude : qualité à valider par l'utilisateur ; licence du pack MIDI à vérifier).
+  Branchés : village = `04_peaceful_village`, parvis/temple = `13_magic_temple` (via generer_village.py). Pistes dispo : 01/09/16/24 combat, 02 ville animée, 03 château royal, 05 long voyage, 06 caverne cachée, 07 forêt, 08 ville forestière, 13 temple magique,
+  18 vieux magicien, 19 ville est, 20 base militaire (caserne ?), 22 bibliothèque, 28 sanctuaire sacré (fin ?). Le donjon et les intérieurs gardent les musiques Ninja Adventure (« 21 - Dungeon », « 27 - Chill »).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.

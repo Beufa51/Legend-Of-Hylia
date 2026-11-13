@@ -243,8 +243,8 @@ ecrans = [
     ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est, 'passages': passages_est}),
     ('MaisonHeros', (4, 2), heros, {'animaux': animaux_heros, 'passages': passages_heros}),
     ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand}),
-    ('Parvis', (2, 0), parvis, {'passages': passages_parvis, 'musique_ecran': 'res://Assets/Ninja_adventure/Audio/Musics/12 - Temple.ogg'}),
-    ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Ninja_adventure/Audio/Musics/12 - Temple.ogg', 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
+    ('Parvis', (2, 0), parvis, {'passages': passages_parvis, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
+    ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
 ]
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
 interieurs = [
@@ -272,7 +272,7 @@ def ecrire_scene():
 
 [node name="World" type="Node2D"]
 script = ExtResource("1")
-musique = "res://Assets/Ninja_adventure/Audio/Musics/20 - Good Time.ogg"
+musique = "res://Assets/Musique/04_peaceful_village.ogg"
 donjon = false
 
 '''
