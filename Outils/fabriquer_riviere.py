@@ -13,14 +13,14 @@ from PIL import Image, ImageDraw
 RACINE = os.path.join(os.path.dirname(__file__), "..")
 SORTIE = os.path.join(RACINE, "Assets/Gemini/tuiles/")
 
-EAU = (44, 118, 180)
-EAU_CLAIRE = (88, 164, 214)
-EAU_PROFONDE = (32, 92, 156)
+EAU = (44, 87, 145)                  # l'eau du pack Village Top Down
+EAU_CLAIRE = (84, 134, 196)
+EAU_PROFONDE = (34, 68, 118)
 ECUME = (206, 232, 244)
-BORD = (24, 52, 84)                 # liseré sombre entre l'eau et la terre
-HERBE = (51, 118, 3)                # même herbe que le sol du village (traiter_pixel_crawler.py)
-HERBE_FONCEE = (38, 98, 4)
-BOUE = (92, 66, 36)                 # petite bande de terre mouillée au bord
+BORD = (22, 40, 74)                 # liseré sombre entre l'eau et la terre
+HERBE = (169, 204, 82)              # même herbe que le sol du village (traiter_village_jadson.py)
+HERBE_FONCEE = (120, 160, 56)
+BOUE = (158, 99, 59)                 # petite bande de terre mouillée au bord
 
 
 def bruit(x, y, graine):

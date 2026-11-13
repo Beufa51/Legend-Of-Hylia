@@ -52,6 +52,16 @@ def rendre(nom, g, props, grille):
             else:
                 h = (x * 73 + y * 151 + gx * 31 + gy * 17) % 13
                 out.alpha_composite(img("v_herbe_sol_%d" % (h + 1) if h < 2 else "v_herbe_sol"), (x * 16, y * 16))
+    for ligne in props.get('terrasses', []):     # RELIEF : terrasses (mêmes morceaux que exterieur.gd::_poser_relief)
+        x0, y0, w, h = (int(v) for v in ligne.split())
+        for j in range(h):
+            for i in range(w):
+                r = 0 if j == 0 else 2 if j == h - 2 else 3 if j == h - 1 else 1
+                c = 0 if i == 0 else 2 if i == w - 1 else 1
+                out.alpha_composite(img("v_ter_%d%d" % (r, c)), ((x0 + i) * 16, (y0 + j) * 16))
+    for ligne in props.get('escaliers', []):
+        x0, y0 = (int(v) for v in ligne.split())
+        out.alpha_composite(img("v_escalier"), (x0 * 16, y0 * 16))
     objets = []
     for y in range(H):
         for x in range(W):

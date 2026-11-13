@@ -9,7 +9,7 @@ class_name Exterieur
 #   b  = buisson (1x1)  B = buisson à baies   u = souche   n = panneau   x = caisse
 #   e  = clôture (2 cases)   z = poteau   k = case de l'enclos (marqueur)   s = point de départ d'une poule (marqueur)
 #   f  = tournesol   g = fleur rouge   w = marguerite (fleurs : décor, ne bloquent pas)
-#   MAISONS dessinées en code (Outils/fabriquer_maisons.py), vues de dessus (5x4, la porte est sur la rangée du bas, 3e colonne) : M rouge+poutres, N ardoise, T chaume, R rouge+pierre, S pierre, L grange en bois ; K = caserne (7x4, porte en 4e colonne)
+#   MAISONS du pack Village Top Down (Outils/traiter_village_jadson.py) : M orange 8x3, N bleue 5x3, T verte 5x3, R rouge 5x3, S ardoise 8x3, L grange 8x3, K caserne 8x3, U temple 8x3 (église) ; la porte est sur la dernière rangée (colonne 2, temple colonne 3)
 #   E  = étal du marché (3x2)  o = tonneau   j = bannière rouge (1x2)
 #   Q  = girouette du coq (3x3)   W = puits (2x2)
 #   ~  = eau de la rivière (bloque)   = = pont de bois (on marche dessus, au-dessus de l'eau)
@@ -38,9 +38,9 @@ const CHEMIN_INTERIEUR := {"se": Vector2i(16, 8), "so": Vector2i(17, 8), "ne": V
 # Objets Gemini : lettre -> [image (Assets/Gemini/tuiles), emprise en cases (largeur, hauteur), bloque ?, balancement au vent (0 = immobile)]
 # L'image est posée CENTRÉE sur l'emprise et ALIGNÉE EN BAS : un arbre ou une maison peut dépasser vers le haut.
 const OBJETS_G := {
-	"A": ["v_arbre_a", Vector2i(2, 2), true, 0.03],
-	"a": ["v_arbre_b", Vector2i(2, 2), true, 0.03],
-	"P": ["v_sapin", Vector2i(2, 2), true, 0.025],
+	"A": ["v_arbre_a", Vector2i(3, 3), true, 0.03],
+	"a": ["v_arbre_b", Vector2i(3, 3), true, 0.03],
+	"P": ["v_sapin", Vector2i(3, 3), true, 0.025],
 	"b": ["v_buisson", Vector2i(1, 1), true, 0.07],
 	"B": ["v_buisson_baies", Vector2i(1, 1), true, 0.07],
 	"f": ["v_tournesol", Vector2i(1, 1), false, 0.22],
@@ -50,26 +50,26 @@ const OBJETS_G := {
 	"x": ["v_caisse", Vector2i(1, 1), true, 0.0],
 	"n": ["v_panneau", Vector2i(1, 1), true, 0.0],
 	"u": ["v_souche", Vector2i(1, 1), true, 0.0],
-	"r": ["v_roche", Vector2i(2, 2), true, 0.0],
+	"r": ["v_roche", Vector2i(1, 1), true, 0.0],
 	"j": ["v_banniere", Vector2i(1, 2), true, 0.1],
 	"W": ["v_puits", Vector2i(2, 2), true, 0.0],
 	"e": ["v_cloture", Vector2i(2, 1), true, 0.0],   # clôture (2 cases de large)
 	"z": ["v_poteau", Vector2i(1, 1), true, 0.0],    # poteau de clôture
-	# Maisons : emprise 7x4 (112 px, sprite agrandi x1,3), la porte est sur la dernière rangée (colonne dans PORTES_MAISONS)
-	"M": ["v_maison_orange", Vector2i(7, 4), true, 0.0],
-	"N": ["v_maison_bleue", Vector2i(7, 4), true, 0.0],
-	"T": ["v_maison_chaume", Vector2i(7, 4), true, 0.0],
-	"R": ["v_maison_rouge", Vector2i(7, 4), true, 0.0],
-	"S": ["v_maison_pierre", Vector2i(7, 4), true, 0.0],
-	"K": ["v_maison_caserne", Vector2i(7, 4), true, 0.0],   # la caserne est plus large (7x4)
-	"L": ["v_maison_bois", Vector2i(7, 4), true, 0.0],
-	"U": ["v_temple_entree", Vector2i(7, 4), true, 0.0],
+	# Maisons du pack « Village Top Down » : emprise = les murs (le toit dépasse vers le haut) ; la porte est sur la dernière rangée (colonne dans PORTES_MAISONS)
+	"M": ["v_maison_orange", Vector2i(8, 3), true, 0.0],
+	"N": ["v_maison_bleue", Vector2i(5, 3), true, 0.0],
+	"T": ["v_maison_chaume", Vector2i(5, 3), true, 0.0],
+	"R": ["v_maison_rouge", Vector2i(5, 3), true, 0.0],
+	"S": ["v_maison_pierre", Vector2i(8, 3), true, 0.0],
+	"K": ["v_maison_caserne", Vector2i(8, 3), true, 0.0],   # la caserne
+	"L": ["v_maison_bois", Vector2i(8, 3), true, 0.0],      # la grange
+	"U": ["v_temple_entree", Vector2i(8, 3), true, 0.0],    # le temple (l'église du pack) : grande porte à croisillons, colonne 3 (et 4)
 	"Z": ["v_corps_coq", Vector2i(9, 5), true, 0.0],       # le CORPS DU COQ (parvis révélé) : bâtiment en forme de coq, porte en colonne 4 (Outils/fabriquer_plans_mode7.py)
 	"Y": ["v_stele_vide", Vector2i(1, 1), true, 0.0],      # stèle du coq (parvis), empreintes des ailes vides (Outils/fabriquer_stele.py)
 	"y": ["v_stele_pleine", Vector2i(1, 1), true, 0.0],    # la même, avec les deux ailes posées   # entrée du temple du donjon : arche de pierre + ouverture sombre + marches (porte en colonne 3)
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
-const PORTES_MAISONS := {"M": 3, "N": 3, "T": 3, "R": 3, "S": 3, "K": 3, "L": 3, "U": 3, "Z": 4}
+const PORTES_MAISONS := {"M": 2, "N": 2, "T": 2, "R": 2, "S": 2, "K": 2, "L": 2, "U": 3, "Z": 4}
 # Touffes d'herbe semées automatiquement (images Gemini)
 const TOUFFES_G := ["v_herbe_1", "v_herbe_2"]
 # Animaux : lettre -> [planche, vitesse (px/s), peureux ?, son quand on le frappe]
@@ -82,6 +82,10 @@ const ANIMAUX := {
 
 # Animaux de l'écran : "lettre x y" (voir ANIMAUX)
 @export var animaux: PackedStringArray
+# RELIEF : terrasses (plateaux d'herbe surélevés avec une falaise au sud), "x y largeur hauteur" en cases (largeur >= 3, hauteur >= 4 : rangée du haut, milieu, bord de falaise, falaise).
+# On marche sur le dessus ; le bord et la falaise bloquent. Les escaliers ("x y" = case du coin haut-gauche, ils font 2 cases de large et 4 de haut) percent la falaise : c'est le seul accès.
+@export var terrasses: PackedStringArray
+@export var escaliers: PackedStringArray
 
 var _solides := {}   # cases bloquées par un objet
 var _couvertes := {} # cases recouvertes par un objet (bloquant ou non) : pas de touffe d'herbe dessus
@@ -159,6 +163,7 @@ func _process(delta: float) -> void:
 
 func _creer_decor() -> void:
 	_poser_sol()
+	_poser_relief()
 	for y in layout.size():
 		for x in layout[y].length():
 			var c := layout[y][x]
@@ -199,8 +204,41 @@ func _poser_sol() -> void:
 			elif _est_chemin(x, y):
 				_poser(_nom_chemin(x, y), pos)
 			else:
-				var h := (x * 73 + y * 151 + grille.x * 31 + grille.y * 17) % 13   # « hasard » fixe
-				_poser("v_herbe_sol_%d" % (h + 1) if h < 2 else "v_herbe_sol", pos)
+				var h := (x * 73 + y * 151 + grille.x * 31 + grille.y * 17) % 24   # « hasard » fixe : environ 1 case sur 4 porte un détail (fleurs, touffe, cailloux)
+				_poser("v_herbe_sol_%d" % (h + 1) if h < 6 else "v_herbe_sol", pos)
+
+
+# RELIEF : dessine les terrasses (morceaux v_ter_<rangée><colonne>) et les escaliers, et rend le bord et la falaise solides.
+func _poser_relief() -> void:
+	for ligne in terrasses:
+		var m := ligne.split(" ", false)
+		if m.size() != 4:
+			push_warning("Exterieur : terrasse mal écrite : " + ligne)
+			continue
+		var x0 := int(m[0])
+		var y0 := int(m[1])
+		var w := int(m[2])
+		var h := int(m[3])
+		for j in h:
+			for i in w:
+				var r := 0 if j == 0 else (2 if j == h - 2 else (3 if j == h - 1 else 1))
+				var c := 0 if i == 0 else (2 if i == w - 1 else 1)
+				_poser("v_ter_%d%d" % [r, c], Vector2((x0 + i) * TUILE, (y0 + j) * TUILE))
+				var case := Vector2i(x0 + i, y0 + j)
+				_couvertes[case] = true
+				if i == 0 or i == w - 1 or j == 0 or j >= h - 2:
+					_solides[case] = true
+	for ligne in escaliers:
+		var m := ligne.split(" ", false)
+		if m.size() != 2:
+			push_warning("Exterieur : escalier mal écrit : " + ligne)
+			continue
+		var x0 := int(m[0])
+		var y0 := int(m[1])
+		_poser("v_escalier", Vector2(x0 * TUILE, y0 * TUILE))
+		for j in 4:
+			for i in 2:
+				_solides.erase(Vector2i(x0 + i, y0 + j))   # on monte l'escalier
 
 
 # De l'eau (ou un pont au-dessus de l'eau) ici ? Hors de l'écran, on prolonge la cellule du bord.

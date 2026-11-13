@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import generer_village as gv
 
 W, H = gv.W, gv.H
-PORTES = {'M': 3, 'N': 3, 'T': 3, 'R': 3, 'S': 3, 'K': 3, 'L': 3, 'U': 3, 'Z': 4}   # colonne de la porte (PORTES_MAISONS de exterieur.gd)
+PORTES = {'M': 2, 'N': 2, 'T': 2, 'R': 2, 'S': 2, 'K': 2, 'L': 2, 'U': 3, 'Z': 4}   # colonne de la porte (PORTES_MAISONS de exterieur.gd)
 
 ext = {nom: (grille, g) for nom, grille, g, _ in gv.ecrans}
 props = {nom: p for nom, _, _, p in gv.ecrans}
@@ -35,6 +35,12 @@ def solides_ext(nom):
         for x in range(W):
             if g[y][x] not in gv.NON_BLOQUANTS:
                 s |= set(gv.cases_objet(g, x, y))
+    ter, esc = props[nom].get('terrasses', []), props[nom].get('escaliers', [])
+    s |= gv.cases_relief(ter, esc)[0]          # relief : bord et falaise des terrasses
+    for ligne in esc:                          # les escaliers percent la falaise
+        x0, y0 = (int(v) for v in ligne.split())
+        for j in range(4):
+            for i in range(2): s.discard((x0 + i, y0 + j))
     for p in passages_de(nom):
         s.discard((int(p[0]), int(p[1])))     # on marche dans la porte
     return s

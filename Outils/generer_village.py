@@ -26,18 +26,17 @@ def vide(): return [['.'] * W for _ in range(H)]
 def put(g, c, *pts):
     for (x, y) in pts: g[y][x] = c
 def maison(g, c, x, y):
-    """Une maison 7x4 (sprite agrandi x1,3). On donne l'ANCIENNE position (coin haut-gauche d'une maison 5x4) : la nouvelle est décalée de (-1, +1),
-    donc la porte est au même x et UNE rangée plus bas (x+2, y+4). La caserne/le temple (K, 7x4) ne se décale que d'une rangée : voir `grande`."""
-    put(g, c, (x - 1, y + 1))
+    """Une maison du pack Village Top Down (N, T, R : 5x3 ; M, S, L : 8x3). On donne la même position qu'avant : la porte (colonne 2 de la maison, rangée du bas) est en (x+2, y+4)."""
+    put(g, c, (x, y + 2))
 def grande(g, x, y):
-    """La grande maison K (7x4) : porte en (x+3, y+4) ; on donne le x du coin et l'ANCIENNE rangée y."""
-    put(g, 'K', (x, y + 1))
+    """La caserne K (8x3, porte en colonne 2) : porte en (x+3, y+4) comme avant."""
+    put(g, 'K', (x + 1, y + 2))
 def chemin(g, x0, x1, y0, y1):
     for y in range(y0, y1 + 1):
         for x in range(x0, x1 + 1): g[y][x] = ':'
 
 # --- Emprises des objets (même table que Scripts/exterieur.gd::OBJETS_G) : sert à retirer/fermer proprement ---
-EMPRISES = {'A': (2, 2), 'a': (2, 2), 'P': (2, 2), 'r': (2, 2), 'W': (2, 2), 'e': (2, 1), 'j': (1, 2), 'b': (1, 1), 'B': (1, 1), 'o': (1, 1),
+EMPRISES = {'A': (3, 3), 'a': (3, 3), 'P': (3, 3), 'r': (1, 1), 'W': (2, 2), 'e': (2, 1), 'j': (1, 2), 'b': (1, 1), 'B': (1, 1), 'o': (1, 1),
             'x': (1, 1), 'n': (1, 1), 'u': (1, 1), 'z': (1, 1), 'Y': (1, 1), 'y': (1, 1), 'E': (3, 2), 'Q': (3, 3), '~': (1, 1),
             'f': (1, 1), 'g': (1, 1), 'w': (1, 1)}
 NON_BLOQUANTS = set('fgw=')          # fleurs et pont : on marche dessus
@@ -65,9 +64,9 @@ def ouvrir(g, cote, prof=None):
     else:
         degager_zone(g, *z)
     chemin(g, *z)
-def fermer_bords(g, sorties):
+def fermer_bords(g, sorties, deja=()):
     """Ferme par un buisson toute case du bord de l'écran qui n'est ni une sortie ni déjà bloquée (sinon le héros sortirait de la carte)."""
-    bloque = set()
+    bloque = set(deja)
     for y in range(H):
         for x in range(W):
             for c in cases_objet(g, x, y):
@@ -81,11 +80,42 @@ def fermer_bords(g, sorties):
         for x in range(W):
             if (x in (0, W - 1) or y in (0, H - 1)) and (x, y) not in bloque and (x, y) not in ouvertes:
                 g[y][x] = 'b'
-def finaliser(g, sorties, profondeurs=None):
-    """Dernière étape d'un écran extérieur : sorties creusées, décors retirés sous les maisons, bords fermés."""
+def cases_relief(terrasses=(), escaliers=()):
+    """(cases bloquantes, cases couvertes) des terrasses : même règle que Scripts/exterieur.gd::_poser_relief."""
+    solides, couvertes = set(), set()
+    for ligne in terrasses:
+        x0, y0, w, h = (int(v) for v in ligne.split())
+        for j in range(h):
+            for i in range(w):
+                couvertes.add((x0 + i, y0 + j))
+                if i == 0 or i == w - 1 or j == 0 or j >= h - 2: solides.add((x0 + i, y0 + j))
+    for ligne in escaliers:
+        x0, y0 = (int(v) for v in ligne.split())
+        for j in range(4):
+            for i in range(2):
+                solides.discard((x0 + i, y0 + j)); couvertes.add((x0 + i, y0 + j))
+    return solides, couvertes
+def nettoyer_arbres(g, couvertes=()):
+    """Retire les arbres 3x3 qui gênent : sur un chemin, dans l'eau, sur une terrasse, débordant de l'écran ou chevauchant une maison/un objet plein."""
+    occupe = set(couvertes)
+    for y in range(H):
+        for x in range(W):
+            c = g[y][x]
+            if emprise(c) and c not in 'AaP' and c not in NON_BLOQUANTS and c != 'b':
+                occupe |= set(cases_objet(g, x, y))
+    for y in range(H):
+        for x in range(W):
+            if g[y][x] in 'AaP':
+                cases = cases_objet(g, x, y)
+                if x + 3 > W or y + 3 > H or any(cx >= W or cy >= H or (cx, cy) in occupe or g[cy][cx] in ':~=' for cx, cy in cases):
+                    g[y][x] = '.'
+def finaliser(g, sorties, profondeurs=None, terrasses=(), escaliers=()):
+    """Dernière étape d'un écran extérieur : sorties creusées, arbres gênants retirés, décors retirés sous les maisons, bords fermés (sauf sous une terrasse)."""
+    solides_ter, couvertes_ter = cases_relief(terrasses, escaliers)
     for c in sorties: ouvrir(g, c, (profondeurs or {}).get(c))
     degager_maisons(g)
-    fermer_bords(g, sorties)
+    nettoyer_arbres(g, couvertes_ter)
+    fermer_bords(g, sorties, couvertes_ter)
 def sortie(g): return 'PackedStringArray(' + ', '.join('"' + ''.join(r) + '"' for r in g) + ')'
 
 
@@ -120,7 +150,7 @@ put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10),
 # Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
 animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 7', 'd 17 8']
 
-TAILLES_MAISONS = {'M': (7, 4), 'N': (7, 4), 'T': (7, 4), 'R': (7, 4), 'S': (7, 4), 'L': (7, 4), 'K': (7, 4), 'U': (7, 4), 'Z': (9, 5)}
+TAILLES_MAISONS = {'M': (8, 3), 'N': (5, 3), 'T': (5, 3), 'R': (5, 3), 'S': (8, 3), 'L': (8, 3), 'K': (8, 3), 'U': (8, 3), 'Z': (9, 5)}
 
 def degager_maisons(g):
     """Retire du plan tout décor (fleurs, tonneaux...) posé SOUS une maison."""
@@ -134,16 +164,11 @@ def degager_maisons(g):
                             g[y + dy][x + dx] = '.'
 
 def bordure(g, haut=True, bas=True, trou=None):
-    """Forêt dense en haut et en bas : une rangée d'arbres 2x2 + une rangée décalée (seulement si la case est vide).
-    `trou` = (x0, x1) : colonnes laissées ouvertes (un chemin qui sort de l'écran)."""
-    def ouvert(x): return trou is not None and x <= trou[1] and x + 1 >= trou[0]
-    for x in range(0, 24, 2):
-        if haut and not ouvert(x): put(g, 'A' if (x // 2) % 2 == 0 else 'a', (x, 0))
-        if bas and not ouvert(x): put(g, 'a' if (x // 2) % 2 == 0 else 'A', (x, 12))
-    for x in range(1, 23, 2):   # rangée décalée, vers l'intérieur de l'écran
-        if haut and not ouvert(x) and g[1][x] == '.': put(g, 'a' if (x // 2) % 2 == 0 else 'A', (x, 1))
-        if bas and not ouvert(x) and g[11][x] == '.': put(g, 'A' if (x // 2) % 2 == 0 else 'a', (x, 11))
-    put(g, 'b', (24, 12), (24, 13), (24, 0), (24, 1))
+    """Forêt en haut et en bas : une rangée d'arbres ronds 3x3 (vert, roux, fleuri). Les sorties sont creusées ensuite par ouvrir() (`trou` n'est plus utilisé)."""
+    for k, x in enumerate(range(0, 22, 3)):
+        if haut: put(g, 'AaPa'[k % 4], (x, 0))
+        if bas: put(g, 'aPAa'[k % 4], (x, 11))
+    put(g, 'b', (24, 12), (24, 13), (24, 0), (24, 1), (24, 2))
 
 
 bordure(place)   # (la place est construite plus haut ; sa forêt est posée ici ; les sorties N/O/E/S sont creusées par finaliser)
@@ -205,12 +230,12 @@ for y in range(4, 8):
     for x in range(16, 22): put(ferme, 'k', (x, y))
 put(ferme, 'n', (16, 9))                                       # panneau de l'enclos
 maison(ferme, 'L', 3, 2)                                       # grange : porte en (5,6)
-put(ferme, 's', (10, 4), (9, 5), (10, 10), (6, 10), (3, 10), (1, 7))
+put(ferme, 's', (12, 3), (8, 9), (10, 10), (6, 10), (3, 10), (1, 7))
 for (x, y) in [(0, 2), (0, 10), (8, 11), (23, 10), (12, 11)]:
     put(ferme, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
 put(ferme, 'x', (9, 3), (10, 3)); put(ferme, 'o', (1, 9), (5, 11))
 put(ferme, 'f', (8, 4), (13, 9), (20, 10), (8, 10)); put(ferme, 'g', (8, 3), (14, 10), (2, 7)); put(ferme, 'w', (10, 9), (2, 3), (19, 10), (22, 10))
-pnjs_ferme = ["Villager5 10 5 bas | Fermière Jeanne | Oh, par tous les coqs ! Mes poules se sont échappées de l'enclos ! // Tu peux me les ramener ? Approche-toi d'une poule et appuie sur Espace pour la prendre dans tes bras. // Puis appuie encore sur Espace pour la lancer : par-dessus la clôture, ou par l'entrée au sud ! // 5 poules, 60 secondes. Prête ? C'est parti ! | poules"]
+pnjs_ferme = ["Villager5 12 5 bas | Fermière Jeanne | Oh, par tous les coqs ! Mes poules se sont échappées de l'enclos ! // Tu peux me les ramener ? Approche-toi d'une poule et appuie sur Espace pour la prendre dans tes bras. // Puis appuie encore sur Espace pour la lancer : par-dessus la clôture, ou par l'entrée au sud ! // 5 poules, 60 secondes. Prête ? C'est parti ! | poules"]
 passages_ferme = ["5 6 ! La grange est fermée à clé."]
 animaux_ferme = ['c 7 9', 'h 12 9']
 
@@ -258,38 +283,45 @@ chemin(route, 11, 13, 0, 10)
 bordure(route, haut=False)
 for x in (9, 11, 13, 15): put(route, 'e', (x, 11))             # la barrière
 put(route, 'z', (8, 11), (17, 11))
-for (x, y) in [(0, 2), (0, 6), (0, 9), (22, 2), (22, 6), (22, 9), (4, 4), (18, 4)]:
-    put(route, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-put(route, 'P', (5, 8), (17, 8)); put(route, 'f', (9, 4), (15, 6)); put(route, 'g', (9, 8), (15, 3)); put(route, 'w', (10, 6), (14, 8), (9, 1))
-put(route, 'n', (10, 10))
+# RELIEF : la route passe dans un petit canyon, deux terrasses de chaque côté (escaliers pour y monter)
+terrasses_route = ["0 2 8 8", "17 2 8 8"]
+escaliers_route = ["3 7", "20 7"]
+put(route, 'f', (9, 4), (15, 6), (2, 3), (21, 3)); put(route, 'g', (9, 8), (15, 3), (5, 4), (19, 5)); put(route, 'w', (10, 6), (14, 8), (9, 1), (3, 5), (22, 4))
+put(route, 'n', (10, 10)); put(route, 'u', (6, 3), (18, 3))
 animaux_route = ['c 9 6']
 pnjs_route = ["Villager3 12 9 bas | Garde de la route | [epreuve_reussie] Garde du royaume ! La route est ouverte pour toi... mais pas encore aujourd'hui : le capitaine veut te voir. ## Halte ! Cette route mène au royaume. // Elle est fermée aux recrues. Passe d'abord l'épreuve d'adoubement, au temple."]
 
 # --- VERGER (1,1) : l'aile gauche du coq, entre le temple (nord) et le village ouest (sud).
 verger = vide()
 chemin(verger, 11, 13, 0, 13)
-for y in (1, 4, 7, 10):
-    for x in (2, 5, 8):
-        put(verger, 'A' if (x + y) % 2 == 0 else 'a', (x + (y // 3) % 2, y))
-    for x in (15, 18, 21):
-        put(verger, 'a' if (x + y) % 2 == 0 else 'A', (x - (y // 3) % 2, y))
-put(verger, 'B', (1, 3), (9, 3), (14, 6), (20, 6), (10, 9), (23, 9), (4, 12), (16, 12))
-put(verger, 'u', (10, 5), (14, 11)); put(verger, 'n', (10, 7))
-put(verger, 'f', (10, 2), (14, 2), (10, 12)); put(verger, 'g', (14, 9), (10, 4)); put(verger, 'w', (14, 4), (10, 10), (14, 12))
-animaux_verger = ['c 8 6', 'h 17 8']
+bordure(verger)
+for y in (3, 7):                                       # le verger : arbres ronds à gauche, en quinconce
+    for k, x in enumerate((0, 3, 6)):
+        put(verger, 'a' if (k + y) % 2 else 'A', (x, y + (k % 2)))
+for k, x in enumerate((15, 18, 21)):                   # et sous la terrasse, à droite
+    put(verger, 'P' if k == 1 else 'A', (x, 8 + (k % 2)))
+put(verger, 'B', (9, 4), (14, 8), (10, 9))
+put(verger, 'u', (10, 6), (14, 10)); put(verger, 'n', (10, 7))
+put(verger, 'f', (10, 2), (14, 2), (10, 12), (17, 2), (21, 3)); put(verger, 'g', (14, 9), (10, 5), (19, 2), (20, 4)); put(verger, 'w', (14, 5), (10, 10), (14, 12), (18, 3), (21, 2))
+# RELIEF : une terrasse (verger en hauteur) à droite, avec son escalier
+terrasses_verger = ["16 1 7 6"]
+escaliers_verger = ["18 4"]
+animaux_verger = ['c 8 6', 'h 15 6']
 pnjs_verger = ["OldMan 10 8 droite | Jardinier Anselme | Mes pommiers ont vu passer bien des recrues. // Ceux qui montent au temple de l'aile gauche passent toujours par ici. // Prends ton temps : l'épreuve ne se gagne pas en courant. ... Quoique tu aies un joli coup de jarret."]
 
 # --- TERRAIN DE LA GARDE (3,1) : l'aile droite du coq, entre le temple (nord) et la caserne (sud).
 terrain = vide()
 chemin(terrain, 11, 13, 0, 13)
-for x in (2, 4, 6, 8): put(terrain, 'e', (x, 3)); put(terrain, 'e', (x, 9)) if x != 4 else None     # enclos d'entraînement (clôtures haut et bas)
-put(terrain, 'z', (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8))
-put(terrain, 'x', (4, 4), (7, 8), (16, 3)); put(terrain, 'o', (3, 4), (8, 4), (16, 4), (17, 3), (20, 9))
+bordure(terrain)
+# RELIEF : l'estrade d'entraînement de la garde, à gauche, avec son escalier
+terrasses_terrain = ["1 2 8 7"]
+escaliers_terrain = ["4 6"]
+put(terrain, 'o', (2, 3), (7, 3), (7, 5)); put(terrain, 'x', (2, 5), (6, 3))     # tonneaux et caisses sur l'estrade
 put(terrain, 'j', (15, 6), (21, 6))
-for (x, y) in [(15, 9), (18, 1), (21, 1), (22, 11), (0, 11), (17, 12)]:
-    put(terrain, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-put(terrain, 'P', (0, 1), (0, 6)); put(terrain, 'f', (10, 10), (14, 3)); put(terrain, 'g', (10, 2), (14, 11)); put(terrain, 'w', (14, 8), (10, 6))
-pnjs_terrain = ["Villager3 5 6 droite | Soldat Hugues | Un, deux ! Un, deux ! Le matin, la garde s'entraîne ici. // Les recrues ne sont pas obligées de venir. Mais les meilleures le font."]
+for k, (x, y) in enumerate([(15, 8), (18, 9), (21, 7), (16, 2), (20, 2)]):
+    put(terrain, 'A' if k % 2 else 'a', (x, y))
+put(terrain, 'f', (10, 10), (14, 3), (3, 5)); put(terrain, 'g', (10, 2), (14, 11), (6, 6)); put(terrain, 'w', (14, 8), (10, 6), (5, 4))
+pnjs_terrain = ["Villager3 3 4 droite | Soldat Hugues | Un, deux ! Un, deux ! Le matin, la garde s'entraîne ici. // Les recrues ne sont pas obligées de venir. Mais les meilleures le font."]
 animaux_terrain = ['d 14 7']
 
 
@@ -370,7 +402,7 @@ passages_parvis_revele = ["12 4 @corps:Arene 12 11 Le corps du coq. Au fond de l
 temple_g = vide()
 chemin(temple_g, 11, 24, 6, 8)                                 # vient de l'est (le parvis) ; sortie sud vers le verger
 chemin(temple_g, 12, 12, 5, 5)                                 # devant la porte du temple
-put(temple_g, 'U', (9, 3))                                     # temple de l'aile gauche (arche + marches) : porte en (12,6) -> donjon
+put(temple_g, 'U', (9, 4))                                     # temple de l'aile gauche (arche + marches) : porte en (12,6) -> donjon
 put(temple_g, 'j', (7, 3), (17, 3)); put(temple_g, 'o', (6, 4), (18, 4))
 bordure(temple_g)
 put(temple_g, 'b', (0, 6), (0, 7), (0, 8))                     # l'ouest : fermé
@@ -383,7 +415,7 @@ passages_temple_g = ["12 6 @donjon:Vestibule 12 10 La grande porte du donjon se 
 temple_d = vide()
 chemin(temple_d, 0, 13, 6, 8)                                  # vient de l'ouest (le parvis)
 chemin(temple_d, 12, 12, 5, 5)                                 # devant la porte du temple
-put(temple_d, 'U', (9, 3))                                     # même arche que l'aile gauche : porte en (12,6) -> aile droite
+put(temple_d, 'U', (9, 4))                                     # même arche que l'aile gauche : porte en (12,6) -> aile droite
 put(temple_d, 'j', (7, 3), (17, 3)); put(temple_d, 'o', (6, 4), (18, 4))
 bordure(temple_d)
 put(temple_d, 'b', (24, 6), (24, 7), (24, 8))                  # l'est (falaise, plus tard) : fermé
@@ -400,9 +432,9 @@ ecrans = [
         'indice': "Une stèle se dresse devant la forêt. Un coq y est gravé, ses ailes creusées dans la pierre..."}),
     ('TempleDroit', (3, 0), temple_d, {'passages': passages_temple_d, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile droite. Derrière cette porte, la seconde moitié de l'épreuve."}),
     # --- cou et ailes basses (y=1)
-    ('Verger', (1, 1), verger, {'animaux': animaux_verger, 'pnjs': pnjs_verger}),
+    ('Verger', (1, 1), verger, {'animaux': animaux_verger, 'pnjs': pnjs_verger, 'terrasses': terrasses_verger, 'escaliers': escaliers_verger}),
     ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand}),
-    ('TerrainGarde', (3, 1), terrain, {'animaux': animaux_terrain, 'pnjs': pnjs_terrain}),
+    ('TerrainGarde', (3, 1), terrain, {'animaux': animaux_terrain, 'pnjs': pnjs_terrain, 'terrasses': terrasses_terrain, 'escaliers': escaliers_terrain}),
     # --- corps (y=2)
     ('VillageOuest', (1, 2), ouest, {'animaux': animaux_ouest, 'pnjs': pnjs_ouest, 'passages': ferme_ouest}),
     ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place, 'passages': ferme_place}),
@@ -412,7 +444,7 @@ ecrans = [
     ('Riviere', (2, 3), riviere, {'animaux': animaux_riviere, 'pnjs': pnjs_riviere}),
     ('Ferme', (3, 3), ferme, {'pnjs': pnjs_ferme, 'animaux': animaux_ferme, 'passages': passages_ferme, 'minijeu': 'poules'}),
     # --- queue (y=4)
-    ('RouteSud', (2, 4), route, {'animaux': animaux_route, 'pnjs': pnjs_route}),
+    ('RouteSud', (2, 4), route, {'animaux': animaux_route, 'pnjs': pnjs_route, 'terrasses': terrasses_route, 'escaliers': escaliers_route}),
 ]
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
 interieurs = [
@@ -432,8 +464,9 @@ SORTIES = {
     'MaisonHeros': ('NE', heros), 'Riviere': ('NOES', riviere), 'Ferme': ('NO', ferme), 'RouteSud': ('N', route),
 }
 PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 2}, 'Parvis': {'S': 6, 'O': 12, 'E': 12}}
+RELIEF = {'Verger': (terrasses_verger, escaliers_verger), 'TerrainGarde': (terrasses_terrain, escaliers_terrain), 'RouteSud': (terrasses_route, escaliers_route)}
 for _nom, (_s, _g) in SORTIES.items():
-    finaliser(_g, _s, PROFONDEURS.get(_nom))
+    finaliser(_g, _s, PROFONDEURS.get(_nom), *RELIEF.get(_nom, ((), ())))
 finaliser(parvis_revele, 'SOE', PROFONDEURS['Parvis'])
 
 
