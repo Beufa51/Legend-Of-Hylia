@@ -13,6 +13,7 @@ signal passage(ecran: String, case: Vector2i)   # le joueur franchit une porte :
 signal dialogue_fini                 # la boîte de dialogue vient de se fermer
 signal minijeu_demande(id: String)   # un habitant lance un mini-jeu (voir minijeu.gd)
 signal repere(retour: Vector2)       # une sentinelle a vu le joueur : un garde le ramène à `retour`
+signal chute(retour: Vector2)        # le joueur est tombé dans un trou (dalle fragile effondrée) : retour à `retour`
 
 const FICHIER := "user://sauvegarde.json"
 

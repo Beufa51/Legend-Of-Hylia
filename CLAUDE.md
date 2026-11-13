@@ -473,6 +473,13 @@
   VILLAGE : `TempleDroit` (3,0) (même arche `U`, porte (12,6) -> `@aile_droite:Vestibule`) ; le chemin du Parvis est ouvert vers l'est. Ordre des ailes libre.
   PLAN PROPOSÉ (à valider) : D2 (2 écrans) SOL FRAGILE (dalles qui s'effondrent après un passage : tout parcourir une seule fois), D3 (3) GLACE (on glisse jusqu'à un obstacle), D4 (4) LE REFLET (un double inverse tes mouvements gauche/droite), D5 (5) combinaison -> fragment droit en (-5,-5).
 
+- 2026-11-13 : plan D2-D5 VALIDÉ par l'utilisateur. **ÉTAPE 11b écrite (non testée dans Godot, solutions vérifiées par un solveur Python)** = PLUME D2 « LE SOL FRAGILE ».
+  `Scripts/dalle.gd` (class Dalle, lettre `z`, dessinée en code : INTACTE -> MARQUEE (pied dessus, lueur) -> TROU (en la quittant : tremble + tombe, son Impact2) ; `raffermir()` = énigme résolue, ne tombe plus).
+  `room.gd::_suivre_pas` (salle courante) : changement de case seulement si les pieds sont à 3 px dans la case (pas de marquage en coupant un coin) ; pieds dans un TROU (2 px de marge) -> `Etat.chute(retour)` ;
+  toutes les dalles foulées -> `drapeau_fragile` + dalles raffermies. R / chute = dalles réparées. `world.gd::_raccompagner(retour, chute)` : chute = héros qui rapetisse en tournant + Whoosh, puis même retour que les sentinelles.
+  SALLES : Epine2 (-2,0) porte ouest = `plumeD2` (tige ouverte) ; PlumeD2a (-2,-1) leçon 5x4 dalles (`d2_sol1` ouvre la grille du haut) ; PlumeD2b (-2,-2) 34 dalles + 2 piliers, il faut FINIR devant la grille de l'alcôve (20 solutions, `d2_sol2`) -> plume `plumeD2` ;
+  Epine3 (-3,0) provisoire (cul-de-sac). Retours = bas de l'écran courant (`retour_d2(n)`). À vérifier au test : sensation de la règle des 3 px, lisibilité dalle/trou.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
