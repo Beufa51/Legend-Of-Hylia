@@ -14,6 +14,7 @@ signal dialogue_fini                 # la boîte de dialogue vient de se fermer
 signal minijeu_demande(id: String)   # un habitant lance un mini-jeu (voir minijeu.gd)
 signal repere(retour: Vector2)       # une sentinelle a vu le joueur : un garde le ramène à `retour`
 signal chute(retour: Vector2)        # le joueur est tombé dans un trou : retour à `retour`
+signal stele_touchee                 # le joueur s'approche de la stèle du coq (parvis) : world.gd lance la cérémonie
 signal pique(retour: Vector2)        # le joueur a marché sur des pics sortis : retour à `retour`
 
 const FICHIER := "user://sauvegarde.json"

@@ -218,17 +218,34 @@ put(grand, 'f', (9, 4), (15, 8)); put(grand, 'g', (9, 9), (15, 3)); put(grand, '
 put(grand, 'n', (10, 7))                                       # panneau (décor)
 animaux_grand = ['c 10 4']
 
-parvis = vide()
-chemin(parvis, 11, 13, 6, 13)                                  # vient du sud
-chemin(parvis, 0, 24, 6, 8)                                    # vers l'ouest : temple de l'aile gauche ; vers l'est : temple de l'aile droite
-chemin(parvis, 12, 12, 5, 5)                                   # devant la porte du CORPS
-grande(parvis, 9, 2)                                       # le CORPS du donjon : grand bâtiment scellé (porte en (12,5))
-put(parvis, 'j', (7, 3), (17, 3)); put(parvis, 'o', (6, 4), (18, 4))
-bordure(parvis, trou=(11, 13))
-for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 4), (22, 9), (20, 11)]:
-    put(parvis, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-put(parvis, 'P', (20, 2), (3, 2)); put(parvis, 'f', (8, 9), (16, 9)); put(parvis, 'g', (10, 5), (14, 5)); put(parvis, 'w', (6, 10), (19, 10))
-passages_parvis = ["12 6 ! Les grandes portes du corps du donjon sont scellées. Il faut d'abord rapporter les deux ailes du blason."]
+def parvis_commun():
+    """Le parvis, commun aux deux versions : chemins, forêt du bord, bannières, fleurs."""
+    g = vide()
+    chemin(g, 11, 13, 6, 13)                                  # vient du sud
+    chemin(g, 0, 24, 6, 8)                                    # vers l'ouest : temple de l'aile gauche ; vers l'est : temple de l'aile droite
+    put(g, 'j', (7, 4), (17, 4)); put(g, 'o', (6, 5), (18, 5))
+    bordure(g, trou=(11, 13))
+    for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 4), (22, 9), (20, 11)]:
+        put(g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+    put(g, 'f', (8, 9), (16, 9)); put(g, 'w', (6, 10), (19, 10)); put(g, 'g', (14, 5))
+    return g
+
+# AVANT : une forêt dense (rangées 1-4) cache le corps du coq ; au bout du petit chemin, la STÈLE du coq (Y),
+#         avec les empreintes des deux ailes. On s'en approche en montant : avec les 2 fragments -> cérémonie (world.gd).
+parvis = parvis_commun()
+for y in (1, 3):
+    for x in range(7, 18, 2):
+        put(parvis, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+chemin(parvis, 12, 12, 5, 5); put(parvis, 'Y', (12, 5))
+passages_parvis = ["12 6 $stele"]
+
+# APRÈS (drapeau corps_revele) : la forêt s'est écartée, le CORPS DU COQ (grand temple, porte en (12,4)) se dresse ;
+#         la stèle, avec les deux ailes, s'est rangée à gauche du passage.
+parvis_revele = parvis_commun()
+for y in range(0, 5):
+    for x in range(8, 17): parvis_revele[y][x] = '.'
+put(parvis_revele, 'U', (9, 1)); chemin(parvis_revele, 12, 12, 5, 5); put(parvis_revele, 'y', (10, 5))
+passages_parvis_revele = ["12 4 ! Le corps du coq... L'épreuve finale se prépare (prochaine étape de la construction).", "10 6 $stele"]
 
 temple_g = vide()
 chemin(temple_g, 11, 24, 6, 8)                                 # vient de l'est (le parvis)
@@ -262,7 +279,9 @@ ecrans = [
     ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est, 'passages': passages_est}),
     ('MaisonHeros', (4, 2), heros, {'animaux': animaux_heros, 'passages': passages_heros}),
     ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand}),
-    ('Parvis', (2, 0), parvis, {'passages': passages_parvis, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
+    ('Parvis', (2, 0), parvis, {'passages': passages_parvis, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
+        'drapeau_revele': 'corps_revele', 'layout_revele': [''.join(r) for r in parvis_revele], 'passages_revele': passages_parvis_revele,
+        'indice': "Une stèle se dresse devant la forêt. Un coq y est gravé, ses ailes creusées dans la pierre..."}),
     ('TempleDroit', (3, 0), temple_d, {'passages': passages_temple_d, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile droite. Derrière cette porte, la seconde moitié de l'épreuve."}),
     ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
 ]
@@ -276,7 +295,7 @@ interieurs = [
 depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans la maison du héros, à côté du lit
 
 
-for _g in (place, ouest, est, heros, ferme, parvis, temple_g, temple_d):
+for _g in (place, ouest, est, heros, ferme, parvis, parvis_revele, temple_g, temple_d):
     degager_maisons(_g)
 
 

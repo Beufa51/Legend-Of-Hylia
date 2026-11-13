@@ -62,7 +62,9 @@ const OBJETS_G := {
 	"S": ["v_maison_pierre", Vector2i(7, 4), true, 0.0],
 	"K": ["v_maison_caserne", Vector2i(7, 4), true, 0.0],   # la caserne est plus large (7x4)
 	"L": ["v_maison_bois", Vector2i(7, 4), true, 0.0],
-	"U": ["v_temple_entree", Vector2i(7, 4), true, 0.0],   # entrée du temple du donjon : arche de pierre + ouverture sombre + marches (porte en colonne 3)
+	"U": ["v_temple_entree", Vector2i(7, 4), true, 0.0],
+	"Y": ["v_stele_vide", Vector2i(1, 1), true, 0.0],      # stèle du coq (parvis), empreintes des ailes vides (Outils/fabriquer_stele.py)
+	"y": ["v_stele_pleine", Vector2i(1, 1), true, 0.0],    # la même, avec les deux ailes posées   # entrée du temple du donjon : arche de pierre + ouverture sombre + marches (porte en colonne 3)
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
 const PORTES_MAISONS := {"M": 3, "N": 3, "T": 3, "R": 3, "S": 3, "K": 3, "L": 3, "U": 3}
@@ -88,6 +90,7 @@ var _coq: Sprite2D   # le coq de la girouette
 
 
 func _ready() -> void:
+	_appliquer_revelation()
 	position = Vector2(grille * TAILLE_SALLE)
 	modulate = teinte
 	_creer_decor()
