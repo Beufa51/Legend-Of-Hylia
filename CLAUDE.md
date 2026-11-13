@@ -714,6 +714,8 @@
 - 2026-11-13 : nouvelle planche `plots.jpg` (vue de FACE, non isométrique, traits noirs de grille entre les cases -> `MARGE` dans l'outil). **14o (non testée dans Godot, aperçu PIL vérifié)** : `traiter_plots.py` produit aussi `plot_bas_o/u` ; `plot.gd` n'est plus dessiné en code (images `plot_haut_*` / `plot_bas_*`) ;
   dalles de couleur = `dalle_rouge/bleue/doree`. Disponibles, non branchés : cristaux `cristal_o/u`, plaque de levier Gemini (2 poses seulement), bouton rond rouge.
 
+- 2026-11-13 : retour : « la grille qui s'ouvre (salle D2b) fait demi-porte ». Cause : `arche_basse_*` (porte intérieure 48x16, mur d'1 rangée) = BAS d'une arche. **14p (non testée dans Godot, aperçu PIL vérifié)** : `Outils/fabriquer_porte_basse.py` dessine un portique complet (linteau de briques, 2 montants, ouverture sombre, grille qui se relève en 5 images) -> `arche_basse_1..5.png` ; à relancer APRÈS `traiter_pack_donjon.py` (qui écrit l'ancienne version).
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
