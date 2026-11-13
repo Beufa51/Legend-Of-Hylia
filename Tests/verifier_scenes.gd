@@ -65,6 +65,21 @@ func _tester_scene(chemin: String) -> void:
 			_erreurs.append("%s : plan vu du ciel incomplet" % chemin)
 		vue.jouer("gauche")
 		await create_timer(5.0).timeout
+	# Plume 1 : pousser les 3 blocs sur les 3 marques doit lever le drapeau de la porte
+	if chemin.ends_with("world.tscn"):
+		var salle = scene.get_node_or_null("Plume1")
+		if salle == null or salle._blocs.size() != 3 or salle._plaques.size() != 3:
+			_erreurs.append("Plume1 : il faut 3 blocs et 3 marques")
+		else:
+			salle.reinitialiser()
+			for bloc in salle._blocs:
+				for i in 6:
+					await bloc.pousser(Vector2i.LEFT)
+			if not root.get_node("Etat").est("p1_plaque"):
+				_erreurs.append("Plume1 : les 3 blocs sont sur les marques mais la porte ne s'ouvre pas")
+			else:
+				print("OK  Plume1 : 3 blocs sur 3 marques = porte ouverte")
+			root.get_node("Etat").drapeaux.erase("p1_plaque")
 	if nb == 0:
 		_erreurs.append("%s : aucun écran trouvé" % chemin)
 	print("OK  %s  (%d écrans)" % [chemin, nb])

@@ -11,9 +11,12 @@ var salle: Node2D       # la salle (Room) qui contient ce bloc
 var case: Vector2i      # case actuelle (colonne, ligne) dans la salle
 var depart: Vector2i    # case de départ (pour recommencer la salle)
 var en_mouvement := false
+var _sprite: Sprite2D
+var _texture_normale: Texture2D
+var _texture_active: Texture2D   # rune dorée : le bloc est posé sur une marque
 
 
-func initialiser(une_salle: Node2D, sa_case: Vector2i, texture: Texture2D) -> void:
+func initialiser(une_salle: Node2D, sa_case: Vector2i, texture: Texture2D, texture_active: Texture2D = null) -> void:
 	salle = une_salle
 	case = sa_case
 	depart = sa_case
@@ -23,6 +26,9 @@ func initialiser(une_salle: Node2D, sa_case: Vector2i, texture: Texture2D) -> vo
 	sprite.texture = texture
 	sprite.centered = false
 	add_child(sprite)
+	_sprite = sprite
+	_texture_normale = texture
+	_texture_active = texture_active
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(TUILE, TUILE)
 	var collision := CollisionShape2D.new()
@@ -53,6 +59,12 @@ func pousser(dir: Vector2i) -> void:
 	await tween.finished
 	en_mouvement = false
 	salle.verifier_plaques()
+
+
+# Allume (ou éteint) la rune du bloc.
+func briller(actif: bool) -> void:
+	if _texture_active != null:
+		_sprite.texture = _texture_active if actif else _texture_normale
 
 
 # Remet le bloc à sa case de départ (touche R).

@@ -311,7 +311,7 @@ func _poser_objets() -> void:
 					_poser_anime(BRASERO, pos + DECALAGE_BRASERO, x + y)
 					_poser_lumiere(pos + Vector2(8, 6), 44.0)
 				"P":
-					_boutons[Vector2i(x, y)] = _poser("bouton", pos)
+					_boutons[Vector2i(x, y)] = _poser("marque", pos)
 					_plaques.append(Vector2i(x, y))
 				"L":
 					var brasero := Brasero.new()
@@ -379,7 +379,7 @@ func _poser_objets() -> void:
 				"X":
 					var bloc := Bloc.new()
 					add_child(bloc)
-					bloc.initialiser(self, Vector2i(x, y), _image("dalle_fleches"))
+					bloc.initialiser(self, Vector2i(x, y), _image("bloc_pierre"), _image("bloc_pierre_actif"))
 					_occupe[Vector2i(x, y)] = bloc
 					_blocs.append(bloc)
 				"D":
@@ -539,7 +539,10 @@ func verifier_plaques() -> void:
 func _maj_boutons() -> void:
 	for cellule in _boutons:
 		var appuye: bool = _occupe.get(cellule) is Bloc or _reflet_sur(cellule)
-		_boutons[cellule].texture = _image("bouton_enfonce" if appuye else "bouton")
+		_boutons[cellule].texture = _image("marque_active" if appuye else "marque")
+	# un bloc posé sur une marque s'illumine (rune dorée) : on voit que c'est bon sans aucun texte
+	for bloc in _blocs:
+		bloc.briller(_boutons.has(bloc.case))
 
 
 # Touche R : les blocs reviennent à leur place de départ.

@@ -729,6 +729,11 @@
   L'utilisateur repassera sur CHAQUE énigme (aile gauche : vestibule, plumes 1-5 ; aile droite : entrée, D1-D5) pour dire quoi changer. Donc : ne PAS refactorer `room.gd` avant ce passage (son contenu va bouger) ;
   à terme, retirer les `indice` textuels et les messages de règle (ex. dalles, glace, reflet) au profit d'indices visuels. Faire UNE énigme à la fois, sur retour de l'utilisateur.
 
+- 2026-11-13 : **ÉNIGME 1 REVUE (Plume 1, aile gauche) — énigme visuelle sans texte** : colonne de 3 BLOCS (x=18, rangées 7-9) + colonne de 3 MARQUES dorées au sol (x=12, mêmes rangées) -> on pousse chaque bloc vers la gauche sur sa marque ; les 3 posés = porte du fond (`p1_plaque`).
+  Plus de pot ni de bouton dans cette salle. NOUVEAU DESIGN : `Outils/fabriquer_bloc.py` (APRÈS traiter_gemini.py) -> `bloc_pierre(_actif)` (pierre bleu-gris des murs/plots, rune creusée ; dorée quand le bloc est sur une marque : `Bloc.briller`) et `marque(_active)` (gravure au sol + losange doré, remplace le bouton rond).
+  S'applique à TOUS les blocs et lettres `P` (aussi D4c/D4d/D5c ; le reflet allume la marque). Test auto : `Tests/verifier_scenes.gd` pousse les 3 blocs et vérifie l'ouverture.
+  MÉTHODE pour la suite : à chaque salle revue, l'utilisateur veut l'AVIS de Claude (forces/faiblesses) avant de modifier.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

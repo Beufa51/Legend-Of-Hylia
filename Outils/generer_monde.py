@@ -51,14 +51,16 @@ e3 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 3 es
 e4 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 4 est obtenue
 e5 = epine(est_ferme=True)            # dernière épine : fermée à l'est, la tige monte vers la plume 5 (pointe de l'aile)
 
-# --- Plume 1 : bloc + bouton (leçon : pousser un bloc ; le pot sert à dégager le chemin)
+# --- Plume 1 : blocs + marques au sol (leçon : pousser un bloc sur sa marque)
 p1 = vide(); sol(p1, 2, 22, 2, 11); sol(p1, 11, 13, 12, 13)
 for x in range(2, 23): p1[5][x] = '#'
 for x in (11, 12, 13): p1[5][x] = 'D'
 put(p1, 'G', (12, 3)); put(p1, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p1, 'T', (x, 4))
-put(p1, 'P', (5, 6)); put(p1, 'X', (16, 9)); put(p1, 'V', (10, 9), (2, 11), (3, 11), (2, 10), (22, 11), (21, 11)); put(p1, 'S', (20, 7)); put(p1, 'O', (3, 7))
-for (x, y) in [(8, 7), (8, 8)]: p1[y][x] = '#'
+# Énigme VISUELLE (sans texte) : une colonne de 3 blocs à droite, une colonne de 3 marques dorées au sol à gauche, sur les mêmes rangées :
+# on comprend qu'il faut pousser chaque bloc (vers la gauche) sur sa marque. Les 3 marques allument la porte du fond.
+put(p1, 'P', (12, 7), (12, 8), (12, 9)); put(p1, 'X', (18, 7), (18, 8), (18, 9))
+put(p1, 'V', (2, 11), (3, 11), (2, 10), (22, 11), (21, 11)); put(p1, 'S', (21, 6)); put(p1, 'O', (3, 7))
 
 # --- Plume 2, écran du bas : SALLE SOMBRE. 4 braseros (L) à allumer à la lance, tous en même temps
 #     (chacun s'éteint au bout de 14 s). Leçon : la lance allume ; on s'organise dans le noir.

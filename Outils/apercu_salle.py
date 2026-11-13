@@ -24,7 +24,7 @@ def room(lay, out):
                 h = (x * 7 + y * 13 + x * y * 3) % 37
                 if lay[y][x] == "i": P("glace_1" if (x * 3 + y * 5) % 4 else "glace_2", x, y)
                 else: P("sol_plat_c" if h == 0 else ("sol_plat_d" if h == 18 else "sol_plat"), x, y)
-                if lay[y][x] == "X": P("dalle_fleches", x, y)
+                if lay[y][x] == "X": P("bloc_pierre", x, y)
                 if x < E or y < E or x >= W - E or y >= H - E: img.alpha_composite(Image.new("RGBA", (T, T), (0, 0, 0, 90)), (x * T, y * T))
     for y in range(H):
         for x in range(W):
@@ -57,7 +57,7 @@ def room(lay, out):
             elif ch == "B": P("brasero_2", x, y, -2, -10)
             elif ch == "Q": P("coffre_1", x, y, -2, -6)
             elif ch == "a": P("dalle_reflet", x, y)
-            elif ch == "P": P("bouton", x, y)
+            elif ch == "P": P("marque", x, y)
             elif ch == "G": P("plume_doree", x, y, 2, 2)
             elif ch == "J": P("levier_1", x, y, 0, -12)
             elif ch == "Z": P("pics_5" if x % 2 == 0 else "pics_1", x, y, 0, -8)
