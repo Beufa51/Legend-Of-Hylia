@@ -437,6 +437,11 @@
   (exterieur.gd inchangé) : sol herbe/chemin (couleurs du pack, fabriqué par traiter_village2), arbres, sapin, buissons, roche, souche, puits, clôture, fleurs, maisons (toit teinté, 80x81 ; caserne 112x88, porte colonne 3). Échelle 2/3 (24 -> 16 px).
   Restent de l'ancien style : tonneau, caisse, bannière, étal, girouette, intérieurs. Décision utilisateur : on continue ensuite la liste A puis retour aux corrections ; PNJ jugés laids -> chercher un pack de persos 16 bits (le « Player Sample » du pack est de la même série).
 
+- 2026-11-13 : **ÉTAPE 10b écrite (non testée dans Godot)** : (1) dialogues conditionnés (`[drapeau]`, `[!drapeau]`, `>> drapeau`, versions séparées par `##`, voir `ecran.gd::_poser_pnjs` et `pnj.gd`) ;
+  (2) chemin du temple : écrans `GrandChemin` (2,1), `Parvis` (2,0, corps du donjon scellé), `TempleGauche` (1,0, porte -> donjon) ; passage entre scènes : cible `"@donjon:Ecran"`/`"@village:Ecran"` dans `passages` (`world.gd::_changer_de_scene`, `Etat.arrivee_*`) ;
+  la porte du donjon se referme derrière le joueur (sortie seulement avec le fragment, puis vue aérienne -> village). (3) NOUVEAU HÉROS : `Assets/character-spritesheet.png` (planche LPC 1536x4736, cases 64 px) -> `Outils/preparer_heros.py` -> `Assets/Heros/heros_marche.png` + `heros_coup.png` (cases 32 px) ;
+  `player.gd` les utilise (marche 8 images, estoc 8 images ; `sprite.offset` (0,-5)). Reste : écrans nord restants, secrets, musique d'intérieur, rubans/records (liste A points 4-5).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.

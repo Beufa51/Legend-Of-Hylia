@@ -1,11 +1,11 @@
 extends CharacterBody2D
 # Joueur : déplacement dans 4 directions + animations (marche / repos) + coup de lance (touche Espace ou J).
-# Les animations sont construites ici à partir des planches du pack Ninja Adventure,
+# Les animations sont construites ici à partir des planches du héros (Assets/Heros),
 # donc rien à configurer à la main dans l'éditeur.
 
 const VITESSE := 70.0  # pixels par seconde
 const FACTEUR_COURSE := 1.7  # vitesse multipliée quand on court (touche Maj ou K)
-const DOSSIER := "res://Assets/Ninja_adventure/Actor/Character/Knight/SeparateAnim/"
+const HEROS := "res://Assets/Heros/"   # planches du héros (voir Outils/preparer_heros.py)
 # Ordre des colonnes dans les planches : bas, haut, gauche, droite
 const DIRECTIONS := ["bas", "haut", "gauche", "droite"]
 const VECTEURS := {"bas": Vector2.DOWN, "haut": Vector2.UP, "gauche": Vector2.LEFT, "droite": Vector2.RIGHT}
@@ -30,6 +30,7 @@ var _temps_pousse := 0.0  # depuis combien de temps on pousse contre un bloc
 func _ready() -> void:
 	add_to_group("joueur")
 	sprite.sprite_frames = _creer_animations()
+	sprite.offset = Vector2(0, -5)   # cases de 32 px : on remonte l'image pour que les pieds soient sur la collision (en bas)
 	sprite.play("repos_bas")
 	_creer_lance()
 	lumiere = Lumiere.creer(Color(0.85, 0.92, 1.0), 0.6, 0.7)
@@ -208,34 +209,35 @@ func _jouer_son(chemin: String, volume_db: float) -> void:
 	lecteur.finished.connect(lecteur.queue_free)
 
 
-# Découpe les planches Walk.png (4x4) et Idle.png (4x1) en animations.
+# Découpe les planches du héros (Assets/Heros/, faites par Outils/preparer_heros.py : cases de 32 px,
+# une ligne par direction dans l'ordre bas, haut, gauche, droite) en animations.
+# heros_marche.png : 9 images par direction (la 1re = debout) ; heros_coup.png : 8 images d'estoc.
 func _creer_animations() -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
-	var marche: Texture2D = load(DOSSIER + "Walk.png")
-	var repos: Texture2D = load(DOSSIER + "Idle.png")
-	var coup: Texture2D = load(DOSSIER + "Attack.png")  # 4 images : bas, haut, gauche, droite
-	for col in DIRECTIONS.size():
-		var nom_marche: String = "marche_" + DIRECTIONS[col]
-		frames.add_animation(nom_marche)
-		frames.set_animation_speed(nom_marche, 8.0)
-		frames.set_animation_loop(nom_marche, true)
-		for ligne in 4:  # 4 images de marche par direction
-			frames.add_frame(nom_marche, _decoupe(marche, col, ligne))
-		var nom_repos: String = "repos_" + DIRECTIONS[col]
-		frames.add_animation(nom_repos)
-		frames.set_animation_loop(nom_repos, true)
-		frames.add_frame(nom_repos, _decoupe(repos, col, 0))
-		var nom_coup: String = "attaque_" + DIRECTIONS[col]
-		frames.add_animation(nom_coup)
-		frames.set_animation_loop(nom_coup, false)
-		frames.add_frame(nom_coup, _decoupe(coup, col, 0))
+	var marche: Texture2D = load(HEROS + "heros_marche.png")
+	var coup: Texture2D = load(HEROS + "heros_coup.png")
+	for ligne in DIRECTIONS.size():
+		var d: String = DIRECTIONS[ligne]
+		frames.add_animation("marche_" + d)
+		frames.set_animation_speed("marche_" + d, 10.0)
+		frames.set_animation_loop("marche_" + d, true)
+		for col in range(1, 9):   # images 1 à 8 : le cycle de marche
+			frames.add_frame("marche_" + d, _decoupe(marche, col, ligne))
+		frames.add_animation("repos_" + d)
+		frames.set_animation_loop("repos_" + d, true)
+		frames.add_frame("repos_" + d, _decoupe(marche, 0, ligne))
+		frames.add_animation("attaque_" + d)
+		frames.set_animation_speed("attaque_" + d, 30.0)   # 8 images en ~0,26 s : la durée du coup de lance
+		frames.set_animation_loop("attaque_" + d, false)
+		for col in 8:
+			frames.add_frame("attaque_" + d, _decoupe(coup, col, ligne))
 	return frames
 
 
-# Renvoie l'image (colonne, ligne) d'une planche de cases 16x16.
+# Renvoie l'image (colonne, ligne) d'une planche de cases 32x32.
 func _decoupe(texture: Texture2D, col: int, ligne: int) -> AtlasTexture:
 	var atlas := AtlasTexture.new()
 	atlas.atlas = texture
-	atlas.region = Rect2(col * 16, ligne * 16, 16, 16)
+	atlas.region = Rect2(col * 32, ligne * 32, 32, 32)
 	return atlas
