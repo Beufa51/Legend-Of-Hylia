@@ -569,6 +569,12 @@ func _passer_porte(nom: String, case: Vector2i, texte: String) -> void:
 		en_transition = true
 		joueur.set_physics_process(false)
 		joueur.velocity = Vector2.ZERO
+		if pas == Vector2.UP and depart != null and not depart.interieur:   # la porte s'ouvre devant le héros
+			var local := joueur.position - depart.position
+			depart.ouvrir_porte(Vector2i(floori(local.x / Ecran.TUILE), floori(local.y / Ecran.TUILE)), 1.0)
+			await get_tree().create_timer(0.25).timeout
+		joueur.set_physics_process(false)
+		joueur.velocity = Vector2.ZERO
 		joueur.direction = dir
 		joueur.sprite.play("marche_" + dir)
 		joueur._jouer_son(SON_PORTE, -3.0)
@@ -581,6 +587,8 @@ func _passer_porte(nom: String, case: Vector2i, texte: String) -> void:
 		en_transition = false
 		Etat.arrivee_direction = dir
 	await _ramener(nom, case, texte)
+	if pas == Vector2.DOWN and arrivee != null and not arrivee.interieur:   # on sort : la porte est ouverte derrière le héros
+		arrivee.ouvrir_porte(case + Vector2i(0, -1), 0.8)
 	if pas != Vector2.ZERO and not nom.begins_with("@"):
 		joueur.direction = Etat.arrivee_direction
 		joueur.sprite.play("repos_" + joueur.direction)

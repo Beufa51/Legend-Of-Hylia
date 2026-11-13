@@ -19,14 +19,14 @@ HABITANTS = {
     "Villager":   (CIT % "Tavern_A" + "Idle/Idle_Side-Sheet.png", 64, CIT % "Tavern_A" + "Walk/Walk_Side-Sheet.png", None, None),
     "Villager5":  (CIT % "Tavern_B" + "Idle/Idle_Side-Sheet.png", 64, CIT % "Tavern_B" + "Walk/Walk_Side-Sheet.png", (0.85, 1.0, 0.50, 1.0), None),   # corsage prune -> turquoise
     "Villager4":  ("Rogue/Idle/Idle-Sheet.png", 32, "Rogue/Run/Run-Sheet.png", None, None),
-    "OldMan":     ("Wizzard/Idle/Idle-Sheet.png", 32, "Wizzard/Run/Run-Sheet.png", (0.70, 0.90, 0.30, 0.9), None),                  # robe violette -> verte
+    "OldMan":     ("Wizzard/Idle/Idle-Sheet.png", 32, "Wizzard/Run/Run-Sheet.png", (0.70, 0.90, 0.30, 0.5, 0.78), None),                  # robe violette -> vert sauge (sobre)
     "KnightGold": ("Knight/Idle/Idle-Sheet.png", 32, "Knight/Run/Run-Sheet.png", (0.45, 0.70, 0.12, 1.6), None),                   # acier bleu -> or
     "Villager3":  ("Knight/Idle/Idle-Sheet.png", 32, "Knight/Run/Run-Sheet.png", None, None),
     "Boy":        (CIT % "Tavern_A" + "Idle/Idle_Side-Sheet.png", 64, CIT % "Tavern_A" + "Walk/Walk_Side-Sheet.png", (0.80, 1.0, 0.58, 1.1), 23),   # plus petit (enfant)
 }
 
 
-def decaler_teinte(img, h0, h1, nouv, sat):
+def decaler_teinte(img, h0, h1, nouv, sat, lum=1.0):
     a = np.array(img).astype(float)
     for y in range(a.shape[0]):
         for x in range(a.shape[1]):
@@ -34,7 +34,7 @@ def decaler_teinte(img, h0, h1, nouv, sat):
                 continue
             h, s, v = colorsys.rgb_to_hsv(*(a[y, x, :3] / 255.0))
             if s > 0.18 and h0 <= h <= h1:
-                r, g, b = colorsys.hsv_to_rgb(nouv + (h - (h0 + h1) / 2) * 0.3, min(1.0, s * sat), v)
+                r, g, b = colorsys.hsv_to_rgb(nouv + (h - (h0 + h1) / 2) * 0.3, min(1.0, s * sat), min(1.0, v * lum))
                 a[y, x, :3] = (r * 255, g * 255, b * 255)
     return Image.fromarray(a.astype(np.uint8), "RGBA")
 

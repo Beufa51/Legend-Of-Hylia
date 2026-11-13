@@ -104,7 +104,7 @@ ecrire(maison2, "v_maison_orange")
 ecrire(teinter(maison2, 0.04, 0.14, 0.62, 0.9, 0.9), "v_maison_pierre")     # toit orange -> bleu ardoise
 ecrire(teinter(maison2, 0.04, 0.14, 0.07, 0.8, 0.62), "v_maison_bois")      # -> brun (grange)
 ecrire(teinter(maison2, 0.04, 0.14, 0.99, 1.2, 0.85), "v_maison_caserne")   # -> rouge sombre (caserne)
-ecrire(eglise, "v_temple_entree")                                           # le temple : l'église du pack, grande porte à croisillons
+# (le temple n'est PLUS l'église : voir plus bas, l'ENTRÉE DE DONJON construite avec la colline et l'arche de pierre)
 
 # --- RELIEF : terrasse (TERRAIN SET 3 : 3 colonnes x 4 rangées de 16 px). L'extérieur (terre) est rendu transparent pour que la terrasse se pose sur l'herbe.
 t3 = np.array(charger("TERRAIN SET 3")).copy()
@@ -123,6 +123,39 @@ for r in range(4):
         ecrire(terrasse.crop((c * 16, r * 16, c * 16 + 16, r * 16 + 16)), "v_ter_%d%d" % (r, c))
 ecrire(charger("GRASS TILE"), "v_ter_11")      # le centre du pack porte des fleurs : on le remplace par de l'herbe unie (les détails viennent du sol)
 ecrire(charger("STAIRS"), "v_escalier")
+
+# --- ENTRÉE DE DONJON (lettre U, 7x3 cases = 112 px, porte en colonne 3) : une colline (morceaux de terrasse) percée d'une arche de pierre sombre, deux torches, des marches.
+GRAND = os.path.join(RACINE, "Assets", "Pixel Crawler - Free Pack", "Environment", "Structures", "Buildings", "Props.png")
+arche = rogner(Image.open(GRAND).convert("RGBA").crop((64, 19, 96, 66)))
+tuile = lambda r, c: terrasse.crop((c * 16, r * 16, c * 16 + 16, r * 16 + 16))
+colline = Image.new("RGBA", (112, 64))
+herbe_pleine = charger("GRASS TILE")
+for r in range(4):
+    for i in range(7):
+        c = 0 if i == 0 else 2 if i == 6 else 1
+        colline.alpha_composite(herbe_pleine if (r == 1 and c == 1) else tuile(r, c), (i * 16, r * 16))
+colline.alpha_composite(arche, (56 - arche.width // 2, 64 - arche.height))
+torche = Image.open(os.path.join(SORTIE, "torche_3.png")).convert("RGBA")
+for x in (30, 76):
+    colline.alpha_composite(torche, (x, 24))
+marche = Image.new("RGBA", (30, 5))
+md = __import__("PIL.ImageDraw", fromlist=["ImageDraw"]).Draw(marche)
+md.rectangle((0, 0, 29, 4), fill=(120, 116, 128, 255), outline=(40, 36, 48, 255))
+colline.alpha_composite(marche, (41, 59))
+ecrire(colline, "v_temple_entree")
+
+# --- INSIGNE de la Garde (récompense des coffres) et ROCHER FISSURÉ (cache un coffre)
+D = __import__("PIL.ImageDraw", fromlist=["ImageDraw"])
+ins = Image.new("RGBA", (12, 12))
+dd = D.Draw(ins)
+dd.ellipse((0, 0, 11, 11), fill=(246, 204, 70, 255), outline=(120, 80, 20, 255))
+dd.ellipse((3, 3, 8, 8), fill=(200, 40, 48, 255))
+dd.point((5, 2), fill=(255, 240, 160, 255))
+ecrire(ins, "insigne")
+roc = detail_transparent("GRASS DETAIL 4").copy()
+rd = D.Draw(roc)
+rd.line((6, 2, 8, 7), fill=(40, 30, 30, 255)); rd.line((8, 7, 6, 10), fill=(40, 30, 30, 255)); rd.line((8, 7, 11, 8), fill=(40, 30, 30, 255))
+ecrire(roc.resize((roc.width * 3 // 2, roc.height * 3 // 2), Image.NEAREST), "v_roche_fissuree")
 print("village habillé avec TILESET VILLAGE TOP DOWN")
 
 if len(sys.argv) > 1:   # aperçu : une terrasse 8x6 + escalier + maisons + arbres

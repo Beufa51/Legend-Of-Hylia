@@ -667,6 +667,16 @@
   3) RELIEF en plus : GrandChemin (2 collines), Parvis (2 terrasses qui encadrent la stèle), VillageEst (colline au nord-ouest) ; fleurs/souches/cailloux sur les terrasses. Total : 6 écrans avec relief.
   `apercu_village.py` sait dessiner les intérieurs (`InterieurHeros`, `InterieurCaserne`, `InterieurStand`).
 
+- 2026-11-13 : utilisateur : « coffres et secrets sur les terrasses (des reliefs ne mènent à rien) ; un PNJ avec du vert a des couleurs bizarres ; l'entrée des maisons fait téléportation (porte fermée) ; les temples ne doivent pas être des églises mais de vraies ENTRÉES DE DONJON façon Zelda ; refaire l'intérieur des donjons si le nouveau pack est mieux ».
+  **ÉTAPE 14h écrite (non testée dans Godot ; aperçus PIL vérifiés, `verifier_carte.py` OK)** :
+  1) COFFRES et SECRETS : `exterieur.gd` exports `coffres` ("x y drapeau | texte") et `secrets` ("sx sy cx cy drapeau | texte" : rocher fissuré `Scripts/secret_pierre.gd`, un coup de lance le brise et révèle un coffre) ; réutilise `coffre.gd` (texte avec `%d` = nombre d'insignes) ;
+     récompense = INSIGNES de la Garde (`Etat.nombre_insignes()`, drapeaux `insigne_*`, `TOTAL_INSIGNES` = 9, affichés au tableau d'honneur). 9 coffres : GrandChemin x2, Parvis x2 (un caché), VillageEst, Verger, TerrainGarde, RouteSud x2 (un caché). Images `insigne`, `v_roche_fissuree` (traiter_village_jadson.py).
+     Données dans `generer_village.py::COFFRES` ; `verifier_carte.py` vérifie que chaque coffre/rocher est atteignable ; `apercu_village.py` les dessine. GrandChemin : forêt des côtés retirée (les collines la remplacent, pied d'escalier relié au chemin).
+  2) PORTES : `exterieur.gd::ouvrir_porte(case, durée)` (rectangle sombre qui s'ouvre sur la porte, puis se referme) ; `world.gd::_passer_porte` l'ouvre avant le pas d'entrée (0,25 s), la rouvre derrière le héros quand il sort.
+  3) ENTRÉE DE DONJON (lettre `U`, 7x3, porte colonne 3) : colline (morceaux de terrasse) percée d'une arche de pierre sombre du pack, 2 torches, marche (`traiter_village_jadson.py`) ; ce n'est plus l'église.
+  4) PNJ : pêcheur (tunique qui « mangeait » le menton : tête jusqu'à r<0,37) et mage (robe vert sauge sobre, `decaler_teinte(..., lum)`).
+  5) DONJONS : comparé le pack Pixel Crawler (`Dungeon_Tiles`, `Wall_Tiles`, `Dungeon_Props`) au décor Craftpix actuel : style proche (pierre sombre, herses, bannières), pas de gain net -> NON remplacé. Pistes si voulu : bannières 3 couleurs du pack, sol sanglant/drain, herses/pics du pack.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

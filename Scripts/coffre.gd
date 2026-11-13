@@ -65,4 +65,4 @@ func frapper() -> void:
 		t2.tween_callback(objet.queue_free)
 	Etat.poser(drapeau)
 	if texte != "":
-		Etat.annoncer(texte)
+		Etat.annoncer(texte % Etat.nombre_insignes() if "%d" in texte else texte)   # (%d = nombre d'insignes de la Garde trouvés)

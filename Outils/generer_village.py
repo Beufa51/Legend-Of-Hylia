@@ -150,7 +150,7 @@ put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10),
 # Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
 animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 7', 'd 17 8']
 
-TAILLES_MAISONS = {'M': (8, 3), 'N': (5, 3), 'T': (5, 3), 'R': (5, 3), 'S': (8, 3), 'L': (8, 3), 'K': (8, 3), 'U': (8, 3), 'Z': (9, 5)}
+TAILLES_MAISONS = {'M': (8, 3), 'N': (5, 3), 'T': (5, 3), 'R': (5, 3), 'S': (8, 3), 'L': (8, 3), 'K': (8, 3), 'U': (7, 3), 'Z': (9, 5)}
 
 def degager_maisons(g):
     """Retire du plan tout décor (fleurs, tonneaux...) posé SOUS une maison."""
@@ -365,7 +365,8 @@ def foret_cotes(g, x0, x1):
 
 grand = vide()
 chemin(grand, 11, 13, 0, 13)
-foret_cotes(grand, 9, 15)
+bordure(grand)                                                 # (les côtés sont tenus par les deux collines : voir terrasses_grand)
+put(grand, 'A', (0, 9)); put(grand, 'a', (21, 9))   # un arbre au pied de chaque colline
 put(grand, 'f', (9, 4), (15, 8)); put(grand, 'g', (9, 9), (15, 3)); put(grand, 'w', (9, 6), (15, 10), (9, 12))
 put(grand, 'n', (10, 7))                                       # panneau (décor)
 animaux_grand = ['c 10 4']
@@ -428,12 +429,22 @@ terrasses_grand, escaliers_grand = ["0 1 8 8", "17 1 8 8"], ["3 6", "20 6"]     
 terrasses_parvis, escaliers_parvis = ["0 0 6 6", "19 0 6 6"], ["3 3", "21 3"]            # la tête : deux petites terrasses qui encadrent le parvis
 terrasses_est, escaliers_est = ["0 0 9 6"], ["3 3"]                                       # le village est : une colline au nord-ouest, la caserne en bas à droite
 # décor SUR les terrasses (fleurs, souches, cailloux : rien de plus gros, les arbres sont retirés des terrasses)
-for _g in (grand,):
-    put(_g, 'f', (2, 3), (6, 5), (19, 4), (23, 6)); put(_g, 'g', (4, 2), (5, 6), (21, 3), (18, 6)); put(_g, 'w', (3, 4), (6, 3), (22, 5), (19, 2))
-    put(_g, 'u', (2, 6), (22, 2)); put(_g, 'r', (6, 6), (18, 3))
+put(grand, 'f', (2, 3), (6, 5), (19, 4), (23, 6)); put(grand, 'g', (4, 2), (5, 6), (21, 3), (18, 6)); put(grand, 'w', (3, 4), (6, 3), (22, 4), (19, 2))
+put(grand, 'u', (2, 6), (23, 2)); put(grand, 'r', (6, 6), (18, 3))
 for _g in (parvis, parvis_revele):
-    put(_g, 'f', (2, 2), (22, 2)); put(_g, 'w', (3, 1), (21, 4)); put(_g, 'g', (4, 3), (20, 1)); put(_g, 'u', (1, 4), (23, 4))
-put(est, 'f', (2, 2), (6, 3)); put(est, 'g', (4, 1), (7, 4)); put(est, 'w', (1, 4), (5, 2)); put(est, 'u', (7, 2), (2, 3)); put(est, 'r', (6, 1))
+    put(_g, 'f', (2, 1), (22, 1)); put(_g, 'w', (3, 1), (21, 3)); put(_g, 'g', (4, 2), (20, 1)); put(_g, 'u', (1, 3), (20, 3))
+put(est, 'f', (2, 2), (6, 3)); put(est, 'g', (4, 1), (7, 3)); put(est, 'w', (1, 2), (5, 3)); put(est, 'u', (7, 2), (2, 3)); put(est, 'r', (6, 1))
+
+# COFFRES et SECRETS sur les terrasses : ("x y drapeau | texte") et ("sx sy cx cy drapeau | texte" : rocher fissuré en (sx,sy), coffre caché en (cx,cy)). Chaque coffre donne un INSIGNE de la Garde (9 en tout, voir Etat.TOTAL_INSIGNES).
+INS = "Un insigne de la Garde ! (%d / 9)"
+COFFRES = {
+    'GrandChemin': (["4 3 insigne_gc1 | " + INS], ["20 3 22 5 insigne_gc2 | " + INS]),
+    'Parvis': (["2 2 insigne_pa1 | " + INS], ["21 2 23 2 insigne_pa2 | " + INS]),
+    'VillageEst': (["5 2 insigne_ve1 | " + INS], []),
+    'Verger': (["21 3 insigne_vg1 | " + INS], []),
+    'TerrainGarde': (["5 4 insigne_tg1 | " + INS], []),
+    'RouteSud': (["2 4 insigne_rs1 | " + INS], ["19 4 22 5 insigne_rs2 | " + INS]),
+}
 ecrans = [
     # --- ailes (y=0)
     ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
@@ -456,6 +467,10 @@ ecrans = [
     # --- queue (y=4)
     ('RouteSud', (2, 4), route, {'animaux': animaux_route, 'pnjs': pnjs_route, 'terrasses': terrasses_route, 'escaliers': escaliers_route}),
 ]
+for _n, _gr, _g, _p in ecrans:
+    if _n in COFFRES:
+        _p['coffres'], _p['secrets'] = COFFRES[_n]
+
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
 interieurs = [
     ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 6 7", "14 6 $records"],

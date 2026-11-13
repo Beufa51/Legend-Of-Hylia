@@ -26,10 +26,12 @@ escaliers = PackedStringArray("3 3", "21 3")
 passages = PackedStringArray("12 6 $stele")
 musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
 drapeau_revele = "corps_revele"
-layout_revele = PackedStringArray("A..a..P.Z............a..b", "...w................g...b", "a.f...................f.b", "....g....................", "Au.....j.........j...wau.", "......o...y.:.g...o......", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "........f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A..a.:a:.P..A.aa...", "...........:::..........b", "...........:::..........b")
+layout_revele = PackedStringArray("A..a..P.Z............a..b", "..fw................g.f.b", "a...g.................A.b", ".u..................uw...", "A......j.........j....a..", "......o...y.:.g...o......", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "........f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A..a.:a:.P..A.aa...", "...........:::..........b", "...........:::..........b")
 passages_revele = PackedStringArray("12 4 @corps:Arene 12 11 Le corps du coq. Au fond de la grande salle, quelqu'un t'attend...", "10 6 $stele")
 indice = "Une stèle se dresse devant la forêt. Un coq y est gravé, ses ailes creusées dans la pierre..."
-layout = PackedStringArray("......P..a..A..a..b.....b", "...w...A.a.A.a.A....g...b", "..f...................f.b", "....g....A...A...........", ".u.....j.........j...w.u.", "......o.....Y.g...o......", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "b.......f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A....:::.P..A.aa...", "...........:::..........b", ".........bb:::b.........b")
+coffres = PackedStringArray("2 2 insigne_pa1 | Un insigne de la Garde ! (%d / 9)")
+secrets = PackedStringArray("21 2 23 2 insigne_pa2 | Un insigne de la Garde ! (%d / 9)")
+layout = PackedStringArray("......P..a..A..a..b.....b", "..fw...A.a.A.a.A....g.f.b", "....g...................b", ".u.......A...A......uw...", ".......j.........j.......", "......o.....Y.g...o......", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "b.......f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A....:::.P..A.aa...", "...........:::..........b", ".........bb:::b.........b")
 
 [node name="TempleDroit" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, 0)
@@ -44,6 +46,8 @@ animaux = PackedStringArray("c 8 6", "h 15 6")
 pnjs = PackedStringArray("OldMan 10 8 droite | Jardinier Anselme | Mes pommiers ont vu passer bien des recrues. // Ceux qui montent au temple de l'aile gauche passent toujours par ici. // Prends ton temps : l'épreuve ne se gagne pas en courant. ... Quoique tu aies un joli coup de jarret.")
 terrasses = PackedStringArray("16 1 7 6")
 escaliers = PackedStringArray("18 4")
+coffres = PackedStringArray("21 3 insigne_vg1 | Un insigne de la Garde ! (%d / 9)")
+secrets = PackedStringArray()
 layout = PackedStringArray("A..a..P..bb:::bbbbbbbbbbb", "...........:::..........b", "..........f:::f..f.g.w..b", "a.....a....:::....w..f..b", "...A.....B.:::......g...b", "..........g:::w.........b", "b.........u:::..........b", "a.....a...n:::..........b", "...A.......:::BA.....A..b", "..........B:::g...P.....b", "b.........w:::u.........b", "a..P..A....:::.P..A..a..b", "..........f:::w.........b", ".........bb:::b.........b")
 
 [node name="GrandChemin" parent="." instance=ExtResource("2")]
@@ -51,7 +55,9 @@ grille = Vector2i(2, 1)
 animaux = PackedStringArray("c 10 4")
 terrasses = PackedStringArray("0 1 8 8", "17 1 8 8")
 escaliers = PackedStringArray("3 6", "20 6")
-layout = PackedStringArray("bbbbbbbbbbb:::bbbbbbbbbbb", "...........:::..........b", "....g......:::.....w..u..", "..f...w....:::.g..r..g...", "...w.....f.:::.....f.....", "......f....:::........w..", "..u..gr..w.:::....g....f.", "..........n:::...........", "...........:::.f.........", "b.....a..g.:::........a..", "a...a......:::.wa...a....", "..A...A....:::....A...A..", ".........w.:::..........b", "bb...b...bb:::bbbb...b..b")
+coffres = PackedStringArray("4 3 insigne_gc1 | Un insigne de la Garde ! (%d / 9)")
+secrets = PackedStringArray("20 3 22 5 insigne_gc2 | Un insigne de la Garde ! (%d / 9)")
+layout = PackedStringArray("bbbbbbbbbbb:::bbbbbbbbbbb", "...........:::..........b", "....g......:::.....w...ub", "..f...w....:::.g..r..g...", "...w.....f.:::.....f..w..", "......f....:::...........", "..u..gr..w.:::....g....f.", "..........n:::...........", "...........:::.f.........", "A........g.:::..........b", "...........:::.w........b", "a..P..A....:::.P..A..a..b", ".........w.:::..........b", ".........bb:::b.........b")
 
 [node name="TerrainGarde" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, 1)
@@ -59,6 +65,8 @@ animaux = PackedStringArray("d 14 7")
 pnjs = PackedStringArray("Villager3 3 4 droite | Soldat Hugues | Un, deux ! Un, deux ! Le matin, la garde s'entraîne ici. // Les recrues ne sont pas obligées de venir. Mais les meilleures le font.")
 terrasses = PackedStringArray("1 2 8 7")
 escaliers = PackedStringArray("4 6")
+coffres = PackedStringArray("5 4 insigne_tg1 | Un insigne de la Garde ! (%d / 9)")
+secrets = PackedStringArray()
 layout = PackedStringArray("bbbbbbbbbbb:::ba..P..a..b", "b..........:::..........b", "b.........g:::..A...a...b", "b.o...xo...:::f.........b", "b....w.....:::..........b", "b.xf...o...:::..........b", "b.....g...w:::.j.....j..b", "b..........:::..........b", "b..........:::wa........b", "b..........:::....A.....b", "b.........f:::..........b", "a..P..A....:::gP..A..a..b", "...........:::..........b", ".........bb:::b.........b")
 
 [node name="VillageOuest" parent="." instance=ExtResource("2")]
@@ -81,7 +89,9 @@ pnjs = PackedStringArray("KnightGold 16 7 gauche | Capitaine Aubrac | [fin_paix]
 passages = PackedStringArray("18 6 InterieurCaserne 12 9")
 terrasses = PackedStringArray("0 0 9 6")
 escaliers = PackedStringArray("3 3")
-layout = PackedStringArray(".........bb:::ba..P..a..b", "....g.r....:::..........b", "..f..w.u...:::..........b", "..u...f.j..:::j...o.....b", ".w....ogw..:::.wK.......b", ".......f.g.:::..........b", "::::::::::::::::::::::..b", "::::::::::::::::::::::..b", "::::::::::::::::::::::..b", "b..........:::.....o..a..", "b...E...o..:::w........w.", "a..........:::.P..A.aa...", "...........:::..........b", "...bbbbbbbb:::b.........b")
+coffres = PackedStringArray("5 2 insigne_ve1 | Un insigne de la Garde ! (%d / 9)")
+secrets = PackedStringArray()
+layout = PackedStringArray(".........bb:::ba..P..a..b", "....g.r....:::..........b", ".wf....u...:::..........b", "..u..wfgj..:::j...o.....b", "......o.w..:::.wK.......b", ".......f.g.:::..........b", "::::::::::::::::::::::..b", "::::::::::::::::::::::..b", "::::::::::::::::::::::..b", "b..........:::.....o..a..", "b...E...o..:::w........w.", "a..........:::.P..A.aa...", "...........:::..........b", "...bbbbbbbb:::b.........b")
 
 [node name="MaisonHeros" parent="." instance=ExtResource("2")]
 grille = Vector2i(1, 3)
@@ -109,6 +119,8 @@ animaux = PackedStringArray("c 9 6")
 pnjs = PackedStringArray("Villager3 12 9 bas | Garde de la route | [epreuve_reussie] Garde du royaume ! La route est ouverte pour toi... mais pas encore aujourd'hui : le capitaine veut te voir. ## Halte ! Cette route mène au royaume. // Elle est fermée aux recrues. Passe d'abord l'épreuve d'adoubement, au temple.")
 terrasses = PackedStringArray("0 2 8 8", "17 2 8 8")
 escaliers = PackedStringArray("3 7", "20 7")
+coffres = PackedStringArray("2 4 insigne_rs1 | Un insigne de la Garde ! (%d / 9)")
+secrets = PackedStringArray("19 4 22 5 insigne_rs2 | Un insigne de la Garde ! (%d / 9)")
 layout = PackedStringArray("bbbbbbbbbbb:::bbbbbbbbbbb", "b........w.:::..........b", "...........:::..........b", "..f...u....:::.g..u..f...", ".....g...f.:::........w..", "...w.......:::.....g.....", "..........w:::.f.........", "...........:::...........", ".........g.:::w..........", "...........:::...........", "b.........n:::..........b", "a..P....ze.e.e.e.zA..a..b", "........................b", "......bbbbbbbbbbbb......b")
 
 [node name="InterieurHeros" parent="." instance=ExtResource("4")]

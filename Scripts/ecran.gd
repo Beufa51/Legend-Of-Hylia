@@ -50,6 +50,11 @@ func reinitialiser() -> void:
 	pass
 
 
+# Une porte de maison s'ouvre (voir exterieur.gd) : rien à faire dans les autres écrans.
+func ouvrir_porte(_case: Vector2i, _duree := 1.4) -> void:
+	pass
+
+
 # Une case où poser le joueur (mode développeur, retours rapides). Par défaut : le centre.
 func point_arrivee() -> Vector2:
 	return position + Vector2(TAILLE_SALLE) / 2.0

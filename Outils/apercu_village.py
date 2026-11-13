@@ -74,6 +74,14 @@ def rendre(nom, g, props, grille):
                 objets.append(((y + 3) * 16, img("girouette_mat"), x * 16, y * 16))
                 coq = img("girouette_coq")
                 objets.append(((y + 3) * 16 + 1, coq, x * 16 + 24 - coq.width // 2, y * 16 + 13 - coq.height))
+    for ligne in props.get('coffres', []):       # coffres (20x22, posés comme dans coffre.gd)
+        t = ligne.split("|")[0].split()
+        im = img("coffre_1")
+        objets.append(((int(t[1]) + 1) * 16, im, int(t[0]) * 16 - 2, int(t[1]) * 16 - 6))
+    for ligne in props.get('secrets', []):       # rochers fissurés
+        t = ligne.split("|")[0].split()
+        im = img("v_roche_fissuree")
+        objets.append(((int(t[1]) + 1) * 16, im, int(t[0]) * 16 + 8 - im.width // 2, int(t[1]) * 16 + 16 - im.height))
     for ligne in props.get('pnjs', []):
         t = ligne.split('|')[0].split()
         f = os.path.join(RACINE, "Assets", "Heros", "pnj_%s.png" % t[0])

@@ -41,6 +41,11 @@ def solides_ext(nom):
         x0, y0 = (int(v) for v in ligne.split())
         for j in range(4):
             for i in range(2): s.discard((x0 + i, y0 + j))
+    for ligne in props[nom].get('coffres', []):      # un coffre bloque sa case
+        s.add(tuple(int(v) for v in ligne.split("|")[0].split()[:2]))
+    for ligne in props[nom].get('secrets', []):      # le rocher fissuré et le coffre caché aussi
+        t = [int(v) for v in ligne.split("|")[0].split()[:4]]
+        s |= {(t[0], t[1]), (t[2], t[3])}
     for p in passages_de(nom):
         s.discard((int(p[0]), int(p[1])))     # on marche dans la porte
     return s
@@ -129,6 +134,16 @@ for nom, p in props.items():
             erreurs.append("%s : un %s est dans un obstacle en (%d,%d)" % (nom, qui, x, y))
         elif (nom, x, y) not in vus:
             erreurs.append("%s : un %s est inatteignable en (%d,%d)" % (nom, qui, x, y))
+
+# --- 5. coffres et rochers : atteignables (une case voisine libre et atteinte)
+for nom, p in props.items():
+    cibles = [tuple(int(v) for v in l.split("|")[0].split()[:2]) for l in p.get('coffres', [])]
+    for l in p.get('secrets', []):
+        t = [int(v) for v in l.split("|")[0].split()[:4]]
+        cibles += [(t[0], t[1]), (t[2], t[3])]
+    for (x, y) in cibles:
+        if not any((nom, x + dx, y + dy) in vus for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+            erreurs.append("%s : le coffre/rocher (%d,%d) n'est pas atteignable à pied" % (nom, x, y))
 
 print("écrans extérieurs :", len(ext), "| intérieurs :", len(inte), "| cases atteintes :", len(vus))
 if erreurs:

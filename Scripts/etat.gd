@@ -65,6 +65,16 @@ func noter(nom: String) -> void:
 	sauver()
 
 
+# Combien d'INSIGNES de la Garde (trouvés dans les coffres du village, drapeaux « insigne_... ») ?
+const TOTAL_INSIGNES := 9
+func nombre_insignes() -> int:
+	var n := 0
+	for nom in drapeaux:
+		if str(nom).begins_with("insigne_"):
+			n += 1
+	return n
+
+
 func est(nom: String) -> bool:
 	return nom != "" and drapeaux.get(nom, false)
 
@@ -165,6 +175,7 @@ func texte_records() -> String:
 		var record = records.get(jeu[0])
 		var valeur := "jamais joué" if record == null else "%s %s" % [str(int(record)) if is_equal_approx(record, roundf(record)) else "%.1f" % record, jeu[2]]
 		lignes.append("%s : %s (%s)" % [jeu[1], valeur, ruban])
+	lignes.append("Insignes de la Garde : %d / %d" % [nombre_insignes(), TOTAL_INSIGNES])
 	return "Tableau d'honneur. " + " // ".join(lignes)
 
 
