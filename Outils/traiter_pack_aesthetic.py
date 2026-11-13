@@ -14,6 +14,7 @@ RACINE = os.path.join(os.path.dirname(__file__), "..", "Assets")
 PACK = os.path.join(RACINE, "Aesthetic pack base set (Free)")
 SORTIE = os.path.join(RACINE, "Gemini", "tuiles")
 ECHELLE = 2.0 / 3.0
+ARBRE = 0.36   # arbres/sapins/buissons : ~33x40 px pour une emprise de 2x2 cases (32x32), à l'échelle du héros (24 px)
 
 _cache = {}
 def planche(nom):
@@ -89,14 +90,14 @@ def sol():
 G = "Grassland Tileset"
 OBJETS = {
     # nom : (planche, boîte source, échelle, rectangles à effacer)
-    "v_arbre_a": (G, (218, 417, 310, 528), ECHELLE, [(0, 0, 22, 18), (0, 86, 22, 111)]),
-    "v_arbre_b": (G, (318, 421, 401, 528), ECHELLE, None),
-    "v_sapin": (G, (0, 288, 72, 410), ECHELLE, [(0, 95, 24, 122), (50, 90, 72, 122)]),
-    "v_buisson": (G, (313, 344, 359, 385), ECHELLE, None),
-    "v_buisson_baies": (G, (410, 455, 454, 482), ECHELLE, None),
+    "v_arbre_a": (G, (218, 417, 310, 528), ARBRE, [(0, 0, 22, 18), (0, 86, 22, 111)]),
+    "v_arbre_b": (G, (318, 421, 401, 528), ARBRE, None),
+    "v_sapin": (G, (0, 288, 72, 410), ARBRE, [(0, 95, 24, 122), (50, 90, 72, 122)]),
+    "v_buisson": (G, (313, 344, 359, 385), ARBRE, None),
+    "v_buisson_baies": (G, (410, 455, 454, 482), ARBRE, None),
     "v_roche": (G, (195, 172, 239, 214), ECHELLE, None),
     "v_souche": (G, (410, 498, 454, 528), 0.5, None),
-    "v_puits": (G, (240, 346, 312, 407), ECHELLE, None),
+    "v_puits": (G, (240, 346, 312, 407), 0.45, None),
     "v_panneau": (G, (121, 505, 144, 528), ECHELLE, None),
     "v_cloture": (G, (183, 361, 231, 379), ECHELLE, None),
     "v_poteau": (G, (176, 360, 188, 380), ECHELLE, None),
