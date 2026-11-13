@@ -26,19 +26,28 @@ def miroir(g):
     return [[ECHANGE.get(c, c) for c in reversed(ligne)] for ligne in g]
 
 
-# --- Vestibule (0,1) : on entre ici depuis le temple de l'aile droite. Pas d'énigme : la porte du nord est ouverte.
+# --- Vestibule (0,1) : on entre ici depuis le temple de l'aile droite. Leçon : LA CLÉ. La porte de bois du nord (E)
+#     est fermée à clé ; la clé est dans le coffre (Q), qu'on ouvre d'un coup de lance.
 vest = vide(); sol(vest, 2, 22, 2, 11); sol(vest, 11, 13, 0, 1)
+for x in (11, 12, 13): vest[0][x] = 'E'; vest[1][x] = 'E'
+put(vest, 'Q', (19, 8))
 for x in (11, 12, 13): vest[12][x] = 'H'; vest[13][x] = 'H'   # grande porte du sud = sortie (s'ouvre avec le fragment)
 put(vest, 'B', (6, 4), (18, 4)); put(vest, 'V', (3, 10), (21, 10), (7, 9), (17, 9), (3, 3), (21, 3))
 put(vest, 'S', (9, 6)); put(vest, 'O', (15, 6))
 for x in range(11, 14):
     for y in range(2, 12): put(vest, 'T', (x, y))
 
-# --- Entrée (0,0) : grande salle, porte au sud (vers le vestibule) et sortie à l'OUEST (rangées 5-8)
+# --- Entrée (0,0) : grande salle, porte au sud (vers le vestibule) et sortie à l'OUEST (rangées 5-8).
+#     Leçon : LE LEVIER. La grille de l'ouest (D) s'ouvre quand on bascule le levier (J) d'un coup de lance.
+#     Deux bassins d'eau (~) décorent la salle.
 ent = vide(); sol(ent, 2, 22, 2, 11); sol(ent, 0, 1, 5, 8); sol(ent, 11, 13, 12, 13)
+for y in range(5, 9): ent[y][1] = 'D'
 put(ent, 'B', (3, 3), (21, 3), (3, 10), (21, 10)); put(ent, 'O', (5, 4)); put(ent, 'S', (19, 4))
-put(ent, 'V', (4, 11), (20, 11), (3, 6), (21, 6))
+put(ent, 'V', (4, 11), (20, 11), (21, 6))
+put(ent, 'J', (4, 9))
 for x in range(6, 19): put(ent, 'T', (x, 6), (x, 7))
+for y in (9, 10):
+    for x in (7, 8, 9, 15, 16, 17): put(ent, '~', (x, y))
 
 
 # --- Épine : couloir horizontal (rangées 5-8) + tige vers le haut (colonnes 11-13). Plan écrit « à l'endroit »
@@ -58,6 +67,11 @@ def epine(porte=False, ferme=False, tige=True):
 
 e1 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D1 est obtenue
 e2 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D2 est obtenue
+# Dans l'épine 2, deux colonnes de PICS (Z) barrent le couloir entre l'entrée (à l'est) et la tige de la plume D2 :
+# elles sortent à tour de rôle ; il faut passer au bon moment. Touché = retour à l'entrée de l'épine (23,6).
+for y in range(5, 9):
+    for x in (16, 19): e2[y][x] = 'Z'
+RETOUR_E2 = 'Vector2(%d, %d)' % (-2 * 400 + 23 * 16 + 8, 6 * 16 + 3)
 e3 = epine(ferme=True, tige=False)   # PROVISOIRE : cul-de-sac tant que la plume D3 n'est pas construite
 
 # --- PLUME D1 : « LES PLOTS ». Leçon : le cristal commute les plots orange (o) et bleus (u).
@@ -101,12 +115,15 @@ put(p2b, 'V', (3, 11), (21, 11), (3, 10), (21, 10)); put(p2b, 'S', (5, 2)); put(
 
 salles = [
     ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'drapeau_porte2': 'fragment_droite',
-        'indice': "L'aile droite du blason. Ici, tout est inversé : l'épine part vers l'ouest."}),
-    ('Entree', (0, 0), ent, (1.0, 0.94, 0.92), {}),
+        'drapeau_coffre': 'd_cle_vestibule', 'drapeau_cle': 'd_cle_vestibule', 'drapeau_serrure': 'd_porte_vestibule',
+        'indice': "L'aile droite du blason. La porte est fermée à clé... ce coffre, peut-être ? Un coup de lance l'ouvre."}),
+    ('Entree', (0, 0), ent, (1.0, 0.94, 0.92), {'drapeau_levier': 'd_levier_entree', 'drapeau_porte': 'd_levier_entree',
+        'indice': "Un levier ! Bascule-le d'un coup de lance pour ouvrir la grille de l'ouest."}),
     ('Epine1', (-1, 0), e1, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD1'}),
     ('PlumeD1', (-1, -1), p1, (0.98, 0.94, 1.06), {'drapeau_gemme': 'plumeD1',
         'indice': "Ce cristal commande les plots de couleur : un coup de lance, et les levés se baissent... et les baissés se lèvent !"}),
-    ('Epine2', (-2, 0), e2, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD2'}),
+    ('Epine2', (-2, 0), e2, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD2', 'retour': RETOUR_E2,
+        'indice': "Des pics ! Observe leur rythme : passe quand ils sont rentrés."}),
     ('PlumeD2a', (-2, -1), p2a, (1.0, 0.97, 0.92), {'drapeau_fragile': 'd2_sol1', 'drapeau_porte': 'd2_sol1', 'retour': retour_d2(1),
         'indice': "Chaque pas retourne une dalle : rouge -> bleue, bleue -> rouge. Rends-les TOUTES bleues pour ouvrir la grille."}),
     ('PlumeD2b', (-2, -2), p2b, (0.98, 0.95, 0.9), {'drapeau_fragile': 'd2_sol2', 'drapeau_porte': 'd2_sol2', 'retour': retour_d2(2),

@@ -497,6 +497,18 @@
   PISTES (à décider avec l'utilisateur) : murs/sol du pack (briques sombres en vue 3/4, sol gris-bleu uni) à la place des murs Gemini verts ; PORTES en arche avec herse qui se relève (animation 5 images) ou porte en bois ;
   coffres (ouverture animée), leviers (5 images), clés, pics (trap_animation), fissures décoratives, eau. Limite : arches de 2 cases de large (nos portes en font 3).
 
+- 2026-11-13 : utilisateur : « fais les 4 points » (murs/sol, portes en arche, coffres/leviers/clés, pics/eau). **ÉTAPE 12b écrite (non testée dans Godot, aperçus PIL vérifiés)** :
+  1) MURS/SOL du pack (vue 3/4) : `traiter_pack_donjon.py` écrit `mur_fond`, `mur_bord_*`, `mur_coin_*`, `mur_dot_*` (rebords de briques = différence avec le mur sombre uni), `mur_face_haut/bas` (+ `_g`/`_d` bouts), `pilier` (16x24), `sol_plat` gris-bleu uni,
+     `sol_plat_c/_d` (dalles gravées rares). `room.gd::_poser_mur` : sol juste en dessous = FACE de briques (et le mur au-dessus d'une face aussi si lui-même a un mur au-dessus -> mur du haut = 2 rangées de briques) ; sinon vu de dessus (sombre + rebord côté sol) ;
+     mur isolé d'1 case = `pilier`. `_murs_du_cadre` et `dalle_unie` supprimés. (decorative_cracks_floor.png = des TROUS, pas des fissures : non utilisé.)
+  2) PORTES : `porte.gd` RÉÉCRIT : `initialiser(taille, texture, images=[])` ; images = arche animée qui RESTE (dernière image) ; `ouvrir(instantane)` (au chargement d'une salle : sans bruit, sans secousse, sans message « porte quelque part » -> `Room._chargement`).
+     `room.gd::_poser_portes_lettre` : groupe 48x32 en haut (rangée 0) = `arche_herse_1..5` (ou `arche_bois_1..5` pour E) ; 48x16 intérieur = `arche_basse_1..5` ; le reste (bas, côtés) = ancienne grille. Arches 32 px du pack ÉLARGIES à 48 (`elargir`).
+  3) COFFRE `Q` (`coffre.gd`, frappé -> animation, objet qui s'élève, `drapeau_coffre`, `texte_coffre`), LEVIER `J` (`levier.gd`, `drapeau_levier`), PORTE À SERRURE `E` (`Porte.activer_serrure(drapeau_cle, drapeau_serrure)` : le joueur la touche avec la clé).
+  4) PICS `Z` (`pics.gd` : cycle `periode_pics` 2.4 s, colonnes paires/impaires décalées d'un demi-cycle, sortis = `Etat.pique(retour)`) ; `world._raccompagner(retour, raison)` : "garde" / "chute" / "pics". EAU `~` (bloque, 2 images alternées, bord sombre + reflet).
+  UTILISATION (aile droite, `generer_aile_droite.py`) : Vestibule = leçon CLÉ (coffre (19,8) -> clé `d_cle_vestibule` -> porte de bois E au nord, `d_porte_vestibule`) ; Entrée = leçon LEVIER (J (4,9) -> grille ouest D colonne 1, `d_levier_entree`) + 2 bassins d'eau ;
+  Épine2 = 2 colonnes de pics (x 16 et 19) entre l'entrée est et la tige (retour (23,6)). L'aile gauche profite automatiquement des nouveaux murs/sols/arches.
+  ORDRE DES OUTILS donjon : traiter_gemini.py -> fabriquer_objets.py -> traiter_pack_donjon.py. `apercu_salle.py <n> <png> [scene.tscn]` montre aussi coffres, leviers, pics, eau, arches.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
