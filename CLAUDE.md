@@ -748,6 +748,13 @@
   PLAN : 6 braseros (15,10) (4,10) (20,10) (4,3) (12,3) (20,3), rivière de flaques rangée 6 (x 4..20, gaps x 2-3 et 21-22), 2 barrages x=7 et x=17 rangées 8-11 (B et C ne se rejoignent que par la rangée 7). Aucun texte. 6 allumés = porte du haut (`p2_braseros`).
   `Outils/verifier_feu.py` : vérifie la résolubilité (marche 8,75 cases/s, feu 2,5 s). Seul E (12,3) exige un relais ; les autres sont atteignables depuis le foyer : si c'est trop facile, réduire FEU_DUREE (player.gd + verifier_feu.py) ou rallonger les barrages. Test auto adapté.
 
+- 2026-11-13 : retour : « les flaques sont moches, les cristaux (et "tape" ?) aussi ». FLAQUES REFAITES (15b) : `Outils/fabriquer_feu.py` fabrique 16 formes x 2 images `flaque_<bits>_<1|2>` (autotile : 1 nord, 2 sud, 4 ouest, 8 est), rive sombre arrondie + liseré clair + eau profonde + rides qui bougent (style `Assets/PNG/water_detilazation_v2.png` du pack Craftpix) ; `room.gd` choisit la forme selon les voisins `w` ; les flaques forment des canaux d'eau.
+  CRISTAUX : AUCUN dans les packs (Craftpix : coffres, clés, tonneaux, pots ; Ninja Adventure : gemmes 16x16 d'inventaire) ; `cristal.gd` les dessine en Polygon2D (moche) -> demander une planche GEMINI (prompt donné à l'utilisateur) puis `Outils/traiter_cristaux.py` à écrire (découpe 16x24, états éteint/actif/frappé, versions orange et bleue pour les plots). Le mot « tape » de l'utilisateur est à clarifier (tapis ? plots ? dalles ?).
+
+- 2026-11-13 : clarification : « les cristaux » = ceux qu'on frappe pour ouvrir une porte (vestibule, plume 2b, plots). CRISTAUX REFAITS (15c) sans nouvelle image Gemini : la planche des plots contenait déjà `cristal_u` (bleu) et `cristal_o` (orange) sur socle de pierre (16x18).
+  `cristal.gd` n'est plus dessiné en polygones : image bleue qui « respire » (pulsation + halo) tant qu'il attend ; frappé = passe à l'orange doré avec éclat blanc qui retombe + halo vif ; commutateur des plots = bleu/orange selon les plots levés. Test auto OK.
+  Leçon Git : après un Pull qui apporte des `.import` de l'utilisateur, relancer `godot --headless --import` côté Claude (sinon textures introuvables dans les tests), puis `git checkout` des `.import` modifiés et supprimer les `.import` non suivis créés par Claude.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
