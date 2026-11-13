@@ -17,14 +17,14 @@ func initialiser(nom_drapeau: String, images: Array[Texture2D]) -> void:
 	add_to_group("frappable")
 	_sprite = Sprite2D.new()
 	_sprite.centered = false
-	_sprite.position = Vector2(0, -8)   # l'image fait 16x24 : elle dépasse de 8 px au-dessus de la case
+	_sprite.position = Vector2(0, -12)  # levier MURAL (image 16x24) : la plaque est sur le mur, le rebord sur la case
 	_sprite.texture = images[0]
 	add_child(_sprite)
 	var forme := RectangleShape2D.new()
-	forme.size = Vector2(12, 10)
+	forme.size = Vector2(14, 10)
 	var collision := CollisionShape2D.new()
 	collision.shape = forme
-	collision.position = Vector2(8, 10)
+	collision.position = Vector2(8, 7)
 	add_child(collision)
 	if Etat.est(drapeau):
 		actif = true
