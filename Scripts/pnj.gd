@@ -5,8 +5,8 @@ class_name Pnj
 # (le coup de lance est remplacé par la parole).
 # Planches (Assets/Heros, fabriquées par Outils/preparer_pnj_pixelcrawler.py) :
 #   pnj_<Nom>.png        4 poses fixes de 32 px (bas, haut, gauche, droite)
-#   pnj_<Nom>_repos.png  animation « au repos » (regard à droite, miroir pour la gauche)
-#   pnj_<Nom>_marche.png animation de marche (6 images, regard à droite)
+#   pnj_<Nom>_repos.png  animation « au repos » : 4 images ; 1 rangée (regard à droite, miroir pour la gauche) ou 3 rangées (bas, haut, côté)
+#   pnj_<Nom>_marche.png animation de marche : 6 images ; mêmes rangées
 # Sans les deux dernières (ancien habitant), il reste planté sur place et tourne seulement la tête.
 
 const DOSSIER := "res://Assets/Ninja_adventure/Actor/Character/%s/SeparateAnim/Idle.png"
@@ -16,9 +16,9 @@ const MARCHE := "res://Assets/Heros/pnj_%s_marche.png"
 const DIRECTIONS := ["bas", "haut", "gauche", "droite"]
 const PORTEE_PAROLE := 26.0   # px : distance maximale pour parler
 const PORTEE_REGARD := 70.0   # px : il tourne la tête vers le joueur en dessous de cette distance
-const VITESSE := 16.0         # px/s en promenade
-const RAYON_X := 34.0         # il ne s'éloigne pas de plus de ça de sa place (px)
-const RAYON_Y := 16.0
+const VITESSE := 22.0         # px/s en promenade
+const RAYON_X := 60.0         # il ne s'éloigne pas de plus de ça de sa place (px)
+const RAYON_Y := 30.0
 
 var nom_affiche := ""
 var minijeu := ""           # si non vide : une fois la conversation finie, ce mini-jeu démarre (voir minijeu.gd)
@@ -34,6 +34,8 @@ var _origine := Vector2.ZERO  # sa place : il se promène autour
 var _cible := Vector2.ZERO
 var _marche := false
 var _gauche := false          # regarde à gauche (miroir)
+var _vue := 2                 # rangée de la planche à 3 vues : 0 bas, 1 haut, 2 côté
+var _rangees := 1             # 1 ou 3 rangées dans les planches animées
 var _temps := 0.0
 var _delai_marche := 0.0      # durée max d'une promenade (au cas où il se coince)
 
@@ -60,6 +62,7 @@ func initialiser(perso: String, nom: String, dialogues: Array, direction: String
 		if ResourceLoader.exists(REPOS % perso) and ResourceLoader.exists(MARCHE % perso):
 			_tex_repos = load(REPOS % perso)
 			_tex_marche = load(MARCHE % perso)
+			_rangees = maxi(1, _tex_repos.get_height() / 32)
 			_anime = true
 	else:
 		_sprite.texture = load(DOSSIER % perso)
@@ -68,20 +71,38 @@ func initialiser(perso: String, nom: String, dialogues: Array, direction: String
 	_sprite.frame = _direction
 	add_child(_sprite)
 	if _anime:
+		_orienter([Vector2(0, 1), Vector2(0, -1), Vector2(-1, 0), Vector2(1, 0)][_direction])
 		_afficher_repos()
-	_chrono = 2.0 + randf() * 4.0
+		_montrer(0)
+	_chrono = 1.0 + randf() * 2.5
 
 
 func _afficher_repos() -> void:
 	_sprite.texture = _tex_repos
 	_sprite.hframes = 4
-	_sprite.flip_h = _gauche
+	_sprite.vframes = _rangees
+	_sprite.flip_h = _gauche and (_vue == 2 or _rangees == 1)
 
 
 func _afficher_marche() -> void:
 	_sprite.texture = _tex_marche
 	_sprite.hframes = 6
-	_sprite.flip_h = _gauche
+	_sprite.vframes = _rangees
+	_sprite.flip_h = _gauche and (_vue == 2 or _rangees == 1)
+
+
+# Regarde dans la direction `v` : côté (miroir à gauche), haut ou bas (planches à 3 vues) ; une planche à 1 rangée n'a que le côté.
+func _orienter(v: Vector2) -> void:
+	if _rangees >= 3 and absf(v.y) > absf(v.x):
+		_vue = 1 if v.y < 0.0 else 0
+	else:
+		_vue = 2 if _rangees >= 3 else 0
+		_gauche = v.x < 0.0
+	_sprite.flip_h = _gauche and (_vue == 2 or _rangees == 1)
+
+
+func _montrer(image: int) -> void:
+	_sprite.frame = (_vue if _rangees >= 3 else 0) * _sprite.hframes + image
 
 
 func _process(delta: float) -> void:
@@ -110,9 +131,8 @@ func _animer(delta: float, joueur: Node2D, proche: bool) -> void:
 		if _marche:
 			_arreter()
 		if joueur:
-			_gauche = joueur.global_position.x < global_position.x
-			_sprite.flip_h = _gauche
-		_sprite.frame = int(_temps * 3.0) % 4
+			_orienter(joueur.global_position - global_position)
+		_montrer(int(_temps * 3.0) % 4)
 		return
 	if _marche:
 		_delai_marche -= delta
@@ -121,28 +141,28 @@ func _animer(delta: float, joueur: Node2D, proche: bool) -> void:
 			_arreter()
 		else:
 			velocity = v.normalized() * VITESSE
-			_gauche = v.x < 0.0 if absf(v.x) > 0.5 else _gauche
-			_sprite.flip_h = _gauche
+			_orienter(v)
 			move_and_slide()
 			if get_slide_collision_count() > 0:   # un obstacle : il s'arrête là
 				_arreter()
 			else:
-				_sprite.frame = int(_temps * 8.0) % 6
+				_montrer(int(_temps * 8.0) % 6)
 		return
-	_sprite.frame = int(_temps * 3.0) % 4
+	_montrer(int(_temps * 3.0) % 4)
 	_chrono -= delta
 	if _chrono <= 0.0:
 		_cible = _origine + Vector2(randf_range(-RAYON_X, RAYON_X), randf_range(-RAYON_Y, RAYON_Y))
-		_delai_marche = 4.0
+		_delai_marche = 5.0
 		_marche = true
+		_orienter(_cible - position)
 		_afficher_marche()
-		_sprite.frame = 0
+		_montrer(0)
 
 
 func _arreter() -> void:
 	_marche = false
 	velocity = Vector2.ZERO
-	_chrono = 2.0 + randf() * 4.0
+	_chrono = 0.8 + randf() * 2.2   # il repart vite : l'habitant ne reste pas figé
 	_afficher_repos()
 
 
@@ -151,8 +171,7 @@ func _regarder(point: Vector2) -> void:
 	if _anime:
 		if _marche:
 			_arreter()
-		_gauche = v.x < 0.0
-		_sprite.flip_h = _gauche
+		_orienter(v)
 		return
 	_direction = (3 if v.x > 0 else 2) if absf(v.x) > absf(v.y) else (0 if v.y > 0 else 1)
 	_sprite.frame = _direction
