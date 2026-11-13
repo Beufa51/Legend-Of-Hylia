@@ -452,6 +452,10 @@
   Branchés : village = `04_peaceful_village`, parvis/temple = `13_magic_temple` (via generer_village.py). Pistes dispo : 01/09/16/24 combat, 02 ville animée, 03 château royal, 05 long voyage, 06 caverne cachée, 07 forêt, 08 ville forestière, 13 temple magique,
   18 vieux magicien, 19 ville est, 20 base militaire (caserne ?), 22 bibliothèque, 28 sanctuaire sacré (fin ?). Le donjon et les intérieurs gardent les musiques Ninja Adventure (« 21 - Dungeon », « 27 - Chill »).
 
+- 2026-11-13 : À FAIRE (demandes de l'utilisateur, après les musiques) : (1) HABITANTS dans le style du héros (planches LPC) ; (2) AILE DROITE du donjon ; (3) REFAIRE L'ENTRÉE DU DONJON (le temple = la maison-forge mousse réutilisée, ressemble à une maison) ;
+  (4) TAILLE DES PORTES : la porte des maisons (~19 px) est plus petite que le héros (24 px) -> pas crédible ; (5) « on a l'impression de rentrer dans le RIEN » en entrant dans un bâtiment (intérieur = écran noir séparé, aucune transition crédible : pas de porte qui s'ouvre, pas de bruit, intérieur sans rapport avec l'extérieur).
+  Pistes : arche de pierre du pack Aesthetic (Grassland Tileset, cases (10..13,11..13)) + escalier sombre pour l'entrée du donjon ; maisons/portes à l'échelle du héros ; porte qui s'ouvre + bruit + héros qui monte d'une case ; intérieur apparaissant dans la continuité de la porte.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
