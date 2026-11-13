@@ -51,27 +51,28 @@ e3 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 3 es
 e4 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 4 est obtenue
 e5 = epine(est_ferme=True)            # dernière épine : fermée à l'est, la tige monte vers la plume 5 (pointe de l'aile)
 
-# --- Plume 1 : blocs + marques au sol (leçon : pousser un bloc sur sa marque)
+# --- Plume 1 : blocs + marques au sol en triangle (leçon : pousser un bloc sur sa marque)
 p1 = vide(); sol(p1, 2, 22, 2, 11); sol(p1, 11, 13, 12, 13)
 for x in range(2, 23): p1[5][x] = '#'
 for x in (11, 12, 13): p1[5][x] = 'D'
 put(p1, 'G', (12, 3)); put(p1, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p1, 'T', (x, 4))
-# Énigme VISUELLE (sans texte) : une colonne de 3 blocs à droite, une colonne de 3 marques dorées au sol à gauche, sur les mêmes rangées :
-# on comprend qu'il faut pousser chaque bloc (vers la gauche) sur sa marque. Les 3 marques allument la porte du fond.
-put(p1, 'P', (12, 7), (12, 8), (12, 9)); put(p1, 'X', (18, 7), (18, 8), (18, 9))
+# Énigme VISUELLE (sans texte) : 3 marques dorées au sol forment un TRIANGLE dont la pointe vise la porte du fond ; 3 blocs alignés en bas
+# (une ligne), chacun pile sous sa marque : on comprend qu'il faut les pousser vers le haut pour former le triangle (2, 2 et 4 poussées).
+put(p1, 'P', (12, 6), (9, 8), (15, 8)); put(p1, 'X', (9, 10), (12, 10), (15, 10))
 put(p1, 'V', (2, 11), (3, 11), (2, 10), (22, 11), (21, 11)); put(p1, 'S', (21, 6)); put(p1, 'O', (3, 7))
 
-# --- Plume 2, écran du bas : SALLE SOMBRE, « LA TÊTE DE COQ ». 12 braseros (L) dessinent une tête de coq de profil (crête à 3 pointes, bec, barbillon, œil). Un trait doré pâle
-#     est gravé au sol entre eux (visible dans le noir) : on les allume à la lance DANS L'ORDRE du tracé (le prochain pulse), avant que tout
-#     s'éteigne (24 s). Un mauvais brasero éteint tout. Le dernier est l'œil. Dessin complet = la porte du haut s'ouvre.
-#     Un brasero (B) toujours allumé près de l'entrée montre d'emblée que le feu s'allume et se voit dans le noir.
-COQ = [(6, 10), (6, 6), (7, 3), (8, 5), (10, 3), (11, 5), (13, 3), (15, 6), (20, 8), (16, 9), (15, 11), (12, 7)]   # ordre du tracé ; le dernier = l'œil
+# --- Plume 2, écran du bas : SALLE SOMBRE, « LA LANCE ENFLAMMÉE ». Un foyer (l) brûle près de l'entrée : le frapper enflamme la lance quelques
+#     secondes. Avec une lance enflammée, on allume les braseros (L) éteints ; chaque brasero allumé devient un nouveau foyer (relais). Les
+#     flaques d'eau (w) éteignent la lance : une rivière de flaques coupe la salle, il faut passer par les gaps des bords et se servir des relais.
+#     Les 6 braseros allumés = la porte du haut s'ouvre. Aucun texte : le foyer brille, les braseros éteints rougeoient, les flaques luisent en bleu.
 p2a = vide(); sol(p2a, 2, 22, 2, 11); sol(p2a, 11, 13, 12, 13); sol(p2a, 11, 13, 0, 1)
 for x in (11, 12, 13): p2a[0][x] = 'D'; p2a[1][x] = 'D'
-put(p2a, 'L', *COQ)
-put(p2a, 'B', (9, 11))
-put(p2a, 'V', (2, 2), (3, 2), (22, 2), (21, 2), (2, 11), (3, 11), (22, 11), (21, 11))
+put(p2a, 'l', (12, 9))                                                     # le foyer (toujours allumé)
+put(p2a, 'L', (15, 10), (4, 10), (20, 10), (4, 3), (12, 3), (20, 3))        # les 6 braseros à allumer
+for x in range(4, 21): put(p2a, 'w', (x, 6))                               # la rivière de flaques (gaps en x=2-3 et x=21-22)
+for y in range(8, 12): put(p2a, 'w', (7, y), (17, y))                       # deux barrages : B et C ne sont joignables que par la rangée 7
+put(p2a, 'V', (2, 2), (3, 2), (22, 2), (21, 2), (22, 11), (21, 11))
 
 # --- Plume 2, écran du haut (la pointe) : un cristal à frapper ouvre la porte de l'alcôve où est la plume
 p2b = vide(); sol(p2b, 2, 22, 2, 11); sol(p2b, 11, 13, 12, 13)
@@ -204,8 +205,7 @@ salles = [
     ('Epine1', (1, 0), e1, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume1'}),
     ('Plume1', (1, -1), p1, (0.90, 0.96, 1.08), {'drapeau_plaque': 'p1_plaque', 'drapeau_porte': 'p1_plaque', 'drapeau_gemme': 'plume1'}),
     ('Epine2', (2, 0), e2, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume2'}),
-    ('Plume2a', (2, -1), p2a, (1.0, 1.0, 1.0), {'sombre': 'true', 'drapeau_braseros': 'p2_braseros', 'drapeau_porte': 'p2_braseros',
-        'chemin_braseros': 'PackedStringArray(' + ', '.join('"%d %d"' % c for c in COQ) + ')', 'duree_chemin': '24.0'}),
+    ('Plume2a', (2, -1), p2a, (1.0, 1.0, 1.0), {'sombre': 'true', 'drapeau_braseros': 'p2_braseros', 'drapeau_porte': 'p2_braseros', 'braseros_feu': 'true'}),
     ('Plume2b', (2, -2), p2b, (1.04, 0.98, 0.9), {'drapeau_cristal': 'p2_cristal', 'drapeau_porte': 'p2_cristal', 'drapeau_gemme': 'plume2'}),
     ('Epine3', (3, 0), e3, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume3'}),
     ('Plume3a', (3, -1), p3a, (1.04, 0.98, 0.9), {'melodie': '132', 'drapeau_melodie': 'p3_chant1', 'drapeau_porte': 'p3_chant1',

@@ -23,6 +23,13 @@ var lance: Node2D       # la lance (image + zone de touche), créée dans _ready
 var zone: Area2D        # zone de touche de la lance
 var lumiere: PointLight2D  # petite lumière autour du joueur (allumée seulement dans les salles sombres)
 var _recul := Vector2.ZERO  # poussée subie (coup de bec d'une poule...), s'éteint toute seule
+# --- Feu (salle « lance enflammée », Plume 2a) : toucher un brasero allumé enflamme la lance quelques secondes ; l'eau l'éteint ---
+const FEU_DUREE := 2.5
+const SON_FEU := "res://Assets/Ninja_adventure/Audio/Sounds/Elemental/Fire.wav"
+const SON_ETEINT := "res://Assets/Ninja_adventure/Audio/Sounds/Elemental/Bubble.wav"
+var feu := 0.0                # secondes de feu restantes (0 = lance normale)
+var _flamme: Node2D           # la flamme au-dessus de la tête
+var _lumiere_feu: PointLight2D
 var porte: Animal         # la poule qu'on porte (mini-jeu de la ferme), sinon null
 var _temps_pousse := 0.0  # depuis combien de temps on pousse contre un bloc
 # GLACE (voir room.gd, section Glace) : la salle où l'on est s'annonce dans `terrain` si elle a de la glace.
@@ -55,6 +62,13 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if feu > 0.0:
+		feu -= delta
+		if feu <= 0.0:
+			eteindre_feu()
+		elif _flamme != null:
+			_flamme.queue_redraw()
+			_lumiere_feu.energy = 0.8 + 0.2 * sin(Time.get_ticks_msec() * 0.02)
 	if _invulnerable > 0.0:
 		_invulnerable -= delta
 		sprite.visible = _invulnerable <= 0.0 or int(_invulnerable * 12.0) % 2 == 0   # clignote
@@ -257,6 +271,55 @@ func _mettre_a_jour_animation(entree: Vector2) -> void:
 		sprite.play("marche_" + direction)
 	else:
 		sprite.play("repos_" + direction)
+
+
+func a_feu() -> bool:
+	return feu > 0.0
+
+
+# La lance prend feu (ou le feu est ravivé) : flamme au-dessus de la tête, lueur orange, pointe de la lance rougeoyante.
+func prendre_feu() -> void:
+	if feu <= 0.0:
+		_jouer_son(SON_FEU, -6.0)
+	feu = FEU_DUREE
+	if _flamme == null:
+		_flamme = Node2D.new()
+		_flamme.position = Vector2(0, -26)
+		_flamme.z_index = 5
+		_flamme.draw.connect(_dessiner_flamme)
+		add_child(_flamme)
+		_lumiere_feu = Lumiere.creer(Color(1.0, 0.62, 0.25), 1.1, 0.9)
+		add_child(_lumiere_feu)
+	_flamme.visible = true
+	_lumiere_feu.enabled = true
+	lance.modulate = Color(1.7, 1.0, 0.6)
+
+
+# L'eau (ou la fin du temps) éteint la lance.
+func eteindre_feu(avec_bruit := false) -> void:
+	if feu <= 0.0 and _flamme == null:
+		return
+	var avait := feu > 0.0
+	feu = 0.0
+	if _flamme != null:
+		_flamme.visible = false
+		_lumiere_feu.enabled = false
+	lance.modulate = Color.WHITE
+	if avec_bruit and avait:
+		_jouer_son(SON_ETEINT, -2.0)
+
+
+# Dessine la flamme : elle rétrécit avec le temps et vacille dans la dernière seconde.
+func _dessiner_flamme() -> void:
+	var reste := clampf(feu / FEU_DUREE, 0.0, 1.0)
+	var t := Time.get_ticks_msec() * 0.012
+	if feu < 1.0 and int(t * 1.5) % 2 == 0:
+		return   # clignote : le feu va s'éteindre
+	var h := 7.0 + 7.0 * reste + sin(t) * 1.2
+	var l := 3.0 + 3.0 * reste
+	_flamme.draw_colored_polygon(PackedVector2Array([Vector2(0, 5), Vector2(-l, 1), Vector2(-l * 0.6, -h * 0.5), Vector2(sin(t * 1.3) * 1.5, -h), Vector2(l * 0.6, -h * 0.5), Vector2(l, 1)]), Color(1.0, 0.35, 0.1, 0.95))
+	_flamme.draw_colored_polygon(PackedVector2Array([Vector2(0, 4), Vector2(-l * 0.6, 1), Vector2(0, -h * 0.65), Vector2(l * 0.6, 1)]), Color(1.0, 0.7, 0.2, 1.0))
+	_flamme.draw_colored_polygon(PackedVector2Array([Vector2(0, 4), Vector2(-l * 0.3, 2), Vector2(0, -h * 0.3), Vector2(l * 0.3, 2)]), Color(1.0, 0.95, 0.6, 1.0))
 
 
 # Allume ou éteint la petite lumière du joueur (appelé par world.gd selon la salle).

@@ -72,34 +72,40 @@ func _tester_scene(chemin: String) -> void:
 			_erreurs.append("Plume1 : il faut 3 blocs et 3 marques")
 		else:
 			salle.reinitialiser()
+			# les 3 blocs sont en bas (rangée 10) : on les pousse vers le haut sur les marques du triangle
 			for bloc in salle._blocs:
-				for i in 6:
-					await bloc.pousser(Vector2i.LEFT)
+				var poussees := 4 if bloc.case.x == 12 else 2
+				for i in poussees:
+					await bloc.pousser(Vector2i.UP)
 			if not root.get_node("Etat").est("p1_plaque"):
 				_erreurs.append("Plume1 : les 3 blocs sont sur les marques mais la porte ne s'ouvre pas")
 			else:
 				print("OK  Plume1 : 3 blocs sur 3 marques = porte ouverte")
 			root.get_node("Etat").drapeaux.erase("p1_plaque")
-	# Plume 2a (tête de coq) : un mauvais brasero éteint tout ; dans l'ordre du tracé, la porte s'ouvre
+	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")
+		var heros = scene.get("joueur")
 		await process_frame
-		await process_frame
-		if salle2 == null or salle2._braseros.size() != 12:
-			_erreurs.append("Plume2a : il faut 12 braseros")
+		if salle2 == null or heros == null or salle2._braseros.size() != 6:
+			_erreurs.append("Plume2a : il faut 6 braseros à allumer")
 		else:
-			var premier: Vector2 = salle2._braseros[0].position / 16.0
-			if Vector2i(premier) != Vector2i(6, 10) or Vector2i(salle2._braseros[11].position / 16.0) != Vector2i(12, 7):
-				_erreurs.append("Plume2a : les braseros ne sont pas dans l'ordre du tracé")
-			salle2._braseros[3].frapper()   # mauvais ordre
-			if salle2._braseros[3].allume:
-				_erreurs.append("Plume2a : un brasero hors ordre ne doit pas s'allumer")
+			salle2._braseros[0].frapper()
+			if salle2._braseros[0].allume:
+				_erreurs.append("Plume2a : un brasero ne doit pas s'allumer sans lance enflammée")
+			heros.global_position = salle2.to_global(Vector2(8 * 16 + 8, 6 * 16 + 8) - Vector2(0, 5))   # sur une flaque
+			heros.prendre_feu()
+			salle2._surveiller_flaques()
+			if heros.a_feu():
+				_erreurs.append("Plume2a : une flaque doit éteindre la lance")
+			heros.prendre_feu()
 			for b in salle2._braseros:
 				b.frapper()
 			if not root.get_node("Etat").est("p2_braseros"):
-				_erreurs.append("Plume2a : tracé complet mais la porte ne s'ouvre pas")
+				_erreurs.append("Plume2a : 6 braseros allumés mais la porte ne s'ouvre pas")
 			else:
-				print("OK  Plume2a : tête de coq complète = porte ouverte")
+				print("OK  Plume2a : lance enflammée, 6 braseros = porte ouverte")
+			heros.eteindre_feu()
 			root.get_node("Etat").drapeaux.erase("p2_braseros")
 	if nb == 0:
 		_erreurs.append("%s : aucun écran trouvé" % chemin)
