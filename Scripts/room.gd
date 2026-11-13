@@ -99,6 +99,7 @@ var _occupe := {}
 var _blocs: Array[Bloc] = []
 var _plaques: Array[Vector2i] = []
 var _braseros: Array[Brasero] = []
+var _marques_vides := {}   # { case : vrai } marques encore libres : elles pulsent pour attirer l'oeil
 var _boutons := {}   # { case : Sprite2D } image de chaque bouton (relevé / enfoncé)
 var _portes: Array[Porte] = []
 var _portes2: Array[Porte] = []
@@ -166,6 +167,12 @@ func _process(delta: float) -> void:
 	for a in _animes:
 		var images: Array = a["images"]
 		a["sprite"].texture = images[int(_temps * 6.0 + a["decalage"]) % images.size()]
+	# Les marques encore vides pulsent doucement (« il y a quelque chose à poser ici »)
+	for cellule in _boutons:
+		var v := 1.0
+		if _marques_vides.get(cellule, true):
+			v = 1.0 + 0.45 * (0.5 + 0.5 * sin(_temps * 3.5))
+		_boutons[cellule].modulate = Color(v, v, v)
 	# Les lueurs vacillent doucement
 	for i in _lumieres.size():
 		_lumieres[i].modulate.a = 0.8 + 0.2 * sin(_temps * 7.0 + i * 1.7) * sin(_temps * 3.1 + i)
@@ -540,6 +547,7 @@ func _maj_boutons() -> void:
 	for cellule in _boutons:
 		var appuye: bool = _occupe.get(cellule) is Bloc or _reflet_sur(cellule)
 		_boutons[cellule].texture = _image("marque_active" if appuye else "marque")
+		_marques_vides[cellule] = not appuye
 	# un bloc posé sur une marque s'illumine (rune dorée) : on voit que c'est bon sans aucun texte
 	for bloc in _blocs:
 		bloc.briller(_boutons.has(bloc.case))
