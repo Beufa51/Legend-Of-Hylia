@@ -499,7 +499,9 @@ func _poser_portes_lettre(lettre: String, liste: Array[Porte]) -> void:
 # Note qu'un noeud occupe une case ; la case se libère toute seule quand le noeud disparaît.
 func _suivre(noeud: Node, cellule: Vector2i) -> void:
 	_occupe[cellule] = noeud
-	noeud.tree_exiting.connect(_oublier.bind(cellule, noeud))
+	var rappel := _oublier.bind(cellule, noeud)
+	if not noeud.tree_exiting.is_connected(rappel):   # un noeud peut être suivi plusieurs fois sur la même case
+		noeud.tree_exiting.connect(rappel)
 
 
 func _oublier(cellule: Vector2i, noeud: Node) -> void:

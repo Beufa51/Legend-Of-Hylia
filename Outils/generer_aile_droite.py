@@ -205,14 +205,15 @@ for y in range(2, 12):
     for x in (15, 18): p5a[y][x] = 'Z'
 put(p5a, 'J', (21, 2)); put(p5a, 'B', (21, 10)); put(p5a, 'V', (2, 11), (9, 2), (22, 7))
 
-# D5b : REFLET + PLOTS. Le reflet est enfermé derrière une barrière ORANGE (colonne 9) ; le cristal la baisse... mais lève
-#       la barrière BLEUE (rangée 7) qui coupe le chemin du joueur. (29 coups ; impossible sans le cristal)
-p5b = salle_reflet('D'); put(p5b, 'r', (5, 3))
+# D5b : REFLET + PLOTS. Le reflet (en haut à gauche) est enfermé derrière une barrière ORANGE (colonne 9) ; le cristal la baisse...
+#       mais lève la barrière BLEUE (rangée 8) qui coupe la salle. Il faut poser le reflet sur sa dalle (8,4) et toi sur la tienne (18,9).
+#       (23 coups au lieu de 29 ; impossible sans le cristal ; plan trouvé par Outils/chercher_d5b.py)
+p5b = salle_reflet('D'); put(p5b, 'r', (8, 2))
 for x in range(2, 10): p5b[6][x] = '#'
 put(p5b, 'o', (9, 2), (9, 3), (9, 4), (9, 5))
-put(p5b, 'a', (16, 4), (8, 9))
-for x in range(14, 23): p5b[7][x] = 'u'
-put(p5b, 'K', (12, 8))
+put(p5b, 'a', (8, 4), (18, 9))
+for x in range(11, 23): p5b[8][x] = 'u'
+put(p5b, 'K', (10, 9))
 
 # D5c : GLACE + BLOC + BOUTON. Le bouton (sol normal au milieu de la glace) arrête le bloc qui glisse dessus : la herse du haut
 #       s'ouvre. (17 coups ; impossible sans le bloc)
@@ -281,7 +282,7 @@ salles = [
         'drapeau_coffre': 'd5_cle', 'drapeau_cle': 'd5_cle', 'drapeau_serrure': 'd5_porte',
         'indice': "La pointe de l'aile. Ici, tout ce que tu as appris se combine..."}),
     ('PlumeD5b', (-5, -2), p5b, (0.95, 0.93, 1.06), {'retour': retour_d5(2), 'drapeau_reflet': 'd5_reflet', 'drapeau_porte': 'd5_reflet',
-        'indice': "Ton reflet est enfermé derrière des plots... et le cristal commande toutes les barrières."}),
+        'indice': "Ton reflet est enfermé derrière des plots orange. Le cristal les baisse, mais il lève les bleus : choisis bien quand le frapper."}),
     ('PlumeD5c', (-5, -3), p5c, (0.9, 0.97, 1.1), {'retour': retour_d5(3), 'drapeau_plaque': 'd5_bouton', 'drapeau_porte2': 'd5_bouton',
         'indice': "Un bouton au milieu de la glace : un bloc qui glisse s'arrête dessus."}),
     ('PlumeD5d', (-5, -4), p5d, (1.0, 0.97, 0.92), {'retour': retour_d5(4), 'drapeau_fragile': 'd5_dalles', 'drapeau_porte2': 'd5_dalles',

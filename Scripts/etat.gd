@@ -86,8 +86,11 @@ func annoncer(texte: String) -> void:
 
 # Retient l'endroit où reprendre la partie (appelé quand le joueur entre dans une salle).
 func memoriser_position(pos: Vector2) -> void:
+	var scene := get_tree().current_scene
+	if scene == null:   # (tests automatiques : pas de scène courante)
+		return
 	position_sauvee = pos
-	scene_sauvee = get_tree().current_scene.scene_file_path
+	scene_sauvee = scene.scene_file_path
 	# on retient aussi le NOM de l'écran et la position dans l'écran (sauvegarde v2)
 	var grille := Vector2i(floori(pos.x / Ecran.TAILLE_SALLE.x), floori(pos.y / Ecran.TAILLE_SALLE.y))
 	for e in get_tree().current_scene.get_children():
@@ -98,7 +101,12 @@ func memoriser_position(pos: Vector2) -> void:
 	sauver()
 
 
+var sauvegarde_active := true         # faux pendant les tests automatiques (Tests/verifier_scenes.gd) : on ne touche pas au fichier
+
+
 func sauver() -> void:
+	if not sauvegarde_active:
+		return
 	var fichier := FileAccess.open(FICHIER, FileAccess.WRITE)
 	if fichier == null:
 		push_warning("Sauvegarde impossible : " + FICHIER)

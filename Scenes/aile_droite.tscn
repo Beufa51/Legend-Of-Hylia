@@ -166,8 +166,8 @@ teinte = Color(0.95, 0.93, 1.06, 1)
 retour = Vector2(-1800, -269)
 drapeau_reflet = "d5_reflet"
 drapeau_porte = "d5_reflet"
-indice = "Ton reflet est enfermé derrière des plots... et le cristal commande toutes les barrières."
-layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##.......o.............##", "##...r...o.............##", "##.......o......a......##", "##.......o.............##", "##########.............##", "##............uuuuuuuuu##", "##..........K..........##", "##......a..............##", "##.....................##", "##.....................##", "###########...###########", "###########...###########")
+indice = "Ton reflet est enfermé derrière des plots orange. Le cristal les baisse, mais il lève les bleus : choisis bien quand le frapper."
+layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##......ro.............##", "##.......o.............##", "##......ao.............##", "##.......o.............##", "##########.............##", "##.....................##", "##.........uuuuuuuuuuuu##", "##........K.......a....##", "##.....................##", "##.....................##", "###########...###########", "###########...###########")
 
 [node name="PlumeD5c" parent="." instance=ExtResource("2")]
 grille = Vector2i(-5, -3)

@@ -118,7 +118,7 @@ def plan_de(nom):
 
 
 if __name__ == "__main__":
-    pads = lambda e, t: e['r'] is not None and {e['j'], e['r']} == {(16, 4), (8, 9)}
+    pads = lambda e, t: e['r'] is not None and {e['j'], e['r']} == {(8, 4), (18, 9)}
     sortie = lambda e, t: e['h'] and e['j'][1] <= 1
     tests = [
         ("PlumeD5b", pads, "K"),              # reflet + plots : impossible sans le cristal

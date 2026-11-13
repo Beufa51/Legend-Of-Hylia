@@ -716,6 +716,15 @@
 
 - 2026-11-13 : retour : « la grille qui s'ouvre (salle D2b) fait demi-porte ». Cause : `arche_basse_*` (porte intérieure 48x16, mur d'1 rangée) = BAS d'une arche. **14p (non testée dans Godot, aperçu PIL vérifié)** : `Outils/fabriquer_porte_basse.py` dessine un portique complet (linteau de briques, 2 montants, ouverture sombre, grille qui se relève en 5 images) -> `arche_basse_1..5.png` ; à relancer APRÈS `traiter_pack_donjon.py` (qui écrit l'ancienne version).
 
+- 2026-11-13 : **AUDIT (joueur Zelda + développeur) puis CORRECTIONS 15a** (l'utilisateur : « fais tout sauf 3 (objets/récompenses) et 4 (style unique), que je ferai avec Opus ; PI gérée, ne plus en parler »).
+  GODOT 4.4.1 headless téléchargé côté Claude (scratchpad, non versionné) : le code a ENFIN été chargé dans un vrai Godot. `Tests/verifier_scenes.gd` (à lancer : `godot --headless --path . -s res://Tests/verifier_scenes.gd`, code de sortie 0 = bon) :
+  charge les 4 scènes, visite chaque écran (F1), vérifie plans 25x14 et grilles uniques, lance 5 s de la vue aérienne, teste les contrôles tactiles. Résultat : TOUT BON. Bugs trouvés/corrigés : signal `tree_exiting` connecté en double dans `room.gd::_suivre` (139 erreurs), `Etat.memoriser_position` sans scène courante, `Etat.sauvegarde_active` (faux pendant les tests).
+  ATTENTION : lancer Godot 4.4 réécrit ~2750 fichiers `.import` (projet en 4.7) -> toujours `git checkout` des `.import` modifiés avant de commiter.
+  1) CONTRÔLES TACTILES : `Scripts/tactile.gd` (class Tactile, ajouté dans `world.gd::_ready`) : joystick flottant (moitié gauche), boutons A (attack), B (run), R (reset), appui ailleurs = avancer un dialogue ; invisible sans écran tactile ou après une touche clavier ; vrais `InputEventAction`.
+  2) D5b RAMENÉE DE 29 À 23 COUPS (plan trouvé par `Outils/chercher_d5b.py`, recherche aléatoire + solveur) : reflet (8,2), dalles (8,4)/(18,9), herse bleue rangée 8, cristal (10,9). `resoudre_d5.py` mis à jour. Indice réécrit. D5c/d/e inchangées (17/19/26 coups).
+  3) DÉCOUPAGE : `world.gd` 990 -> 808 lignes : la cinématique de vue aérienne est dans `Scripts/vue_aerienne.gd` (class VueAerienne, `VueAerienne.new(self).jouer(cote)`, accède au monde via `monde.`). `room.gd` (1150 lignes) PAS découpé : ses sections (sentinelles, rayon, chant, reflet) partagent trop d'état ; à faire avec le test comme filet.
+  4) À FAIRE (Opus) : points 3 (objets + récompenses : outil par aile, effets des insignes) et 4 (style visuel unique). Reste : session de test humaine de 10a-14p, build web mobile (export), perf web.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
