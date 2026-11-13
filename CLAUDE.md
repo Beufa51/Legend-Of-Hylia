@@ -694,6 +694,10 @@
   3) STATUES : `Outils/fabriquer_statues.py` (APRÈS fabriquer_objets.py) redessine `statue_chevalier` (armure, heaume à cimier, épée, écu à croix) et `statue_oiseau` (coq de pierre : crête, bec, queue, aile) en 22x34 sur piédestal biseauté, ombrage haut-gauche ; décalage (-3, TUILE-34) dans `room.gd`, `chanteur.gd` (collision 16x30), `apercu_salle.py`.
   Aucune statue n'existe dans les packs importés : elles sont dessinées en code.
 
+- 2026-11-13 : statues dessinées en code jugées « horribles » -> l'utilisateur les a fait générer par Gemini (`Assets/Gemini/originaux/statues.jpg`, 4 colonnes x 2 rangées, fond magenta en dégradé).
+  **ÉTAPE 14k écrite (non testée dans Godot, aperçu PIL vérifié)** : `Outils/traiter_statues.py` (À LANCER APRÈS `fabriquer_statues.py`, qui n'est plus qu'un repli) découpe, détoure (clé magenta + plus grande composante), réduit en 22x34 (alignées en bas) -> `statue_chevalier` (épée, utilisée par `S`), `statue_oiseau` (coq vers la droite, `O` et le chanteur `C`),
+  + disponibles, pas encore branchées : `statue_lance`, `statue_oiseau_g` (coq vers la gauche), `statue_oiseau_d2`, `statue_capuche`, `statue_gargouille`, `statue_gargouille_ailee`. Offsets inchangés (-3, TUILE-34). Aperçu : `Outils/apercus/statues.png`. Idée : lettres pour capuche/gargouille dans les salles, coq inversé pour la symétrie de l'aile droite.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
