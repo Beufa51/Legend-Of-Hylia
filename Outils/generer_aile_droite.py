@@ -39,15 +39,12 @@ for x in range(11, 14):
 
 # --- Entrée (0,0) : grande salle, porte au sud (vers le vestibule) et sortie à l'OUEST (rangées 5-8).
 #     Leçon : LE LEVIER. La grille de l'ouest (D) s'ouvre quand on bascule le levier (J) d'un coup de lance.
-#     Deux bassins d'eau (~) décorent la salle.
 ent = vide(); sol(ent, 2, 22, 2, 11); sol(ent, 0, 1, 5, 8); sol(ent, 11, 13, 12, 13)
 for y in range(5, 9): ent[y][1] = 'D'
 put(ent, 'B', (3, 3), (21, 3), (3, 10), (21, 10)); put(ent, 'O', (5, 4)); put(ent, 'S', (19, 4))
 put(ent, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (22, 6), (22, 7))
-put(ent, 'J', (4, 9))
+put(ent, 'J', (12, 2))   # levier contre le mur du haut, au centre
 for x in range(6, 19): put(ent, 'T', (x, 6), (x, 7))
-for y in (9, 10):
-    for x in (7, 8, 9, 15, 16, 17): put(ent, '~', (x, y))
 
 
 # --- Épine : couloir horizontal (rangées 5-8) + tige vers le haut (colonnes 11-13). Plan écrit « à l'endroit »
@@ -206,7 +203,7 @@ for y in range(2, 6): p5a[y][7] = '#'
 put(p5a, 'D', (3, 5), (4, 5), (5, 5)); put(p5a, 'Q', (4, 3))
 for y in range(2, 12):
     for x in (15, 18): p5a[y][x] = 'Z'
-put(p5a, 'J', (21, 3)); put(p5a, 'B', (21, 10)); put(p5a, 'V', (2, 11), (9, 2), (22, 7))
+put(p5a, 'J', (21, 2)); put(p5a, 'B', (21, 10)); put(p5a, 'V', (2, 11), (9, 2), (22, 7))
 
 # D5b : REFLET + PLOTS. Le reflet est enfermé derrière une barrière ORANGE (colonne 9) ; le cristal la baisse... mais lève
 #       la barrière BLEUE (rangée 7) qui coupe le chemin du joueur. (29 coups ; impossible sans le cristal)

@@ -704,6 +704,10 @@
   3) POTS en grappes dans les coins / le long des murs (`generer_monde.py`, `generer_aile_droite.py`) : Vestibules, Entrées, Plumes 1, 2a, 2b, 3a-3c, 5b, 5d (gauche). NON touchées (puzzles à solveur/rayons/sentinelles) : plumes 4, 5a/c/e, D1-D5 sauf Entrée droite ; le pot de la plume 1 (10,9) est une énigme.
   Scènes régénérées (`world.tscn`, `aile_droite.tscn`) ; solveurs `resoudre_d5.py` et `simuler_sentinelles.py` relancés OK.
 
+- 2026-11-13 : retours 14l : « eau pas naturelle au début du donjon, levier mal placé (à mettre contre le mur), blocs de couleur jurent encore -> prompt Gemini ». **14m (non testée dans Godot)** : bassins d'eau RETIRÉS de l'Entrée droite ;
+  LEVIER MURAL (`fabriquer_levier.py` : plaque rivetée sur le mur + rebord, sprite décalé de -12 px) posé rangée 2 contre le mur du haut : Entrée droite (12,2), D5a (21,2). Plots/dalles de couleur : prompt Gemini donné à l'utilisateur
+  (planche : plots orange/bleu levés + baissés, dalles rouge/bleu + dorée, magenta #FF00FF) ; À FAIRE à réception : `Assets/Gemini/originaux/plots.jpg` -> découper/réduire 16 px, brancher dans `plot.gd` et `dalle.gd` (images au lieu de ColorRect).
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

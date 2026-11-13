@@ -8,25 +8,25 @@ CONTOUR = (19, 18, 28); P_SOMBRE = (52, 52, 70); P_MOY = (72, 72, 93); P_CLAIRE 
 ACIER = (150, 165, 200); ACIER_S = (92, 104, 140); ROUGE = (214, 56, 48); ROUGE_C = (255, 150, 120)
 
 def levier(angle):
+    """Levier MURAL : plaque de pierre rivetée sur le mur (haut de l'image) + petit rebord au sol (bas)."""
     im = Image.new("RGBA", (16, 24), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-    # socle : dalle de pierre en perspective + fente
-    d.rectangle((1, 17, 14, 22), fill=CONTOUR)
-    d.rectangle((2, 17, 13, 21), fill=P_MOY); d.rectangle((2, 17, 13, 17), fill=P_CLAIRE)
-    d.rectangle((2, 20, 13, 21), fill=P_SOMBRE)
-    d.rectangle((5, 18, 10, 19), fill=CONTOUR)                      # fente où pivote la tige
-    # tige (épaisseur 3 px, contour sombre) depuis le pivot (8, 18)
-    px, py = 8, 18; L = 11
+    d.rectangle((1, 1, 14, 14), fill=CONTOUR)                          # plaque
+    d.rectangle((2, 2, 13, 13), fill=P_MOY); d.rectangle((2, 2, 13, 2), fill=P_CLAIRE); d.rectangle((2, 2, 2, 13), fill=P_CLAIRE)
+    d.rectangle((2, 13, 13, 13), fill=P_SOMBRE); d.rectangle((13, 3, 13, 13), fill=P_SOMBRE)
+    for (rx, ry) in ((3, 3), (12, 3)): d.point((rx, ry), fill=ACIER)   # rivets
+    d.rectangle((7, 4, 9, 11), fill=CONTOUR)                           # rainure
+    d.rectangle((1, 15, 14, 19), fill=CONTOUR)                         # rebord de pierre au sol
+    d.rectangle((2, 15, 13, 18), fill=P_CLAIRE); d.rectangle((2, 18, 13, 18), fill=P_SOMBRE)
+    px, py = 8, 11; L = 8
     ex = px + L * math.sin(math.radians(angle)); ey = py - L * math.cos(math.radians(angle))
     d.line((px, py, ex, ey), fill=CONTOUR, width=5)
     d.line((px, py, ex, ey), fill=ACIER_S, width=3)
     d.line((px - 0.5, py, ex - 0.5, ey), fill=ACIER, width=1)
-    # pommeau rouge bien visible
     r = 3
     d.ellipse((ex - r - 1, ey - r - 1, ex + r + 1, ey + r + 1), fill=CONTOUR)
     d.ellipse((ex - r, ey - r, ex + r, ey + r), fill=ROUGE)
     d.rectangle((ex - 1.5, ey - 1.5, ex - 0.5, ey - 0.5), fill=ROUGE_C)
-    # pivot : rivet
-    d.rectangle((7, 17, 9, 19), fill=CONTOUR); d.rectangle((8, 18, 8, 18), fill=ACIER)
+    d.rectangle((7, 10, 9, 12), fill=CONTOUR); d.point((8, 11), fill=ACIER)   # pivot
     return im
 
 for i, a in enumerate((-27, -14, 0, 14, 27)):
