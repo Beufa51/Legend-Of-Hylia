@@ -5,7 +5,7 @@ Lettres des plans : voir l'en-tête de Scripts/room.gd. Une salle = 25 x 14 case
 L'aile droite est le MIROIR de l'aile gauche (voir generer_monde.py) :
   vestibule (0,1) -> entrée (0,0) -> épine qui part vers l'OUEST (-1..-5, 0) avec 5 plumes qui montent,
   de plus en plus longues de DROITE à GAUCHE. Drapeaux : plumeD1..plumeD4, fragment_droite.
-Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur, 3 glace (faites) ; prévues : 4 reflet, 5 combinaison.
+Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur, 3 glace, 4 reflet (faites) ; prévue : 5 combinaison.
 """
 import os
 W, H, E = 25, 14, 2
@@ -73,7 +73,8 @@ for y in range(5, 9):
     for x in (16, 19): e2[y][x] = 'Z'
 RETOUR_E2 = 'Vector2(%d, %d)' % (-2 * 400 + 23 * 16 + 8, 6 * 16 + 3)
 e3 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D3 est obtenue
-e4 = epine(ferme=True, tige=False)   # PROVISOIRE : cul-de-sac tant que la plume D4 n'est pas construite
+e4 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D4 est obtenue
+e5 = epine(ferme=True, tige=False)   # PROVISOIRE : cul-de-sac tant que la plume D5 n'est pas construite
 
 # --- PLUME D1 : « LES PLOTS ». Leçon : le cristal commute les plots orange (o) et bleus (u).
 #     Au départ : orange LEVÉS (la barrière de la rangée 9 bloque), bleus BAISSÉS (la grille bleue du nord est ouverte).
@@ -152,6 +153,45 @@ put(p3c, 'G', (12, 2)); put(p3c, 'B', (9, 2), (15, 2))
 for x in range(10, 15): put(p3c, 'T', (x, 3))
 put(p3c, 'V', (2, 11), (22, 11))
 
+# --- PLUME D4 : « LE REFLET ». Un double fantôme (part de la case r) fait les mêmes gestes que le joueur, gauche et droite
+#     INVERSÉES. Bloqué par un mur pendant que le joueur avance, il se décale. Dalles du reflet (a) : toutes occupées en même
+#     temps (joueur + reflet) = drapeau ; le reflet enfonce aussi les boutons (P). R = retour au début (reflet compris).
+#     Vérifié par un solveur (modèle par cases) : 4a = 6 coups, 4b = 9, 4c = 41, 4d = 30.
+def retour_d4(n):   # bas de l'écran n de la plume D4 (case (12,11)), en position dans le monde
+    return 'Vector2(%d, %d)' % (-4 * 400 + 12 * 16 + 8, -224 * n + 11 * 16 + 3)
+
+def salle_reflet(sortie):
+    """Salle ouverte en bas ; en haut (rangées 0-1, colonnes 11-13) une porte de la lettre `sortie`."""
+    g = vide(); sol(g, 2, 22, 2, 11); sol(g, 11, 13, 12, 13); sol(g, 11, 13, 0, 1)
+    for x in (11, 12, 13): g[0][x] = sortie; g[1][x] = sortie
+    return g
+
+# D4a (leçon) : 4 pas à droite et 2 en haut, et chacun est sur sa dalle.
+p4a = salle_reflet('D'); put(p4a, 'r', (6, 4)); put(p4a, 'a', (16, 9), (2, 2))
+put(p4a, 'V', (22, 11), (2, 11)); put(p4a, 'B', (20, 3)); put(p4a, 'S', (9, 7))
+
+# D4b : il faut un décalage vertical : bloquer le reflet sous le mur (15-21, 3) pendant qu'on monte.
+p4b = salle_reflet('D'); put(p4b, 'r', (12, 5)); put(p4b, 'a', (6, 8), (18, 4))
+for x in range(15, 22): p4b[3][x] = '#'
+put(p4b, '#', (4, 5), (8, 10), (20, 9)); put(p4b, 'V', (2, 11), (22, 11))
+
+# D4c : le reflet doit entrer dans la niche du bouton (P), en haut à gauche (ouverte seulement par (5,3)) : la herse du haut s'ouvre.
+p4c = salle_reflet('H'); put(p4c, 'r', (19, 9)); put(p4c, 'P', (3, 3))
+put(p4c, '#', (2, 5), (3, 5), (4, 5), (5, 5), (5, 4), (5, 2))
+put(p4c, '#', (8, 3), (8, 4), (8, 7), (9, 7), (10, 7), (15, 9), (16, 9), (17, 6), (18, 6), (21, 4), (14, 3))
+put(p4c, 'V', (22, 11), (2, 11))
+
+# D4d (pointe, SOMBRE) : le reflet enfonce le bouton (P) -> la herse H de l'enclos s'ouvre ; le joueur sur la dalle de l'enclos
+#      ET le reflet sur l'autre -> la grille D de l'alcôve s'ouvre -> plume.
+p4d = vide(); sol(p4d, 2, 22, 6, 11); sol(p4d, 11, 13, 12, 13)
+sol(p4d, 9, 15, 2, 4); put(p4d, 'D', (11, 5), (12, 5), (13, 5))
+for x in range(16, 23): p4d[8][x] = '#'
+put(p4d, 'H', (18, 8), (19, 8), (20, 8)); put(p4d, '#', (16, 6), (16, 7))
+put(p4d, 'a', (21, 6), (4, 10)); put(p4d, 'P', (3, 6)); put(p4d, 'r', (8, 9))
+put(p4d, '#', (6, 7), (7, 7), (10, 10), (13, 7), (5, 9))
+put(p4d, 'G', (12, 3)); put(p4d, 'B', (9, 2), (15, 2))
+for x in range(10, 15): put(p4d, 'T', (x, 4))
+
 salles = [
     ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'drapeau_porte2': 'fragment_droite',
         'drapeau_coffre': 'd_cle_vestibule', 'drapeau_cle': 'd_cle_vestibule', 'drapeau_serrure': 'd_porte_vestibule',
@@ -174,7 +214,17 @@ salles = [
         'indice': "Aucun rocher au bon endroit... Un bloc poussé sur la glace glisse, lui aussi."}),
     ('PlumeD3c', (-3, -3), p3c, (0.94, 0.96, 1.1), {'retour': retour_d3(3), 'drapeau_gemme': 'plumeD3',
         'indice': "Un plot baissé n'est pas glissant : on s'y arrête. Et le cristal fait monter les plots bleus..."}),
-    ('Epine4', (-4, 0), e4, (0.90, 0.88, 0.98), {}),
+    ('Epine4', (-4, 0), e4, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD4'}),
+    ('PlumeD4a', (-4, -1), p4a, (0.96, 0.94, 1.08), {'retour': retour_d4(1), 'drapeau_reflet': 'd4_reflet1', 'drapeau_porte': 'd4_reflet1',
+        'indice': "Ton REFLET ! Il fait tes gestes, mais la gauche et la droite inversées. Mettez-vous chacun sur une dalle."}),
+    ('PlumeD4b', (-4, -2), p4b, (0.95, 0.93, 1.06), {'retour': retour_d4(2), 'drapeau_reflet': 'd4_reflet2', 'drapeau_porte': 'd4_reflet2',
+        'indice': "Quand un mur arrête ton reflet, toi tu continues : vous vous décalez. R pour recommencer."}),
+    ('PlumeD4c', (-4, -3), p4c, (0.94, 0.95, 1.08), {'retour': retour_d4(3), 'drapeau_plaque': 'd4_bouton', 'drapeau_porte2': 'd4_bouton',
+        'indice': "Le bouton est hors de ta portée... mais pas de celle de ton reflet."}),
+    ('PlumeD4d', (-4, -4), p4d, (1.0, 1.0, 1.0), {'sombre': 'true', 'retour': retour_d4(4), 'drapeau_plaque': 'd4_bouton2', 'drapeau_porte2': 'd4_bouton2',
+        'drapeau_reflet': 'd4_reflet3', 'drapeau_porte': 'd4_reflet3', 'drapeau_gemme': 'plumeD4',
+        'indice': "Dans le noir, ton reflet luit. Un bouton, une herse, deux dalles..."}),
+    ('Epine5', (-5, 0), e5, (0.90, 0.88, 0.98), {}),
 ]
 depart = (200, 224 + 180)   # (seulement si on lance la scène directement : sinon on arrive par le temple)
 

@@ -11,7 +11,7 @@ Images produites :
   MURS ET SOL (mêmes noms que ceux de traiter_gemini.py, qu'ils remplacent) : mur_fond, mur_bord_n/s/e/o, mur_coin_*, mur_dot_*,
   + nouvelles : mur_face_haut/bas (+ _g/_d = bouts), pilier (16x24), sol_plat(_b/_c/_d)
   PORTES ET OBJETS : arche_herse_1..5, arche_bois_1..5 (48x32), arche_basse_1..5 (48x16), coffre_1..5 (20x22),
-  levier_1..5 (16x16), cle (12x8), pics_1..5 (16x24), eau_1/2 (16x16), glace_1/2 (16x16, dessinées en code)
+  levier_1..5 (16x16), cle (12x8), pics_1..5 (16x24), eau_1/2 (16x16), glace_1/2, dalle_reflet(_on) (16x16, dessinées en code)
 """
 import os
 import sys
@@ -208,6 +208,23 @@ def glace(images):
             d.line([(x0 + 1, 12), (x0 + 3, 10)], fill=(255, 255, 255, 255))
         d.point([(12 - decalage // 2, 4), (4 + decalage, 6)], fill=(255, 255, 255, 255))   # éclats
         images["glace_%d" % n] = im
+    dalles_reflet(images)
+
+
+def dalles_reflet(images):
+    """DALLE DU REFLET (lettre a) : disque de pierre gravé de deux arcs face à face (un miroir), éteint / allumé."""
+    from PIL import ImageDraw
+    for nom, trait, fond in (("dalle_reflet", (70, 110, 150, 255), (74, 82, 104, 255)),
+                             ("dalle_reflet_on", (170, 235, 255, 255), (60, 110, 150, 255))):
+        im = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+        d = ImageDraw.Draw(im)
+        d.ellipse([1, 1, 14, 14], fill=(46, 50, 66, 255))            # bord sombre
+        d.ellipse([2, 2, 13, 13], fill=fond)
+        d.arc([3, 4, 9, 12], 100, 260, fill=trait)                     # arc gauche ( 
+        d.arc([6, 4, 12, 12], 280, 80, fill=trait)                     # arc droit  )
+        d.line([(7, 4), (7, 11)], fill=trait)                          # l'axe du miroir
+        d.point([(5, 3)], fill=(200, 220, 240, 255))
+        images[nom] = im
 
 
 def main():

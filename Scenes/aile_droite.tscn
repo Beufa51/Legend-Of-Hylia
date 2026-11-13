@@ -99,6 +99,52 @@ layout = PackedStringArray("#########################", "#######################
 [node name="Epine4" parent="." instance=ExtResource("2")]
 grille = Vector2i(-4, 0)
 teinte = Color(0.9, 0.88, 0.98, 1)
+drapeau_porte = "plumeD4"
+layout = PackedStringArray("###########...###########", "###########...###########", "###########...###########", "###########...###########", "###########...###########", ".D....B...........B......", ".D.......................", ".DTTTTTTTTT...TTTTTTTTT..", ".D.......................", "#########################", "#########################", "#########################", "#########################", "#########################")
+
+[node name="PlumeD4a" parent="." instance=ExtResource("2")]
+grille = Vector2i(-4, -1)
+teinte = Color(0.96, 0.94, 1.08, 1)
+retour = Vector2(-1400, -45)
+drapeau_reflet = "d4_reflet1"
+drapeau_porte = "d4_reflet1"
+indice = "Ton REFLET ! Il fait tes gestes, mais la gauche et la droite inversées. Mettez-vous chacun sur une dalle."
+layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##a....................##", "##..................B..##", "##....r................##", "##.....................##", "##.....................##", "##.......S.............##", "##.....................##", "##..............a......##", "##.....................##", "##V...................V##", "###########...###########", "###########...###########")
+
+[node name="PlumeD4b" parent="." instance=ExtResource("2")]
+grille = Vector2i(-4, -2)
+teinte = Color(0.95, 0.93, 1.06, 1)
+retour = Vector2(-1400, -269)
+drapeau_reflet = "d4_reflet2"
+drapeau_porte = "d4_reflet2"
+indice = "Quand un mur arrête ton reflet, toi tu continues : vous vous décalez. R pour recommencer."
+layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##.....................##", "##.............#######.##", "##................a....##", "##..#.......r..........##", "##.....................##", "##.....................##", "##....a................##", "##..................#..##", "##......#..............##", "##V...................V##", "###########...###########", "###########...###########")
+
+[node name="PlumeD4c" parent="." instance=ExtResource("2")]
+grille = Vector2i(-4, -3)
+teinte = Color(0.94, 0.95, 1.08, 1)
+retour = Vector2(-1400, -493)
+drapeau_plaque = "d4_bouton"
+drapeau_porte2 = "d4_bouton"
+indice = "Le bouton est hors de ta portée... mais pas de celle de ton reflet."
+layout = PackedStringArray("###########HHH###########", "###########HHH###########", "##...#.................##", "##.P....#.....#........##", "##...#..#............#.##", "######.................##", "##...............##....##", "##......###............##", "##.....................##", "##.............##..r...##", "##.....................##", "##V...................V##", "###########...###########", "###########...###########")
+
+[node name="PlumeD4d" parent="." instance=ExtResource("2")]
+grille = Vector2i(-4, -4)
+teinte = Color(1.0, 1.0, 1.0, 1)
+sombre = true
+retour = Vector2(-1400, -717)
+drapeau_plaque = "d4_bouton2"
+drapeau_porte2 = "d4_bouton2"
+drapeau_reflet = "d4_reflet3"
+drapeau_porte = "d4_reflet3"
+drapeau_gemme = "plumeD4"
+indice = "Dans le noir, ton reflet luit. Un bouton, une herse, deux dalles..."
+layout = PackedStringArray("#########################", "#########################", "#########B.....B#########", "#########...G...#########", "#########.TTTTT.#########", "###########DDD###########", "##.P............#....a.##", "##....##.....#..#......##", "##..............##HHH####", "##...#..r..............##", "##..a.....#............##", "##.....................##", "###########...###########", "###########...###########")
+
+[node name="Epine5" parent="." instance=ExtResource("2")]
+grille = Vector2i(-5, 0)
+teinte = Color(0.9, 0.88, 0.98, 1)
 layout = PackedStringArray("#########################", "#########################", "#########################", "#########################", "#########################", "##....B...........B......", "##.......................", "##TTTTTTTTT...TTTTTTTTT..", "##.......................", "#########################", "#########################", "#########################", "#########################", "#########################")
 
 [node name="Player" parent="." instance=ExtResource("3")]

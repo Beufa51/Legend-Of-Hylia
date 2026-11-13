@@ -516,6 +516,15 @@
   SALLES : Épine3 porte ouest = `plumeD3` ; D3a (-3,-1) leçon (3 glissades) ; D3b (-3,-2) BLOC comme butée (12 coups, impossible sans le bloc) ; D3c (-3,-3) glace + PLOTS + CRISTAL (13 coups, impossible sans le cristal) -> plume `plumeD3` ;
   Épine4 (-4,0) provisoire (cul-de-sac). Sorties de D3a/D3b = remonter la colonne 12 jusqu'au sol de la rangée 2. `Outils/resoudre_glace.py` revérifie les 3 salles depuis aile_droite.tscn (à relancer après toute modif).
 
+- 2026-11-13 : **ÉTAPE 11f écrite (non testée dans Godot, 4 salles vérifiées par un solveur)** = PLUME D4 « LE REFLET » (colonne x=-4).
+  `Scripts/reflet.gd` (class Reflet, CharacterBody2D) : double fantôme du joueur (même SpriteFrames, bleuté, pulse, lumière en salle sombre) qui part de la case `r` ; chaque image il reproduit le DÉPLACEMENT RÉEL du joueur
+  avec x inversé (`velocity = (-dx, dy)/delta`, move_and_slide) : bloqué par murs/objets/portes fermées (masque 1), traverse le joueur (exception) ; saut > 12 px (téléportation) ignoré ; `disparaitre()` une fois l'énigme résolue.
+  `room.gd` (section Reflet) : lettres `r` (départ) et `a` (dalle du reflet, `dalle_reflet(_on)`, lueur en salle sombre) ; export `drapeau_reflet` (toutes les dalles `a` occupées en même temps par joueur/reflet) ;
+  le reflet ENFONCE les boutons `P` (`_reflet_sur`, `verifier_plaques`/`_maj_boutons`) ; créé à la 1re entrée dans la salle, remis au départ à chaque entrée et à R. `recommence_au_debut()` (glace ou reflet non résolu) -> R = retour au début (world.gd).
+  SALLES : Épine4 porte ouest = `plumeD4` ; D4a (-4,-1) leçon (6 coups) ; D4b (-4,-2) décalage contre un mur (9 coups) ; D4c (-4,-3) le reflet entre dans la niche du bouton -> herse H du haut (41 coups) ;
+  D4d (-4,-4) SOMBRE : bouton -> herse H de l'enclos, puis dalles -> alcôve D -> plume `plumeD4` (30 coups). Épine5 (-5,0) provisoire (cul-de-sac). `Outils/resoudre_reflet.py` revérifie (modèle par cases).
+  À VÉRIFIER AU TEST : sensation du reflet (décalage d'1 image), passage du reflet dans les ouvertures d'1 case (niche 4c).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
