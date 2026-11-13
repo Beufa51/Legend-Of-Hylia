@@ -358,7 +358,13 @@ func _poser_objets() -> void:
 					_occupe[Vector2i(x, y)] = foyer
 				"w":
 					_flaques[Vector2i(x, y)] = true
-					_poser_anime(["flaque_1", "flaque_1", "flaque_1", "flaque_1", "flaque_2", "flaque_2", "flaque_2", "flaque_2"], pos, x + y)
+					# la flaque se raccorde à ses voisines (bits : 1 nord, 2 sud, 4 ouest, 8 est) ; rives arrondies là où il n'y a pas d'eau
+					var bits := 0
+					if y > 0 and layout[y - 1][x] == "w": bits |= 1
+					if y < layout.size() - 1 and layout[y + 1][x] == "w": bits |= 2
+					if x > 0 and layout[y][x - 1] == "w": bits |= 4
+					if x < layout[y].length() - 1 and layout[y][x + 1] == "w": bits |= 8
+					_poser_anime(["flaque_%d_1" % bits, "flaque_%d_1" % bits, "flaque_%d_1" % bits, "flaque_%d_1" % bits, "flaque_%d_2" % bits, "flaque_%d_2" % bits, "flaque_%d_2" % bits, "flaque_%d_2" % bits], pos, x + y)
 					if sombre:   # on doit voir les flaques dans le noir : une faible lueur bleue
 						var l := Lumiere.creer(Color(0.4, 0.65, 1.0), 0.5, 0.6)
 						l.position = pos + Vector2(8, 8)

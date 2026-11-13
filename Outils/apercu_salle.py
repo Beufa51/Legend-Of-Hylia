@@ -56,7 +56,9 @@ def room(lay, out):
             elif ch == "V": P("vase_1", x, y, 0, -1)
             elif ch == "B" or ch == "l": P("brasero_2", x, y, -2, -10)
             elif ch == "L": P("brasero_eteint", x, y, -2, -10)
-            elif ch == "w": P("flaque_1", x, y)
+            elif ch == "w":
+                b = (1 if y > 0 and lay[y-1][x] == "w" else 0) | (2 if y < len(lay)-1 and lay[y+1][x] == "w" else 0) | (4 if x > 0 and lay[y][x-1] == "w" else 0) | (8 if x < len(lay[y])-1 and lay[y][x+1] == "w" else 0)
+                P("flaque_%d_1" % b, x, y)
             elif ch == "Q": P("coffre_1", x, y, -2, -6)
             elif ch == "a": P("dalle_reflet", x, y)
             elif ch == "P": P("marque", x, y)
