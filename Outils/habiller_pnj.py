@@ -56,7 +56,7 @@ def habiller(case, vue, t):
             f = max(0.55, min(1.25, lum / lpeau))   # relief du corps (ombres et lumières) : on le garde
             dx = x - cx
             couleur = None
-            if r < 0.37:                       # TÊTE et COU (le visage reste visible : sinon la tunique « mange » le menton)
+            if r < 0.43:                       # TÊTE et COU (le visage reste visible : sinon la tunique « mange » le menton)
                 coiffe = t["coiffe"]
                 if vue == "haut":
                     couleur = t["cheveux"]                                          # de dos : tout est cheveux

@@ -142,7 +142,7 @@ grille = Vector2i(3, 5)
 pnjs = PackedStringArray("Villager3 13 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces.")
 passages = PackedStringArray("12 10 VillageEst 18 7")
 style = "caserne"
-layout = PackedStringArray("                         ", "                         ", "                         ", "      #w#z#x#w#x##       ", "      ############       ", "      #G..G..H...#       ", "      #..........#       ", "      #........J.#       ", "      #F.M.....D.#       ", "      #..........#       ", "      ######m#####       ", "                         ", "                         ", "                         ")
+layout = PackedStringArray("                         ", "                         ", "                         ", "      #w#z#x#w#x##       ", "      ############       ", "      #G..G..H...#       ", "      #..........#       ", "      #........J.#       ", "      #FM......D.#       ", "      #..........#       ", "      ######m#####       ", "                         ", "                         ", "                         ")
 
 [node name="Player" parent="." instance=ExtResource("3")]
 position = Vector2(1752, 1219)

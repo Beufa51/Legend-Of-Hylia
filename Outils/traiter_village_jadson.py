@@ -124,25 +124,36 @@ for r in range(4):
 ecrire(charger("GRASS TILE"), "v_ter_11")      # le centre du pack porte des fleurs : on le remplace par de l'herbe unie (les détails viennent du sol)
 ecrire(charger("STAIRS"), "v_escalier")
 
-# --- ENTRÉE DE DONJON (lettre U, 7x3 cases = 112 px, porte en colonne 3) : une colline (morceaux de terrasse) percée d'une arche de pierre sombre, deux torches, des marches.
-GRAND = os.path.join(RACINE, "Assets", "Pixel Crawler - Free Pack", "Environment", "Structures", "Buildings", "Props.png")
-arche = rogner(Image.open(GRAND).convert("RGBA").crop((64, 19, 96, 66)))
-tuile = lambda r, c: terrasse.crop((c * 16, r * 16, c * 16 + 16, r * 16 + 16))
-colline = Image.new("RGBA", (112, 64))
-herbe_pleine = charger("GRASS TILE")
-for r in range(4):
+# --- ENTRÉE DE DONJON (lettre U, 7x3 cases de collision = 112 px de large, 72 px de haut, porte en colonne 3) : une FAÇADE DE PIERRE solennelle,
+#     créneaux, pilastres, bannières rouges, torches et grande arche sombre (briques, arche, pilier, bannière et torche du pack donjon Craftpix, déjà découpés par traiter_pack_donjon.py).
+D2 = __import__("PIL.ImageDraw", fromlist=["ImageDraw"])
+def tuile_donjon(n):
+    return Image.open(os.path.join(SORTIE, n + ".png")).convert("RGBA")
+facade = Image.new("RGBA", (112, 72))
+fd = D2.Draw(facade)
+brique_h, brique_b = tuile_donjon("mur_face_haut"), tuile_donjon("mur_face_bas")
+for j in range(2, 5):                                    # le mur : 3 rangées de briques (y 24..72)
     for i in range(7):
-        c = 0 if i == 0 else 2 if i == 6 else 1
-        colline.alpha_composite(herbe_pleine if (r == 1 and c == 1) else tuile(r, c), (i * 16, r * 16))
-colline.alpha_composite(arche, (56 - arche.width // 2, 64 - arche.height))
-torche = Image.open(os.path.join(SORTIE, "torche_3.png")).convert("RGBA")
-for x in (30, 76):
-    colline.alpha_composite(torche, (x, 24))
-marche = Image.new("RGBA", (30, 5))
-md = __import__("PIL.ImageDraw", fromlist=["ImageDraw"]).Draw(marche)
-md.rectangle((0, 0, 29, 4), fill=(120, 116, 128, 255), outline=(40, 36, 48, 255))
-colline.alpha_composite(marche, (41, 59))
-ecrire(colline, "v_temple_entree")
+        facade.alpha_composite(brique_h if (i + j) % 2 == 0 else brique_h.transpose(Image.FLIP_LEFT_RIGHT), (i * 16, j * 16 - 8))
+fd.rectangle((0, 12, 111, 24), fill=(78, 74, 92, 255), outline=(30, 28, 40, 255))      # corniche
+fd.line((1, 13, 110, 13), fill=(150, 146, 168, 255))
+for i in range(0, 112, 16):                                                              # créneaux
+    fd.rectangle((i + 2, 2, i + 11, 12), fill=(96, 92, 112, 255), outline=(30, 28, 40, 255))
+    fd.line((i + 3, 3, i + 10, 3), fill=(150, 146, 168, 255))
+pilier = tuile_donjon("pilier")
+for x in (0, 96):                                        # pilastres aux deux bouts
+    facade.alpha_composite(pilier, (x, 24)); facade.alpha_composite(pilier, (x, 48))
+arche = tuile_donjon("arche_herse_5")                    # grande arche ouverte (sombre)
+facade.alpha_composite(arche, (32, 72 - arche.height))
+banniere = tuile_donjon("banniere")
+for x in (18, 78):
+    facade.alpha_composite(banniere, (x, 22))
+torche = tuile_donjon("torche_3")
+for x in (21, 83):
+    facade.alpha_composite(torche, (x - 6, 36))
+for k, (x0, w) in enumerate(((30, 52), (26, 60), (22, 68))):   # trois marches de pierre devant l'arche
+    pass
+ecrire(facade, "v_temple_entree")
 
 # --- INSIGNE de la Garde (récompense des coffres) et ROCHER FISSURÉ (cache un coffre)
 D = __import__("PIL.ImageDraw", fromlist=["ImageDraw"])

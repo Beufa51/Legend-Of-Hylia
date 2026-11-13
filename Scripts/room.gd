@@ -51,6 +51,7 @@ const COULEUR_REPERE := Color(1.0, 0.2, 0.15, 0.55)
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
 const COLONNES_TORCHES := [4, 20]
 const COLONNES_BANNIERES := [7, 17]
+const COLONNES_NICHES := [9, 14]   # niches voûtées à barreaux (2 colonnes de large) : donnent du relief au mur du haut
 # Images animées (pack donjon Craftpix, voir Outils/traiter_pack_donjon.py). Le brasero fait 20x26 :
 # sa case de 16x16 est en bas au centre, d'où le décalage.
 const BRASERO := ["brasero_1", "brasero_2", "brasero_3", "brasero_4", "brasero_5", "brasero_6"]
@@ -1056,6 +1057,9 @@ func _poser_details() -> void:
 	for x in COLONNES_BANNIERES:
 		if _mur_haut_libre(x):
 			_poser("banniere", Vector2(x * TUILE, EPAISSEUR * TUILE - 26))
+	for x in COLONNES_NICHES:
+		if _mur_haut_libre(x) and _mur_haut_libre(x + 1):
+			_poser("niche_grille", Vector2(x * TUILE, EPAISSEUR * TUILE - 21))
 	for x in COLONNES_TORCHES:
 		if _mur_haut_libre(x):
 			_poser_anime(TORCHE, Vector2(x * TUILE + 2, EPAISSEUR * TUILE - 24), x)

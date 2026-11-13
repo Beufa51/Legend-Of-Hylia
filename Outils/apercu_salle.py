@@ -68,6 +68,8 @@ def room(lay, out):
                 P("arche_basse_1", x, y)
     for x in (7, 17):
         if mur(x, E - 1) and sol(x, E): P("banniere", x, 0, 0, E * T - 26)
+    for x in (9, 14):   # niches voûtées à barreaux (room.gd::COLONNES_NICHES)
+        if mur(x, E - 1) and sol(x, E) and mur(x + 1, E - 1) and sol(x + 1, E): P("niche_grille", x, 0, 0, E * T - 21)
     for x in (4, 20):
         if mur(x, E - 1) and sol(x, E): P("torche_1", x, 0, 2, E * T - 24)
     kn = Image.open(os.path.join(RACINE, "Assets/Ninja_adventure/Actor/Character/Knight/SeparateAnim/Idle.png")).convert("RGBA").crop((0, 0, 16, 16))

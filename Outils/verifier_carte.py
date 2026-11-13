@@ -54,10 +54,35 @@ def solides_ext(nom):
 SOL = {nom: solides_ext(nom) for nom in ext}
 
 
+# --- intérieurs : cases bloquantes = murs, pans de mur du haut (2x2) et meubles (emprises lues dans Scripts/interieur.gd)
+import re
+_gd = open(os.path.join(os.path.dirname(__file__), "..", "Scripts", "interieur.gd"), encoding="utf-8").read()
+EMP_INT = {m.group(1): (int(m.group(3)), int(m.group(4)), m.group(5) == "true")
+           for m in re.finditer(r'"(.)": \["(v_\w+)", Vector2i\((\d+), (\d+)\), (true|false)\]', _gd)}
+
+
+def solides_int(g):
+    s = set()
+    for y in range(H):
+        for x in range(W):
+            c = g[y][x]
+            if c in ' #':
+                s.add((x, y))
+            elif c in 'wxyvz':
+                s |= {(x + i, y + j) for i in range(2) for j in range(2)}
+            elif c in EMP_INT and EMP_INT[c][2]:
+                w, h, _ = EMP_INT[c]
+                s |= {(x + i, y + j) for i in range(w) for j in range(h)}
+    return s
+
+
+SOL_INT = {nom: solides_int(g) for nom, (_, g) in inte.items()}
+
+
 def libre(nom, x, y):
     if not (0 <= x < W and 0 <= y < H): return False
     if nom in ext: return (x, y) not in SOL[nom]
-    return inte[nom][1][y][x] in '.m'
+    return (x, y) not in SOL_INT[nom]
 
 
 # --- 1. bords ---
