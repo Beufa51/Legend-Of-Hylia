@@ -48,7 +48,8 @@ func _ready() -> void:
 	_regler_obscurite(salle_actuelle)
 	Etat.secousse.connect(_secouer)
 	Etat.repere.connect(_raccompagner)
-	Etat.chute.connect(_raccompagner.bind(true))
+	Etat.chute.connect(_raccompagner.bind("chute"))
+	Etat.pique.connect(_raccompagner.bind("pics"))
 	Etat.passage.connect(func(ecran, case): _passer_porte(ecran, case, Etat.passage_texte))
 	Etat.drapeau_change.connect(_sur_drapeau)
 	_creer_hud()
@@ -273,13 +274,15 @@ func _secouer() -> void:
 # --- Repéré par une sentinelle ---------------------------------------------------
 const SON_ALERTE := "res://Assets/Ninja_adventure/Audio/Sounds/Alert/Alert.wav"
 const SON_CHUTE := "res://Assets/Ninja_adventure/Audio/Sounds/Whoosh & Slash/Whoosh.wav"
+const SON_PIQUE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Hit1.wav"
 var _fondu: ColorRect
 var _raccompagnement := false
 
 
 # Un garde ramène le joueur à l'entrée de la plume : alerte, fondu au noir, retour, la salle est remise à zéro.
-# `chute` : vrai si le joueur est tombé dans un trou (pas de garde : il disparaît dans le trou).
-func _raccompagner(retour: Vector2, chute := false) -> void:
+# `raison` : "garde" (repéré par une sentinelle), "chute" (tombé dans un trou), "pics" (marché sur des pics sortis).
+func _raccompagner(retour: Vector2, raison := "garde") -> void:
+	var chute := raison == "chute"
 	if _raccompagnement:
 		return
 	_raccompagnement = true
@@ -293,15 +296,19 @@ func _raccompagner(retour: Vector2, chute := false) -> void:
 		t_chute.tween_property(joueur.sprite, "scale", Vector2(0.1, 0.1), 0.5)
 		t_chute.parallel().tween_property(joueur.sprite, "rotation", 3.0, 0.5)
 		Etat.annoncer("Tu es tombé ! Retour au début de la salle.")
-	var flux = null if chute else load(SON_ALERTE)
+	var flux = load(SON_ALERTE) if raison == "garde" else null
 	if flux != null:
 		var lecteur := AudioStreamPlayer.new()
 		lecteur.stream = flux
 		add_child(lecteur)
 		lecteur.play()
 		lecteur.finished.connect(lecteur.queue_free)
-	if not chute:
+	if raison == "garde":
 		Etat.annoncer("Repéré ! Un garde te raccompagne au début de la salle.")
+	elif raison == "pics":
+		_jouer_son(SON_PIQUE, -2.0)
+		joueur.sprite.modulate = Color(1.0, 0.4, 0.4)
+		Etat.annoncer("Aïe, les pics ! Retour au début de la salle. Passe quand ils sont rentrés.")
 	await get_tree().create_timer(0.7).timeout
 	var tween := create_tween()
 	tween.tween_property(_fondu, "modulate:a", 1.0, 0.4)
@@ -310,6 +317,7 @@ func _raccompagner(retour: Vector2, chute := false) -> void:
 	joueur.velocity = Vector2.ZERO
 	joueur.sprite.scale = Vector2.ONE
 	joueur.sprite.rotation = 0.0
+	joueur.sprite.modulate = Color.WHITE
 	for enfant in get_children():
 		if enfant is Ecran and enfant.grille == salle_reperee:
 			enfant.reinitialiser()

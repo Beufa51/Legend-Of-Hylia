@@ -23,12 +23,17 @@ class_name Room
 #   o  = plot ORANGE (levé au départ)   u = plot BLEU (baissé au départ). Dans une salle à plots,
 #        le cristal K est un commutateur : chaque coup de lance inverse les plots (voir plot.gd).
 #   z  = dalle de couleur : chaque pas la retourne (rouge <-> bleue). Toutes bleues = `drapeau_fragile` (voir dalle.gd).
+#   Q  = coffre (un coup de lance l'ouvre, lève `drapeau_coffre` ; ex. une clé)      J = levier (lève `drapeau_levier`)
+#   E  = porte à serrure (porte de bois) : s'ouvre si le joueur la touche avec la clé `drapeau_cle` (lève `drapeau_serrure`)
+#   Z  = pics qui sortent du sol en boucle (sortis = retour à `retour`)              ~ = eau (bloque)
+# Portes : un groupe 3x2 sur le mur du HAUT = arche animée (herse, ou bois pour E) ; 3x1 dans un mur intérieur
+# = herse basse ; les autres (bas, côtés) gardent l'ancienne grille.
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
 
 # Caractères qui bloquent le joueur (en plus des murs)
-const SOLIDES := "#SOBR"
+const SOLIDES := "#SOBR~"
 # Épaisseur des murs du bord (en tuiles)
 const EPAISSEUR := 2
 # Son d'une fausse note (pack Ninja Adventure)
@@ -66,6 +71,12 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 @export var drapeau_rayon := ""      # levé quand le rayon de lumière touche le réceptacle Y
 @export var chanteur_au_soleil := false   # la statue du coq ne chante que si le rayon l'éclaire
 @export var drapeau_fragile := ""    # levé quand TOUTES les dalles de couleur z sont bleues
+@export var drapeau_coffre := ""     # levé quand on ouvre le coffre Q
+@export var texte_coffre := "Tu as trouvé une petite clé !"
+@export var drapeau_levier := ""     # levé quand on bascule le levier J
+@export var drapeau_cle := ""        # la clé qui ouvre les portes à serrure E de cette salle
+@export var drapeau_serrure := ""    # levé quand une porte E est ouverte (elle s'ouvre avec ce drapeau)
+@export var periode_pics := 2.4      # durée d'un cycle des pics Z (secondes)
 
 # Lueur des flammes (texture et matériau partagés par toutes les lumières)
 static var _tex_lumiere: GradientTexture2D
@@ -109,6 +120,10 @@ var _orange_leves := true  # vrai = les plots orange bloquent, les bleus sont ba
 var _dalles := {}          # { case : Dalle } dalles de couleur
 var _case_pied := Vector2i(-1, -1)   # case où le joueur avait les pieds à l'image précédente
 var _regle_dite := false   # la règle des dalles a été expliquée (au 1er pas sur une dalle)
+var _portes_cle: Array[Porte] = []
+var _pics := {}            # { case : Pics }
+var _pique := false        # le joueur vient d'être touché par des pics (on attend le retour)
+var _chargement := true    # vrai pendant _ready : les portes déjà ouvertes s'ouvrent sans bruit
 
 
 func _ready() -> void:
@@ -118,10 +133,10 @@ func _ready() -> void:
 	_creer_decor()
 	_creer_collisions()
 	Etat.drapeau_change.connect(_sur_drapeau)
-	if Etat.est(drapeau_porte):
-		_sur_drapeau(drapeau_porte)  # drapeau déjà levé : les portes sont ouvertes d'emblée
-	if Etat.est(drapeau_porte2):
-		_sur_drapeau(drapeau_porte2)
+	for d in [drapeau_porte, drapeau_porte2, drapeau_serrure]:
+		if Etat.est(d):
+			_sur_drapeau(d)  # drapeau déjà levé : les portes sont ouvertes d'emblée, sans bruit
+	_chargement = false
 	if _cible != null and Etat.est(drapeau_rayon):
 		_cible.allumer()
 	if Etat.est(drapeau_melodie):
@@ -148,6 +163,8 @@ func _process(delta: float) -> void:
 		_tracer_rayon()
 	if not _dalles.is_empty() and grille == Etat.salle_courante:
 		_suivre_pas()
+	if not _pics.is_empty() and grille == Etat.salle_courante:
+		_surveiller_pics()
 
 
 # --- Chargement ---------------------------------------------------------------
@@ -155,22 +172,16 @@ func _process(delta: float) -> void:
 # --- Décor --------------------------------------------------------------------
 
 func _creer_decor() -> void:
-	var murs_cadre := _murs_du_cadre()
 	for y in layout.size():
 		for x in layout[y].length():
 			var pos := Vector2(x * TUILE, y * TUILE)
 			if not _est_mur(x, y):
 				_poser(_nom_sol(x, y), pos)
-				# Petite ombre sur le sol, juste sous un mur : donne de la profondeur
-				if _est_mur(x, y - 1):
-					_poser_rect(pos, Vector2(TUILE, 5), Color(0, 0, 0, 0.27))
 				# Case de porte (sur le bord de la salle) : sol assombri = passage
 				if x < EPAISSEUR or y < EPAISSEUR or x >= layout[y].length() - EPAISSEUR or y >= layout.size() - EPAISSEUR:
-					_poser_rect(pos, Vector2(TUILE, TUILE), Color(0, 0, 0, 0.45))
-			elif murs_cadre.has(Vector2i(x, y)):
-				_poser_mur(x, y)
+					_poser_rect(pos, Vector2(TUILE, TUILE), Color(0, 0, 0, 0.35))
 			else:
-				_poser("dalle_unie", pos)  # pilier / bloc isolé
+				_poser_mur(x, y)
 	_poser_objets()
 	_poser_portes()
 	_poser_details()
@@ -184,24 +195,44 @@ func _creer_decor() -> void:
 		add_child(_calque_rayon)
 
 
-# Tuile de sol : damier discret de deux tons (comme Zelda SNES), avec de rares dalles fissurées/usées.
-# Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
+# Tuile de sol (pack donjon Craftpix) : gris-bleu uni comme dans Zelda SNES, avec de rares dalles gravées. Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
 func _nom_sol(x: int, y: int) -> String:
 	var h := (x * 7 + y * 13 + x * y * 3) % 37
-	var clair := (x + y) % 2 == 0
 	if h == 0:
-		return "sol_plat_c" if clair else "sol_plat_d"
-	return "sol_plat" if clair else "sol_plat_b"
+		return "sol_plat_c"
+	if h == 18:
+		return "sol_plat_d"
+	return "sol_plat"
 
 
-# Mur : fond sombre + liserés de pierre du côté du sol.
+# MUR (vue de 3/4, comme dans Zelda SNES) :
+# - un mur avec du sol juste EN DESSOUS montre sa FACE de briques (`mur_face_bas`), et le mur juste
+#   au-dessus de cette face aussi (`mur_face_haut`) : le mur du haut de la salle fait 2 rangées de briques ;
+# - les autres murs sont vus DE DESSUS : sombres, avec un rebord de briques du côté du sol ;
+# - un mur isolé d'une seule case est un petit pilier (`pilier`, 8 px plus haut que sa case).
+# Images : Outils/traiter_pack_donjon.py.
+func _face_bas(x: int, y: int) -> bool:
+	return _est_mur(x, y) and y + 1 < layout.size() and _est_sol(x, y + 1)
+
+
 func _poser_mur(x: int, y: int) -> void:
 	var pos := Vector2(x * TUILE, y * TUILE)
+	if not (_est_mur(x - 1, y) or _est_mur(x + 1, y) or _est_mur(x, y - 1) or _est_mur(x, y + 1)):
+		_poser(_nom_sol(x, y), pos)
+		_poser("pilier", pos - Vector2(0, 8))
+		return
+	var bas := _face_bas(x, y)
+	if bas or (_face_bas(x, y + 1) and _est_mur(x, y - 1)):
+		var nom := "mur_face_bas" if bas else "mur_face_haut"
+		if not _est_mur(x - 1, y):
+			nom += "_g"   # bout gauche de la face
+		elif not _est_mur(x + 1, y):
+			nom += "_d"   # bout droit
+		if bas:
+			_poser("sol_plat", pos)   # le bas de la face est transparent (ombre portée sur le sol)
+		_poser(nom, pos)
+		return
 	_poser("mur_fond", pos)
-	# Relief : le mur loin du sol est plus sombre, celui qui touche le sol reste clair
-	if not (_est_sol(x, y - 1) or _est_sol(x, y + 1) or _est_sol(x + 1, y) or _est_sol(x - 1, y)
-			or _est_sol(x + 1, y + 1) or _est_sol(x - 1, y + 1) or _est_sol(x + 1, y - 1) or _est_sol(x - 1, y - 1)):
-		_poser_rect(pos, Vector2(TUILE, TUILE), Color(0, 0, 0, 0.38))
 	var n := _est_sol(x, y - 1)
 	var s := _est_sol(x, y + 1)
 	var e := _est_sol(x + 1, y)
@@ -218,14 +249,9 @@ func _poser_mur(x: int, y: int) -> void:
 			_poser("mur_bord_" + cote[0], pos)
 	# Angle rentrant : sol seulement en diagonale
 	if not (n or s or e or o):
-		if _est_sol(x + 1, y + 1):
-			_poser("mur_dot_se", pos)
-		if _est_sol(x - 1, y + 1):
-			_poser("mur_dot_so", pos)
-		if _est_sol(x + 1, y - 1):
-			_poser("mur_dot_ne", pos)
-		if _est_sol(x - 1, y - 1):
-			_poser("mur_dot_no", pos)
+		for d in [["se", 1, 1], ["so", -1, 1], ["ne", 1, -1], ["no", -1, -1]]:
+			if _est_sol(x + d[1], y + d[2]):
+				_poser("mur_dot_" + d[0], pos)
 
 
 # Tapis, statues, braseros, vases posés d'après les lettres du plan.
@@ -275,6 +301,31 @@ func _poser_objets() -> void:
 						cristal.colorer(true)
 						_commutateurs.append(cristal)
 					_occupe[Vector2i(x, y)] = cristal
+				"Q":
+					var coffre := Coffre.new()
+					coffre.position = pos
+					add_child(coffre)
+					coffre.initialiser(drapeau_coffre, texte_coffre, _images_serie("coffre_", 5), _image("cle"))
+					_occupe[Vector2i(x, y)] = coffre
+				"J":
+					var levier := Levier.new()
+					levier.position = pos
+					add_child(levier)
+					levier.initialiser(drapeau_levier, _images_serie("levier_", 5))
+					_occupe[Vector2i(x, y)] = levier
+				"Z":
+					var pics := Pics.new()
+					pics.position = pos
+					add_child(pics)
+					# une colonne sur deux est décalée d'un demi-cycle : on passe entre elles au bon moment
+					pics.initialiser(_images_serie("pics_", 5), periode_pics, fposmod(x * 0.5, 1.0), y == _premiere_rangee_pics(x))
+					_pics[Vector2i(x, y)] = pics
+				"~":
+					_poser_anime(["eau_1", "eau_1", "eau_1", "eau_1", "eau_1", "eau_1", "eau_2", "eau_2", "eau_2", "eau_2", "eau_2", "eau_2"], pos, x + y)
+					if y > 0 and layout[y - 1][x] != "~" and not _est_mur(x, y - 1):
+						# bord de l'eau : une marche sombre et un reflet clair
+						_poser_rect(pos, Vector2(TUILE, 2), Color(0.1, 0.12, 0.2))
+						_poser_rect(pos + Vector2(0, 2), Vector2(TUILE, 1), Color(0.55, 0.85, 0.95, 0.8))
 				"z":
 					var dalle := Dalle.new()
 					add_child(dalle)
@@ -359,6 +410,9 @@ func _poser_objets() -> void:
 func _poser_portes() -> void:
 	_poser_portes_lettre("D", _portes)
 	_poser_portes_lettre("H", _portes2)
+	_poser_portes_lettre("E", _portes_cle)
+	for porte in _portes_cle:
+		porte.activer_serrure(drapeau_cle, drapeau_serrure)
 
 
 # Regroupe les cases voisines portant la lettre : chaque groupe devient UNE porte, dessinée avec l'image porte_LxH.
@@ -388,7 +442,13 @@ func _poser_portes_lettre(lettre: String, liste: Array[Porte]) -> void:
 			var porte := Porte.new()
 			porte.position = Vector2(haut_gauche * TUILE)
 			add_child(porte)
-			porte.initialiser(taille, _image("porte_%dx%d" % [int(taille.x), int(taille.y)]))
+			# Arche animée du pack donjon : porte 3x2 du mur du haut, ou porte 3x1 dans un mur intérieur
+			var images: Array[Texture2D] = []
+			if taille == Vector2(48, 32) and haut_gauche.y == 0:
+				images = _images_serie("arche_bois_" if lettre == "E" else "arche_herse_", 5)
+			elif taille == Vector2(48, 16) and haut_gauche.y >= EPAISSEUR and haut_gauche.y < layout.size() - EPAISSEUR:
+				images = _images_serie("arche_basse_", 5)
+			porte.initialiser(taille, _image("porte_%dx%d" % [int(taille.x), int(taille.y)]), images)
 			liste.append(porte)
 			for c in groupe:
 				_suivre(porte, c)
@@ -419,7 +479,7 @@ func liberer(cellule: Vector2i) -> void:
 func case_libre(cellule: Vector2i) -> bool:
 	if cellule.y < 0 or cellule.y >= layout.size() or cellule.x < 0 or cellule.x >= layout[cellule.y].length():
 		return false
-	return ".TPFXVou".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
+	return ".TPFXVouz".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
 
 
 # Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
@@ -459,6 +519,7 @@ func reinitialiser() -> void:
 	for dalle in _dalles.values():
 		dalle.remettre()
 	_case_pied = Vector2i(-1, -1)
+	_pique = false
 
 
 # --- Dalles de couleur -----------------------------------------------------------
@@ -495,6 +556,38 @@ func _suivre_pas() -> void:
 
 func _dalles_resolues() -> bool:
 	return drapeau_fragile == "" or Etat.est(drapeau_fragile)
+
+
+# --- Pics, séries d'images ------------------------------------------------------
+
+# Les pieds du joueur sur des pics sortis : retour au début de la salle (comme une chute).
+func _surveiller_pics() -> void:
+	if _pique:
+		return
+	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
+	if joueur == null:
+		return
+	var pied := to_local(joueur.global_position) + Vector2(0, 5)
+	var c := Vector2i(floori(pied.x / TUILE), floori(pied.y / TUILE))
+	if _pics.has(c) and _pics[c].dangereux:
+		_pique = true
+		Etat.pique.emit(retour)
+
+
+# La rangée la plus haute d'une colonne de pics (c'est elle qui fait le bruit).
+func _premiere_rangee_pics(x: int) -> int:
+	for y in layout.size():
+		if layout[y][x] == "Z":
+			return y
+	return -1
+
+
+# Images numérotées : prefixe1, prefixe2... prefixeN.
+func _images_serie(prefixe: String, n: int) -> Array[Texture2D]:
+	var liste: Array[Texture2D] = []
+	for i in n:
+		liste.append(_image(prefixe + str(i + 1)))
+	return liste
 
 
 # Un coup sur le cristal commutateur : les plots levés se baissent, les baissés se lèvent.
@@ -800,15 +893,15 @@ func _jouer_son(chemin: String, volume_db: float) -> void:
 func _sur_drapeau(nom: String) -> void:
 	if nom == "":
 		return
-	for paire in [[drapeau_porte, _portes], [drapeau_porte2, _portes2]]:
+	for paire in [[drapeau_porte, _portes], [drapeau_porte2, _portes2], [drapeau_serrure, _portes_cle]]:
 		if nom != paire[0]:
 			continue
 		var liste: Array = paire[1]
-		if not liste.is_empty() and grille != Etat.salle_courante:
+		if not liste.is_empty() and grille != Etat.salle_courante and not _chargement:
 			Etat.annoncer("Un bruit sourd : une porte s'est ouverte quelque part...")
 		for porte in liste:
 			if is_instance_valid(porte):
-				porte.ouvrir()
+				porte.ouvrir(_chargement)
 
 
 # Torches et bannières sur le mur du haut (seulement là où il y a du mur au-dessus du sol).
@@ -875,27 +968,6 @@ func _est_mur(x: int, y: int) -> bool:
 # Vrai si la case est dans la salle et n'est pas un mur (objets compris).
 func _est_sol(x: int, y: int) -> bool:
 	return not _est_mur(x, y)
-
-
-# Liste des murs reliés au bord de la salle (ils reçoivent liserés de pierre).
-# Les blocs isolés au milieu (piliers) n'y sont pas.
-func _murs_du_cadre() -> Dictionary:
-	var vus := {}
-	var a_voir: Array[Vector2i] = []
-	for y in layout.size():
-		for x in layout[y].length():
-			if (x == 0 or y == 0 or x == layout[y].length() - 1 or y == layout.size() - 1) and "#R".contains(layout[y][x]):
-				a_voir.append(Vector2i(x, y))
-	while not a_voir.is_empty():
-		var c: Vector2i = a_voir.pop_back()
-		if c.x < 0 or c.y < 0 or c.y >= layout.size() or c.x >= layout[c.y].length():
-			continue
-		if vus.has(c) or not "#R".contains(layout[c.y][c.x]):
-			continue
-		vus[c] = true
-		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			a_voir.append(c + d)
-	return vus
 
 
 # --- Collisions ---------------------------------------------------------------
