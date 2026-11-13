@@ -42,6 +42,11 @@ const COULEUR_REPERE := Color(1.0, 0.2, 0.15, 0.55)
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
 const COLONNES_TORCHES := [4, 20]
 const COLONNES_BANNIERES := [7, 17]
+# Images animées (pack donjon Craftpix, voir Outils/traiter_pack_donjon.py). Le brasero fait 20x26 :
+# sa case de 16x16 est en bas au centre, d'où le décalage.
+const BRASERO := ["brasero_1", "brasero_2", "brasero_3", "brasero_4", "brasero_5", "brasero_6"]
+const TORCHE := ["torche_1", "torche_2", "torche_3", "torche_4", "torche_5", "torche_6"]
+const DECALAGE_BRASERO := Vector2(-2, -10)
 
 # Énigmes : noms de drapeaux (voir etat.gd). Vide = rien.
 @export var drapeau_plaque := ""   # levé quand TOUTES les plaques P portent un bloc
@@ -243,10 +248,10 @@ func _poser_objets() -> void:
 					var pot := Pot.new()
 					pot.position = pos
 					add_child(pot)
-					pot.initialiser(_image("vase_1"))
+					pot.initialiser(_image("vase_1" if (x + y) % 3 else "vase_2"))   # vases bleus et quelques bruns
 					_suivre(pot, Vector2i(x, y))
 				"B":
-					_poser_anime(["brasero_1", "brasero_2", "brasero_3"], pos, x + y)
+					_poser_anime(BRASERO, pos + DECALAGE_BRASERO, x + y)
 					_poser_lumiere(pos + Vector2(8, 6), 44.0)
 				"P":
 					_boutons[Vector2i(x, y)] = _poser("bouton", pos)
@@ -255,7 +260,9 @@ func _poser_objets() -> void:
 					var brasero := Brasero.new()
 					brasero.position = pos
 					add_child(brasero)
-					var flammes: Array[Texture2D] = [_image("brasero_1"), _image("brasero_2"), _image("brasero_3")]
+					var flammes: Array[Texture2D] = []
+					for nom in BRASERO:
+						flammes.append(_image(nom))
 					brasero.initialiser(self, duree_braseros, _image("brasero_eteint"), flammes)
 					_braseros.append(brasero)
 					_occupe[Vector2i(x, y)] = brasero
@@ -813,7 +820,7 @@ func _poser_details() -> void:
 			_poser("banniere", Vector2(x * TUILE, EPAISSEUR * TUILE - 26))
 	for x in COLONNES_TORCHES:
 		if _mur_haut_libre(x):
-			_poser_anime(["torche_1", "torche_2"], Vector2(x * TUILE, (EPAISSEUR - 1) * TUILE), x)
+			_poser_anime(TORCHE, Vector2(x * TUILE + 2, EPAISSEUR * TUILE - 24), x)
 			_poser_lumiere(Vector2(x * TUILE + 8, EPAISSEUR * TUILE + 2), 52.0)
 
 

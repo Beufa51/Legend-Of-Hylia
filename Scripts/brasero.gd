@@ -26,6 +26,7 @@ func initialiser(une_salle: Node2D, secondes: float, eteint: Texture2D, flammes:
 	_sprite = Sprite2D.new()
 	_sprite.texture = eteint
 	_sprite.centered = false
+	_sprite.position = Room.DECALAGE_BRASERO   # image 20x26, la case est en bas au centre
 	add_child(_sprite)
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(12, 12)

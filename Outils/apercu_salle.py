@@ -44,12 +44,12 @@ def room(lay, out):
             if ch == "T": P("tapis_milieu", x, y)
             elif ch == "S": P("statue_chevalier", x, y, 0, T - 30)
             elif ch == "O": P("statue_oiseau", x, y, 0, T - 30)
-            elif ch == "V": P("vase_1", x, y, 3, 3)
-            elif ch == "B": P("brasero_2", x, y)
+            elif ch == "V": P("vase_1", x, y, 0, -1)
+            elif ch == "B": P("brasero_2", x, y, -2, -10)
     for x in (7, 17):
         if mur(x, E - 1) and sol(x, E): P("banniere", x, 0, 0, E * T - 26)
     for x in (4, 20):
-        if mur(x, E - 1) and sol(x, E): P("torche_1", x, E - 1)
+        if mur(x, E - 1) and sol(x, E): P("torche_1", x, 0, 2, E * T - 24)
     kn = Image.open(os.path.join(RACINE, "Assets/Ninja_adventure/Actor/Character/Knight/SeparateAnim/Idle.png")).convert("RGBA").crop((0, 0, 16, 16))
     img.alpha_composite(kn, (192, 172))
     img.resize((W * T * 3, H * T * 3), Image.NEAREST).save(out)
