@@ -573,6 +573,13 @@
   NB technique : la boîte de choix émet `dialogue_fini` 0,15 s APRÈS `choix_fait` -> gardien.gd attend ce signal avant d'ouvrir la réplique suivante.
   **LE JEU EST JOUABLE DU DÉBUT À LA FIN (en code).** SUITE (Sonnet) : AUDIT + refonte graphique/disposition du VILLAGE ; puis stèle à refaire, D5 et énigmes à rééquilibrer, mode 7 à affiner, contrôles tactiles.
 
-## PROCHAINE ÉTAPE (Sonnet) : tester la fin (13c), puis AUDIT + refonte du VILLAGE (disposition, graphismes)
-- Tester : stèle -> forêt qui s'écarte -> mode 7 -> bâtiment du corps -> Gardien (combattre ET refuser) -> écran de fin -> adoubement par le capitaine.
-- Ensuite : audit général, village (disposition + graphismes), stèle à refaire, rééquilibrage D5/énigmes, contrôles tactiles.
+- 2026-11-13 : boss testé par l'utilisateur : « il fonctionne ». **REFONTE DU VILLAGE décidée** (critiques : disposition, PNJ laids, le sud « donne sur rien », girouette, animaux qui traversent les arbres, style).
+  CHOIX UTILISATEUR : (1) carte en **COQ DEBOUT** : tête = Parvis (nord), ailes = 2 temples (gauche/droite), corps = Place du Coq (centre), pattes/queue = chemins du SUD (maison du héros, pont, route : le sud doit MENER quelque part) ;
+  (2) girouette CONSERVÉE mais au **design plus travaillé** (à redessiner) ; (3) **PNJ peu nombreux (~6), bien placés, avec une vraie activité** (jardinier, forgeron, enfant qui court...) ; demander à l'utilisateur ce qui choque dans leur look ;
+  (4) STYLE : **auditer tous les packs** (Ninja Adventure, Aesthetic, Craftpix donjon, `generic-rpg-pack` Vaca Roxa [16 px, arbres 53x74, auberge 70x88, ponts, clôtures, PNJ 16x23 : à examiner], LPC) et compléter par des packs itch.io (à télécharger par l'utilisateur) ou Gemini.
+  FAIT (non testé dans Godot) : **animaux/PNJ derrière les arbres** : `exterieur.gd::_process` règle le `z_index` du héros, des animaux (groupe `animaux`, ajouté dans `animal.gd`) et des PNJ : 0 = derrière un grand objet, 2 = devant (arbres/maisons fixés à z 1). Cause : animaux toujours dessinés au-dessus.
+  À FAIRE : plan de la carte en coq (grille à définir, ex. Parvis (2,0) / ailes (1,1)-(3,1) / corps (2,2) / pattes (1,3)-(3,3)) dans `generer_village.py` ; girouette ; PNJ ; audit de style.
+
+## PROCHAINE ÉTAPE (Opus pour la conception, puis Sonnet) : REFONTE DU VILLAGE en forme de coq (voir entrée du 2026-11-13 ci-dessus)
+- D'abord : tester le correctif d'arbres (animaux/PNJ devant-derrière), puis valider le plan de carte en coq, puis audit des packs, girouette, PNJ.
+- Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
