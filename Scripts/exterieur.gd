@@ -96,6 +96,7 @@ var _temps := 0.0
 var _eaux: Array = []      # [sprite, nom de l'image, ...] de chaque case d'eau : 2 images alternées = l'eau qui scintille
 var _image_eau := -1       # laquelle des 2 images est affichée
 var _coq: Sprite2D   # le coq de la girouette
+var _cases_portes: Array[Vector2i] = []   # cases des passages (portes de maison), lues dans `passages`
 
 
 func _ready() -> void:
@@ -137,7 +138,13 @@ func _process(delta: float) -> void:
 			continue   # un acteur d'un autre écran
 		var local := acteur.global_position - global_position
 		var derriere := false
+		var pres_porte := false   # devant une porte, le héros reste DEVANT la maison (sinon il paraît passer en dessous quand il entre)
+		for c in _cases_portes:
+			if absf(local.x - (c.x * TUILE + 8)) < 20.0 and local.y > c.y * TUILE - 12.0 and local.y < c.y * TUILE + 28.0:
+				pres_porte = true
 		for h in _hauts:
+			if pres_porte:
+				break
 			if local.x > h[2].x and local.x < h[2].y and local.y + 6.0 < h[1] - TUILE:
 				derriere = true
 				break
@@ -389,6 +396,10 @@ func _poser_animaux() -> void:
 
 
 func _creer_collisions() -> void:
+	for ligne in passages:
+		var m0 := ligne.split(" ", false, 2)
+		if m0.size() >= 2:
+			_cases_portes.append(Vector2i(int(m0[0]), int(m0[1])))
 	for ligne in passages:
 		var m := ligne.split(" ", false, 2)
 		if m.size() >= 2:

@@ -340,9 +340,9 @@ def interieur(porte, meubles, haut, gauche=6, droite=17, bas=10):
 int_heros = interieur(12, [('L', 7, 5), ('S', 14, 5), ('q', 11, 5), ('t', 9, 7), ('T', 14, 8), ('C', 13, 8), ('o', 7, 9), ('p', 16, 7)],
                       ['w', 'y', 'z', 'v', 'x'])
 pnjs_int_heros = ["Woman 10 7 bas | Maman | [epreuve_reussie] Garde du royaume ! Ma fille, garde du royaume ! // Ton père aurait été si fier de toi. Viens, le repas de fête est prêt ! ## [fragment_gauche] Ma fille, la moitié du blason ! Je vais préparer un grand repas. // Mais d'abord, va te reposer. ## [capitaine_vu] Le capitaine t'a parlé ? Alors file au temple, et fais attention à toi ! ## Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'est de la place du village. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
-int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 5), ('F', 7, 8), ('M', 9, 8), ('D', 15, 8)],
+int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 7), ('F', 7, 8), ('M', 9, 8), ('D', 15, 8)],
                         ['w', 'z', 'x', 'w', 'x'])
-pnjs_int_caserne = ["Villager3 14 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
+pnjs_int_caserne = ["Villager3 13 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
 
 FERMEE = "La porte est fermée à clé."
 ferme_place = ["5 6 ! " + FERMEE, "20 6 ! " + FERMEE]
@@ -424,21 +424,31 @@ for (x, y) in [(1, 2), (1, 9), (22, 2), (22, 4), (22, 10), (19, 9)]:
 put(temple_d, 'P', (20, 2), (3, 2)); put(temple_d, 'f', (8, 9), (16, 9)); put(temple_d, 'g', (10, 5), (14, 5)); put(temple_d, 'w', (6, 10), (19, 10))
 passages_temple_d = ["12 6 @aile_droite:Vestibule 12 10 La grande porte se referme derrière toi... L'aile droite du blason : ici, tout est inversé."]
 
+terrasses_grand, escaliers_grand = ["0 1 8 8", "17 1 8 8"], ["3 6", "20 6"]          # le cou du coq : deux collines de chaque côté du grand chemin
+terrasses_parvis, escaliers_parvis = ["0 0 6 6", "19 0 6 6"], ["3 3", "21 3"]            # la tête : deux petites terrasses qui encadrent le parvis
+terrasses_est, escaliers_est = ["0 0 9 6"], ["3 3"]                                       # le village est : une colline au nord-ouest, la caserne en bas à droite
+# décor SUR les terrasses (fleurs, souches, cailloux : rien de plus gros, les arbres sont retirés des terrasses)
+for _g in (grand,):
+    put(_g, 'f', (2, 3), (6, 5), (19, 4), (23, 6)); put(_g, 'g', (4, 2), (5, 6), (21, 3), (18, 6)); put(_g, 'w', (3, 4), (6, 3), (22, 5), (19, 2))
+    put(_g, 'u', (2, 6), (22, 2)); put(_g, 'r', (6, 6), (18, 3))
+for _g in (parvis, parvis_revele):
+    put(_g, 'f', (2, 2), (22, 2)); put(_g, 'w', (3, 1), (21, 4)); put(_g, 'g', (4, 3), (20, 1)); put(_g, 'u', (1, 4), (23, 4))
+put(est, 'f', (2, 2), (6, 3)); put(est, 'g', (4, 1), (7, 4)); put(est, 'w', (1, 4), (5, 2)); put(est, 'u', (7, 2), (2, 3)); put(est, 'r', (6, 1))
 ecrans = [
     # --- ailes (y=0)
     ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
-    ('Parvis', (2, 0), parvis, {'passages': passages_parvis, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
+    ('Parvis', (2, 0), parvis, {'terrasses': terrasses_parvis, 'escaliers': escaliers_parvis, 'passages': passages_parvis, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
         'drapeau_revele': 'corps_revele', 'layout_revele': [''.join(r) for r in parvis_revele], 'passages_revele': passages_parvis_revele,
         'indice': "Une stèle se dresse devant la forêt. Un coq y est gravé, ses ailes creusées dans la pierre..."}),
     ('TempleDroit', (3, 0), temple_d, {'passages': passages_temple_d, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile droite. Derrière cette porte, la seconde moitié de l'épreuve."}),
     # --- cou et ailes basses (y=1)
     ('Verger', (1, 1), verger, {'animaux': animaux_verger, 'pnjs': pnjs_verger, 'terrasses': terrasses_verger, 'escaliers': escaliers_verger}),
-    ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand}),
+    ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand, 'terrasses': terrasses_grand, 'escaliers': escaliers_grand}),
     ('TerrainGarde', (3, 1), terrain, {'animaux': animaux_terrain, 'pnjs': pnjs_terrain, 'terrasses': terrasses_terrain, 'escaliers': escaliers_terrain}),
     # --- corps (y=2)
     ('VillageOuest', (1, 2), ouest, {'animaux': animaux_ouest, 'pnjs': pnjs_ouest, 'passages': ferme_ouest}),
     ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place, 'passages': ferme_place}),
-    ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est, 'passages': passages_est}),
+    ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est, 'passages': passages_est, 'terrasses': terrasses_est, 'escaliers': escaliers_est}),
     # --- pattes (y=3)
     ('MaisonHeros', (1, 3), heros, {'animaux': animaux_heros, 'passages': passages_heros}),
     ('Riviere', (2, 3), riviere, {'animaux': animaux_riviere, 'pnjs': pnjs_riviere}),
@@ -464,10 +474,10 @@ SORTIES = {
     'MaisonHeros': ('NE', heros), 'Riviere': ('NOES', riviere), 'Ferme': ('NO', ferme), 'RouteSud': ('N', route),
 }
 PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 2}, 'Parvis': {'S': 6, 'O': 12, 'E': 12}}
-RELIEF = {'Verger': (terrasses_verger, escaliers_verger), 'TerrainGarde': (terrasses_terrain, escaliers_terrain), 'RouteSud': (terrasses_route, escaliers_route)}
+RELIEF = {'GrandChemin': (terrasses_grand, escaliers_grand), 'Parvis': (terrasses_parvis, escaliers_parvis), 'VillageEst': (terrasses_est, escaliers_est), 'Verger': (terrasses_verger, escaliers_verger), 'TerrainGarde': (terrasses_terrain, escaliers_terrain), 'RouteSud': (terrasses_route, escaliers_route)}
 for _nom, (_s, _g) in SORTIES.items():
     finaliser(_g, _s, PROFONDEURS.get(_nom), *RELIEF.get(_nom, ((), ())))
-finaliser(parvis_revele, 'SOE', PROFONDEURS['Parvis'])
+finaliser(parvis_revele, 'SOE', PROFONDEURS['Parvis'], terrasses_parvis, escaliers_parvis)
 
 
 def ecrire_scene():

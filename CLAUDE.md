@@ -659,6 +659,14 @@
   ORDRE DES OUTILS village : traiter_village -> traiter_village2 -> fabriquer_maisons -> traiter_pack_aesthetic -> traiter_pixel_crawler -> fabriquer_maisons_pixelcrawler -> traiter_village_jadson -> fabriquer_riviere -> generer_village -> verifier_carte.
   Restent à l'ancien style : tonneau, caisse, bannière, étal, panneau, corps du coq (`Z`), intérieurs ; le pont du pack (arqué, horizontal) n'est pas utilisé (pont maison). Idées : terrasses avec maisons dessus, falaises en lisière, escaliers vers un secret.
 
+- 2026-11-13 : utilisateur : « refais les intérieurs dans ce style, vérifie les collisions des maisons (on a l'impression de passer en dessous quand on entre), et plus de relief ». **ÉTAPE 14g écrite (non testée dans Godot ; aperçus PIL fidèles vérifiés)** :
+  1) INTÉRIEURS : `Outils/traiter_interieur_pixelcrawler.py` (APRÈS traiter_village.py, AVANT generer_village.py) refait avec Pixel Crawler (`Interior_Walls_01`, `Interior_Props_01`) les images attendues par `interieur.gd` : sols (parquet, pierre), murs (pans planches/pierre, fenêtre, tableau, cheminée = four en briques), lits, étagère, armoire, tables, chaise, coffres, tonneau, seaux, banc, râteliers, boucliers ; tapis et paillasson dessinés en code.
+     Emprises de `MEUBLES` adaptées (lits L/l 2x3, armoire 2x3, tables U/M 4x2, râteliers 4x2, boucliers 2x1). Plans de la caserne retouchés (J en (15,7), Soldat Gilles en (13,7)).
+  2) PORTES : `exterieur.gd` garde le héros DEVANT la maison près d'une porte (`_cases_portes`, avant il pouvait passer « derrière/en dessous ») ; `world.gd::_passer_porte` : en entrant dans un bâtiment le héros s'estompe dans l'ombre de la porte pendant son pas. Collisions des maisons relues avec le nouvel outil
+     `Outils/apercu_village.py --collisions sortie.png Ecran...` (cases bloquantes en rouge) : l'emprise = les murs (bas de la maison), le toit dépasse sans bloquer, la case de la porte est libre (marche du perron).
+  3) RELIEF en plus : GrandChemin (2 collines), Parvis (2 terrasses qui encadrent la stèle), VillageEst (colline au nord-ouest) ; fleurs/souches/cailloux sur les terrasses. Total : 6 écrans avec relief.
+  `apercu_village.py` sait dessiner les intérieurs (`InterieurHeros`, `InterieurCaserne`, `InterieurStand`).
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

@@ -572,9 +572,12 @@ func _passer_porte(nom: String, case: Vector2i, texte: String) -> void:
 		joueur.direction = dir
 		joueur.sprite.play("marche_" + dir)
 		joueur._jouer_son(SON_PORTE, -3.0)
-		var t := create_tween()
+		var t := create_tween().set_parallel(true)
 		t.tween_property(joueur, "position", joueur.position + pas * 12.0, 0.35)
+		if pas == Vector2.UP and arrivee != null and arrivee.interieur:
+			t.tween_property(joueur, "modulate:a", 0.0, 0.3).set_delay(0.1)   # il entre dans l'ombre de la porte
 		await t.finished
+		joueur.modulate.a = 1.0
 		en_transition = false
 		Etat.arrivee_direction = dir
 	await _ramener(nom, case, texte)
