@@ -4,6 +4,7 @@ Usage : python3 Outils/fabriquer_plans_mode7.py [apercu.png]
     Scenes/aile_droite.tscn), 2 px par case : murs en relief (pierre éclairée en haut à gauche), sols dallés.
   - plan_corps.png : le corps du donjon = la silhouette du coq de pierre du blason (sans les ailes), dessinée comme un
     bâtiment (enceinte épaisse + salles), 2x plus grand que le blason.
+  - Assets/Gemini/tuiles/v_corps_coq.png : ce même corps vu du PARVIS (lettre Z de exterieur.gd).
   - plans_mode7.json : taille de chaque image et position de la RACINE de chaque aile (centre de la salle d'entrée),
     autour de laquelle l'aile pivote pour s'emboîter sur le corps.
 À RELANCER après toute modification des plans des ailes (generer_monde.py / generer_aile_droite.py)."""
@@ -100,6 +101,29 @@ def plan_corps():
     return peindre(plan, (l, h))
 
 
+def batiment_parvis(corps):
+    """Le corps du coq VU DU PARVIS (lettre Z de exterieur.gd, emprise 9x5 = 144x80, porte en colonne 4) :
+    le même bâtiment en forme de coq que dans le mode 7 (vu d'en haut, en 3/4), posé sur une façade de briques avec une grande
+    arche sombre au milieu. Image 144x92 : la case du bas = la façade et la porte."""
+    l, h = 144, 92
+    im = Image.new("RGBA", (l, h), (0, 0, 0, 0))
+    toit = corps.resize((140, 74), Image.NEAREST)
+    ombre = Image.new("RGBA", toit.size, (0, 0, 0, 0))
+    ombre.paste((0, 0, 0, 90), mask=toit.split()[3])
+    im.alpha_composite(ombre, (4, 4))
+    im.alpha_composite(toit, (2, 0))
+    d = ImageDraw.Draw(im)
+    d.rectangle([38, 70, 105, 91], fill=MUR, outline=MUR_SOMBRE)                # façade de briques
+    for y in range(72, 91, 4):
+        for x in range(39 + (y // 4 % 2) * 4, 105, 8):
+            d.line([(x, y), (min(x + 5, 104), y)], fill=MUR_CLAIR)
+    d.rectangle([64, 74, 79, 91], fill=(16, 14, 24, 255))                       # la grande porte (sombre)
+    d.ellipse([64, 68, 79, 82], fill=(16, 14, 24, 255))
+    d.arc([62, 66, 81, 84], 180, 360, fill=(200, 170, 90, 255))                 # cintre doré
+    d.line([(63, 75), (63, 91)], fill=(200, 170, 90, 255)); d.line([(80, 75), (80, 91)], fill=(200, 170, 90, 255))
+    return im
+
+
 def main():
     gauche, racine_g = plan_aile("world.tscn")
     droite, racine_d = plan_aile("aile_droite.tscn")
@@ -107,6 +131,7 @@ def main():
     gauche.save(os.path.join(SORTIE, "plan_aile_gauche.png"))
     droite.save(os.path.join(SORTIE, "plan_aile_droite.png"))
     corps.save(os.path.join(SORTIE, "plan_corps.png"))
+    batiment_parvis(corps).save(os.path.join(RACINE, "Assets", "Gemini", "tuiles", "v_corps_coq.png"))
     infos = {"aile_gauche": {"taille": list(gauche.size), "racine": racine_g},
              "aile_droite": {"taille": list(droite.size), "racine": racine_d},
              "corps": {"taille": list(corps.size)}}

@@ -64,7 +64,7 @@ put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10),
 # Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
 animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 5', 'd 17 8']
 
-TAILLES_MAISONS = {'M': (7, 4), 'N': (7, 4), 'T': (7, 4), 'R': (7, 4), 'S': (7, 4), 'L': (7, 4), 'K': (7, 4), 'U': (7, 4)}
+TAILLES_MAISONS = {'M': (7, 4), 'N': (7, 4), 'T': (7, 4), 'R': (7, 4), 'S': (7, 4), 'L': (7, 4), 'K': (7, 4), 'U': (7, 4), 'Z': (9, 5)}
 
 def degager_maisons(g):
     """Retire du plan tout décor (fleurs, tonneaux...) posé SOUS une maison."""
@@ -128,7 +128,7 @@ put(est, 'E', (4, 10)); put(est, 'o', (8, 10), (19, 9))
 put(est, 'g', (9, 5), (16, 5), (13, 10), (2, 6)); put(est, 'f', (7, 5), (17, 4), (12, 11))
 put(est, 'w', (8, 4), (15, 4), (14, 10), (23, 10), (1, 7))
 pnjs_est = [
-    "KnightGold 16 6 gauche | Capitaine Aubrac | [fragment_gauche] Une aile complète ! Je n'y croyais plus. // Mais ce n'est que la moitié du blason : l'aile droite t'attend, et au centre, l'épreuve finale. // Repose-toi, recrue. Tu l'as mérité. ## [capitaine_vu] Alors, cette épreuve ? Le temple est au nord du village. // Souviens-toi : observer, réfléchir, et frapper seulement ce qui doit l'être. ## Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend au temple, au nord du village. // Deux ailes et un corps : voilà la forme du donjon. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur. >> capitaine_vu",
+    "KnightGold 16 6 gauche | Capitaine Aubrac | [fin_paix] Recrue ! Le Gardien du blason m'a parlé de toi. // Tu as baissé ta lance devant lui... Il faut plus de courage pour cela que pour frapper. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fin_combat] Recrue ! Le Gardien du blason m'a parlé de toi. // Tu l'as vaincu en l'observant, sans colère. C'est ainsi que se bat un garde. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fragment_gauche] Une aile complète ! Je n'y croyais plus. // Mais ce n'est que la moitié du blason : l'aile droite t'attend, et au centre, l'épreuve finale. // Repose-toi, recrue. Tu l'as mérité. ## [capitaine_vu] Alors, cette épreuve ? Le temple est au nord du village. // Souviens-toi : observer, réfléchir, et frapper seulement ce qui doit l'être. ## Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend au temple, au nord du village. // Deux ailes et un corps : voilà la forme du donjon. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur. >> capitaine_vu",
     "Villager3 7 7 droite | Soldat Merle | [plume4] La quatrième plume ? Des sentinelles qui tournent la tête ? Brr. Reste dans l'ombre, c'est le conseil d'un vétéran. ## Dix ans de garde et je n'ai jamais vu le fond du donjon. // Les anciens disent que les plumes de l'aile gauche sont de plus en plus longues. Je ne sais pas ce que ça veut dire !",
     "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.",
 ]
@@ -187,7 +187,7 @@ def interieur(porte, meubles, haut, gauche=6, droite=17, bas=10):
 
 int_heros = interieur(12, [('L', 7, 5), ('S', 14, 5), ('q', 11, 5), ('t', 9, 7), ('T', 14, 8), ('C', 13, 8), ('o', 7, 9), ('p', 16, 7)],
                       ['w', 'y', 'z', 'v', 'x'])
-pnjs_int_heros = ["Woman 10 7 bas | Maman | [fragment_gauche] Ma fille, la moitié du blason ! Je vais préparer un grand repas. // Mais d'abord, va te reposer. ## [capitaine_vu] Le capitaine t'a parlé ? Alors file au temple, et fais attention à toi ! ## Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'ouest, tout près d'ici. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
+pnjs_int_heros = ["Woman 10 7 bas | Maman | [epreuve_reussie] Garde du royaume ! Ma fille, garde du royaume ! // Ton père aurait été si fier de toi. Viens, le repas de fête est prêt ! ## [fragment_gauche] Ma fille, la moitié du blason ! Je vais préparer un grand repas. // Mais d'abord, va te reposer. ## [capitaine_vu] Le capitaine t'a parlé ? Alors file au temple, et fais attention à toi ! ## Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'ouest, tout près d'ici. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
 int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 5), ('F', 7, 8), ('M', 9, 8), ('D', 15, 8)],
                         ['w', 'z', 'x', 'w', 'x'])
 pnjs_int_caserne = ["Villager3 14 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
@@ -239,13 +239,13 @@ for y in (1, 3):
 chemin(parvis, 12, 12, 5, 5); put(parvis, 'Y', (12, 5))
 passages_parvis = ["12 6 $stele"]
 
-# APRÈS (drapeau corps_revele) : la forêt s'est écartée, le CORPS DU COQ (grand temple, porte en (12,4)) se dresse ;
+# APRÈS (drapeau corps_revele) : la forêt s'est écartée, le CORPS DU COQ (bâtiment en forme de coq Z, 9x5, porte en (12,4)) se dresse ;
 #         la stèle, avec les deux ailes, s'est rangée à gauche du passage.
 parvis_revele = parvis_commun()
 for y in range(0, 4):                       # mêmes arbres que ceux qui s'écartent pendant la cérémonie (world.gd : colonnes 7-18, rangées 0-3)
     for x in range(7, 19): parvis_revele[y][x] = '.'
-put(parvis_revele, 'U', (9, 1)); chemin(parvis_revele, 12, 12, 5, 5); put(parvis_revele, 'y', (10, 5))
-passages_parvis_revele = ["12 4 ! Le corps du coq... L'épreuve finale se prépare (prochaine étape de la construction).", "10 6 $stele"]
+put(parvis_revele, 'Z', (8, 0)); chemin(parvis_revele, 12, 12, 5, 5); put(parvis_revele, 'y', (10, 5))
+passages_parvis_revele = ["12 4 @corps:Arene 12 11 Le corps du coq. Au fond de la grande salle, quelqu'un t'attend...", "10 6 $stele"]
 
 temple_g = vide()
 chemin(temple_g, 11, 24, 6, 8)                                 # vient de l'est (le parvis)

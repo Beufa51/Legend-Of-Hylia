@@ -3,6 +3,8 @@ class_name Dialogue
 # Boîte de dialogue en bas de l'écran (créée par world.gd). Écoute Etat.dialogue_demande.
 # Le texte s'écrit lettre par lettre ; Espace/J (ou Entrée) : finit la ligne, puis passe à la suivante.
 # Pendant le dialogue, le joueur ne bouge pas.
+# CHOIX (Etat.choix_demande) : après la dernière ligne, des options s'affichent ; haut/bas pour choisir,
+# Espace/J pour valider -> Etat.choix_fait(index).
 
 const SON := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Accept.wav"
 const VITESSE := 45.0   # lettres par seconde
@@ -15,6 +17,9 @@ var _lignes: PackedStringArray
 var _index := 0
 var _tween: Tween
 var _ouvert := false
+var _options: PackedStringArray = []   # options du choix (vide = dialogue simple)
+var _choix := 0                        # option sélectionnée
+var _en_choix := false                 # les options sont affichées
 
 
 func _ready() -> void:
@@ -36,6 +41,23 @@ func _ready() -> void:
 	_suite = _etiquette(Vector2(350, 50), Vector2(20, 14), Color(0.98, 0.84, 0.4))
 	_suite.text = "▼"
 	Etat.dialogue_demande.connect(_ouvrir)
+	Etat.choix_demande.connect(_ouvrir_choix)
+
+
+func _ouvrir_choix(nom: String, lignes: PackedStringArray, options: PackedStringArray) -> void:
+	_options = options
+	_ouvrir(nom, lignes)
+
+
+# Affiche les options à la place du texte : « ▶ » devant celle qui est choisie.
+func _afficher_options() -> void:
+	_en_choix = true
+	_suite.visible = false
+	var texte := ""
+	for i in _options.size():
+		texte += ("▶ " if i == _choix else "    ") + _options[i] + "\n"
+	_texte.text = texte
+	_texte.visible_characters = -1
 
 
 func _etiquette(pos: Vector2, taille: Vector2, couleur: Color) -> Label:
@@ -75,9 +97,23 @@ func _afficher_ligne() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _ouvert and _en_choix and (event.is_action_pressed("move_up") or event.is_action_pressed("move_down")):
+		get_viewport().set_input_as_handled()
+		_choix = posmod(_choix + (1 if event.is_action_pressed("move_down") else -1), _options.size())
+		_jouer_son()
+		_afficher_options()
+		return
 	if not _ouvert or not (event.is_action_pressed("attack") or event.is_action_pressed("ui_accept")):
 		return
 	get_viewport().set_input_as_handled()
+	if _en_choix:   # option validée
+		var choisi := _choix
+		_en_choix = false
+		_options = []
+		_choix = 0
+		_fermer()
+		Etat.choix_fait.emit(choisi)
+		return
 	if _tween and _tween.is_running():   # ligne pas finie : on l'affiche en entier
 		_tween.kill()
 		_texte.visible_characters = -1
@@ -86,6 +122,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	_index += 1
 	if _index < _lignes.size():
 		_afficher_ligne()
+	elif not _options.is_empty():
+		_afficher_options()
 	else:
 		_fermer()
 

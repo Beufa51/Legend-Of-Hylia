@@ -35,6 +35,13 @@ var _cible_glissade := Vector2.ZERO
 var _case_avant := Vector2i(-99, -99)   # case des pieds à l'image précédente
 var _attente_glace := 0.0     # petite pause entre deux glissades / poussées depuis la glace
 
+# --- Cœurs (seulement utiles contre le Gardien du corps du coq : le reste du jeu ne blesse jamais) ---
+signal coeurs_change(coeurs: int, maxi: int)
+const COEURS_MAX := 5
+const SON_BLESSE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Hit2.wav"
+var coeurs := COEURS_MAX
+var _invulnerable := 0.0      # temps restant pendant lequel on ne peut plus être touché (le héros clignote)
+
 
 func _ready() -> void:
 	add_to_group("joueur")
@@ -48,6 +55,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _invulnerable > 0.0:
+		_invulnerable -= delta
+		sprite.visible = _invulnerable <= 0.0 or int(_invulnerable * 12.0) % 2 == 0   # clignote
 	if porte != null:
 		if is_instance_valid(porte):
 			porte.global_position = global_position + Vector2(0, -12)   # la poule est tenue au-dessus de la tête
@@ -198,6 +208,25 @@ func _lancer_poule() -> void:
 # Pousse le joueur (sans le blesser) : utilisé par les poules en colère.
 func repousser(force: Vector2) -> void:
 	_recul = force
+
+
+# Touché (par le Gardien) : perd `degats` cœurs, est repoussé loin de `source`, clignote un instant.
+func blesser(source: Vector2, degats := 1) -> void:
+	if _invulnerable > 0.0 or coeurs <= 0:
+		return
+	coeurs = maxi(coeurs - degats, 0)
+	_invulnerable = 1.2
+	_recul = (global_position - source).normalized() * 240.0
+	_jouer_son(SON_BLESSE, -2.0)
+	coeurs_change.emit(coeurs, COEURS_MAX)
+
+
+# Tous les cœurs reviennent.
+func soigner() -> void:
+	coeurs = COEURS_MAX
+	_invulnerable = 0.0
+	sprite.visible = true
+	coeurs_change.emit(coeurs, COEURS_MAX)
 
 
 # Si on avance contre un bloc "poussable" pendant un instant, il glisse d'une case.
