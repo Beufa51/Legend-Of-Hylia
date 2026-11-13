@@ -1,6 +1,7 @@
 extends StaticBody2D
 class_name Bloc
 # Un bloc que le joueur pousse d'une case à la fois (il faut pousser un instant contre lui).
+# Sur la glace, il glisse jusqu'à un obstacle.
 
 const SON_POUSSE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact.wav"
 const TUILE := 16
@@ -37,13 +38,18 @@ func pousser(dir: Vector2i) -> void:
 	var cible := case + dir
 	if not salle.case_libre(cible):
 		return
+	# Sur la GLACE, le bloc continue de glisser jusqu'à un obstacle (ou jusqu'au sol normal)
+	var cases := 1
+	while salle.has_method("est_glace") and salle.est_glace(cible) and salle.case_libre(cible + dir):
+		cible += dir
+		cases += 1
 	salle.liberer(case)
 	salle.occuper(cible, self)
 	case = cible
 	en_mouvement = true
 	_jouer_son()
 	var tween := create_tween()
-	tween.tween_property(self, "position", Vector2(case * TUILE), DUREE)
+	tween.tween_property(self, "position", Vector2(case * TUILE), DUREE * (1.0 if cases == 1 else 0.6 * cases))
 	await tween.finished
 	en_mouvement = false
 	salle.verifier_plaques()

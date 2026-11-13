@@ -509,6 +509,13 @@
   Épine2 = 2 colonnes de pics (x 16 et 19) entre l'entrée est et la tige (retour (23,6)). L'aile gauche profite automatiquement des nouveaux murs/sols/arches.
   ORDRE DES OUTILS donjon : traiter_gemini.py -> fabriquer_objets.py -> traiter_pack_donjon.py. `apercu_salle.py <n> <png> [scene.tscn]` montre aussi coffres, leviers, pics, eau, arches.
 
+- 2026-11-13 : **ÉTAPE 11e écrite (non testée dans Godot, 3 salles vérifiées par un solveur)** = PLUME D3 « LA GLACE » (colonne x=-3).
+  Lettre `i` = GLACE (`glace_1/2`, dessinées par `traiter_pack_donjon.py::glace`). RÈGLES : en posant le pied sur la glace, on glisse tout droit (sens de la marche) jusqu'à un obstacle ; une case libre NON glacée (sol, plot baissé, case de départ d'un bloc) arrête la glissade dessus ;
+  arrêté sur la glace, une direction = nouvelle glissade, ou pousser le bloc devant (il glisse aussi, `bloc.gd`). `room.gd` (section Glace) : `case_des_pieds`, `position_sur_case`, `est_glace`, `case_bloquee`, `destination_glissade`, `pousser_bloc`, la salle s'annonce dans `joueur.terrain` (`_annoncer_glace`).
+  `player.gd::_gerer_glace` (glissade à 130 px/s, Whoosh2 au départ, Impact à la butée), `arreter_glissade()` (appelé par world lors des téléportations). Touche R dans une salle de glace = retour au début (`_raccompagner(retour, "recommencer")`).
+  SALLES : Épine3 porte ouest = `plumeD3` ; D3a (-3,-1) leçon (3 glissades) ; D3b (-3,-2) BLOC comme butée (12 coups, impossible sans le bloc) ; D3c (-3,-3) glace + PLOTS + CRISTAL (13 coups, impossible sans le cristal) -> plume `plumeD3` ;
+  Épine4 (-4,0) provisoire (cul-de-sac). Sorties de D3a/D3b = remonter la colonne 12 jusqu'au sol de la rangée 2. `Outils/resoudre_glace.py` revérifie les 3 salles depuis aile_droite.tscn (à relancer après toute modif).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.

@@ -172,7 +172,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("reset") and not en_transition and not Etat.en_dialogue:
 		for enfant in get_children():
 			if enfant is Ecran and enfant.grille == salle_actuelle:
-				enfant.reinitialiser()
+				if enfant is Room and enfant.a_de_la_glace() and enfant.retour != Vector2.ZERO:
+					_raccompagner(enfant.retour, "recommencer")   # sur la glace, on peut être coincé : retour au début
+				else:
+					enfant.reinitialiser()
 
 
 # Petit texte en bas de l'écran pour les messages (Etat.annoncer).
@@ -280,7 +283,8 @@ var _raccompagnement := false
 
 
 # Un garde ramène le joueur à l'entrée de la plume : alerte, fondu au noir, retour, la salle est remise à zéro.
-# `raison` : "garde" (repéré par une sentinelle), "chute" (tombé dans un trou), "pics" (marché sur des pics sortis).
+# `raison` : "garde" (repéré par une sentinelle), "chute" (tombé dans un trou), "pics" (marché sur des pics sortis),
+# "recommencer" (touche R dans une salle de glace).
 func _raccompagner(retour: Vector2, raison := "garde") -> void:
 	var chute := raison == "chute"
 	if _raccompagnement:
@@ -305,6 +309,8 @@ func _raccompagner(retour: Vector2, raison := "garde") -> void:
 		lecteur.finished.connect(lecteur.queue_free)
 	if raison == "garde":
 		Etat.annoncer("Repéré ! Un garde te raccompagne au début de la salle.")
+	elif raison == "recommencer":
+		Etat.annoncer("Tu recommences la salle.")
 	elif raison == "pics":
 		_jouer_son(SON_PIQUE, -2.0)
 		joueur.sprite.modulate = Color(1.0, 0.4, 0.4)
@@ -313,6 +319,7 @@ func _raccompagner(retour: Vector2, raison := "garde") -> void:
 	var tween := create_tween()
 	tween.tween_property(_fondu, "modulate:a", 1.0, 0.4)
 	await tween.finished
+	joueur.arreter_glissade()
 	joueur.position = retour
 	joueur.velocity = Vector2.ZERO
 	joueur.sprite.scale = Vector2.ONE
@@ -420,6 +427,7 @@ func _dev_cinematique() -> void:
 
 func _teleporter(salle: Ecran) -> void:
 	_menu_dev.visible = false
+	joueur.arreter_glissade()
 	joueur.position = salle.point_arrivee()
 	joueur.velocity = Vector2.ZERO
 	salle_actuelle = _salle_du_joueur()
@@ -543,6 +551,7 @@ func _ramener(nom_salle: String, case: Vector2i, texte: String) -> void:
 		return
 	for enfant in get_children():
 		if enfant is Ecran and enfant.name == nom_salle:
+			joueur.arreter_glissade()
 			joueur.position = enfant.position + Vector2(case * Ecran.TUILE) + Vector2(8, 3)
 	joueur.velocity = Vector2.ZERO
 	_placer_camera()

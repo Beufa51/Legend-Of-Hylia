@@ -5,7 +5,7 @@ Lettres des plans : voir l'en-tête de Scripts/room.gd. Une salle = 25 x 14 case
 L'aile droite est le MIROIR de l'aile gauche (voir generer_monde.py) :
   vestibule (0,1) -> entrée (0,0) -> épine qui part vers l'OUEST (-1..-5, 0) avec 5 plumes qui montent,
   de plus en plus longues de DROITE à GAUCHE. Drapeaux : plumeD1..plumeD4, fragment_droite.
-Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur (faites) ; prévues : 3 glace, 4 reflet, 5 combinaison.
+Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur, 3 glace (faites) ; prévues : 4 reflet, 5 combinaison.
 """
 import os
 W, H, E = 25, 14, 2
@@ -72,7 +72,8 @@ e2 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D2 est
 for y in range(5, 9):
     for x in (16, 19): e2[y][x] = 'Z'
 RETOUR_E2 = 'Vector2(%d, %d)' % (-2 * 400 + 23 * 16 + 8, 6 * 16 + 3)
-e3 = epine(ferme=True, tige=False)   # PROVISOIRE : cul-de-sac tant que la plume D3 n'est pas construite
+e3 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D3 est obtenue
+e4 = epine(ferme=True, tige=False)   # PROVISOIRE : cul-de-sac tant que la plume D4 n'est pas construite
 
 # --- PLUME D1 : « LES PLOTS ». Leçon : le cristal commute les plots orange (o) et bleus (u).
 #     Au départ : orange LEVÉS (la barrière de la rangée 9 bloque), bleus BAISSÉS (la grille bleue du nord est ouverte).
@@ -113,6 +114,44 @@ for y in range(6, 10):
 put(p2b, '#', (10, 7), (14, 8))
 put(p2b, 'V', (3, 11), (21, 11), (3, 10), (21, 10)); put(p2b, 'S', (5, 2)); put(p2b, 'O', (19, 2))
 
+# --- PLUME D3 : « LA GLACE ». Sur la glace (i), on glisse tout droit jusqu'à un obstacle (ou jusqu'au sol normal).
+#     Un bloc poussé sur la glace glisse aussi. Un plot BAISSÉ n'est pas glissant : on s'arrête dessus.
+#     R = retour au début de la salle (on peut se coincer). Les 3 salles ont été vérifiées par un solveur (mêmes règles) :
+#     3a = 3 glissades ; 3b = 12 coups dont 2 poussées (impossible sans le bloc) ; 3c = 13 coups (impossible sans le cristal).
+def retour_d3(n):   # bas de l'écran n de la plume D3 (case (12,11), sol normal), en position dans le monde
+    return 'Vector2(%d, %d)' % (-3 * 400 + 12 * 16 + 8, -224 * n + 11 * 16 + 3)
+
+def champ_de_glace(g):
+    """Glace sur les rangées 3 à 10, sol normal rangée 11, entrée en bas, sortie en haut (rangées 0-2, colonnes 11-13)."""
+    for y in range(3, 11):
+        for x in range(2, 23): g[y][x] = 'i'
+    sol(g, 2, 22, 11, 11); sol(g, 11, 13, 12, 13); sol(g, 11, 13, 0, 2)
+
+# D3a (leçon) : monter, glisser à droite contre le rocher, remonter. La colonne du milieu est fermée en bas.
+p3a = vide(); champ_de_glace(p3a)
+put(p3a, '#', (11, 10), (12, 10), (13, 10), (13, 3), (6, 7), (18, 6), (16, 9))
+put(p3a, 'V', (2, 11), (22, 11)); put(p3a, 'S', (5, 11)); put(p3a, 'O', (19, 11))
+
+# D3b : la sortie ne s'atteint qu'en remontant la colonne 12 ; aucun rocher ne permet de s'y arrêter : il faut
+#      d'abord pousser le BLOC (il monte jusqu'au rocher (16,5)), puis le pousser à gauche (il s'arrête contre (10,6)).
+p3b = vide(); champ_de_glace(p3b)
+put(p3b, '#', (12, 10), (11, 3), (13, 3), (16, 5), (17, 5), (10, 6), (4, 8), (20, 9), (6, 4))
+put(p3b, 'X', (16, 9))
+put(p3b, 'V', (2, 11), (22, 11)); put(p3b, 'O', (5, 11))
+
+# D3c (la pointe) : glace + PLOTS + CRISTAL. L'alcôve de la plume (rangées 2-3) ne s'ouvre que par (12,4), qu'on atteint
+#      en remontant la colonne 12. Le cristal (21,8) se frappe depuis la glace : il lève le plot bleu (13,8), qui devient la butée.
+p3c = vide()
+sol(p3c, 9, 15, 2, 3); put(p3c, '.', (12, 4))
+for y in range(5, 11):
+    for x in range(2, 23): p3c[y][x] = 'i'
+sol(p3c, 2, 22, 11, 11); sol(p3c, 11, 13, 12, 13)
+put(p3c, '#', (12, 10), (11, 5), (13, 5), (7, 6), (18, 9), (4, 9), (20, 5), (2, 7))
+put(p3c, 'o', (16, 7), (9, 9), (5, 8)); put(p3c, 'u', (13, 8), (10, 6)); put(p3c, 'K', (21, 8))
+put(p3c, 'G', (12, 2)); put(p3c, 'B', (9, 2), (15, 2))
+for x in range(10, 15): put(p3c, 'T', (x, 3))
+put(p3c, 'V', (2, 11), (22, 11))
+
 salles = [
     ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'drapeau_porte2': 'fragment_droite',
         'drapeau_coffre': 'd_cle_vestibule', 'drapeau_cle': 'd_cle_vestibule', 'drapeau_serrure': 'd_porte_vestibule',
@@ -128,7 +167,14 @@ salles = [
         'indice': "Chaque pas retourne une dalle : rouge -> bleue, bleue -> rouge. Rends-les TOUTES bleues pour ouvrir la grille."}),
     ('PlumeD2b', (-2, -2), p2b, (0.98, 0.95, 0.9), {'drapeau_fragile': 'd2_sol2', 'drapeau_porte': 'd2_sol2', 'retour': retour_d2(2),
         'drapeau_gemme': 'plumeD2', 'indice': "Plus de dalles, deux piliers, et une seule entrée : repasser sur une dalle bleue la remet en rouge. Trace ton chemin avant de partir..."}),
-    ('Epine3', (-3, 0), e3, (0.90, 0.88, 0.98), {}),
+    ('Epine3', (-3, 0), e3, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD3'}),
+    ('PlumeD3a', (-3, -1), p3a, (0.92, 0.98, 1.08), {'retour': retour_d3(1),
+        'indice': "De la glace ! Une fois lancé, tu glisses tout droit jusqu'à un obstacle. R pour recommencer."}),
+    ('PlumeD3b', (-3, -2), p3b, (0.9, 0.97, 1.1), {'retour': retour_d3(2),
+        'indice': "Aucun rocher au bon endroit... Un bloc poussé sur la glace glisse, lui aussi."}),
+    ('PlumeD3c', (-3, -3), p3c, (0.94, 0.96, 1.1), {'retour': retour_d3(3), 'drapeau_gemme': 'plumeD3',
+        'indice': "Un plot baissé n'est pas glissant : on s'y arrête. Et le cristal fait monter les plots bleus..."}),
+    ('Epine4', (-4, 0), e4, (0.90, 0.88, 0.98), {}),
 ]
 depart = (200, 224 + 180)   # (seulement si on lance la scène directement : sinon on arrive par le temple)
 

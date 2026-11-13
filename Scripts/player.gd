@@ -25,6 +25,15 @@ var lumiere: PointLight2D  # petite lumière autour du joueur (allumée seulemen
 var _recul := Vector2.ZERO  # poussée subie (coup de bec d'une poule...), s'éteint toute seule
 var porte: Animal         # la poule qu'on porte (mini-jeu de la ferme), sinon null
 var _temps_pousse := 0.0  # depuis combien de temps on pousse contre un bloc
+# GLACE (voir room.gd, section Glace) : la salle où l'on est s'annonce dans `terrain` si elle a de la glace.
+const VITESSE_GLISSADE := 130.0
+const SON_GLISSADE := "res://Assets/Ninja_adventure/Audio/Sounds/Whoosh & Slash/Whoosh2.wav"
+const SON_BUTEE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact.wav"
+var terrain = null            # la salle (Room) glacée où se trouve le joueur, sinon null
+var _glisse := false          # en train de glisser (on ne contrôle plus rien)
+var _cible_glissade := Vector2.ZERO
+var _case_avant := Vector2i(-99, -99)   # case des pieds à l'image précédente
+var _attente_glace := 0.0     # petite pause entre deux glissades / poussées depuis la glace
 
 
 func _ready() -> void:
@@ -63,6 +72,8 @@ func _physics_process(delta: float) -> void:
 		return
 	# Vecteur d'entrée : (-1..1, -1..1) selon les touches pressées
 	var entree := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if _gerer_glace(entree, delta):
+		return
 	var court := Input.is_action_pressed("run")
 	velocity = entree * VITESSE * (FACTEUR_COURSE if court else 1.0) * (0.85 if porte != null else 1.0) + _recul
 	_recul = _recul.move_toward(Vector2.ZERO, 600.0 * delta)
@@ -70,6 +81,81 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_pousser_les_blocs(entree, delta)
 	_mettre_a_jour_animation(entree)
+
+
+# --- Glace -----------------------------------------------------------------------
+# Renvoie vrai si la glace s'occupe du déplacement à cette image (glissade en cours, ou arrêté sur la glace).
+func _gerer_glace(entree: Vector2, delta: float) -> bool:
+	if _glisse:
+		global_position = global_position.move_toward(_cible_glissade, VITESSE_GLISSADE * delta)
+		if global_position.distance_to(_cible_glissade) < 0.5:
+			global_position = _cible_glissade
+			_glisse = false
+			_attente_glace = 0.12
+			if terrain != null and terrain.est_glace(terrain.case_des_pieds(global_position)):
+				_jouer_son(SON_BUTEE, -14.0)   # on s'arrête contre un obstacle
+		_case_avant = terrain.case_des_pieds(global_position) if terrain != null else _case_avant
+		return true
+	if terrain == null or not is_instance_valid(terrain):
+		terrain = null
+		return false
+	_attente_glace = maxf(0.0, _attente_glace - delta)
+	var c: Vector2i = terrain.case_des_pieds(global_position)
+	var avant := _case_avant
+	_case_avant = c
+	if not terrain.est_glace(c):
+		return false
+	var d := _direction_entree(entree)
+	if not terrain.est_glace(avant) and avant != c:
+		# On vient de poser le pied sur la glace en marchant : on part en glissade dans le sens de la marche
+		if d == Vector2i.ZERO:
+			d = Vector2i(VECTEURS[direction])
+		_partir(c, d)
+		return true
+	# Arrêté sur la glace : une direction = glisser (ou pousser le bloc qui est devant)
+	velocity = Vector2.ZERO
+	sprite.play("repos_" + direction)
+	if d == Vector2i.ZERO or _attente_glace > 0.0:
+		return true
+	_tourner_vers(d)
+	if terrain.pousser_bloc(c + d, d):
+		_attente_glace = 0.4
+		return true
+	_partir(c, d)
+	return true
+
+
+# Glisse depuis la case de glace `c` dans la direction `d` (jusqu'où la salle le dit).
+func _partir(c: Vector2i, d: Vector2i) -> void:
+	_tourner_vers(d)
+	var arrivee: Vector2i = terrain.destination_glissade(c, d)
+	_cible_glissade = terrain.position_sur_case(arrivee)
+	_glisse = true
+	velocity = Vector2.ZERO
+	sprite.play("repos_" + direction)
+	if arrivee != c:
+		_jouer_son(SON_GLISSADE, -12.0)
+
+
+# Direction dominante des touches (une seule des 4 directions), ou ZERO.
+func _direction_entree(entree: Vector2) -> Vector2i:
+	if entree.length() < 0.3:
+		return Vector2i.ZERO
+	if absf(entree.x) > absf(entree.y):
+		return Vector2i(signi(roundi(signf(entree.x))), 0)
+	return Vector2i(0, signi(roundi(signf(entree.y))))
+
+
+func _tourner_vers(d: Vector2i) -> void:
+	for nom in VECTEURS:
+		if Vector2i(VECTEURS[nom]) == d:
+			direction = nom
+
+
+# Arrête net une glissade (téléportation, retour au début de la salle...).
+func arreter_glissade() -> void:
+	_glisse = false
+	_case_avant = Vector2i(-99, -99)
 
 
 # Un habitant du village assez près pour lui parler ?

@@ -26,6 +26,8 @@ class_name Room
 #   Q  = coffre (un coup de lance l'ouvre, lève `drapeau_coffre` ; ex. une clé)      J = levier (lève `drapeau_levier`)
 #   E  = porte à serrure (porte de bois) : s'ouvre si le joueur la touche avec la clé `drapeau_cle` (lève `drapeau_serrure`)
 #   Z  = pics qui sortent du sol en boucle (sortis = retour à `retour`)              ~ = eau (bloque)
+#   i  = GLACE : le joueur (et un bloc poussé) glisse tout droit jusqu'à un obstacle ou jusqu'au sol normal
+#        (un plot baissé n'est pas de la glace : on s'arrête dessus). R = retour au début de la salle.
 # Portes : un groupe 3x2 sur le mur du HAUT = arche animée (herse, ou bois pour E) ; 3x1 dans un mur intérieur
 # = herse basse ; les autres (bas, côtés) gardent l'ancienne grille.
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
@@ -124,6 +126,7 @@ var _portes_cle: Array[Porte] = []
 var _pics := {}            # { case : Pics }
 var _pique := false        # le joueur vient d'être touché par des pics (on attend le retour)
 var _chargement := true    # vrai pendant _ready : les portes déjà ouvertes s'ouvrent sans bruit
+var _a_glace := false      # la salle contient de la glace (lettre i)
 
 
 func _ready() -> void:
@@ -165,6 +168,8 @@ func _process(delta: float) -> void:
 		_suivre_pas()
 	if not _pics.is_empty() and grille == Etat.salle_courante:
 		_surveiller_pics()
+	if _a_glace:
+		_annoncer_glace()
 
 
 # --- Chargement ---------------------------------------------------------------
@@ -172,6 +177,9 @@ func _process(delta: float) -> void:
 # --- Décor --------------------------------------------------------------------
 
 func _creer_decor() -> void:
+	for ligne in layout:
+		if ligne.contains("i"):
+			_a_glace = true
 	for y in layout.size():
 		for x in layout[y].length():
 			var pos := Vector2(x * TUILE, y * TUILE)
@@ -197,6 +205,8 @@ func _creer_decor() -> void:
 
 # Tuile de sol (pack donjon Craftpix) : gris-bleu uni comme dans Zelda SNES, avec de rares dalles gravées. Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
 func _nom_sol(x: int, y: int) -> String:
+	if layout[y][x] == "i":
+		return "glace_1" if (x * 3 + y * 5) % 4 else "glace_2"
 	var h := (x * 7 + y * 13 + x * y * 3) % 37
 	if h == 0:
 		return "sol_plat_c"
@@ -479,7 +489,7 @@ func liberer(cellule: Vector2i) -> void:
 func case_libre(cellule: Vector2i) -> bool:
 	if cellule.y < 0 or cellule.y >= layout.size() or cellule.x < 0 or cellule.x >= layout[cellule.y].length():
 		return false
-	return ".TPFXVouz".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
+	return ".TPFXVouzi".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
 
 
 # Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
@@ -556,6 +566,74 @@ func _suivre_pas() -> void:
 
 func _dalles_resolues() -> bool:
 	return drapeau_fragile == "" or Etat.est(drapeau_fragile)
+
+
+# --- Glace ----------------------------------------------------------------------
+# Le joueur (player.gd) demande à la salle où il est : est-ce de la glace ? jusqu'où glisse-t-on ?
+# Les règles sont les mêmes que celles du solveur qui a vérifié les salles (voir Outils/generer_aile_droite.py).
+
+func a_de_la_glace() -> bool:
+	return _a_glace
+
+
+# La salle prévient le joueur qu'il est sur un terrain glacé (seulement la salle où il se trouve).
+func _annoncer_glace() -> void:
+	var joueur := get_tree().get_first_node_in_group("joueur")
+	if joueur == null:
+		return
+	if grille == Etat.salle_courante:
+		joueur.terrain = self
+	elif joueur.terrain == self:
+		joueur.terrain = null
+
+
+# Case (de cette salle) sous les pieds d'un personnage dont on donne la position dans le monde.
+func case_des_pieds(position_monde: Vector2) -> Vector2i:
+	var pied := to_local(position_monde) + Vector2(0, 5)
+	return Vector2i(floori(pied.x / TUILE), floori(pied.y / TUILE))
+
+
+# Position (dans le monde) du joueur debout au centre de la case : ses pieds sont 5 px sous son centre.
+func position_sur_case(c: Vector2i) -> Vector2:
+	return global_position + Vector2(c * TUILE) + Vector2(8, 3)
+
+
+func est_glace(c: Vector2i) -> bool:
+	return c.y >= 0 and c.y < layout.size() and c.x >= 0 and c.x < layout[c.y].length() and layout[c.y][c.x] == "i"
+
+
+# Une case où l'on ne peut pas entrer en glissant : mur, objet solide, bloc, plot levé, porte fermée...
+func case_bloquee(c: Vector2i) -> bool:
+	if c.y < 0 or c.y >= layout.size() or c.x < 0 or c.x >= layout[c.y].length():
+		return true
+	if _est_mur(c.x, c.y) or SOLIDES.contains(layout[c.y][c.x]):
+		return true
+	var occupant = _occupe.get(c)
+	if occupant == null or not is_instance_valid(occupant):
+		return false
+	return not (occupant is Porte and occupant.ouverte)
+
+
+# Depuis la case de glace `c`, on glisse dans la direction `d` : on avance tant que la case suivante
+# est libre et glacée ; une case libre NON glacée (sol, plot baissé) arrête la glissade dessus.
+func destination_glissade(c: Vector2i, d: Vector2i) -> Vector2i:
+	for _i in 100:
+		var suivante := c + d
+		if case_bloquee(suivante):
+			return c
+		c = suivante
+		if not est_glace(c):
+			return c
+	return c
+
+
+# Le joueur, arrêté sur la glace, pousse vers la case `c` : s'il y a un bloc, il le pousse (le bloc glisse aussi).
+func pousser_bloc(c: Vector2i, d: Vector2i) -> bool:
+	var occupant = _occupe.get(c)
+	if occupant is Bloc:
+		occupant.pousser(d)
+		return true
+	return false
 
 
 # --- Pics, séries d'images ------------------------------------------------------

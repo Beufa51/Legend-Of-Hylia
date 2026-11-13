@@ -11,7 +11,7 @@ Images produites :
   MURS ET SOL (mêmes noms que ceux de traiter_gemini.py, qu'ils remplacent) : mur_fond, mur_bord_n/s/e/o, mur_coin_*, mur_dot_*,
   + nouvelles : mur_face_haut/bas (+ _g/_d = bouts), pilier (16x24), sol_plat(_b/_c/_d)
   PORTES ET OBJETS : arche_herse_1..5, arche_bois_1..5 (48x32), arche_basse_1..5 (48x16), coffre_1..5 (20x22),
-  levier_1..5 (16x16), cle (12x8), pics_1..5 (16x24), eau_1/2 (16x16)
+  levier_1..5 (16x16), cle (12x8), pics_1..5 (16x24), eau_1/2 (16x16), glace_1/2 (16x16, dessinées en code)
 """
 import os
 import sys
@@ -190,6 +190,24 @@ def objets_animes(images):
     eau = Image.open(os.path.join(PACK, "Water_coasts_animation.png")).convert("RGBA")
     images["eau_1"] = eau.crop((0, 432, 16, 448))
     images["eau_2"] = eau.crop((16, 432, 32, 448))
+    glace(images)
+
+
+def glace(images):
+    """GLACE (dessinée ici, pas dans le pack) : dalle bleu très clair, fins joints, reflets blancs en biais.
+    2 variantes (reflets décalés) pour que le sol ne fasse pas « papier peint »."""
+    from PIL import ImageDraw
+    for n, decalage in ((1, 0), (2, 7)):
+        im = Image.new("RGBA", (16, 16), (176, 214, 236, 255))
+        d = ImageDraw.Draw(im)
+        d.rectangle([0, 0, 15, 15], outline=(140, 182, 214, 255))          # joint entre les dalles
+        d.line([(1, 1), (14, 1)], fill=(214, 236, 248, 255))               # arête éclairée
+        for k in (0, 1):                                                    # reflets en biais
+            x0 = (3 + decalage + 7 * k) % 14
+            d.line([(x0, 12), (x0 + 4, 8)], fill=(240, 250, 255, 255))
+            d.line([(x0 + 1, 12), (x0 + 3, 10)], fill=(255, 255, 255, 255))
+        d.point([(12 - decalage // 2, 4), (4 + decalage, 6)], fill=(255, 255, 255, 255))   # éclats
+        images["glace_%d" % n] = im
 
 
 def main():
