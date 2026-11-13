@@ -5,7 +5,7 @@ Lettres des plans : voir l'en-tête de Scripts/room.gd. Une salle = 25 x 14 case
 L'aile droite est le MIROIR de l'aile gauche (voir generer_monde.py) :
   vestibule (0,1) -> entrée (0,0) -> épine qui part vers l'OUEST (-1..-5, 0) avec 5 plumes qui montent,
   de plus en plus longues de DROITE à GAUCHE. Drapeaux : plumeD1..plumeD4, fragment_droite.
-Mécaniques prévues (1 nouvelle par plume) : 1 plots orange/bleus, 2 sol fragile, 3 glace, 4 reflet, 5 combinaison.
+Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 sol fragile (faites) ; prévues : 3 glace, 4 reflet, 5 combinaison.
 """
 import os
 W, H, E = 25, 14, 2
@@ -57,7 +57,8 @@ def epine(porte=False, ferme=False, tige=True):
 
 
 e1 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D1 est obtenue
-e2 = epine(ferme=True, tige=False)   # PROVISOIRE : cul-de-sac tant que la plume D2 n'est pas construite
+e2 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D2 est obtenue
+e3 = epine(ferme=True, tige=False)   # PROVISOIRE : cul-de-sac tant que la plume D3 n'est pas construite
 
 # --- PLUME D1 : « LES PLOTS ». Leçon : le cristal commute les plots orange (o) et bleus (u).
 #     Au départ : orange LEVÉS (la barrière de la rangée 9 bloque), bleus BAISSÉS (la grille bleue du nord est ouverte).
@@ -73,6 +74,30 @@ put(p1, 'K', (12, 9))                                       # le cristal, DANS l
 put(p1, 'V', (3, 11), (21, 11), (3, 6), (21, 6)); put(p1, 'S', (6, 7)); put(p1, 'O', (18, 7))
 for x in range(10, 15): put(p1, 'T', (x, 11))
 
+# --- PLUME D2 : « LE SOL FRAGILE ». Les dalles z s'effondrent quand on les quitte : il faut passer sur TOUTES,
+#     une seule fois chacune (sinon on reste coincé : R pour recommencer ; tomber dans un trou = retour en bas).
+def retour_d2(n):   # bas de l'écran n de la plume D2 (case (12,12)), en position dans le monde
+    return 'Vector2(%d, %d)' % (-2 * 400 + 12 * 16 + 8, -224 * n + 194)
+
+# D2a (en bas) : leçon. Un champ de 5 x 4 dalles traverse la salle ; un serpentin suffit.
+p2a = vide(); sol(p2a, 2, 22, 2, 3); sol(p2a, 2, 22, 8, 11); sol(p2a, 11, 13, 12, 13); sol(p2a, 11, 13, 0, 1)
+for x in (11, 12, 13): p2a[0][x] = 'D'; p2a[1][x] = 'D'
+for y in range(4, 8):
+    for x in range(10, 15): p2a[y][x] = 'z'
+put(p2a, 'V', (3, 11), (21, 11), (3, 2), (21, 2)); put(p2a, 'S', (8, 9)); put(p2a, 'O', (16, 9)); put(p2a, 'B', (5, 9), (19, 9))
+
+# D2b (la pointe) : 34 dalles autour de 2 piliers ; on entre par le bas, on doit finir devant la grille de l'alcôve
+#     (colonnes 11-13). Seulement 20 chemins possibles (vérifié par un solveur).
+p2b = vide(); sol(p2b, 2, 22, 2, 4); sol(p2b, 2, 22, 10, 11); sol(p2b, 11, 13, 12, 13)
+for x in range(2, 23): p2b[5][x] = '#'
+for x in (11, 12, 13): p2b[5][x] = 'D'
+put(p2b, 'G', (12, 3)); put(p2b, 'B', (9, 3), (15, 3))
+for x in range(10, 15): put(p2b, 'T', (x, 4))
+for y in range(6, 10):
+    for x in range(8, 17): p2b[y][x] = 'z'
+put(p2b, '#', (10, 7), (14, 8))
+put(p2b, 'V', (3, 11), (21, 11), (3, 10), (21, 10)); put(p2b, 'S', (5, 2)); put(p2b, 'O', (19, 2))
+
 salles = [
     ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'drapeau_porte2': 'fragment_droite',
         'indice': "L'aile droite du blason. Ici, tout est inversé : l'épine part vers l'ouest."}),
@@ -80,7 +105,12 @@ salles = [
     ('Epine1', (-1, 0), e1, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD1'}),
     ('PlumeD1', (-1, -1), p1, (0.98, 0.94, 1.06), {'drapeau_gemme': 'plumeD1',
         'indice': "Ce cristal commande les plots de couleur : un coup de lance, et les levés se baissent... et les baissés se lèvent !"}),
-    ('Epine2', (-2, 0), e2, (0.90, 0.88, 0.98), {}),
+    ('Epine2', (-2, 0), e2, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD2'}),
+    ('PlumeD2a', (-2, -1), p2a, (1.0, 0.97, 0.92), {'drapeau_fragile': 'd2_sol1', 'drapeau_porte': 'd2_sol1', 'retour': retour_d2(1),
+        'indice': "Ces dalles sont fragiles : elles s'effondrent derrière toi. Passe sur TOUTES pour ouvrir la grille. Coincé ? R pour recommencer."}),
+    ('PlumeD2b', (-2, -2), p2b, (0.98, 0.95, 0.9), {'drapeau_fragile': 'd2_sol2', 'drapeau_porte': 'd2_sol2', 'retour': retour_d2(2),
+        'drapeau_gemme': 'plumeD2', 'indice': "Cette fois, il faut finir devant la grille. Réfléchis avant de faire le premier pas..."}),
+    ('Epine3', (-3, 0), e3, (0.90, 0.88, 0.98), {}),
 ]
 depart = (200, 224 + 180)   # (seulement si on lance la scène directement : sinon on arrive par le temple)
 
