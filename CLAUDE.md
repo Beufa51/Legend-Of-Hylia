@@ -620,6 +620,15 @@
   5) Textes géographiques de Maman/capitaine/indice corrigés (caserne = à l'est de la place) ; `gardien.gd` retour en (18,7). RESTE (étape 5 du plan) : secrets (bois/cascade), girouette redessinée, PNJ restants/style, route du sud ouverte à l'épilogue, panneaux.
   ORDRE DES OUTILS village : traiter_village -> traiter_village2 -> fabriquer_maisons -> traiter_pack_aesthetic -> fabriquer_riviere -> generer_village -> verifier_carte.
 
-## PROCHAINE ÉTAPE (Opus pour la conception, puis Sonnet) : REFONTE DU VILLAGE en forme de coq (voir entrée du 2026-11-13 ci-dessus)
-- D'abord : tester le correctif d'arbres (animaux/PNJ devant-derrière), puis valider le plan de carte en coq, puis audit des packs, girouette, PNJ.
+- 2026-11-13 : utilisateur : « j'ai testé, tout marche » (carte en coq 14a OK). **ÉTAPE 14b écrite (non testée dans Godot ; aperçus PIL fidèles vérifiés)** = GIROUETTE + STYLE PIXEL CRAWLER + HABITANTS :
+  1) GIROUETTE redessinée (`Outils/fabriquer_objets.py::girouette_mat/girouette_coq`) : socle de pierre rond à 2 marches, mât de fer, boule dorée, croix des points cardinaux avec plaques O/E/N/S ; coq de PROFIL dessiné à la main (crête, bec doré, barbillon, queue verte et rouge, perchoir de fer), toujours 48x64 + coq qui se retourne (code inchangé).
+  2) STYLE DU VILLAGE : `Outils/traiter_pixel_crawler.py` (à lancer APRÈS traiter_pack_aesthetic.py, AVANT generer_village.py) remplace les `v_*.png` de nature par ceux de Pixel Crawler : herbe/chemin (couleurs du pack, fabriqués par traiter_village2), 2 feuillus (32x62), sapin, buissons, fleurs, touffes, roche.
+     Les arbres sont plus hauts (62 px) mais gardent l'emprise 2x2. PAS touchés : maisons (code), caserne/temple, clôtures, puits, panneau, tonneau, caisse, bannière, étal, intérieurs (restes d'autres packs).
+  3) HABITANTS : `Outils/preparer_pnj_pixelcrawler.py` (après preparer_pnj.py) écrit `Assets/Heros/pnj_<Nom>.png` depuis les persos du pack (Citizen_F, Knight, Rogue, Wizzard, recolorés) : Woman, Villager, Villager5, Villager4 (capuche), OldMan (mage vert), KnightGold, Villager3 (soldat), Boy.
+     Ils sont de PROFIL seulement : gauche = miroir, haut/bas = profil. LIMITE : ils sont plus grands/détaillés que le héros LPC (style qui jure un peu) -> proposer de remplacer AUSSI le héros par un perso du pack.
+  4) Nouvel outil `Outils/apercu_village.py sortie.png Ecran...` = aperçu fidèle d'écrans du village (images + emprises lues dans exterieur.gd, habitants dessinés).
+  ORDRE DES OUTILS village : traiter_village -> traiter_village2 -> fabriquer_maisons -> traiter_pack_aesthetic -> traiter_pixel_crawler -> fabriquer_riviere -> generer_village -> verifier_carte (+ preparer_pnj -> preparer_pnj_pixelcrawler pour les habitants).
+
+## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
+- Maisons / caserne / temple / intérieurs encore dans l'ancien style (à refaire avec Roofs.png/Walls.png de Pixel Crawler ou à recolorer) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
