@@ -636,6 +636,12 @@
      s'arrête et se tourne (miroir) vers le joueur à moins de 56 px ou pendant un dialogue ; s'arrête s'il heurte un obstacle. Sans ces images (anciens habitants) : comportement d'avant. But : juger visuellement s'il faut REMPLACER les habitants (pack Pixel Crawler jugé « pas fan »).
   PISTES si les PNJ déplaisent : planches LPC variées (générateur), ou recolorer/agrandir le héros pour harmoniser, ou retour aux Ninja Adventure 16x16 (plus petits, plus simples).
 
+- 2026-11-13 : retour 14c : « j'aime bien la femme ; soldats et pêcheur : on dirait qu'ils n'ont pas de bras ; ils ne bougent pas assez ». **ÉTAPE 14d écrite (non testée dans Godot ; planches vérifiées en image)** :
+  1) `Outils/habiller_pnj.py` (à lancer APRÈS preparer_pnj_pixelcrawler.py) : HABILLE le corps nu `Body_A` du pack (repeint par zones : cheveux, tunique, manches/armure, ceinture, pantalon, bottes, casque, chapeau de paille) -> habitants VUS DE 3 CÔTÉS (bas, haut, côté) avec bras visibles :
+     Villager3 (soldat : casque + armure grise), KnightGold (capitaine : armure dorée, tunique rouge), Villager4 (pêcheur : chapeau de paille, tunique verte). Planches `repos` (4 images x 3 rangées) et `marche` (6 x 3). Les autres habitants (Woman, Villager, Villager5, OldMan, Boy) restent à 1 rangée (profil).
+  2) `pnj.gd` : planches à 1 ou 3 rangées (`_rangees`, `_orienter`, `_montrer`) ; promenade plus ample (60x30 px autour de la place), plus rapide (22 px/s), pauses courtes (0,8-3 s) ; il se tourne vers le joueur (haut/bas/côté) quand on approche.
+  Limite : le corps du pack est « grosse tête » : à juger au test ; sinon passer à des planches LPC variées.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Maisons / caserne / temple / intérieurs encore dans l'ancien style (à refaire avec Roofs.png/Walls.png de Pixel Crawler ou à recolorer) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
