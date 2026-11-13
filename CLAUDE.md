@@ -642,6 +642,11 @@
   2) `pnj.gd` : planches à 1 ou 3 rangées (`_rangees`, `_orienter`, `_montrer`) ; promenade plus ample (60x30 px autour de la place), plus rapide (22 px/s), pauses courtes (0,8-3 s) ; il se tourne vers le joueur (haut/bas/côté) quand on approche.
   Limite : le corps du pack est « grosse tête » : à juger au test ; sinon passer à des planches LPC variées.
 
+- 2026-11-13 : utilisateur : « refais les maisons dans le style du pack ». **ÉTAPE 14e écrite (non testée dans Godot ; aperçus PIL fidèles vérifiés)** : `Outils/fabriquer_maisons_pixelcrawler.py` (à lancer APRÈS traiter_pack_aesthetic / traiter_pixel_crawler, AVANT generer_village) refait `v_maison_orange/bleue/chaume/rouge/pierre/bois/caserne`
+  avec Pixel Crawler : mur à colombages de face (Walls.png, 5 pièces = 112 px, types fenêtres / plein / brique / planches), porte arrondie à ferrures au milieu (colonne 3), 2 fenêtres (carreaux ou volets verts), grand toit du pack (126 px) recoloré (brun, bleu, chaume, rouge, gris-pierre, brun sombre, vert menthe pour la caserne),
+  pignon de planches sous la crête (le creux du toit laissait voir l'herbe). Sprites 128x127, emprise 7x4 INCHANGÉE (exterieur.gd/generer_village.py non modifiés) ; le toit dépasse d'environ 15 px au-dessus de l'écran pour les maisons de la rangée 3.
+  Restent dans l'ancien style : temple/corps du coq (`U`, `Z`), étal `E`, tonneau, caisse, bannière, clôture, puits, panneau, intérieurs. ORDRE DES OUTILS village : ... traiter_pixel_crawler -> fabriquer_maisons_pixelcrawler -> fabriquer_riviere -> generer_village.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
-- Maisons / caserne / temple / intérieurs encore dans l'ancien style (à refaire avec Roofs.png/Walls.png de Pixel Crawler ou à recolorer) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
+- Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
