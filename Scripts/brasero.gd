@@ -9,6 +9,8 @@ var salle: Node2D          # la salle (Room) : on la prévient quand un brasero 
 var duree := 14.0
 var allume := false
 var verrouille := false    # vrai quand l'énigme est résolue
+var foyer := false         # mode « lance enflammée » : foyer allumé en permanence, il donne le feu à la lance
+var mode_feu := false      # mode « lance enflammée » : ne s'allume qu'avec une lance enflammée, puis reste allumé (et sert de relais)
 var ordonne := false       # mode « chemin » (tête de coq) : la salle gère l'ordre et la durée, le brasero ne s'éteint pas seul
 var attendu := false       # c'est LUI le prochain à allumer : il pulse doucement
 var vie := 1.0             # 1 = flamme pleine, 0 = sur le point de s'éteindre (mode chemin)
@@ -47,6 +49,9 @@ func initialiser(une_salle: Node2D, secondes: float, eteint: Texture2D, flammes:
 func frapper() -> void:
 	if verrouille:
 		return
+	if foyer or mode_feu:
+		_frapper_avec_feu()
+		return
 	if ordonne:
 		if allume:
 			return
@@ -58,6 +63,27 @@ func frapper() -> void:
 	_reste = duree   # un nouveau coup remet le compteur à zéro
 	_regler_lumiere(true)
 	salle.verifier_braseros()
+
+
+# Salle « lance enflammée » : frapper un brasero ALLUMÉ enflamme la lance ; frapper un brasero ÉTEINT avec une lance enflammée l'allume pour de bon.
+func _frapper_avec_feu() -> void:
+	var joueur = get_tree().get_first_node_in_group("joueur")
+	if joueur == null:
+		return
+	if allume:
+		joueur.prendre_feu()
+	elif joueur.a_feu():
+		allume = true
+		_jouer_son()
+		_regler_lumiere(true)
+		salle.verifier_braseros()
+
+
+# Foyer : allumé dès le début, pour toujours.
+func allumer_foyer() -> void:
+	foyer = true
+	allume = true
+	_regler_lumiere(true)
 
 
 # L'énigme est résolue : le brasero ne s'éteindra plus.
@@ -90,6 +116,9 @@ func _process(delta: float) -> void:
 		return
 	_sprite.texture = _images_flamme[int(_temps * 6.0) % _images_flamme.size()]
 	if verrouille:
+		return
+	if foyer or mode_feu:
+		_lumiere.energy = 1.0   # allumé pour de bon : pas de compte à rebours
 		return
 	if ordonne:
 		# la flamme rétrécit à mesure que le temps passe ; elle vacille dans les dernières secondes

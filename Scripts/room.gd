@@ -12,6 +12,8 @@ class_name Room
 #   G  = plume dorée à ramasser (lève `drapeau_gemme`)
 #   K  = cristal à frapper à la lance (lève `drapeau_cristal`)
 #   L  = brasero à allumer à la lance, dans une salle `sombre` (voir `drapeau_braseros`)
+#   l  = FOYER (salle `braseros_feu`) : brasero allumé en permanence, un coup de lance enflamme la lance quelques secondes
+#   w  = flaque d'eau (ne bloque pas) : y entrer avec la lance enflammée l'éteint
 #   P  = bouton de sol : s'enfonce quand un bloc est dessus (voir `drapeau_plaque`)
 #   1 à 5 = cloche à frapper à la lance (le chiffre = sa note, 1 = la plus grave)
 #   C  = statue du coq chanteur : frappée, elle joue la `melodie` de la salle
@@ -65,6 +67,7 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 @export var drapeau_cristal := ""  # levé quand on frappe le cristal K de cette salle
 @export var drapeau_braseros := "" # levé quand TOUS les braseros L sont allumés en même temps
 @export var duree_braseros := 14.0 # secondes avant qu'un brasero L s'éteigne
+@export var braseros_feu := false   # mode « lance enflammée » : les braseros L ne s'allument qu'avec une lance enflammée (au contact d'un foyer `l` ou d'un brasero déjà allumé)
 @export var chemin_braseros: PackedStringArray   # mode « tête de coq » : cases "x y" des braseros L DANS L'ORDRE où il faut les allumer (vide = mode normal)
 @export var duree_chemin := 24.0   # mode chemin : secondes pour allumer toute la série avant que tout s'éteigne
 @export var melodie := ""          # notes à rejouer sur les cloches, dans l'ordre (ex. "132")
@@ -101,6 +104,7 @@ var _occupe := {}
 var _blocs: Array[Bloc] = []
 var _plaques: Array[Vector2i] = []
 var _braseros: Array[Brasero] = []
+var _flaques := {}         # { case : vrai } flaques d'eau (éteignent la lance enflammée)
 var _ordre := 0            # mode chemin : combien de braseros sont déjà allumés dans l'ordre
 var _t_chemin := 0.0       # mode chemin : temps écoulé depuis le premier brasero
 var _echec_t := 0.0        # mode chemin : l'éclair rouge après une erreur
@@ -175,6 +179,8 @@ func _process(delta: float) -> void:
 		a["sprite"].texture = images[int(_temps * 6.0 + a["decalage"]) % images.size()]
 	if not chemin_braseros.is_empty():
 		_gerer_chemin(delta)
+	if not _flaques.is_empty() and grille == Etat.salle_courante:
+		_surveiller_flaques()
 	# Les marques encore vides pulsent doucement (« il y a quelque chose à poser ici »)
 	for cellule in _boutons:
 		var v := 1.0
@@ -337,8 +343,26 @@ func _poser_objets() -> void:
 						flammes.append(_image(nom))
 					brasero.initialiser(self, duree_braseros, _image("brasero_eteint"), flammes)
 					brasero.ordonne = not chemin_braseros.is_empty()
+					brasero.mode_feu = braseros_feu
 					_braseros.append(brasero)
 					_occupe[Vector2i(x, y)] = brasero
+				"l":
+					var foyer := Brasero.new()
+					foyer.position = pos
+					add_child(foyer)
+					var flammes_foyer: Array[Texture2D] = []
+					for nom in BRASERO:
+						flammes_foyer.append(_image(nom))
+					foyer.initialiser(self, duree_braseros, _image("brasero_eteint"), flammes_foyer)
+					foyer.allumer_foyer()   # pas dans `_braseros` : il est déjà allumé, il ne compte pas dans l'énigme
+					_occupe[Vector2i(x, y)] = foyer
+				"w":
+					_flaques[Vector2i(x, y)] = true
+					_poser_anime(["flaque_1", "flaque_1", "flaque_1", "flaque_1", "flaque_2", "flaque_2", "flaque_2", "flaque_2"], pos, x + y)
+					if sombre:   # on doit voir les flaques dans le noir : une faible lueur bleue
+						var l := Lumiere.creer(Color(0.4, 0.65, 1.0), 0.5, 0.6)
+						l.position = pos + Vector2(8, 8)
+						add_child(l)
 				"K":
 					var cristal := Cristal.new()
 					cristal.position = pos
@@ -579,6 +603,10 @@ func reinitialiser() -> void:
 			brasero.eteindre()
 	_ordre = 0
 	_t_chemin = 0.0
+	if braseros_feu:
+		var joueur = get_tree().get_first_node_in_group("joueur")
+		if joueur != null:
+			joueur.eteindre_feu()
 	if _calque_chemin != null and not _braseros.is_empty() and not _braseros[0].verrouille:
 		_rearmer_chemin()
 	_repere = false
@@ -781,6 +809,13 @@ func basculer_plots() -> void:
 		plot.regler((plot.couleur == Plot.ORANGE) == _orange_leves)
 	for cristal in _commutateurs:
 		cristal.colorer(_orange_leves)
+
+
+# L'eau éteint la lance enflammée du joueur.
+func _surveiller_flaques() -> void:
+	var joueur = get_tree().get_first_node_in_group("joueur")
+	if joueur != null and joueur.a_feu() and _flaques.has(case_des_pieds(joueur.global_position)):
+		joueur.eteindre_feu(true)
 
 
 # --- Les braseros « tête de coq » : on les allume dans l'ordre du tracé, avant qu'ils s'éteignent -------------
