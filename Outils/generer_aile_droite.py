@@ -5,7 +5,7 @@ Lettres des plans : voir l'en-tête de Scripts/room.gd. Une salle = 25 x 14 case
 L'aile droite est le MIROIR de l'aile gauche (voir generer_monde.py) :
   vestibule (0,1) -> entrée (0,0) -> épine qui part vers l'OUEST (-1..-5, 0) avec 5 plumes qui montent,
   de plus en plus longues de DROITE à GAUCHE. Drapeaux : plumeD1..plumeD4, fragment_droite.
-Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur, 3 glace, 4 reflet (faites) ; prévue : 5 combinaison.
+Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur, 3 glace, 4 reflet, 5 combinaison -> fragment (faites). AILE DROITE COMPLÈTE.
 """
 import os
 W, H, E = 25, 14, 2
@@ -74,7 +74,7 @@ for y in range(5, 9):
 RETOUR_E2 = 'Vector2(%d, %d)' % (-2 * 400 + 23 * 16 + 8, 6 * 16 + 3)
 e3 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D3 est obtenue
 e4 = epine(porte=True)            # la porte ouest s'ouvre quand la plume D4 est obtenue
-e5 = epine(ferme=True, tige=False)   # PROVISOIRE : cul-de-sac tant que la plume D5 n'est pas construite
+e5 = epine(ferme=True)            # dernière épine : fermée à l'ouest (fin de l'aile), la tige monte vers la plume D5 (pointe de l'aile)
 
 # --- PLUME D1 : « LES PLOTS ». Leçon : le cristal commute les plots orange (o) et bleus (u).
 #     Au départ : orange LEVÉS (la barrière de la rangée 9 bloque), bleus BAISSÉS (la grille bleue du nord est ouverte).
@@ -192,6 +192,61 @@ put(p4d, '#', (6, 7), (7, 7), (10, 10), (13, 7), (5, 9))
 put(p4d, 'G', (12, 3)); put(p4d, 'B', (9, 2), (15, 2))
 for x in range(10, 15): put(p4d, 'T', (x, 4))
 
+# --- PLUME D5 : LA POINTE DE L'AILE (5 écrans, colonne x=-5) : chaque écran COMBINE des mécaniques de l'aile droite.
+#     Vérifié par Outils/resoudre_d5.py (sauf 5a : le rythme des pics n'est pas simulé).
+def retour_d5(n):   # bas de l'écran n de la plume D5 (case (12,11)), en position dans le monde
+    return 'Vector2(%d, %d)' % (-5 * 400 + 12 * 16 + 8, -224 * n + 11 * 16 + 3)
+
+# D5a : CLÉ + LEVIER + PICS. La clé est dans un coffre, au fond d'une niche fermée par une herse ; le levier qui ouvre la herse
+#       est de l'autre côté de deux colonnes de pics (qui sortent à tour de rôle). La clé ouvre la porte de bois du haut.
+p5a = vide(); sol(p5a, 2, 22, 2, 11); sol(p5a, 11, 13, 12, 13); sol(p5a, 11, 13, 0, 1)
+for x in (11, 12, 13): p5a[0][x] = 'E'; p5a[1][x] = 'E'
+for x in range(2, 8): p5a[5][x] = '#'
+for y in range(2, 6): p5a[y][7] = '#'
+put(p5a, 'D', (3, 5), (4, 5), (5, 5)); put(p5a, 'Q', (4, 3))
+for y in range(2, 12):
+    for x in (15, 18): p5a[y][x] = 'Z'
+put(p5a, 'J', (21, 3)); put(p5a, 'B', (21, 10)); put(p5a, 'V', (2, 11), (9, 2), (22, 7))
+
+# D5b : REFLET + PLOTS. Le reflet est enfermé derrière une barrière ORANGE (colonne 9) ; le cristal la baisse... mais lève
+#       la barrière BLEUE (rangée 7) qui coupe le chemin du joueur. (29 coups ; impossible sans le cristal)
+p5b = salle_reflet('D'); put(p5b, 'r', (5, 3))
+for x in range(2, 10): p5b[6][x] = '#'
+put(p5b, 'o', (9, 2), (9, 3), (9, 4), (9, 5))
+put(p5b, 'a', (16, 4), (8, 9))
+for x in range(14, 23): p5b[7][x] = 'u'
+put(p5b, 'K', (12, 8))
+
+# D5c : GLACE + BLOC + BOUTON. Le bouton (sol normal au milieu de la glace) arrête le bloc qui glisse dessus : la herse du haut
+#       s'ouvre. (17 coups ; impossible sans le bloc)
+p5c = vide(); champ_de_glace(p5c)
+for x in (11, 12, 13): p5c[0][x] = 'H'; p5c[1][x] = 'H'
+put(p5c, '#', (17, 4), (18, 4), (19, 9), (4, 4), (8, 8), (20, 3), (3, 7), (14, 9))
+put(p5c, 'P', (6, 5)); put(p5c, 'X', (17, 8))
+put(p5c, 'V', (2, 11), (22, 11))
+
+# D5d : DALLES DE COULEUR + PLOTS + CRISTAL. Champ de dalles 5x3 (colonnes 10-14, rangées 5-7), entrée unique (12,8) ;
+#       le cristal est AU MILIEU du champ : un plot baissé est un passage libre (il ne retourne rien), un plot levé un mur.
+#       Toutes bleues -> la herse H (rangée 4) du couloir de sortie s'ouvre. (19 coups ; impossible sans le cristal)
+p5d = vide(); sol(p5d, 2, 22, 9, 11); sol(p5d, 11, 13, 12, 13); sol(p5d, 11, 13, 0, 3)
+put(p5d, 'H', (11, 4), (12, 4), (13, 4))
+for y in range(5, 8):
+    for x in range(10, 15): p5d[y][x] = 'z'
+put(p5d, '.', (12, 8))
+put(p5d, 'o', (14, 7), (13, 5)); put(p5d, 'u', (12, 5)); put(p5d, 'K', (13, 6))
+put(p5d, 'V', (2, 11), (22, 11), (3, 9), (21, 9)); put(p5d, 'S', (7, 9)); put(p5d, 'O', (17, 9))
+
+# D5e (POINTE DE L'AILE) : GLACE + PLOTS + CRISTAL + COFFRE. La clé est dans le coffre, niché entre des rochers ; elle ouvre la
+#       grille à serrure de l'alcôve du FRAGMENT de l'aile droite. (26 coups ; impossible sans le cristal)
+p5e = vide()
+sol(p5e, 9, 15, 2, 4); put(p5e, 'W', (12, 3)); put(p5e, 'E', (11, 5), (12, 5), (13, 5))
+for y in range(6, 11):
+    for x in range(2, 23): p5e[y][x] = 'i'
+sol(p5e, 2, 22, 11, 11); sol(p5e, 11, 13, 12, 13)
+put(p5e, '#', (12, 10), (13, 9), (18, 10), (7, 7), (18, 8), (20, 9), (2, 9), (2, 6), (21, 7), (17, 8))
+put(p5e, 'o', (22, 7), (11, 9)); put(p5e, 'u', (9, 10), (12, 7)); put(p5e, 'K', (20, 8)); put(p5e, 'Q', (17, 10))
+put(p5e, 'B', (9, 2), (15, 2))
+
 salles = [
     ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'drapeau_porte2': 'fragment_droite',
         'drapeau_coffre': 'd_cle_vestibule', 'drapeau_cle': 'd_cle_vestibule', 'drapeau_serrure': 'd_porte_vestibule',
@@ -225,6 +280,18 @@ salles = [
         'drapeau_reflet': 'd4_reflet3', 'drapeau_porte': 'd4_reflet3', 'drapeau_gemme': 'plumeD4',
         'indice': "Dans le noir, ton reflet luit. Un bouton, une herse, deux dalles..."}),
     ('Epine5', (-5, 0), e5, (0.90, 0.88, 0.98), {}),
+    ('PlumeD5a', (-5, -1), p5a, (1.0, 0.95, 0.92), {'retour': retour_d5(1), 'drapeau_levier': 'd5_levier', 'drapeau_porte': 'd5_levier',
+        'drapeau_coffre': 'd5_cle', 'drapeau_cle': 'd5_cle', 'drapeau_serrure': 'd5_porte',
+        'indice': "La pointe de l'aile. Ici, tout ce que tu as appris se combine..."}),
+    ('PlumeD5b', (-5, -2), p5b, (0.95, 0.93, 1.06), {'retour': retour_d5(2), 'drapeau_reflet': 'd5_reflet', 'drapeau_porte': 'd5_reflet',
+        'indice': "Ton reflet est enfermé derrière des plots... et le cristal commande toutes les barrières."}),
+    ('PlumeD5c', (-5, -3), p5c, (0.9, 0.97, 1.1), {'retour': retour_d5(3), 'drapeau_plaque': 'd5_bouton', 'drapeau_porte2': 'd5_bouton',
+        'indice': "Un bouton au milieu de la glace : un bloc qui glisse s'arrête dessus."}),
+    ('PlumeD5d', (-5, -4), p5d, (1.0, 0.97, 0.92), {'retour': retour_d5(4), 'drapeau_fragile': 'd5_dalles', 'drapeau_porte2': 'd5_dalles',
+        'indice': "Des dalles, des plots, un cristal au milieu : un plot baissé est un passage qui ne retourne aucune dalle."}),
+    ('PlumeD5e', (-5, -5), p5e, (1.06, 1.0, 0.9), {'retour': retour_d5(5), 'drapeau_coffre': 'd5_cle2', 'drapeau_cle': 'd5_cle2',
+        'drapeau_serrure': 'd5_alcove', 'drapeau_gemme': 'fragment_droite',
+        'indice': "Le FRAGMENT de l'aile droite est derrière cette grille. La clé est dans le coffre... sur la glace."}),
 ]
 depart = (200, 224 + 180)   # (seulement si on lance la scène directement : sinon on arrive par le temple)
 

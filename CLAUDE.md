@@ -527,6 +527,14 @@
 
 - 2026-11-13 : nouvelle musique du VILLAGE fournie par l'utilisateur : `Assets/Musique/First Light in the Village.mp3` (branchée dans `generer_village.py`, remplace `04_peaceful_village`). Godot lit le MP3 (boucle via `flux.loop`).
 
+- 2026-11-13 : **ÉTAPE 11g écrite (non testée dans Godot)** = PLUME D5, POINTE DE L'AILE DROITE (colonne x=-5) -> **L'AILE DROITE EST COMPLÈTE (en code)**. Épine5 : tige ouverte, fermée à l'ouest.
+  Chaque écran COMBINE : D5a (-5,-1) CLÉ + LEVIER + PICS (levier (21,3) derrière 2 colonnes de pics x=15/18 -> herse de la niche du coffre -> clé -> porte de bois E du haut ; rythme des pics non simulé) ;
+  D5b (-5,-2) REFLET + PLOTS (29 coups) ; D5c (-5,-3) GLACE + BLOC + BOUTON (le bouton = sol normal qui arrête le bloc ; 17 coups) ; D5d (-5,-4) DALLES + PLOTS + CRISTAL au milieu du champ 5x3, herse H du couloir de sortie (19 coups) ;
+  D5e (-5,-5) GLACE + PLOTS + CRISTAL + COFFRE -> clé -> grille à serrure E de l'alcôve -> FRAGMENT `fragment_droite` (26 coups). Chacune impossible sans sa mécanique clé.
+  NOUVEL OUTIL `Outils/resoudre_d5.py` = SOLVEUR GÉNÉRAL (glace, blocs, plots/cristal, boutons/herses, coffre/serrure, reflet/dalles du reflet, dalles de couleur), réutilisable pour l'épreuve finale ; `python3 Outils/resoudre_d5.py` revérifie D5b-e.
+  Les plans 5d et 5e ont été choisis par RECHERCHE AUTOMATIQUE (milliers de dispositions testées, contrainte « impossible sans le cristal »).
+  À TESTER : toute l'aile droite (D1 à D5), sortie avec le fragment -> vue aérienne droite -> village (TempleDroit). Ensuite : rééquilibrage des énigmes, CORPS du donjon (épreuve finale).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.

@@ -145,7 +145,57 @@ layout = PackedStringArray("#########################", "#######################
 [node name="Epine5" parent="." instance=ExtResource("2")]
 grille = Vector2i(-5, 0)
 teinte = Color(0.9, 0.88, 0.98, 1)
-layout = PackedStringArray("#########################", "#########################", "#########################", "#########################", "#########################", "##....B...........B......", "##.......................", "##TTTTTTTTT...TTTTTTTTT..", "##.......................", "#########################", "#########################", "#########################", "#########################", "#########################")
+layout = PackedStringArray("###########...###########", "###########...###########", "###########...###########", "###########...###########", "###########...###########", "##....B...........B......", "##.......................", "##TTTTTTTTT...TTTTTTTTT..", "##.......................", "#########################", "#########################", "#########################", "#########################", "#########################")
+
+[node name="PlumeD5a" parent="." instance=ExtResource("2")]
+grille = Vector2i(-5, -1)
+teinte = Color(1.0, 0.95, 0.92, 1)
+retour = Vector2(-1800, -45)
+drapeau_levier = "d5_levier"
+drapeau_porte = "d5_levier"
+drapeau_coffre = "d5_cle"
+drapeau_cle = "d5_cle"
+drapeau_serrure = "d5_porte"
+indice = "La pointe de l'aile. Ici, tout ce que tu as appris se combine..."
+layout = PackedStringArray("###########EEE###########", "###########EEE###########", "##.....#.V.....Z..Z....##", "##..Q..#.......Z..Z..J.##", "##.....#.......Z..Z....##", "###DDD##.......Z..Z....##", "##.............Z..Z....##", "##.............Z..Z...V##", "##.............Z..Z....##", "##.............Z..Z....##", "##.............Z..Z..B.##", "##V............Z..Z....##", "###########...###########", "###########...###########")
+
+[node name="PlumeD5b" parent="." instance=ExtResource("2")]
+grille = Vector2i(-5, -2)
+teinte = Color(0.95, 0.93, 1.06, 1)
+retour = Vector2(-1800, -269)
+drapeau_reflet = "d5_reflet"
+drapeau_porte = "d5_reflet"
+indice = "Ton reflet est enfermé derrière des plots... et le cristal commande toutes les barrières."
+layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##.......o.............##", "##...r...o.............##", "##.......o......a......##", "##.......o.............##", "##########.............##", "##............uuuuuuuuu##", "##..........K..........##", "##......a..............##", "##.....................##", "##.....................##", "###########...###########", "###########...###########")
+
+[node name="PlumeD5c" parent="." instance=ExtResource("2")]
+grille = Vector2i(-5, -3)
+teinte = Color(0.9, 0.97, 1.1, 1)
+retour = Vector2(-1800, -493)
+drapeau_plaque = "d5_bouton"
+drapeau_porte2 = "d5_bouton"
+indice = "Un bouton au milieu de la glace : un bloc qui glisse s'arrête dessus."
+layout = PackedStringArray("###########HHH###########", "###########HHH###########", "###########...###########", "##iiiiiiiiiiiiiiiiii#ii##", "##ii#iiiiiiiiiiii##iiii##", "##iiiiPiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##i#iiiiiiiiiiiiiiiiiii##", "##iiiiii#iiiiiiiiXiiiii##", "##iiiiiiiiiiii#iiii#iii##", "##iiiiiiiiiiiiiiiiiiiii##", "##V...................V##", "###########...###########", "###########...###########")
+
+[node name="PlumeD5d" parent="." instance=ExtResource("2")]
+grille = Vector2i(-5, -4)
+teinte = Color(1.0, 0.97, 0.92, 1)
+retour = Vector2(-1800, -717)
+drapeau_fragile = "d5_dalles"
+drapeau_porte2 = "d5_dalles"
+indice = "Des dalles, des plots, un cristal au milieu : un plot baissé est un passage qui ne retourne aucune dalle."
+layout = PackedStringArray("###########...###########", "###########...###########", "###########...###########", "###########...###########", "###########HHH###########", "##########zzuoz##########", "##########zzzKz##########", "##########zzzzo##########", "############.############", "##.V...S.........O...V.##", "##.....................##", "##V...................V##", "###########...###########", "###########...###########")
+
+[node name="PlumeD5e" parent="." instance=ExtResource("2")]
+grille = Vector2i(-5, -5)
+teinte = Color(1.06, 1.0, 0.9, 1)
+retour = Vector2(-1800, -941)
+drapeau_coffre = "d5_cle2"
+drapeau_cle = "d5_cle2"
+drapeau_serrure = "d5_alcove"
+drapeau_gemme = "fragment_droite"
+indice = "Le FRAGMENT de l'aile droite est derrière cette grille. La clé est dans le coffre... sur la glace."
+layout = PackedStringArray("#########################", "#########################", "#########B.....B#########", "#########...W...#########", "#########.......#########", "###########EEE###########", "###iiiiiiiiiiiiiiiiiiii##", "##iiiii#iiiiuiiiiiiii#o##", "##iiiiiiiiiiiiiii##iKii##", "###iiiiiiiioi#iiiiii#ii##", "##iiiiiiiuii#iiiiQ#iiii##", "##.....................##", "###########...###########", "###########...###########")
 
 [node name="Player" parent="." instance=ExtResource("3")]
 position = Vector2(200, 404)
