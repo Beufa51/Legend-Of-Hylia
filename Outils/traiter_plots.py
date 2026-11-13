@@ -1,5 +1,5 @@
-"""Découpe la planche Gemini `plots.jpg` (4 colonnes x 3 rangées, fond magenta) -> Assets/Gemini/tuiles/ :
-plot_haut_o / plot_haut_u (cubes de pierre, 16x18), cristal_o / cristal_u (16x18),
+"""Découpe la planche Gemini `plots.jpg` (4 colonnes x 3 rangées, fond magenta, vue de face) -> Assets/Gemini/tuiles/ :
+plot_haut_o/u (blocs levés) et plot_bas_o/u (dalles baissées), 16x16, cristal_o / cristal_u (16x18),
 dalle_rouge / dalle_bleue / dalle_doree (16x16, étirées en carré). Les autres cases (dalles losanges, levier, piédestal) ne sont pas utilisées."""
 import numpy as np
 from PIL import Image, ImageFilter
@@ -8,10 +8,12 @@ from collections import deque
 SRC = "Assets/Gemini/originaux/plots.jpg"
 SORTIE = "Assets/Gemini/tuiles/"
 # (rangée, colonne) -> (nom, largeur, hauteur, étirer)
-CASES = {(0, 0): ("plot_haut_o", 16, 18, False), (0, 1): ("plot_haut_u", 16, 18, False),
+CASES = {(0, 0): ("plot_haut_o", 16, 16, False), (0, 1): ("plot_haut_u", 16, 16, False),
+         (1, 0): ("plot_bas_o", 16, 16, True), (1, 1): ("plot_bas_u", 16, 16, True),
          (0, 2): ("cristal_o", 16, 18, False), (0, 3): ("cristal_u", 16, 18, False),
          (1, 2): ("dalle_rouge", 16, 16, True), (1, 3): ("dalle_bleue", 16, 16, True),
          (2, 0): ("dalle_doree", 16, 16, True)}
+MARGE = 8   # ignore les traits noirs de la grille entre les cases
 
 def fond(rgb):
     r, g, b = [rgb[..., i].astype(int) for i in range(3)]
@@ -19,7 +21,7 @@ def fond(rgb):
 
 img = Image.open(SRC).convert("RGB"); W, Ht = img.size
 for (j, i), (nom, L, H, etirer) in CASES.items():
-    c = np.array(img.crop((i * W // 4, j * Ht // 3, (i + 1) * W // 4, (j + 1) * Ht // 3)))
+    c = np.array(img.crop((i * W // 4 + MARGE, j * Ht // 3 + MARGE, (i + 1) * W // 4 - MARGE, (j + 1) * Ht // 3 - MARGE)))
     m = ~fond(c); h, w = m.shape
     lab = np.zeros((h, w), int); n = 0; tailles = {}
     for sy in range(h):

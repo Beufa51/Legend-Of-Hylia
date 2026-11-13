@@ -30,20 +30,20 @@ func initialiser(une_salle: Room, sa_case: Vector2i, orange: bool) -> void:
 	case = sa_case
 	position = Vector2(case * TUILE)
 	couleur = ORANGE if orange else BLEU
-	# Baissé : une dalle de pierre plate (même pierre que les murs) avec un cabochon de couleur en creux
+	# Baissé : la dalle de pierre Gemini (cabochon en creux)
 	_bas = Node2D.new()
 	add_child(_bas)
-	_rect(_bas, Vector2(1, 1), Vector2(14, 14), PIERRE_SOMBRE)
-	_rect(_bas, Vector2(2, 2), Vector2(12, 12), PIERRE_MOYENNE)
-	_rect(_bas, Vector2(5, 5), Vector2(6, 6), couleur.darkened(0.55))
-	_rect(_bas, Vector2(6, 6), Vector2(4, 4), couleur.darkened(0.35))
-	# Levé : le cube de pierre Gemini (gemme orange ou bleue), posé sur la case ; le haut dépasse de 2 px
+	var image_bas := Sprite2D.new()
+	image_bas.centered = false
+	image_bas.texture = salle._image("plot_bas_o" if orange else "plot_bas_u")
+	_bas.add_child(image_bas)
+	# Levé : le cube de pierre Gemini (gemme orange ou bleue), posé sur la case ; bloc plein de la taille de la case
 	_haut = Node2D.new()
 	add_child(_haut)
 	_rect(_haut, Vector2(0, 12), Vector2(16, 4), Color(0, 0, 0, 0.30))       # ombre au sol
 	var image := Sprite2D.new()
 	image.centered = false
-	image.position = Vector2(0, -2)
+	image.position = Vector2(0, 0)
 	image.texture = salle._image("plot_haut_o" if orange else "plot_haut_u")
 	_haut.add_child(image)
 	var forme := RectangleShape2D.new()

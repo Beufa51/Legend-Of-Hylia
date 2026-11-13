@@ -711,6 +711,9 @@
 - 2026-11-13 : `plots.jpg` reçu (Gemini, vue isométrique). **14n (non testée dans Godot, aperçu PIL vérifié)** : `Outils/traiter_plots.py` -> `plot_haut_o/u` (cubes de pierre 16x18), `cristal_o/u` (pas encore branchés), `dalle_rouge/bleue/doree` (16x16).
   `plot.gd` : plot LEVÉ = image `plot_haut_*` (le baissé reste dessiné en code : dalle de pierre + cabochon) ; `dalle.gd` : sprite qui alterne les 3 images (`textures` fournies par `room.gd`). Non utilisés : dalles losanges, levier et piédestal Gemini (vue de côté), cristaux de l'énigme.
 
+- 2026-11-13 : nouvelle planche `plots.jpg` (vue de FACE, non isométrique, traits noirs de grille entre les cases -> `MARGE` dans l'outil). **14o (non testée dans Godot, aperçu PIL vérifié)** : `traiter_plots.py` produit aussi `plot_bas_o/u` ; `plot.gd` n'est plus dessiné en code (images `plot_haut_*` / `plot_bas_*`) ;
+  dalles de couleur = `dalle_rouge/bleue/doree`. Disponibles, non branchés : cristaux `cristal_o/u`, plaque de levier Gemini (2 poses seulement), bouton rond rouge.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
