@@ -525,6 +525,8 @@
   D4d (-4,-4) SOMBRE : bouton -> herse H de l'enclos, puis dalles -> alcôve D -> plume `plumeD4` (30 coups). Épine5 (-5,0) provisoire (cul-de-sac). `Outils/resoudre_reflet.py` revérifie (modèle par cases).
   À VÉRIFIER AU TEST : sensation du reflet (décalage d'1 image), passage du reflet dans les ouvertures d'1 case (niche 4c).
 
+- 2026-11-13 : nouvelle musique du VILLAGE fournie par l'utilisateur : `Assets/Musique/First Light in the Village.mp3` (branchée dans `generer_village.py`, remplace `04_peaceful_village`). Godot lit le MP3 (boucle via `flux.loop`).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.

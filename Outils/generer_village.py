@@ -292,7 +292,7 @@ def ecrire_scene():
 
 [node name="World" type="Node2D"]
 script = ExtResource("1")
-musique = "res://Assets/Musique/04_peaceful_village.ogg"
+musique = "res://Assets/Musique/First Light in the Village.mp3"
 donjon = false
 
 '''
