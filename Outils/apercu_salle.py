@@ -59,7 +59,7 @@ def room(lay, out):
             elif ch == "a": P("dalle_reflet", x, y)
             elif ch == "P": P("bouton", x, y)
             elif ch == "G": P("plume_doree", x, y, 2, 2)
-            elif ch == "J": P("levier_1", x, y)
+            elif ch == "J": P("levier_1", x, y, 0, -8)
             elif ch == "Z": P("pics_5" if x % 2 == 0 else "pics_1", x, y, 0, -8)
             elif ch == "~": P("eau_1", x, y)
             elif ch in "DE" and y == 0 and x + 2 < W and lay[y][x + 2] == ch and (x == 0 or lay[y][x - 1] != ch):

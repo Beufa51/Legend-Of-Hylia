@@ -32,7 +32,7 @@ vest = vide(); sol(vest, 2, 22, 2, 11); sol(vest, 11, 13, 0, 1)
 for x in (11, 12, 13): vest[0][x] = 'E'; vest[1][x] = 'E'
 put(vest, 'Q', (19, 8))
 for x in (11, 12, 13): vest[12][x] = 'H'; vest[13][x] = 'H'   # grande porte du sud = sortie (s'ouvre avec le fragment)
-put(vest, 'B', (6, 4), (18, 4)); put(vest, 'V', (3, 10), (21, 10), (7, 9), (17, 9), (3, 3), (21, 3))
+put(vest, 'B', (6, 4), (18, 4)); put(vest, 'V', (2, 11), (3, 11), (2, 10), (22, 11), (21, 11), (22, 10), (2, 2), (3, 2), (22, 2), (21, 2))
 put(vest, 'S', (9, 6)); put(vest, 'O', (15, 6))
 for x in range(11, 14):
     for y in range(2, 12): put(vest, 'T', (x, y))
@@ -43,7 +43,7 @@ for x in range(11, 14):
 ent = vide(); sol(ent, 2, 22, 2, 11); sol(ent, 0, 1, 5, 8); sol(ent, 11, 13, 12, 13)
 for y in range(5, 9): ent[y][1] = 'D'
 put(ent, 'B', (3, 3), (21, 3), (3, 10), (21, 10)); put(ent, 'O', (5, 4)); put(ent, 'S', (19, 4))
-put(ent, 'V', (4, 11), (20, 11), (21, 6))
+put(ent, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (22, 6), (22, 7))
 put(ent, 'J', (4, 9))
 for x in range(6, 19): put(ent, 'T', (x, 6), (x, 7))
 for y in (9, 10):

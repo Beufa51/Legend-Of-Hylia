@@ -7,8 +7,13 @@ class_name Plot
 # Dessiné en code (pas d'image).
 
 const TUILE := 16
-const ORANGE := Color(0.95, 0.55, 0.15)
-const BLEU := Color(0.25, 0.5, 0.95)
+const ORANGE := Color(0.88, 0.52, 0.2)
+const BLEU := Color(0.3, 0.52, 0.88)
+# Pierre du donjon (mêmes tons que les murs et piliers)
+const PIERRE_SOMBRE := Color8(52, 52, 70)
+const PIERRE_MOYENNE := Color8(72, 72, 93)
+const PIERRE_CLAIRE := Color8(105, 101, 132)
+const CONTOUR := Color8(19, 18, 28)
 
 var salle: Room
 var case: Vector2i
@@ -25,20 +30,26 @@ func initialiser(une_salle: Room, sa_case: Vector2i, orange: bool) -> void:
 	case = sa_case
 	position = Vector2(case * TUILE)
 	couleur = ORANGE if orange else BLEU
-	# Baissé : une dalle plate entourée de sa couleur
+	# Baissé : une dalle de pierre plate (même pierre que les murs) avec un cabochon de couleur en creux
 	_bas = Node2D.new()
 	add_child(_bas)
-	_rect(_bas, Vector2(1, 1), Vector2(14, 14), couleur.darkened(0.55))
-	_rect(_bas, Vector2(3, 3), Vector2(10, 10), couleur.darkened(0.3))
+	_rect(_bas, Vector2(1, 1), Vector2(14, 14), PIERRE_SOMBRE)
+	_rect(_bas, Vector2(2, 2), Vector2(12, 12), PIERRE_MOYENNE)
 	_rect(_bas, Vector2(5, 5), Vector2(6, 6), couleur.darkened(0.55))
-	# Levé : un pilier carré avec un dessus clair et une face avant plus sombre (relief)
+	_rect(_bas, Vector2(6, 6), Vector2(4, 4), couleur.darkened(0.35))
+	# Levé : un bloc de pierre taillée (dessus clair, face avant sombre) incrusté d'un cabochon de couleur
 	_haut = Node2D.new()
 	add_child(_haut)
 	_rect(_haut, Vector2(0, 12), Vector2(16, 4), Color(0, 0, 0, 0.35))       # ombre au sol
-	_rect(_haut, Vector2(1, 8), Vector2(14, 7), couleur.darkened(0.35))       # face avant
-	_rect(_haut, Vector2(1, -2), Vector2(14, 11), couleur)                    # dessus
-	_rect(_haut, Vector2(2, -1), Vector2(12, 2), couleur.lightened(0.45))     # reflet
-	_rect(_haut, Vector2(5, 2), Vector2(6, 4), couleur.lightened(0.2))        # motif central
+	_rect(_haut, Vector2(1, 8), Vector2(14, 7), PIERRE_SOMBRE)                # face avant
+	_rect(_haut, Vector2(1, 14), Vector2(14, 1), CONTOUR)
+	_rect(_haut, Vector2(1, -2), Vector2(14, 11), PIERRE_MOYENNE)             # dessus
+	_rect(_haut, Vector2(1, -2), Vector2(14, 1), PIERRE_CLAIRE)               # biseau éclairé
+	_rect(_haut, Vector2(1, -2), Vector2(1, 11), PIERRE_CLAIRE)
+	_rect(_haut, Vector2(5, 1), Vector2(6, 5), couleur.darkened(0.3))         # cabochon : cadre
+	_rect(_haut, Vector2(6, 2), Vector2(4, 3), couleur)
+	_rect(_haut, Vector2(6, 2), Vector2(2, 1), couleur.lightened(0.5))        # reflet
+	_rect(_haut, Vector2(7, 10), Vector2(2, 2), couleur.darkened(0.2))        # petite gemme sur la face avant
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(TUILE, TUILE)
 	_collision = CollisionShape2D.new()

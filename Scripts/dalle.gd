@@ -6,10 +6,10 @@ class_name Dalle
 # La salle (room.gd) suit les pas du joueur et appelle retourner(), remettre(), valider().
 # Dessinée en code (pas d'image) : cadre de pierre, dalle biseautée, gemme au centre.
 
-const ROUGE := Color(0.78, 0.2, 0.18)
-const BLEU := Color(0.2, 0.45, 0.9)
+const ROUGE := Color(0.66, 0.25, 0.22)
+const BLEU := Color(0.28, 0.5, 0.82)
 const OR := Color(1.0, 0.82, 0.3)
-const CADRE := Color(0.2, 0.18, 0.22)
+const CADRE := Color8(40, 40, 56)
 const SON := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Move2.wav"
 
 var bleue := false

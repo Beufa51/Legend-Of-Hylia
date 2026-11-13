@@ -20,14 +20,14 @@ vest = vide(); sol(vest, 2, 22, 2, 11); sol(vest, 11, 13, 0, 1)
 for x in (11, 12, 13): vest[0][x] = 'D'; vest[1][x] = 'D'   # porte de 3 x 2 cases
 for x in (11, 12, 13): vest[12][x] = 'H'; vest[13][x] = 'H'   # grande porte du sud = sortie du donjon (s'ouvre avec le fragment)
 put(vest, 'K', (12, 7))
-put(vest, 'B', (6, 4), (18, 4)); put(vest, 'V', (3, 10), (21, 10), (7, 9), (17, 9), (3, 3), (21, 3))
+put(vest, 'B', (6, 4), (18, 4)); put(vest, 'V', (2, 11), (3, 11), (2, 10), (22, 11), (21, 11), (22, 10), (2, 2), (3, 2), (22, 2), (21, 2))
 for x in range(11, 14):
     for y in range(8, 12): put(vest, 'T', (x, y))
 
 # --- Entrée (0,0) : grande salle, porte au sud (vers le vestibule) et sortie à l'est (rangées 5-8)
 ent = vide(); sol(ent, 2, 22, 2, 11); sol(ent, 23, 24, 5, 8); sol(ent, 11, 13, 12, 13)
 put(ent, 'B', (3, 3), (21, 3), (3, 10), (21, 10)); put(ent, 'S', (5, 4)); put(ent, 'O', (19, 4))
-put(ent, 'V', (4, 11), (20, 11), (3, 6), (21, 6))
+put(ent, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (2, 6), (2, 7))
 for x in range(6, 19): put(ent, 'T', (x, 6), (x, 7))
 
 
@@ -57,7 +57,7 @@ for x in range(2, 23): p1[5][x] = '#'
 for x in (11, 12, 13): p1[5][x] = 'D'
 put(p1, 'G', (12, 3)); put(p1, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p1, 'T', (x, 4))
-put(p1, 'P', (5, 6)); put(p1, 'X', (16, 9)); put(p1, 'V', (10, 9), (3, 11), (21, 11)); put(p1, 'S', (20, 7)); put(p1, 'O', (3, 7))
+put(p1, 'P', (5, 6)); put(p1, 'X', (16, 9)); put(p1, 'V', (10, 9), (2, 11), (3, 11), (2, 10), (22, 11), (21, 11)); put(p1, 'S', (20, 7)); put(p1, 'O', (3, 7))
 for (x, y) in [(8, 7), (8, 8)]: p1[y][x] = '#'
 
 # --- Plume 2, écran du bas : SALLE SOMBRE. 4 braseros (L) à allumer à la lance, tous en même temps
@@ -68,7 +68,7 @@ put(p2a, 'L', (4, 3), (20, 3), (4, 10), (20, 10))
 for (x0, y0) in [(8, 4), (16, 4), (8, 8), (16, 8)]:
     for dx in (0, 1):
         for dy in (0, 1): p2a[y0 + dy][x0 + dx] = '#'
-put(p2a, 'V', (12, 6), (6, 7), (18, 7), (3, 6), (21, 6))
+put(p2a, 'V', (2, 2), (3, 2), (22, 2), (21, 2), (2, 11), (3, 11), (22, 11), (21, 11))
 
 # --- Plume 2, écran du haut (la pointe) : un cristal à frapper ouvre la porte de l'alcôve où est la plume
 p2b = vide(); sol(p2b, 2, 22, 2, 11); sol(p2b, 11, 13, 12, 13)
@@ -76,7 +76,7 @@ for x in range(2, 23): p2b[5][x] = '#'
 for x in (11, 12, 13): p2b[5][x] = 'D'
 put(p2b, 'G', (12, 3)); put(p2b, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p2b, 'T', (x, 4))
-put(p2b, 'K', (4, 8)); put(p2b, 'S', (20, 7)); put(p2b, 'O', (3, 11)); put(p2b, 'V', (21, 11), (12, 9), (8, 7))
+put(p2b, 'K', (4, 8)); put(p2b, 'S', (20, 7)); put(p2b, 'O', (3, 11)); put(p2b, 'V', (22, 11), (21, 11), (22, 10))
 
 # --- PLUME 3 : « LE CHANT DU COQ ». Frapper la statue du coq (C) : elle chante une mélodie et chaque cloche
 #     s'allume quand sa note passe. Il faut rejouer la mélodie sur les cloches (1 à 5) avec la lance.
@@ -90,7 +90,7 @@ p3a = vide(); plume_bas_haut(p3a)
 put(p3a, 'C', (12, 8))
 for y in (9, 10, 11): put(p3a, 'T', (11, y), (12, y), (13, y))
 put(p3a, '3', (6, 5)); put(p3a, '2', (18, 5)); put(p3a, '1', (12, 4))
-put(p3a, 'B', (3, 3), (21, 3)); put(p3a, 'V', (3, 11), (21, 11), (4, 8)); put(p3a, 'S', (20, 8))
+put(p3a, 'B', (3, 3), (21, 3)); put(p3a, 'V', (2, 11), (3, 11), (22, 11), (21, 11)); put(p3a, 'S', (20, 8))
 
 # 3b (au milieu) : 4 cloches, 4 notes ; la cloche 3 est dans une niche, cachée derrière un bloc à pousser
 p3b = vide(); plume_bas_haut(p3b)
@@ -99,18 +99,18 @@ for y in (10, 11): put(p3b, 'T', (11, y), (12, y), (13, y))
 put(p3b, '#', (16, 2), (18, 2)); put(p3b, '3', (17, 2)); put(p3b, 'X', (17, 3))
 put(p3b, '2', (5, 4)); put(p3b, '1', (5, 9)); put(p3b, '4', (19, 9))
 put(p3b, '#', (8, 6), (16, 6))
-put(p3b, 'V', (3, 11), (21, 11), (21, 3)); put(p3b, 'O', (3, 2)); put(p3b, 'B', (9, 2))
+put(p3b, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (22, 10)); put(p3b, 'O', (3, 2)); put(p3b, 'B', (9, 2))
 
 # 3c (la pointe) : SALLE SOMBRE, 5 cloches, 5 notes : il faut repérer dans le noir les cloches qui s'allument.
 #     La mélodie ouvre l'alcôve où se trouve la plume.
 p3c = vide(); sol(p3c, 2, 22, 2, 11); sol(p3c, 11, 13, 12, 13)
 for x in range(2, 23): p3c[5][x] = '#'
 for x in (11, 12, 13): p3c[5][x] = 'D'
-put(p3c, 'G', (12, 3)); put(p3c, 'V', (5, 3), (19, 3), (3, 2), (21, 2))
+put(p3c, 'G', (12, 3)); put(p3c, 'V', (2, 2), (3, 2), (2, 3), (22, 2), (21, 2), (22, 3))
 for x in range(10, 15): put(p3c, 'T', (x, 4))
 put(p3c, 'C', (12, 9))
 put(p3c, '3', (4, 7)); put(p3c, '1', (8, 10)); put(p3c, '5', (16, 10)); put(p3c, '2', (20, 7)); put(p3c, '4', (16, 6))
-put(p3c, 'V', (3, 11), (21, 11))
+put(p3c, 'V', (2, 11), (3, 11), (22, 11), (21, 11))
 
 # --- PLUME 4 : « LES SENTINELLES ». Des statues de garde (^ v < >) surveillent les cases éclairées devant elles.
 #     Le regard s'arrête aux obstacles. Repéré = un garde te ramène à l'entrée de la plume (bas de 4a).
@@ -166,7 +166,7 @@ put(p5a, 'V', (3, 11), (21, 11), (21, 2)); put(p5a, 'S', (6, 8)); put(p5a, 'B', 
 p5b = vide(); plume_grille(p5b)
 put(p5b, 'R', (1, 9)); put(p5b, 'M', (11, 9), (11, 11)); put(p5b, 'N', (20, 11)); put(p5b, 'Y', (20, 4))
 put(p5b, '#', (11, 5), (10, 5), (12, 5))
-put(p5b, 'V', (3, 3), (21, 2), (3, 11)); put(p5b, 'O', (16, 7)); put(p5b, 'B', (6, 3))
+put(p5b, 'V', (2, 2), (2, 3), (21, 2), (3, 11)); put(p5b, 'O', (16, 7)); put(p5b, 'B', (6, 3))
 
 # 5c : le bloc COUPE le rayon. Au départ, le bloc est posé en plein dans le rayon (on voit le rayon s'arrêter dessus).
 #      Le pousser jusqu'au bouton (à droite) fait d'une pierre deux coups : le rayon passe ET la grille H s'ouvre.
@@ -182,7 +182,7 @@ put(p5c, 'V', (3, 11), (3, 2), (21, 2), (16, 11)); put(p5c, 'S', (8, 8)); put(p5
 p5d = vide(); plume_grille(p5d)
 put(p5d, 'R', (1, 10)); put(p5d, 'N', (6, 10), (6, 3)); put(p5d, 'M', (17, 3), (12, 7)); put(p5d, 'N', (20, 10)); put(p5d, 'Y', (17, 8))
 put(p5d, '#', (9, 6), (9, 7), (14, 5), (14, 6), (20, 5))
-put(p5d, 'V', (3, 2), (21, 2), (3, 6))
+put(p5d, 'V', (2, 2), (3, 2), (22, 2), (21, 2))
 
 # 5e (POINTE DE L'AILE) : le coq ne chante qu'au soleil. Dégager le bloc du rayon, régler 2 miroirs pour éclairer
 #      la statue : elle chante. Rejouer la mélodie sur les cloches : l'alcôve s'ouvre -> FRAGMENT de l'aile gauche (W).
