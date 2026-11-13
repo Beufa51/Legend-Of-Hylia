@@ -593,6 +593,18 @@
   (7) collisions = 1 forme par case (pas de forme par objet) : OK mais pas de collision partielle (tronc seul) ; (8) restes de l'ancien style : étal `E`, tonneau, caisse, bannière, girouette, tous les intérieurs ; `Etat.chute` inutilisé ; (9) code des écrans 10a-10f et du correctif z-index : NON TESTÉ dans Godot.
   POUR LA CARTE EN COQ : la grille accepte n'importe quelles coordonnées adjacentes (garder la rangée 5 libre pour les intérieurs) ; le Parvis (stèle (12,5), forêt qui s'écarte colonnes 7-18 rangées 0-3, bâtiment Z (8,0)) doit rester la TÊTE ; chaque écran doit avoir une identité visuelle (place, rivière/pont, champs, falaise, bois secret).
 
+- 2026-11-13 : **PLAN DE LA CARTE EN COQ (proposé, à valider)** — ailes déployées vers le haut, 7 écrans inchangés :
+  y=0 : TempleGauche (1,0) – PARVIS (2,0) – TempleDroit (3,0) [+ secrets plus tard : Bois (0,0), Cascade (4,0)] ;
+  y=1 : Verger (1,1, NOUVEAU, N/S) – Cou = GrandChemin (2,1, N/S, côtés fermés) – Terrain de la Garde (3,1, NOUVEAU, N/S) ;
+  y=2 : VillageOuest (1,2, N/E/S, ouest fermé) – PlaceDuCoq (2,2, + sortie S) – VillageEst (3,2, N/O/S, est fermé) ;
+  y=3 : MaisonHeros (4,2 -> 1,3, N/E, plan refait) – Rivière+Pont (2,3, NOUVEAU, 4 sorties, rivière rangées 3-4) – Ferme (0,2 -> 3,3, N/O, plan refait) ;
+  y=4 : Route du Sud (2,4, NOUVEAU, N ; sud bloqué par une barrière + sentinelle jusqu'à `epreuve_reussie`, futur épilogue).
+  Temples : + sortie S. Ouvertures standard N/S colonnes 11-13, E/O rangées 6-8. Intérieurs restent en rangée 5 (RÈGLE : aucun écran en y=4 sauf (2,4)).
+  SAUVEGARDE v2 : `{"version":2, scene, ecran (nom), case [x,y], drapeaux, records}` ; chargement par NOM d'écran + `point_arrivee()` si case bloquée.
+  Migration v1 (pixels) dans `Etat.charger` : village -> table `ANCIENNE_GRILLE_VILLAGE` (ancienne grille -> nom) ; donjons/corps -> écrans réels (grilles inchangées) ; puis réécriture en v2.
+  Repli : InterieurHeros sans `capitaine_vu`, sinon PlaceDuCoq. Test : bouton F1 « Simuler une vieille sauvegarde ».
+  ORDRE : 1) sauvegarde v2 sur la carte ACTUELLE ; 2) factoriser generer_village.py (`ecran(sorties=...)`) + `Outils/verifier_carte.py` ; 3) déplacer/créer les écrans ; 4) réécrire textes géographiques ; 5) secrets, girouette, PNJ.
+
 ## PROCHAINE ÉTAPE (Opus pour la conception, puis Sonnet) : REFONTE DU VILLAGE en forme de coq (voir entrée du 2026-11-13 ci-dessus)
 - D'abord : tester le correctif d'arbres (animaux/PNJ devant-derrière), puis valider le plan de carte en coq, puis audit des packs, girouette, PNJ.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
