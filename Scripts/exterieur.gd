@@ -12,6 +12,7 @@ class_name Exterieur
 #   MAISONS dessinées en code (Outils/fabriquer_maisons.py), vues de dessus (5x4, la porte est sur la rangée du bas, 3e colonne) : M rouge+poutres, N ardoise, T chaume, R rouge+pierre, S pierre, L grange en bois ; K = caserne (7x4, porte en 4e colonne)
 #   E  = étal du marché (3x2)  o = tonneau   j = bannière rouge (1x2)
 #   Q  = girouette du coq (3x4)   W = puits (2x2)
+#   ~  = eau de la rivière (bloque)   = = pont de bois (on marche dessus, au-dessus de l'eau)
 # ANIMAUX : pas dans le plan, mais dans la liste `animaux` : "lettre x y", par ex. "c 9 9"
 #   c  = poule blanche   h = poule rousse   k = chat   d = chien
 # PASSAGES (portes de maison) : liste `passages` (voir ecran.gd). La case de la porte est en bas de la maison, 2e colonne.
@@ -88,6 +89,8 @@ var _objets := {}          # { case du coin haut-gauche : Sprite2D } des grands 
 var _hauts: Array = []     # [sprite, ligne de base (y local)] : arbres, maisons... le héros passe DERRIÈRE quand il est plus haut qu'eux
 var _plantes: Array = []   # [sprite, amplitude, phase] : ce qui se balance au vent
 var _temps := 0.0
+var _eaux: Array = []      # [sprite, nom de l'image, ...] de chaque case d'eau : 2 images alternées = l'eau qui scintille
+var _image_eau := -1       # laquelle des 2 images est affichée
 var _coq: Sprite2D   # le coq de la girouette
 
 
@@ -135,6 +138,12 @@ func _process(delta: float) -> void:
 				derriere = true
 				break
 		acteur.z_index = 0 if derriere else 2
+	if not _eaux.is_empty():
+		var image := int(Time.get_ticks_msec() / 700) % 2
+		if image != _image_eau:
+			_image_eau = image
+			for e in _eaux:
+				e[0].texture = _image("%s_%d" % [e[1], image + 1])
 	if not _vent_actif:
 		return
 	_temps += delta
@@ -176,11 +185,29 @@ func _poser_sol() -> void:
 	for y in layout.size():
 		for x in layout[y].length():
 			var pos := Vector2(x * TUILE, y * TUILE)
-			if _est_chemin(x, y):
+			if _est_eau(x, y):
+				# RIVIÈRE : `~` = eau (bloque), `=` = pont (on marche dessus). L'eau a une rive claire côté herbe.
+				var base := "v_eau_h" if not _est_eau(x, y - 1) else ("v_eau_b" if not _est_eau(x, y + 1) else "v_eau")
+				var sprite := _poser(base + "_1", pos)
+				_eaux.append([sprite, base])
+				if layout[y][x] == "=":
+					var cote := "g" if layout[y][maxi(x - 1, 0)] != "=" else ("d" if layout[y][mini(x + 1, layout[y].length() - 1)] != "=" else "m")
+					_poser("v_pont_" + cote, pos).z_index = 0
+				else:
+					_solides[Vector2i(x, y)] = true
+					_couvertes[Vector2i(x, y)] = true
+			elif _est_chemin(x, y):
 				_poser(_nom_chemin(x, y), pos)
 			else:
 				var h := (x * 73 + y * 151 + grille.x * 31 + grille.y * 17) % 13   # « hasard » fixe
 				_poser("v_herbe_sol_%d" % (h + 1) if h < 2 else "v_herbe_sol", pos)
+
+
+# De l'eau (ou un pont au-dessus de l'eau) ici ? Hors de l'écran, on prolonge la cellule du bord.
+func _est_eau(x: int, y: int) -> bool:
+	y = clampi(y, 0, layout.size() - 1)
+	x = clampi(x, 0, layout[y].length() - 1)
+	return layout[y][x] == "~" or layout[y][x] == "="
 
 
 # Hors de l'écran, on prolonge la cellule du bord (un chemin qui sort de l'écran n'a pas de bordure).
@@ -319,6 +346,12 @@ func _creer_collisions() -> void:
 		collision.shape = forme
 		collision.position = Vector2(cellule * TUILE) + Vector2(TUILE, TUILE) / 2.0
 		corps.add_child(collision)
+
+
+# Le point `pos` (en pixels monde) est-il dans un obstacle ? (sert à reprendre une sauvegarde sans coincer le héros)
+func position_bloquee(pos: Vector2) -> bool:
+	var rel := pos - position
+	return _solides.has(Vector2i(floori(rel.x / TUILE), floori(rel.y / TUILE)))
 
 
 # Une cellule libre pour poser le joueur (mode développeur) : la plus proche du centre de l'écran.

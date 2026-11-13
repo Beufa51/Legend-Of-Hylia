@@ -342,7 +342,7 @@ func _fin(issue: String) -> void:
 	while not Input.is_action_just_pressed("attack"):
 		await get_tree().process_frame
 	# Retour au village, devant la caserne : le capitaine a de nouvelles répliques (drapeau epreuve_reussie)
-	get_parent()._ramener("@village:VillageEst", Vector2i(13, 7), "Le capitaine Aubrac t'attend devant la caserne !")
+	get_parent()._ramener("@village:VillageEst", Vector2i(18, 7), "Le capitaine Aubrac t'attend devant la caserne !")
 
 
 # --- HUD du combat : cœurs du héros (en haut à gauche) + vie du Gardien (en haut au milieu) ---------

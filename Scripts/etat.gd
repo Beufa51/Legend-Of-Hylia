@@ -32,6 +32,18 @@ var arrivee_texte := ""
 var arrivee_direction := ""           # direction regardée à l'arrivée (ex. "haut" : on entre dans le bâtiment)
 var passage_texte := ""               # message à afficher après le prochain passage (écrit par ecran.gd juste avant le signal)
 var scene_sauvee := ""                # dans quelle scène (donjon ou village) reprendre la partie
+var ecran_sauve := ""                 # SAUVEGARDE v2 : NOM de l'écran où reprendre (indépendant de la grille, donc la carte peut changer)
+var decalage_sauve := Vector2.ZERO    # position en pixels DANS cet écran (0,0 = coin haut-gauche)
+
+# Anciennes sauvegardes (v1 = position en pixels sur l'ancienne grille du village) : ancienne case de grille -> nom d'écran.
+# À compléter si la grille du village change encore (voir world.gd::_position_reprise).
+const ANCIENNE_GRILLE_VILLAGE := {
+	Vector2i(0, 2): "Ferme", Vector2i(1, 2): "VillageOuest", Vector2i(2, 2): "PlaceDuCoq",
+	Vector2i(3, 2): "VillageEst", Vector2i(4, 2): "MaisonHeros", Vector2i(2, 1): "GrandChemin",
+	Vector2i(2, 0): "Parvis", Vector2i(3, 0): "TempleDroit", Vector2i(1, 0): "TempleGauche",
+	Vector2i(4, 5): "InterieurHeros", Vector2i(1, 5): "InterieurStand", Vector2i(3, 5): "InterieurCaserne",
+}
+const VILLAGE := "res://Scenes/village.tscn"
 
 
 func _ready() -> void:
@@ -65,6 +77,13 @@ func annoncer(texte: String) -> void:
 func memoriser_position(pos: Vector2) -> void:
 	position_sauvee = pos
 	scene_sauvee = get_tree().current_scene.scene_file_path
+	# on retient aussi le NOM de l'écran et la position dans l'écran (sauvegarde v2)
+	var grille := Vector2i(floori(pos.x / Ecran.TAILLE_SALLE.x), floori(pos.y / Ecran.TAILLE_SALLE.y))
+	for e in get_tree().current_scene.get_children():
+		if e is Ecran and e.grille == grille:
+			ecran_sauve = e.name
+			decalage_sauve = pos - e.position
+			break
 	sauver()
 
 
@@ -76,9 +95,13 @@ func sauver() -> void:
 	fichier.store_string(JSON.stringify({
 		"drapeaux": drapeaux.keys(),
 		"records": records,
-		"x": position_sauvee.x,
-		"y": position_sauvee.y,
+		"version": 2,
 		"scene": scene_sauvee,
+		"ecran": ecran_sauve,
+		"case": [int(decalage_sauve.x / Ecran.TUILE), int(decalage_sauve.y / Ecran.TUILE)],
+		"decalage": [decalage_sauve.x, decalage_sauve.y],
+		"x": position_sauvee.x,   # (gardés pour les scènes dont la grille n'a pas changé)
+		"y": position_sauvee.y,
 	}))
 
 
@@ -94,6 +117,17 @@ func charger() -> void:
 	position_sauvee = Vector2(donnees.get("x", 0.0), donnees.get("y", 0.0))
 	# (les premières sauvegardes n'avaient pas de scène : elles venaient forcément du donjon)
 	scene_sauvee = donnees.get("scene", "res://Scenes/world.tscn" if position_sauvee != Vector2.ZERO else "")
+	if int(donnees.get("version", 1)) >= 2:
+		ecran_sauve = donnees.get("ecran", "")
+		var d = donnees.get("decalage", [0, 0])
+		decalage_sauve = Vector2(d[0], d[1])
+	elif scene_sauvee == VILLAGE and position_sauvee != Vector2.ZERO:
+		# MIGRATION v1 -> v2 : l'ancienne position en pixels est traduite en (nom d'écran, position dans l'écran)
+		var g := Vector2i(floori(position_sauvee.x / Ecran.TAILLE_SALLE.x), floori(position_sauvee.y / Ecran.TAILLE_SALLE.y))
+		if ANCIENNE_GRILLE_VILLAGE.has(g):
+			ecran_sauve = ANCIENNE_GRILLE_VILLAGE[g]
+			decalage_sauve = position_sauvee - Vector2(g * Ecran.TAILLE_SALLE)
+		sauver()   # réécrit en v2
 
 
 # Nouvelle partie : tout oublier (mode développeur).
@@ -102,6 +136,8 @@ func effacer() -> void:
 	records.clear()
 	position_sauvee = Vector2.ZERO
 	scene_sauvee = ""
+	ecran_sauve = ""
+	decalage_sauve = Vector2.ZERO
 	if FileAccess.file_exists(FICHIER):
 		DirAccess.remove_absolute(FICHIER)
 
@@ -130,3 +166,12 @@ func texte_records() -> String:
 		var valeur := "jamais joué" if record == null else "%s %s" % [str(int(record)) if is_equal_approx(record, roundf(record)) else "%.1f" % record, jeu[2]]
 		lignes.append("%s : %s (%s)" % [jeu[1], valeur, ruban])
 	return "Tableau d'honneur. " + " // ".join(lignes)
+
+
+# Mode développeur : écrit une VIEILLE sauvegarde (v1, position en pixels) pour tester la migration.
+func simuler_ancienne_sauvegarde() -> void:
+	var f := FileAccess.open(FICHIER, FileAccess.WRITE)
+	# ancienne grille : VillageEst (3,2), case (13,9)
+	f.store_string(JSON.stringify({"drapeaux": drapeaux.keys(), "records": records,
+		"x": 3 * 400 + 13 * 16 + 8.0, "y": 2 * 224 + 9 * 16 + 3.0, "scene": VILLAGE}))
+	f.close()

@@ -55,6 +55,11 @@ func point_arrivee() -> Vector2:
 	return position + Vector2(TAILLE_SALLE) / 2.0
 
 
+# Le point `pos` (position du joueur, en pixels monde) est-il dans un obstacle ? Par défaut non ; exterieur.gd le redéfinit.
+func position_bloquee(_pos: Vector2) -> bool:
+	return false
+
+
 func _image(nom: String) -> Texture2D:
 	if not _cache.has(nom):
 		var chemin := DOSSIER + nom + ".png"

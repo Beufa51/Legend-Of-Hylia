@@ -33,7 +33,7 @@ var en_transition := false
 
 func _ready() -> void:
 	if Etat.position_sauvee != Vector2.ZERO and Etat.scene_sauvee == scene_file_path:
-		joueur.position = Etat.position_sauvee   # partie sauvegardée : on reprend là où on était
+		joueur.position = _position_reprise()   # partie sauvegardée : on reprend là où on était
 	if Etat.arrivee_ecran != "":   # on arrive d'une autre scène (village <-> donjon)
 		for e in get_children():
 			if e is Ecran and e.name == Etat.arrivee_ecran:
@@ -75,6 +75,28 @@ func _ready() -> void:
 		create_tween().tween_property(_fondu, "modulate:a", 0.0, 0.8)
 		if texte != "":
 			get_tree().create_timer(1.0).timeout.connect(func(): Etat.annoncer(texte))
+
+
+# Où reprendre la partie ? On cherche l'écran par son NOM (la grille a pu changer depuis la sauvegarde) ;
+# si la case est devenue bloquée, on prend le point d'arrivée de l'écran ; si l'écran n'existe plus, un écran de repli.
+func _position_reprise() -> Vector2:
+	var ecrans := {}
+	for e in get_children():
+		if e is Ecran:
+			ecrans[e.name] = e
+	if Etat.ecran_sauve == "":
+		return Etat.position_sauvee   # (donjons : grille inchangée)
+	if ecrans.has(Etat.ecran_sauve):
+		var e: Ecran = ecrans[Etat.ecran_sauve]
+		var p: Vector2 = e.position + Etat.decalage_sauve
+		var dedans := Rect2(Vector2.ZERO, Vector2(Ecran.TAILLE_SALLE)).has_point(Etat.decalage_sauve)
+		if dedans and not e.position_bloquee(p):
+			return p
+		return e.point_arrivee()
+	for nom in ["InterieurHeros" if not Etat.est("capitaine_vu") else "PlaceDuCoq", "PlaceDuCoq"]:
+		if ecrans.has(nom):
+			return ecrans[nom].point_arrivee()
+	return Etat.position_sauvee
 
 
 func _process(_delta: float) -> void:
@@ -383,6 +405,15 @@ func _creer_menu_dev() -> void:
 	bouton_stele.focus_mode = Control.FOCUS_NONE
 	bouton_stele.pressed.connect(_dev_test_stele)
 	boite.add_child(bouton_stele)
+	var bouton_vieille := Button.new()
+	bouton_vieille.text = "Simuler une vieille sauvegarde (village)"
+	bouton_vieille.add_theme_font_size_override("font_size", 8)
+	bouton_vieille.focus_mode = Control.FOCUS_NONE
+	bouton_vieille.pressed.connect(func():
+		Etat.simuler_ancienne_sauvegarde()
+		Etat.charger()
+		get_tree().change_scene_to_file("res://Scenes/demarrage.tscn"))
+	boite.add_child(bouton_vieille)
 	var bouton_effacer := Button.new()
 	bouton_effacer.text = "Effacer la sauvegarde (nouvelle partie)"
 	bouton_effacer.add_theme_font_size_override("font_size", 8)

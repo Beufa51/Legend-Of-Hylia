@@ -605,6 +605,21 @@
   Repli : InterieurHeros sans `capitaine_vu`, sinon PlaceDuCoq. Test : bouton F1 « Simuler une vieille sauvegarde ».
   ORDRE : 1) sauvegarde v2 sur la carte ACTUELLE ; 2) factoriser generer_village.py (`ecran(sorties=...)`) + `Outils/verifier_carte.py` ; 3) déplacer/créer les écrans ; 4) réécrire textes géographiques ; 5) secrets, girouette, PNJ.
 
+- 2026-11-13 : nouveau pack ajouté par l'utilisateur : `Assets/Pixel Crawler - Free Pack/` (Anokolisa, cases 16 px, vue 3/4). Licence : usage commercial OK, modifs OK, pas de revente des assets seuls ni du pack ;
+  crédit facultatif. Contenu : arbres (3 modèles x 5 tailles, ~60-100 px), buissons/fleurs/herbes (`Vegetation.png`), sols herbe/terre/neige (`Floors_Tiles.png`, blocs 3x3 avec coins), eau (`Water_tiles.png`), toits/murs de maisons en bois
+  (`Roofs.png`, `Walls.png`, style isométrique), mobiliers, cuisines/forge, et PERSOS = corps nus à habiller (couches `Body_A`, 64x64) + `Npc's` (Knight, Wizzard, Rogue, Citizen_F). Pas encore utilisé sauf l'eau (rivière). À EXPLOITER à l'étape « audit des packs / style du village ».
+- 2026-11-13 : **ÉTAPE 14a écrite (non testée dans Godot ; carte vérifiée par `Outils/verifier_carte.py`)** = CARTE EN COQ du village (plan validé) :
+  1) SAUVEGARDE v2 (`etat.gd`) : `ecran_sauve` + `decalage_sauve` (nom d'écran + position en pixels dans l'écran), fichier `version: 2` ; migration v1 -> v2 par `ANCIENNE_GRILLE_VILLAGE` ; `world.gd::_position_reprise()` retrouve l'écran PAR SON NOM, repli sur `point_arrivee()` si la case est bloquée
+     (`Ecran.position_bloquee`, redéfini dans `exterieur.gd`), repli sur InterieurHeros/PlaceDuCoq si l'écran n'existe plus. F1 -> « Simuler une vieille sauvegarde (village) ».
+  2) `generer_village.py` factorisé : `ouvrir(g, cote, prof)` creuse une sortie (chemin 3 cases + arbres retirés), `fermer_bords` ferme tout le reste par des buissons, `finaliser(g, sorties)`, tables `SORTIES` / `PROFONDEURS`. `Outils/verifier_carte.py [--carte]` : bords cohérents, tout atteignable, portes/passages OK, PNJ/animaux libres.
+  3) NOUVELLE GRILLE : y=0 TempleGauche (1,0) / Parvis (2,0) / TempleDroit (3,0) ; y=1 Verger (1,1) / GrandChemin (2,1) / TerrainGarde (3,1) ; y=2 VillageOuest (1,2) / PlaceDuCoq (2,2) / VillageEst (3,2) ;
+     y=3 MaisonHeros (1,3) / Riviere (2,3) / Ferme (3,3) ; y=4 RouteSud (2,4) (barrière + garde, sud fermé jusqu'à la fin) ; intérieurs toujours rangée 5.
+     Écrans NOUVEAUX : Verger (pommiers, jardinier Anselme), TerrainGarde (enclos d'entraînement, soldat Hugues), Riviere (rivière rangées 3-4 + pont colonnes 11-13, pêcheur Bastien), RouteSud (garde de la route).
+     Écrans DÉPLACÉS/refaits : MaisonHeros (porte (6,6)), Ferme (enclos à droite, grange (5,6), entrée ouest + nord), VillageOuest (stand de tir : porte (17,6)), VillageEst (caserne : porte (18,6), capitaine (16,7)). Temples : + sortie sud.
+  4) RIVIÈRE : lettres `~` (eau, bloque) et `=` (pont) dans `exterieur.gd` (rive claire selon les voisins, 2 images qui alternent toutes les 0,7 s) ; images `v_eau*`, `v_pont_*` par `Outils/fabriquer_riviere.py` (eau du pack Pixel Crawler).
+  5) Textes géographiques de Maman/capitaine/indice corrigés (caserne = à l'est de la place) ; `gardien.gd` retour en (18,7). RESTE (étape 5 du plan) : secrets (bois/cascade), girouette redessinée, PNJ restants/style, route du sud ouverte à l'épilogue, panneaux.
+  ORDRE DES OUTILS village : traiter_village -> traiter_village2 -> fabriquer_maisons -> traiter_pack_aesthetic -> fabriquer_riviere -> generer_village -> verifier_carte.
+
 ## PROCHAINE ÉTAPE (Opus pour la conception, puis Sonnet) : REFONTE DU VILLAGE en forme de coq (voir entrée du 2026-11-13 ci-dessus)
 - D'abord : tester le correctif d'arbres (animaux/PNJ devant-derrière), puis valider le plan de carte en coq, puis audit des packs, girouette, PNJ.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
