@@ -17,6 +17,7 @@ const SCENES := {
 	"donjon": "res://Scenes/world.tscn",
 	"aile_droite": "res://Scenes/aile_droite.tscn",
 	"village": "res://Scenes/village.tscn",
+	"corps": "res://Scenes/corps.tscn",
 }
 const VOLUME_MUSIQUE_DB := -8.0
 # Jingles (pack Ninja Adventure) : une énigme résolue / une plume récupérée
@@ -388,7 +389,7 @@ func _creer_menu_dev() -> void:
 	bouton_effacer.focus_mode = Control.FOCUS_NONE
 	bouton_effacer.pressed.connect(_dev_nouvelle_partie)
 	boite.add_child(bouton_effacer)
-	for lieu in [["village", "Aller au village"], ["donjon", "Aller à l'aile gauche"], ["aile_droite", "Aller à l'aile droite"]]:
+	for lieu in [["village", "Aller au village"], ["donjon", "Aller à l'aile gauche"], ["aile_droite", "Aller à l'aile droite"], ["corps", "Aller au Gardien (fin)"]]:
 		if SCENES[lieu[0]] == scene_file_path:
 			continue
 		var bouton_scene := Button.new()
@@ -528,7 +529,7 @@ func _passer_porte(nom: String, case: Vector2i, texte: String) -> void:
 			if e.name == nom:
 				arrivee = e
 	var pas := Vector2.ZERO
-	if nom.begins_with("@donjon") or nom.begins_with("@aile_droite"):
+	if nom.begins_with("@donjon") or nom.begins_with("@aile_droite") or nom.begins_with("@corps"):
 		pas = Vector2.UP
 	elif arrivee != null and depart != null and arrivee.interieur != depart.interieur:
 		pas = Vector2.UP if arrivee.interieur else Vector2.DOWN
@@ -824,7 +825,7 @@ func _creer_hud() -> void:
 	_icone_fragment = _sprite(_texture("res://Assets/Gemini/tuiles/fragment_aile.png"), Vector2(62, 1), _hud)
 	if cote == "droite":   # l'aile droite = l'aile gauche dans un miroir
 		_icone_fragment.flip_h = true
-	_hud.visible = donjon   # les plumes ne s'affichent que dans le donjon
+	_hud.visible = donjon and cote in ["gauche", "droite"]   # les plumes ne s'affichent que dans les ailes du donjon
 	_maj_hud()
 
 
@@ -895,7 +896,7 @@ func _ceremonie_stele() -> void:
 	if parvis is Exterieur:
 		_jouer_son(SON_ENVOL, -4.0)
 		parvis.ecarter_foret(Rect2i(7, 0, 12, 4), (STELE_CASE.x + 0.5) * Ecran.TUILE)   # arbres des colonnes 7-18, rangées 0-3
-		parvis.faire_apparaitre("U", Vector2i(9, 1))
+		parvis.faire_apparaitre("Z", Vector2i(8, 0))
 		Etat.annoncer("La forêt s'écarte devant toi... Derrière, un immense bâtiment : le CORPS DU COQ !")
 		for i in 4:
 			_secouer()

@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Scripts/world.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/room.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://Scenes/player.tscn" id="3"]
+[ext_resource type="Script" path="res://Scripts/gardien.gd" id="4"]
+
+; FICHIER GÉNÉRÉ par Outils/generer_corps.py : modifie le plan là-bas, pas ici.
+
+[node name="World" type="Node2D"]
+script = ExtResource("1")
+musique = "res://Assets/Ninja_adventure/Audio/Musics/24 - Final Area.ogg"
+cote = "corps"
+
+[node name="Arene" parent="." instance=ExtResource("2")]
+teinte = Color(1.04, 0.96, 0.86, 1)
+passages = PackedStringArray("11 13 @village:Parvis 12 5", "12 13 @village:Parvis 12 5", "13 13 @village:Parvis 12 5")
+layout = PackedStringArray("#########################", "#########################", "##......O.......O......##", "##.B.................B.##", "##.........TTT.........##", "##....S....TTT....S....##", "##.........TTT.........##", "##.........TTT.........##", "##.........TTT.........##", "##....S....TTT....S....##", "##.B.......TTT.......B.##", "##.........TTT.........##", "###########...###########", "###########...###########")
+
+[node name="Gardien" type="CharacterBody2D" parent="."]
+position = Vector2(200, 59)
+script = ExtResource("4")
+
+[node name="Player" parent="." instance=ExtResource("3")]
+position = Vector2(200, 179)
+
+[node name="Camera2D" type="Camera2D" parent="."]

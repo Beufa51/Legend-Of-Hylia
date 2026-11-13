@@ -561,8 +561,18 @@
   PARVIS : `exterieur.gd::ecarter_foret(zone, axe_x)` (les arbres glissent sur les côtés en s'effaçant) + `faire_apparaitre(lettre, case)` (le temple `U` du corps apparaît derrière) appelés par `world.gd::_ceremonie_stele` après les secousses, AVANT le mode 7.
   Le parvis révélé n'a plus les arbres des colonnes 7-18, rangées 0-3 (mêmes que ceux qui s'écartent).
 
-## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
-- Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
-- Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
-- Ensuite : dialogues conditionnés par les drapeaux ; chemins + parvis du temple (écrans nord) + liaison avec le donjon ; secrets (bois, cascade) ; musique d'intérieur.
-- Plus tard : fin de la vue aérienne avec le VRAI corps du donjon ; rééquilibrage des énigmes ; aile droite ; épreuve finale ; contrôles tactiles.
+- 2026-11-13 : retour 13b : « un peu mieux, à affiner ». DÉCISION utilisateur : PAS d'énigme finale, directement le BOSS ; le bâtiment du corps doit ressembler à la vue mode 7.
+  **ÉTAPE 13c écrite (non testée dans Godot)** = CORPS DU COQ + GARDIEN + FIN :
+  PARVIS révélé : bâtiment `Z` (`v_corps_coq.png` 144x92, emprise 9x5, porte colonne 4, fait par `fabriquer_plans_mode7.py::batiment_parvis` = le même plan de coq que le mode 7 + façade et grande arche) en (8,0) ; porte (12,4) -> `@corps:Arene 12 11`.
+  NOUVELLE SCÈNE `Scenes/corps.tscn` (écrite par `Outils/generer_corps.py`, world.gd avec `cote = "corps"`, musique « 24 - Final Area ») : salle « Arene » (statues S et braseros B = obstacles), sortie en bas -> parvis.
+  `Scripts/gardien.gd` (class Gardien, GiantBlueSamurai du pack) : à l'approche, CHOIX (`Etat.choix_demande` / `choix_fait`, options dans `dialogue.gd`) « Combattre » / « Baisser ma lance ».
+  COMBAT : garde parfaite de face (clang) ; il marche, brille, FONCE ; s'il percute un mur/une statue = ÉTOURDI -> le frapper ; 6 PV ; à 3 PV phase 2 (plus vite + pierres qui tombent, ombre au sol) ; musique 24_battle_theme_iv.
+  HÉROS : 5 cœurs (`player.gd::blesser`, `soigner`, signal `coeurs_change`, clignote 1,2 s) ; KO = le Gardien le relève, tout recommence, le choix revient. HUD cœurs + barre du Gardien (dans gardien.gd).
+  PAIX : discours « un garde ne choisit pas toujours la violence ». LES DEUX ISSUES : drapeaux `epreuve_reussie` + `fin_paix` / `fin_combat`, écran de fin (musique 28_holy_sanctuary), puis retour au village devant la caserne :
+  le capitaine fait l'ADOUBEMENT (versions `[fin_paix]` / `[fin_combat]` dans generer_village.py), Maman aussi (`[epreuve_reussie]`). F1 -> « Aller au Gardien (fin) ».
+  NB technique : la boîte de choix émet `dialogue_fini` 0,15 s APRÈS `choix_fait` -> gardien.gd attend ce signal avant d'ouvrir la réplique suivante.
+  **LE JEU EST JOUABLE DU DÉBUT À LA FIN (en code).** SUITE (Sonnet) : AUDIT + refonte graphique/disposition du VILLAGE ; puis stèle à refaire, D5 et énigmes à rééquilibrer, mode 7 à affiner, contrôles tactiles.
+
+## PROCHAINE ÉTAPE (Sonnet) : tester la fin (13c), puis AUDIT + refonte du VILLAGE (disposition, graphismes)
+- Tester : stèle -> forêt qui s'écarte -> mode 7 -> bâtiment du corps -> Gardien (combattre ET refuser) -> écran de fin -> adoubement par le capitaine.
+- Ensuite : audit général, village (disposition + graphismes), stèle à refaire, rééquilibrage D5/énigmes, contrôles tactiles.
