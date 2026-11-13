@@ -14,7 +14,7 @@ func initialiser(texture: Texture2D) -> void:
 	var sprite := Sprite2D.new()
 	sprite.texture = texture
 	sprite.centered = false
-	sprite.position = Vector2(3, 3)
+	sprite.position = Vector2(0, -1)   # vase 16x16 (pack donjon), posé au fond de sa case
 	add_child(sprite)
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(12, 12)

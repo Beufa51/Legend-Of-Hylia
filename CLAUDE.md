@@ -490,6 +490,13 @@
   dessin = cadre de pierre + dalle biseautée + panneau + gemme (dorée une fois validée) ; `retourner()`, `remettre()` (R), `valider()`. `room.gd::_suivre_pas` : règle des 3 px gardée, toutes bleues -> `drapeau_fragile`.
   Message au 1er pas. Mêmes plans D2a/D2b (indices réécrits). `Etat.chute` + `world._raccompagner(retour, chute)` restent dans le code (inutilisés pour l'instant).
 
+- 2026-11-13 : l'utilisateur ajoute un PACK DONJON Craftpix (16 px, vue 3/4) : `Assets/PNG/` (walls_floor, Objects, doors_lever_chest_animation, fire_animation(2), trap_animation, decorative_cracks_*, Water_*), + `Assets/PSD/`, `Assets/Tiled_files/`.
+  Licence craftpix.net (usage dans un jeu OK, pas de redistribution des fichiers seuls -> attention si le dépôt devient public). **ÉTAPE 12a (non testée dans Godot, aperçu PIL vérifié)** :
+  `Outils/traiter_pack_donjon.py` (à lancer APRÈS traiter_gemini.py) écrit dans `Assets/Gemini/tuiles/` : `brasero_1..6` + `brasero_eteint` (20x26, flamme retirée + braises ; décalage `Room.DECALAGE_BRASERO` (-2,-10)),
+  `torche_1..6` (12x24, posées en (x*16+2, 8)), `vase_1` bleu / `vase_2` brun (16x16, `pot.gd` sprite en (0,-1)). `room.gd` : constantes `BRASERO`, `TORCHE` (6 images). `apercu_salle.py` mis à jour.
+  PISTES (à décider avec l'utilisateur) : murs/sol du pack (briques sombres en vue 3/4, sol gris-bleu uni) à la place des murs Gemini verts ; PORTES en arche avec herse qui se relève (animation 5 images) ou porte en bois ;
+  coffres (ouverture animée), leviers (5 images), clés, pics (trap_animation), fissures décoratives, eau. Limite : arches de 2 cases de large (nos portes en font 3).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
