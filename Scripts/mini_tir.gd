@@ -33,34 +33,8 @@ func _depart() -> void:
 
 func _maj(delta: float) -> void:
 	# Pots touchés (disparus) ou trop vieux
-Supprime ces 5 lignes (celles de ton écran, numérotées 36 à 38 à gauche, puis 39 et 40) :
-
-- `<<<<<<< HEAD` (ligne 36)
-- `for cible in _cibles.duplicate():` (la **première**, ligne 37)
-- `var pot: Node = cible[0]` (ligne 38)
-- `=======` (ligne 39)
-- `>>>>>>> 6bc022dd0b8eaafb3c177bc6a3865f793c30e8b4` (ligne 42)
-
-Garde ces deux lignes :
-
-```gdscript
 	for cible in _cibles.duplicate():
-		var pot = cible[0]   # sans type : un pot cassé est un objet détruit, qu'une variable typée refuserait (erreur)
-```
-
-Le résultat final doit être :
-
-```gdscript
-func _maj(delta: float) -> void:
-	# Pots touchés (disparus) ou trop vieux
-	for cible in _cibles.duplicate():
-		var pot = cible[0]   # sans type ...
-		if not is_instance_valid(pot) or pot.is_queued_for_deletion():
-```
-
-Dans ce fichier, `for cible in _cibles.duplicate():` doit apparaître une seule fois, juste avant `var pot = cible[0]`, et il ne doit plus rester de `<<<<<<<`, `=======` ni `>>>>>>>`.
-
-Enregistre avec `Ctrl+S`, puis clique sur **Continue merge** et **Push origin**. Dis-moi quand c'est fait.
+		var pot = cible[0]   # sans type : un pot cassé est un objet détruit
 		if not is_instance_valid(pot) or pot.is_queued_for_deletion():
 			_score += 1
 			_jouer("res://Assets/Ninja_adventure/Audio/Sounds/Bonus/Coin.wav", -10.0)

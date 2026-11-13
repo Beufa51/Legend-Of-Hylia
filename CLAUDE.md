@@ -431,6 +431,12 @@
   `generer_village.py` : maisons déplacées (portes : place (5,5) et (20,5) fermées ; ouest (5,5) fermée + (14,5) STAND DE TIR ; caserne (13,5) ; héros (13,5) ; grange (19,5)), `degager_maisons()` retire les décors posés sous une maison, intérieurs -> sorties recalées.
   ORDRE DES OUTILS : traiter_village.py -> traiter_village2.py -> fabriquer_maisons.py -> generer_village.py. Les planches Gemini de maisons (village2_maisons.jpg) ne sont plus utilisées (remplaçables par du Gemini plus tard, même emprise 5x4).
 
+- 2026-11-13 : conflit Git sur mini_tir.gd : l'utilisateur avait collé mon explication dans le script -> nettoyé (leçon : donner le code final dans un bloc à copier). Nouveau pack ajouté par l'utilisateur :
+  `Assets/Aesthetic pack base set (Free)/` (cases de 24 px : Grassland Tileset, Pack 1 expansion, Reg tree wall, Alt-water cliffs, Player Sample, Player Sword Sample). Licence à vérifier (usage commercial ?).
+  **ÉTAPE 10a écrite (non testée dans Godot, aperçu PIL vérifié)** : `Outils/traiter_pack_aesthetic.py` (à lancer APRÈS fabriquer_maisons.py, AVANT generer_village.py) remplace le décor EXTÉRIEUR en gardant les MÊMES noms `v_*.png`
+  (exterieur.gd inchangé) : sol herbe/chemin (couleurs du pack, fabriqué par traiter_village2), arbres, sapin, buissons, roche, souche, puits, clôture, fleurs, maisons (toit teinté, 80x81 ; caserne 112x88, porte colonne 3). Échelle 2/3 (24 -> 16 px).
+  Restent de l'ancien style : tonneau, caisse, bannière, étal, girouette, intérieurs. Décision utilisateur : on continue ensuite la liste A puis retour aux corrections ; PNJ jugés laids -> chercher un pack de persos 16 bits (le « Player Sample » du pack est de la même série).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
