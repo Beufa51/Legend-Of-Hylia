@@ -11,7 +11,7 @@ class_name Exterieur
 #   f  = tournesol   g = fleur rouge   w = marguerite (fleurs : décor, ne bloquent pas)
 #   MAISONS dessinées en code (Outils/fabriquer_maisons.py), vues de dessus (5x4, la porte est sur la rangée du bas, 3e colonne) : M rouge+poutres, N ardoise, T chaume, R rouge+pierre, S pierre, L grange en bois ; K = caserne (7x4, porte en 4e colonne)
 #   E  = étal du marché (3x2)  o = tonneau   j = bannière rouge (1x2)
-#   Q  = girouette du coq (3x4)   W = puits (2x2)
+#   Q  = girouette du coq (3x3)   W = puits (2x2)
 #   ~  = eau de la rivière (bloque)   = = pont de bois (on marche dessus, au-dessus de l'eau)
 # ANIMAUX : pas dans le plan, mais dans la liste `animaux` : "lettre x y", par ex. "c 9 9"
 #   c  = poule blanche   h = poule rousse   k = chat   d = chien
@@ -164,8 +164,8 @@ func _creer_decor() -> void:
 			var c := layout[y][x]
 			if OBJETS_G.has(c):
 				_poser_objet_g(OBJETS_G[c], Vector2i(x, y))
-			elif c == "Q":   # girouette : mât + coq qui tourne au vent (3x4)
-				_poser_objet(["tuile:girouette_mat", Rect2i(0, 0, 3, 4), true, 0.0], Vector2i(x, y))
+			elif c == "Q":   # girouette : mât + coq qui tourne au vent (3x3)
+				_poser_objet(["tuile:girouette_mat", Rect2i(0, 0, 3, 3), true, 0.0], Vector2i(x, y))
 			elif c == "E":   # étal du marché : paniers sur une table
 				_poser_region(MAISONS, Rect2i(16, 16, 3, 1), Vector2i(x, y + 1))
 				_poser_region(MAISONS, Rect2i(16, 13, 3, 1), Vector2i(x, y))
@@ -187,7 +187,7 @@ func _poser_sol() -> void:
 			var pos := Vector2(x * TUILE, y * TUILE)
 			if _est_eau(x, y):
 				# RIVIÈRE : `~` = eau (bloque), `=` = pont (on marche dessus). L'eau a une rive claire côté herbe.
-				var base := "v_eau_h" if not _est_eau(x, y - 1) else ("v_eau_b" if not _est_eau(x, y + 1) else "v_eau")
+				var base := _nom_eau(x, y)
 				var sprite := _poser(base + "_1", pos)
 				_eaux.append([sprite, base])
 				if layout[y][x] == "=":
@@ -208,6 +208,24 @@ func _est_eau(x: int, y: int) -> bool:
 	y = clampi(y, 0, layout.size() - 1)
 	x = clampi(x, 0, layout[y].length() - 1)
 	return layout[y][x] == "~" or layout[y][x] == "="
+
+
+# Quelle image d'eau ? Comme le chemin : elle dépend des 4 voisins (bits : 1 nord, 2 sud, 4 ouest, 8 est) ;
+# entourée d'eau partout : v_eau_f + 4 bits pour les coins de terre. (Le nom reçoit ensuite _1 ou _2 : les 2 images alternent.)
+func _nom_eau(x: int, y: int) -> String:
+	var bits := 0
+	if _est_eau(x, y - 1): bits |= 1
+	if _est_eau(x, y + 1): bits |= 2
+	if _est_eau(x - 1, y): bits |= 4
+	if _est_eau(x + 1, y): bits |= 8
+	if bits != 15:
+		return "v_eau_%d" % bits
+	var coins := 0
+	if not _est_eau(x + 1, y - 1): coins |= 1
+	if not _est_eau(x - 1, y - 1): coins |= 2
+	if not _est_eau(x + 1, y + 1): coins |= 4
+	if not _est_eau(x - 1, y + 1): coins |= 8
+	return "v_eau_f%d" % coins
 
 
 # Hors de l'écran, on prolonge la cellule du bord (un chemin qui sort de l'écran n'a pas de bordure).
@@ -287,7 +305,7 @@ func _poser_coq_girouette(cellule: Vector2i) -> void:
 	_coq = Sprite2D.new()
 	_coq.texture = _image("girouette_coq")
 	_coq.offset = Vector2(0, -_coq.texture.get_height() / 2.0)   # pivot = pieds du coq
-	_coq.position = Vector2(cellule * TUILE) + Vector2(24, 17)
+	_coq.position = Vector2(cellule * TUILE) + Vector2(24, 13)
 	add_child(_coq)
 
 

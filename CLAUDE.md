@@ -629,6 +629,13 @@
   4) Nouvel outil `Outils/apercu_village.py sortie.png Ecran...` = aperçu fidèle d'écrans du village (images + emprises lues dans exterieur.gd, habitants dessinés).
   ORDRE DES OUTILS village : traiter_village -> traiter_village2 -> fabriquer_maisons -> traiter_pack_aesthetic -> traiter_pixel_crawler -> fabriquer_riviere -> generer_village -> verifier_carte (+ preparer_pnj -> preparer_pnj_pixelcrawler pour les habitants).
 
+- 2026-11-13 : retours 14b : « la rivière est moche, les arbres beaucoup mieux, pas fan des PNJ (les faire bouger pour voir s'il faut les remplacer), girouette bien mais un peu grosse ». **ÉTAPE 14c écrite (non testée dans Godot ; aperçus PIL vérifiés)** :
+  1) RIVIÈRE refaite : AUTOTILE comme le chemin (`Outils/fabriquer_riviere.py` : `v_eau_<bits>_<1|2>` et `v_eau_f<coins>_<1|2>`, rive en terre mouillée + liseré sombre + écume, reflets qui bougent) ; `exterieur.gd::_nom_eau` ; la rivière SERPENTE sur 3 rangées (`rangees_eau(x)` dans generer_village.py), pont `=` colonnes 11-13 rangées 2-4. Écran Rivière : sortie nord = rangées 0-1.
+  2) GIROUETTE réduite x0,75 : image 48x48, emprise 3x3 (au lieu de 3x4), coq posé en (24,13) ; plaques O/E/N/S sans lettres (illisibles à cette taille).
+  3) HABITANTS ANIMÉS : `Outils/preparer_pnj_pixelcrawler.py` écrit aussi `pnj_<Nom>_repos.png` (4 images) et `pnj_<Nom>_marche.png` (6 images) ; `pnj.gd` est maintenant un CharacterBody2D : repos animé, PROMENADE lente (16 px/s) dans un petit rayon autour de sa place (34x16 px),
+     s'arrête et se tourne (miroir) vers le joueur à moins de 56 px ou pendant un dialogue ; s'arrête s'il heurte un obstacle. Sans ces images (anciens habitants) : comportement d'avant. But : juger visuellement s'il faut REMPLACER les habitants (pack Pixel Crawler jugé « pas fan »).
+  PISTES si les PNJ déplaisent : planches LPC variées (générateur), ou recolorer/agrandir le héros pour harmoniser, ou retour aux Ninja Adventure 16x16 (plus petits, plus simples).
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Maisons / caserne / temple / intérieurs encore dans l'ancien style (à refaire avec Roofs.png/Walls.png de Pixel Crawler ou à recolorer) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

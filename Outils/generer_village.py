@@ -38,7 +38,7 @@ def chemin(g, x0, x1, y0, y1):
 
 # --- Emprises des objets (même table que Scripts/exterieur.gd::OBJETS_G) : sert à retirer/fermer proprement ---
 EMPRISES = {'A': (2, 2), 'a': (2, 2), 'P': (2, 2), 'r': (2, 2), 'W': (2, 2), 'e': (2, 1), 'j': (1, 2), 'b': (1, 1), 'B': (1, 1), 'o': (1, 1),
-            'x': (1, 1), 'n': (1, 1), 'u': (1, 1), 'z': (1, 1), 'Y': (1, 1), 'y': (1, 1), 'E': (3, 2), 'Q': (3, 4), '~': (1, 1),
+            'x': (1, 1), 'n': (1, 1), 'u': (1, 1), 'z': (1, 1), 'Y': (1, 1), 'y': (1, 1), 'E': (3, 2), 'Q': (3, 3), '~': (1, 1),
             'f': (1, 1), 'g': (1, 1), 'w': (1, 1)}
 NON_BLOQUANTS = set('fgw=')          # fleurs et pont : on marche dessus
 def emprise(c):
@@ -109,7 +109,7 @@ put(place, 'b', (0, 11), (1, 11), (23, 11), (24, 11))
 # Maisons (portes en bas : colonnes 4 et 20)
 maison(place, 'M', 3, 2); maison(place, 'T', 18, 2)   # maisons 7x4 : portes en (5,6) et (20,6)
 # Statue du coq au centre, bannières de part et d'autre
-put(place, 'Q', (11, 4)); put(place, 'j', (9, 5), (15, 5))   # girouette 3x4 au centre
+put(place, 'Q', (11, 4)); put(place, 'j', (9, 5), (15, 5))   # girouette 3x3 au centre
 # Marché (en bas à gauche) et puits (en bas à droite)
 put(place, 'E', (4, 9)); put(place, 'o', (7, 10), (3, 9))
 put(place, 'W', (18, 9)); put(place, 'o', (21, 10))
@@ -233,16 +233,22 @@ passages_heros = ["6 6 InterieurHeros 12 9"]
 # --- RIVIÈRE (2,3) : pattes du coq, au centre-sud. Une rivière (rangées 3-4) coupe la carte d'ouest en est ;
 #     un pont (colonnes 11-13) relie la place au sud. Les chemins ouest/est (maison du héros, ferme) sont sous la rivière.
 riviere = vide()
+# la rivière serpente : rangées de l'eau selon la colonne (le pont, colonnes 11-13, reste en rangées 2-4)
+def rangees_eau(x):
+    return (3, 4, 5) if x <= 3 else (2, 3, 4) if x <= 20 else (1, 2, 3)
 for x in range(W):
-    put(riviere, '~', (x, 3), (x, 4))
+    for y in rangees_eau(x): put(riviere, '~', (x, y))
 for x in (11, 12, 13):
-    put(riviere, '=', (x, 3), (x, 4))
+    put(riviere, '=', (x, 2), (x, 3), (x, 4))
 bordure(riviere, haut=False, bas=False)
-chemin(riviere, 11, 13, 0, 2); chemin(riviere, 11, 13, 5, 13); chemin(riviere, 0, 24, 6, 8)
-for (x, y) in [(0, 10), (2, 12), (21, 11), (22, 9), (3, 0), (20, 0), (5, 1), (18, 1)]:
+chemin(riviere, 11, 13, 0, 1); chemin(riviere, 11, 13, 5, 13); chemin(riviere, 0, 24, 6, 8)
+for (x, y) in [(0, 10), (2, 12), (21, 11), (22, 9), (3, 0), (19, 0)]:
     put(riviere, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
 put(riviere, 'r', (7, 10), (17, 10)); put(riviere, 'u', (8, 5), (16, 5)); put(riviere, 'n', (10, 5))
 put(riviere, 'f', (6, 2), (18, 2), (9, 11), (15, 9)); put(riviere, 'g', (7, 9), (4, 5), (19, 5)); put(riviere, 'w', (9, 2), (15, 1), (5, 11), (20, 9), (2, 5))
+for x in range(W):                      # (l'eau passe avant les décors : on retire ce qui est tombé dedans)
+    for y in rangees_eau(x):
+        if riviere[y][x] != '=': riviere[y][x] = '~'
 animaux_riviere = ['c 6 9', 'd 19 6']
 pnjs_riviere = ["Villager4 6 5 haut | Pêcheur Bastien | Chut ! Tu fais fuir les poissons. // Cette rivière coupe le pays en deux. Le pont est tout ce qu'il y a de plus sûr... enfin, je crois. // Au sud, c'est la route du royaume. Mais la garde en interdit l'accès aux recrues."]
 
@@ -425,7 +431,7 @@ SORTIES = {
     'VillageOuest': ('NES', ouest), 'PlaceDuCoq': ('NOES', place), 'VillageEst': ('NOS', est),
     'MaisonHeros': ('NE', heros), 'Riviere': ('NOES', riviere), 'Ferme': ('NO', ferme), 'RouteSud': ('N', route),
 }
-PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 3}, 'Parvis': {'S': 6, 'O': 12, 'E': 12}}
+PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 2}, 'Parvis': {'S': 6, 'O': 12, 'E': 12}}
 for _nom, (_s, _g) in SORTIES.items():
     finaliser(_g, _s, PROFONDEURS.get(_nom))
 finaliser(parvis_revele, 'SOE', PROFONDEURS['Parvis'])

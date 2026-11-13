@@ -32,7 +32,11 @@ def rendre(nom, g, props, grille):
         for x in range(W):
             c = g[y][x]
             if eau(x, y):
-                base = "v_eau_h" if not eau(x, y - 1) else ("v_eau_b" if not eau(x, y + 1) else "v_eau")
+                bits = (1 if eau(x, y - 1) else 0) | (2 if eau(x, y + 1) else 0) | (4 if eau(x - 1, y) else 0) | (8 if eau(x + 1, y) else 0)
+                if bits == 15:
+                    base = "v_eau_f%d" % ((1 if not eau(x + 1, y - 1) else 0) | (2 if not eau(x - 1, y - 1) else 0) | (4 if not eau(x + 1, y + 1) else 0) | (8 if not eau(x - 1, y + 1) else 0))
+                else:
+                    base = "v_eau_%d" % bits
                 out.alpha_composite(img(base + "_1"), (x * 16, y * 16))
                 if c == '=':
                     cote = "g" if g[y][max(x - 1, 0)] != '=' else ("d" if g[y][min(x + 1, W - 1)] != '=' else "m")
@@ -57,9 +61,9 @@ def rendre(nom, g, props, grille):
                 im = img(n)
                 objets.append(((y + eh) * 16, im, round((x + ew / 2) * 16 - im.width / 2), round((y + eh) * 16 - im.height)))
             elif c == 'Q':
-                objets.append(((y + 4) * 16, img("girouette_mat"), x * 16, y * 16))
+                objets.append(((y + 3) * 16, img("girouette_mat"), x * 16, y * 16))
                 coq = img("girouette_coq")
-                objets.append(((y + 4) * 16 + 1, coq, x * 16 + 24 - coq.width // 2, y * 16 + 17 - coq.height))
+                objets.append(((y + 3) * 16 + 1, coq, x * 16 + 24 - coq.width // 2, y * 16 + 13 - coq.height))
     for ligne in props.get('pnjs', []):
         t = ligne.split('|')[0].split()
         f = os.path.join(RACINE, "Assets", "Heros", "pnj_%s.png" % t[0])

@@ -235,7 +235,7 @@ def _lettre(img, x, y, car, couleur):
             if c == "X": img.putpixel((x + i, y + j), couleur)
 
 
-def girouette_mat():
+def _girouette_mat_grande(avec_lettres=True):
     """48x64 : socle de pierre à deux marches, mât de fer avec deux bagues et une boule dorée, croix des points cardinaux
     (plaques N, E, S, O). Le coq (image à part, il tourne) se pose en haut, ses pieds en (24, 17)."""
     from PIL import ImageDraw
@@ -264,17 +264,17 @@ def girouette_mat():
     for cx, car in ((8, "O"), (39, "E")):   # plaques aux extrémités (O = ouest)
         d.rectangle((cx - 4, 28, cx + 4, 36), fill=(58, 40, 24, 255), outline=CONTOUR)
         d.rectangle((cx - 3, 29, cx + 3, 35), fill=(96, 66, 36, 255))
-        _lettre(img, cx - 1, 30, car, OR_C)
+        if avec_lettres: _lettre(img, cx - 1, 30, car, OR_C)
     # plaques N (au-dessus de la croix) et S (en dessous) sur le mât
-    d.rectangle((19, 24, 28, 30), fill=(58, 40, 24, 255), outline=CONTOUR); _lettre(img, 21, 25, "N", OR_C)
-    d.rectangle((19, 35, 28, 41), fill=(58, 40, 24, 255), outline=CONTOUR); _lettre(img, 22, 36, "S", OR_C)
+    d.rectangle((19, 24, 28, 30), fill=(58, 40, 24, 255), outline=CONTOUR); (_lettre(img, 21, 25, "N", OR_C) if avec_lettres else None)
+    d.rectangle((19, 35, 28, 41), fill=(58, 40, 24, 255), outline=CONTOUR); (_lettre(img, 22, 36, "S", OR_C) if avec_lettres else None)
     # boule dorée au sommet, là où tourne le coq
     d.ellipse((20, 17, 27, 23), fill=OR, outline=CONTOUR)
     d.rectangle((22, 18, 23, 19), fill=OR_C)
     return img
 
 
-def girouette_coq():
+def _girouette_coq_grand():
     """Le coq de la girouette, de PROFIL (regarde à droite), dessiné à la main : crête, bec doré, barbillon, aile, queue en panache.
     32 px de large (l'axe du mât est au milieu), pieds posés sur un petit perchoir de fer en bas de l'image."""
     from PIL import ImageDraw
@@ -327,6 +327,25 @@ def girouette_coq():
     pd.line((6, H + 1, 28, H + 1), fill=(188, 184, 198, 255))
     pd.line((6, H + 4, 28, H + 4), fill=CONTOUR)
     return perch
+
+
+ECHELLE_GIROUETTE = 0.75   # la girouette finale = le dessin ci-dessus réduit (« un peu grosse » : 48x64 -> 36x48, emprise 3x3 cases)
+
+
+def _reduire_girouette(im, e=ECHELLE_GIROUETTE):
+    return im.resize((round(im.width * e), round(im.height * e)), Image.NEAREST)
+
+
+def girouette_mat():
+    """48x48 : le socle et le mât réduits (36x48) au milieu de l'image ; les pieds du coq se posent en (24, 13)."""
+    petit = _reduire_girouette(_girouette_mat_grande(False))
+    img = Image.new("RGBA", (48, 48))
+    img.alpha_composite(petit, ((48 - petit.width) // 2, 48 - petit.height))
+    return img
+
+
+def girouette_coq():
+    return _reduire_girouette(_girouette_coq_grand())
 
 
 def puits():

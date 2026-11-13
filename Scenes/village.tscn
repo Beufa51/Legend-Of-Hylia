@@ -83,7 +83,7 @@ layout = PackedStringArray("A.a.A.a.A.b:::a.A.a.A.a.b", ".a.A.a.A.a.:::.A.a.A.a.
 grille = Vector2i(2, 3)
 animaux = PackedStringArray("c 6 9", "d 19 6")
 pnjs = PackedStringArray("Villager4 6 5 haut | Pêcheur Bastien | Chut ! Tu fais fuir les poissons. // Cette rivière coupe le pays en deux. Le pont est tout ce qu'il y a de plus sûr... enfin, je crois. // Au sud, c'est la route du royaume. Mais la garde en interdit l'accès aux recrues.")
-layout = PackedStringArray("bbba.bbbbbb:::bbbbbbA.bbb", "b....a.....:::.w..a.....b", "b.....f..w.:::....f.....b", "~~~~~~~~~~~===~~~~~~~~~~~", "~~~~~~~~~~~===~~~~~~~~~~~", "b.w.g...u.n:::..u..g....b", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "b......g...:::.f....w.a.b", "a......r...:::...r......b", ".....w...f.:::.......A..b", "b.a........:::..........b", "bb..bbbbbbb:::bbbbbbbbbbb")
+layout = PackedStringArray("bbba.bbbbbb:::bbbbba.bbbb", "b..........:::.w.....~~~~", "b...~~~~~~~===~~~~~~~~~~~", "~~~~~~~~~~~===~~~~~~~~~~~", "~~~~~~~~~~~===~~~~~~~...b", "~~~~g...u.n:::..u..g....b", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "b......g...:::.f....w.a.b", "a......r...:::...r......b", ".....w...f.:::.......A..b", "b.a........:::..........b", "bb..bbbbbbb:::bbbbbbbbbbb")
 
 [node name="Ferme" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, 3)
