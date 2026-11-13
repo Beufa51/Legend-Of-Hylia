@@ -708,6 +708,9 @@
   LEVIER MURAL (`fabriquer_levier.py` : plaque rivetée sur le mur + rebord, sprite décalé de -12 px) posé rangée 2 contre le mur du haut : Entrée droite (12,2), D5a (21,2). Plots/dalles de couleur : prompt Gemini donné à l'utilisateur
   (planche : plots orange/bleu levés + baissés, dalles rouge/bleu + dorée, magenta #FF00FF) ; À FAIRE à réception : `Assets/Gemini/originaux/plots.jpg` -> découper/réduire 16 px, brancher dans `plot.gd` et `dalle.gd` (images au lieu de ColorRect).
 
+- 2026-11-13 : `plots.jpg` reçu (Gemini, vue isométrique). **14n (non testée dans Godot, aperçu PIL vérifié)** : `Outils/traiter_plots.py` -> `plot_haut_o/u` (cubes de pierre 16x18), `cristal_o/u` (pas encore branchés), `dalle_rouge/bleue/doree` (16x16).
+  `plot.gd` : plot LEVÉ = image `plot_haut_*` (le baissé reste dessiné en code : dalle de pierre + cabochon) ; `dalle.gd` : sprite qui alterne les 3 images (`textures` fournies par `room.gd`). Non utilisés : dalles losanges, levier et piédestal Gemini (vue de côté), cristaux de l'énigme.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

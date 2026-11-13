@@ -367,6 +367,7 @@ func _poser_objets() -> void:
 						add_child(lueur)
 				"z":
 					var dalle := Dalle.new()
+					dalle.textures = [_image("dalle_rouge"), _image("dalle_bleue"), _image("dalle_doree")]
 					add_child(dalle)
 					dalle.initialiser(Vector2i(x, y))
 					_dalles[Vector2i(x, y)] = dalle

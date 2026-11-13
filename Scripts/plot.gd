@@ -37,19 +37,15 @@ func initialiser(une_salle: Room, sa_case: Vector2i, orange: bool) -> void:
 	_rect(_bas, Vector2(2, 2), Vector2(12, 12), PIERRE_MOYENNE)
 	_rect(_bas, Vector2(5, 5), Vector2(6, 6), couleur.darkened(0.55))
 	_rect(_bas, Vector2(6, 6), Vector2(4, 4), couleur.darkened(0.35))
-	# Levé : un bloc de pierre taillée (dessus clair, face avant sombre) incrusté d'un cabochon de couleur
+	# Levé : le cube de pierre Gemini (gemme orange ou bleue), posé sur la case ; le haut dépasse de 2 px
 	_haut = Node2D.new()
 	add_child(_haut)
-	_rect(_haut, Vector2(0, 12), Vector2(16, 4), Color(0, 0, 0, 0.35))       # ombre au sol
-	_rect(_haut, Vector2(1, 8), Vector2(14, 7), PIERRE_SOMBRE)                # face avant
-	_rect(_haut, Vector2(1, 14), Vector2(14, 1), CONTOUR)
-	_rect(_haut, Vector2(1, -2), Vector2(14, 11), PIERRE_MOYENNE)             # dessus
-	_rect(_haut, Vector2(1, -2), Vector2(14, 1), PIERRE_CLAIRE)               # biseau éclairé
-	_rect(_haut, Vector2(1, -2), Vector2(1, 11), PIERRE_CLAIRE)
-	_rect(_haut, Vector2(5, 1), Vector2(6, 5), couleur.darkened(0.3))         # cabochon : cadre
-	_rect(_haut, Vector2(6, 2), Vector2(4, 3), couleur)
-	_rect(_haut, Vector2(6, 2), Vector2(2, 1), couleur.lightened(0.5))        # reflet
-	_rect(_haut, Vector2(7, 10), Vector2(2, 2), couleur.darkened(0.2))        # petite gemme sur la face avant
+	_rect(_haut, Vector2(0, 12), Vector2(16, 4), Color(0, 0, 0, 0.30))       # ombre au sol
+	var image := Sprite2D.new()
+	image.centered = false
+	image.position = Vector2(0, -2)
+	image.texture = salle._image("plot_haut_o" if orange else "plot_haut_u")
+	_haut.add_child(image)
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(TUILE, TUILE)
 	_collision = CollisionShape2D.new()

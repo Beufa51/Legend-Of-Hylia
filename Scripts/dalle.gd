@@ -4,23 +4,15 @@ class_name Dalle
 # chaque fois que le joueur pose le pied dessus, elle se RETOURNE : rouge -> bleue, bleue -> rouge.
 # Le but : rendre TOUTES les dalles de la salle bleues (repasser sur une dalle bleue la remet en rouge !).
 # La salle (room.gd) suit les pas du joueur et appelle retourner(), remettre(), valider().
-# Dessinée en code (pas d'image) : cadre de pierre, dalle biseautée, gemme au centre.
+# Images Gemini : dalle_rouge / dalle_bleue / dalle_doree (Outils/traiter_plots.py).
 
-const ROUGE := Color(0.66, 0.25, 0.22)
-const BLEU := Color(0.28, 0.5, 0.82)
-const OR := Color(1.0, 0.82, 0.3)
-const CADRE := Color8(40, 40, 56)
 const SON := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Move2.wav"
 
 var bleue := false
 var validee := false     # énigme résolue : la dalle reste bleue, on peut marcher dessus librement
-var _face: Node2D        # tout le dessin (centré, pour l'animation de retournement)
-var _corps: ColorRect
-var _clair: Array[ColorRect] = []   # biseau éclairé (haut, gauche)
-var _sombre: Array[ColorRect] = []  # biseau dans l'ombre (bas, droite)
-var _panneau: ColorRect
-var _gemme: Polygon2D
-var _reflet: ColorRect
+var _face: Node2D        # le dessin (centré, pour l'animation de retournement)
+var _image: Sprite2D
+var textures: Array[Texture2D] = []   # [rouge, bleue, dorée], fournies par room.gd (images Gemini)
 
 
 func initialiser(case: Vector2i) -> void:
@@ -28,38 +20,15 @@ func initialiser(case: Vector2i) -> void:
 	_face = Node2D.new()
 	_face.position = Vector2(8, 8)   # au centre de la case : la dalle se retourne sur elle-même
 	add_child(_face)
-	_rect(CADRE, Vector2(0, 0), Vector2(16, 16))
-	_corps = _rect(ROUGE, Vector2(1, 1), Vector2(14, 14))
-	_clair.append(_rect(ROUGE, Vector2(1, 1), Vector2(14, 1)))
-	_clair.append(_rect(ROUGE, Vector2(1, 1), Vector2(1, 14)))
-	_sombre.append(_rect(ROUGE, Vector2(1, 14), Vector2(14, 1)))
-	_sombre.append(_rect(ROUGE, Vector2(14, 1), Vector2(1, 14)))
-	_panneau = _rect(ROUGE, Vector2(4, 4), Vector2(8, 8))
-	_gemme = Polygon2D.new()
-	_gemme.polygon = PackedVector2Array([Vector2(0, -3), Vector2(3, 0), Vector2(0, 3), Vector2(-3, 0)])
-	_face.add_child(_gemme)
-	_reflet = _rect(Color(1, 1, 1, 0.5), Vector2(2, 2), Vector2(2, 1))
-	_colorer(ROUGE, false)
+	_image = Sprite2D.new()
+	_face.add_child(_image)
+	_colorer(false, false)
 
 
-func _rect(c: Color, pos: Vector2, taille: Vector2) -> ColorRect:
-	var r := ColorRect.new()
-	r.position = pos - Vector2(8, 8)
-	r.size = taille
-	r.color = c
-	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_face.add_child(r)
-	return r
-
-
-func _colorer(base: Color, gemme_or: bool) -> void:
-	_corps.color = base
-	for r in _clair:
-		r.color = base.lightened(0.35)
-	for r in _sombre:
-		r.color = base.darkened(0.45)
-	_panneau.color = base.darkened(0.22)
-	_gemme.color = OR if gemme_or else base.lightened(0.55)
+func _colorer(en_bleu: bool, gemme_or: bool) -> void:
+	if textures.size() < 3:
+		return
+	_image.texture = textures[2] if gemme_or else (textures[1] if en_bleu else textures[0])
 
 
 # Le joueur pose le pied dessus : la dalle se retourne (animation + petit bruit, aigu si elle devient bleue).
@@ -78,7 +47,7 @@ func retourner() -> void:
 		lecteur.finished.connect(lecteur.queue_free)
 	var t := create_tween()
 	t.tween_property(_face, "scale:x", 0.0, 0.07)
-	t.tween_callback(_colorer.bind(BLEU if bleue else ROUGE, false))
+	t.tween_callback(_colorer.bind(bleue, false))
 	t.tween_property(_face, "scale:x", 1.0, 0.07)
 
 
@@ -88,14 +57,14 @@ func remettre() -> void:
 		return
 	bleue = false
 	_face.scale = Vector2.ONE
-	_colorer(ROUGE, false)
+	_colorer(false, false)
 
 
 # Énigme résolue : la dalle reste bleue, sa gemme devient dorée.
 func valider(anime := true) -> void:
 	validee = true
 	bleue = true
-	_colorer(BLEU, true)
+	_colorer(true, true)
 	if anime:
 		_face.scale = Vector2(1.3, 1.3)
 		create_tween().tween_property(_face, "scale", Vector2.ONE, 0.25)
