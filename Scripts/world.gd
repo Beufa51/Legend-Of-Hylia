@@ -8,6 +8,16 @@ const DUREE_GLISSEMENT := 0.6  # secondes
 # Scène qui utilise ce script : le donjon (world.tscn) ou l'extérieur (village.tscn), réglé dans la scène
 @export var musique := "res://Assets/Ninja_adventure/Audio/Musics/21 - Dungeon.ogg"
 @export var donjon := true   # faux à l'extérieur : pas de plumes à l'écran, pas de sortie du donjon
+# Quelle aile du donjon : "gauche" (world.tscn) ou "droite" (aile_droite.tscn). L'aile droite est le
+# MIROIR de la gauche : l'épine part vers l'ouest (grille x négative) et ses drapeaux ont d'autres noms
+# (plumeD1..plumeD4, fragment_droite) : voir _plume().
+@export var cote := "gauche"
+# Scènes du jeu, pour les passages "@nom:Ecran" (voir _changer_de_scene)
+const SCENES := {
+	"donjon": "res://Scenes/world.tscn",
+	"aile_droite": "res://Scenes/aile_droite.tscn",
+	"village": "res://Scenes/village.tscn",
+}
 const VOLUME_MUSIQUE_DB := -8.0
 # Jingles (pack Ninja Adventure) : une énigme résolue / une plume récupérée
 const JINGLE_ENIGME := "res://Assets/Ninja_adventure/Audio/Jingles/Success2.wav"
@@ -67,11 +77,11 @@ func _process(_delta: float) -> void:
 	if en_transition:
 		return
 	var nouvelle := _salle_du_joueur()
-	if donjon and nouvelle == SORTIE_DONJON and Etat.est("fragment_gauche"):
-		if not Etat.est("vue_aerienne_gauche"):
-			_vue_aerienne("gauche")   # on sort du donjon avec l'aile : vue du ciel
+	if donjon and nouvelle == SORTIE_DONJON and Etat.est("fragment_" + cote):
+		if not Etat.est("vue_aerienne_" + cote):
+			_vue_aerienne(cote)   # on sort du donjon avec l'aile : vue du ciel
 		else:
-			_ramener("@village:TempleGauche", Vector2i(12, 7), "")   # sorties suivantes : on retourne directement au village
+			_ramener("@village:" + _temple(), Vector2i(12, 7), "")   # sorties suivantes : on retourne directement au village
 		return
 	if nouvelle != salle_actuelle:
 		_glisser_vers(nouvelle)
@@ -196,7 +206,7 @@ func _creer_messages() -> void:
 	await get_tree().create_timer(0.8).timeout
 	Etat.annoncer((Noms.VILLAGE if not donjon else "L'Épreuve de la Garde") + " — Flèches/ZQSD : bouger   Maj/K : courir   Espace/J : lance   R : recommencer")
 	await get_tree().create_timer(5.5).timeout
-	if not Etat.est("vestibule_cristal") and salle_actuelle == Vector2i(0, 1):   # seulement si on est encore au vestibule
+	if cote == "gauche" and donjon and not Etat.est("vestibule_cristal") and salle_actuelle == Vector2i(0, 1):   # seulement si on est encore au vestibule
 		Etat.annoncer("Frappe le cristal bleu avec ta lance pour ouvrir la porte")
 
 
@@ -332,7 +342,7 @@ func _creer_menu_dev() -> void:
 	grille.columns = 4
 	boite.add_child(grille)
 	var bouton_cine := Button.new()
-	bouton_cine.text = "Vue aérienne aile gauche"
+	bouton_cine.text = "Vue aérienne aile " + cote
 	bouton_cine.add_theme_font_size_override("font_size", 8)
 	bouton_cine.focus_mode = Control.FOCUS_NONE
 	bouton_cine.pressed.connect(_dev_cinematique)
@@ -343,12 +353,15 @@ func _creer_menu_dev() -> void:
 	bouton_effacer.focus_mode = Control.FOCUS_NONE
 	bouton_effacer.pressed.connect(_dev_nouvelle_partie)
 	boite.add_child(bouton_effacer)
-	var bouton_scene := Button.new()
-	bouton_scene.text = "Aller au village" if donjon else "Aller au donjon"
-	bouton_scene.add_theme_font_size_override("font_size", 8)
-	bouton_scene.focus_mode = Control.FOCUS_NONE
-	bouton_scene.pressed.connect(_dev_changer_scene)
-	boite.add_child(bouton_scene)
+	for lieu in [["village", "Aller au village"], ["donjon", "Aller à l'aile gauche"], ["aile_droite", "Aller à l'aile droite"]]:
+		if SCENES[lieu[0]] == scene_file_path:
+			continue
+		var bouton_scene := Button.new()
+		bouton_scene.text = lieu[1]
+		bouton_scene.add_theme_font_size_override("font_size", 8)
+		bouton_scene.focus_mode = Control.FOCUS_NONE
+		bouton_scene.pressed.connect(_dev_changer_scene.bind(SCENES[lieu[0]]))
+		boite.add_child(bouton_scene)
 	for enfant in get_children():
 		if enfant is Ecran:
 			var bouton := Button.new()
@@ -367,7 +380,7 @@ func _changer_de_scene(cible: String, case: Vector2i, texte: String) -> void:
 	Etat.arrivee_case = case
 	Etat.arrivee_texte = texte
 	Etat.position_sauvee = Vector2.ZERO   # la position sera mémorisée à l'arrivée
-	get_tree().change_scene_to_file("res://Scenes/world.tscn" if morceaux[0] == "donjon" else "res://Scenes/village.tscn")
+	get_tree().change_scene_to_file(SCENES.get(morceaux[0], SCENES["village"]))
 
 
 func _dev_nouvelle_partie() -> void:
@@ -375,13 +388,13 @@ func _dev_nouvelle_partie() -> void:
 	get_tree().change_scene_to_file("res://Scenes/demarrage.tscn")
 
 
-func _dev_changer_scene() -> void:
-	get_tree().change_scene_to_file("res://Scenes/village.tscn" if donjon else "res://Scenes/world.tscn")
+func _dev_changer_scene(chemin: String) -> void:
+	get_tree().change_scene_to_file(chemin)
 
 
 func _dev_cinematique() -> void:
 	_menu_dev.visible = false
-	_vue_aerienne("gauche")
+	_vue_aerienne(cote)
 
 
 func _teleporter(salle: Ecran) -> void:
@@ -431,12 +444,26 @@ var _musique: AudioStreamPlayer
 # qui vient de s'ouvrir ; après le fragment, à l'Entrée. Plus besoin de refaire le chemin à vide.
 func _sur_drapeau(nom: String) -> void:
 	_maj_hud()
-	if nom == "fragment_gauche":
+	if not donjon:
+		return
+	if nom == "fragment_" + cote:
 		await get_tree().create_timer(1.8).timeout   # laisser le temps au jingle et au message
 		_ramener("Entree", Vector2i(12, 9), "Une force t'a ramené à l'entrée. La grande porte du vestibule est ouverte : sors du donjon !")
-	elif nom in ["plume1", "plume2", "plume3", "plume4"]:
-		await get_tree().create_timer(1.8).timeout
-		_ramener("Epine" + nom.substr(5), Vector2i(12, 6), "Une force t'a ramené dans l'épine de l'aile. La porte de l'est est ouverte !")
+		return
+	for n in range(1, 5):
+		if nom == _plume(n):
+			await get_tree().create_timer(1.8).timeout
+			_ramener("Epine%d" % n, Vector2i(12, 6), "Une force t'a ramené dans l'épine de l'aile. La porte de " + ("l'est" if cote == "gauche" else "l'ouest") + " est ouverte !")
+
+
+# Nom du drapeau de la plume n de CETTE aile : "plume1" (aile gauche), "plumeD1" (aile droite).
+func _plume(n: int) -> String:
+	return ("plume%d" if cote == "gauche" else "plumeD%d") % n
+
+
+# L'écran du village devant le temple de cette aile.
+func _temple() -> String:
+	return "TempleGauche" if cote == "gauche" else "TempleDroit"
 
 
 # Fondu au noir, le joueur est posé dans la salle `nom_salle`, sur la case `case`.
@@ -456,7 +483,7 @@ func _passer_porte(nom: String, case: Vector2i, texte: String) -> void:
 			if e.name == nom:
 				arrivee = e
 	var pas := Vector2.ZERO
-	if nom.begins_with("@donjon"):
+	if nom.begins_with("@donjon") or nom.begins_with("@aile_droite"):
 		pas = Vector2.UP
 	elif arrivee != null and depart != null and arrivee.interieur != depart.interieur:
 		pas = Vector2.UP if arrivee.interieur else Vector2.DOWN
@@ -557,7 +584,7 @@ func _plan_vu_du_ciel() -> Dictionary:
 	var bas := Vector2i(1000, 1000)    # plus petite case de la grille
 	var haut := Vector2i(-1000, -1000) # plus grande case de la grille
 	for enfant in get_children():
-		if enfant is Room:   # (aile droite plus tard : ne garder que les salles de l'aile voulue)
+		if enfant is Room:   # (chaque aile est dans sa propre scène : toutes les salles en font partie)
 			salles.append(enfant)
 			bas = Vector2i(mini(bas.x, enfant.grille.x), mini(bas.y, enfant.grille.y))
 			haut = Vector2i(maxi(haut.x, enfant.grille.x), maxi(haut.y, enfant.grille.y))
@@ -607,15 +634,15 @@ func _voisin(plan: PackedByteArray, taille: Vector2i, x: int, y: int, rayon: int
 	return false
 
 
-func _vue_aerienne(cote: String) -> void:
+func _vue_aerienne(aile_vue: String) -> void:
 	if en_transition:
 		return
 	en_transition = true
-	Etat.noter("vue_aerienne_" + cote)
+	Etat.noter("vue_aerienne_" + aile_vue)
 	_hud.visible = false
 	joueur.set_physics_process(false)
 	joueur.velocity = Vector2.ZERO
-	var droite := cote == "droite"
+	var droite := aile_vue == "droite"
 
 	# 1) Fondu au noir ; pendant ce temps, on fabrique le plan vu du ciel
 	_jouer_son(SON_ENVOL)
@@ -658,8 +685,8 @@ func _vue_aerienne(cote: String) -> void:
 	clignote.tween_property(point, "modulate:a", 0.2, 0.3)
 	clignote.tween_property(point, "modulate:a", 1.0, 0.3)
 	# L'aile du blason (rouge), qui remplacera le plan une fois emboîtée
-	var pivot: Vector2 = PIVOTS[cote]
-	var aile := _sprite(_texture(DOSSIER_BLASON + "blason_aile_" + cote + ".png"), origine, calque)
+	var pivot: Vector2 = PIVOTS[aile_vue]
+	var aile := _sprite(_texture(DOSSIER_BLASON + "blason_aile_" + aile_vue + ".png"), origine, calque)
 	aile.modulate.a = 0.0
 	var flash := ColorRect.new()
 	flash.color = Color(1.0, 0.95, 0.8)
@@ -720,7 +747,7 @@ func _vue_aerienne(cote: String) -> void:
 	if Etat.est("fragment_" + autre):
 		Etat.annoncer("Les deux ailes ont rejoint le corps du donjon ! L'épreuve finale t'attend.")
 	else:
-		Etat.annoncer("L'aile " + cote + " a rejoint le corps du donjon ! Il manque encore l'aile " + autre + ".")
+		Etat.annoncer("L'aile " + aile_vue + " a rejoint le corps du donjon ! Il manque encore l'aile " + autre + ".")
 	await get_tree().create_timer(4.5).timeout
 
 	# 6) Fondu au noir, retour dans le vestibule (le corps du donjon n'est pas encore construit)
@@ -729,7 +756,7 @@ func _vue_aerienne(cote: String) -> void:
 	await t.finished
 	calque.queue_free()
 	# Retour au village, devant le temple (la scène change : la musique et l'état sont rechargés)
-	_changer_de_scene("@village:TempleGauche", Vector2i(12, 7), "Tu ressors du temple, l'aile à la main. Retourne voir le capitaine Aubrac !")
+	_changer_de_scene("@village:" + _temple(), Vector2i(12, 7), "Tu ressors du temple, l'aile à la main. Retourne voir le capitaine Aubrac !")
 
 
 # --- HUD : les 5 plumes de l'aile, en haut à gauche ------------------------------------
@@ -749,14 +776,16 @@ func _creer_hud() -> void:
 		var icone := _sprite(plume, Vector2(4 + i * 11, 3), _hud)
 		_icones_plumes.append(icone)
 	_icone_fragment = _sprite(_texture("res://Assets/Gemini/tuiles/fragment_aile.png"), Vector2(62, 1), _hud)
+	if cote == "droite":   # l'aile droite = l'aile gauche dans un miroir
+		_icone_fragment.flip_h = true
 	_hud.visible = donjon   # les plumes ne s'affichent que dans le donjon
 	_maj_hud()
 
 
 func _maj_hud() -> void:
 	for i in 5:
-		_icones_plumes[i].modulate = Color.WHITE if Etat.est("plume%d" % (i + 1)) else TEINTE_MANQUANTE
+		_icones_plumes[i].modulate = Color.WHITE if Etat.est(_plume(i + 1)) else TEINTE_MANQUANTE
 	# plume 5 = le fragment (la plume 5 n'a pas de plume dorée : sa récompense est le fragment)
-	if Etat.est("fragment_gauche"):
+	if Etat.est("fragment_" + cote):
 		_icones_plumes[4].modulate = Color.WHITE
-	_icone_fragment.visible = Etat.est("fragment_gauche")
+	_icone_fragment.visible = Etat.est("fragment_" + cote)

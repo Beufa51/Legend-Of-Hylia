@@ -220,14 +220,13 @@ animaux_grand = ['c 10 4']
 
 parvis = vide()
 chemin(parvis, 11, 13, 6, 13)                                  # vient du sud
-chemin(parvis, 0, 13, 6, 8)                                    # vers l'ouest : temple de l'aile gauche
+chemin(parvis, 0, 24, 6, 8)                                    # vers l'ouest : temple de l'aile gauche ; vers l'est : temple de l'aile droite
 chemin(parvis, 12, 12, 5, 5)                                   # devant la porte du CORPS
 grande(parvis, 9, 2)                                       # le CORPS du donjon : grand bâtiment scellé (porte en (12,5))
 put(parvis, 'j', (7, 3), (17, 3)); put(parvis, 'o', (6, 4), (18, 4))
 bordure(parvis, trou=(11, 13))
 for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 4), (22, 9), (20, 11)]:
     put(parvis, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-put(parvis, 'b', (24, 6), (24, 7), (24, 8))                    # l'est : le temple de l'aile droite (plus tard)
 put(parvis, 'P', (20, 2), (3, 2)); put(parvis, 'f', (8, 9), (16, 9)); put(parvis, 'g', (10, 5), (14, 5)); put(parvis, 'w', (6, 10), (19, 10))
 passages_parvis = ["12 6 ! Les grandes portes du corps du donjon sont scellées. Il faut d'abord rapporter les deux ailes du blason."]
 
@@ -243,6 +242,19 @@ for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 9), (3, 9)]:
 put(temple_g, 'P', (20, 2), (3, 2)); put(temple_g, 'f', (8, 9), (16, 9)); put(temple_g, 'g', (10, 5), (14, 5)); put(temple_g, 'w', (6, 10), (19, 10))
 passages_temple_g = ["12 6 @donjon:Vestibule 12 10 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."]
 
+# --- TEMPLE DE L'AILE DROITE (3,0) : le symétrique du temple de l'aile gauche (chemin venant de l'ouest)
+temple_d = vide()
+chemin(temple_d, 0, 13, 6, 8)                                  # vient de l'ouest (le parvis)
+chemin(temple_d, 12, 12, 5, 5)                                 # devant la porte du temple
+put(temple_d, 'U', (9, 3))                                     # même arche que l'aile gauche : porte en (12,6) -> aile droite
+put(temple_d, 'j', (7, 3), (17, 3)); put(temple_d, 'o', (6, 4), (18, 4))
+bordure(temple_d)
+put(temple_d, 'b', (24, 6), (24, 7), (24, 8))                  # l'est (falaise, plus tard) : fermé
+for (x, y) in [(1, 2), (1, 9), (22, 2), (22, 4), (22, 10), (19, 9)]:
+    put(temple_d, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+put(temple_d, 'P', (20, 2), (3, 2)); put(temple_d, 'f', (8, 9), (16, 9)); put(temple_d, 'g', (10, 5), (14, 5)); put(temple_d, 'w', (6, 10), (19, 10))
+passages_temple_d = ["12 6 @aile_droite:Vestibule 12 10 La grande porte se referme derrière toi... L'aile droite du blason : ici, tout est inversé."]
+
 ecrans = [
     ('Ferme', (0, 2), ferme, {'pnjs': pnjs_ferme, 'passages': passages_ferme, 'minijeu': 'poules'}),
     ('PlaceDuCoq', (2, 2), place, {'animaux': animaux_place, 'passages': ferme_place}),
@@ -251,6 +263,7 @@ ecrans = [
     ('MaisonHeros', (4, 2), heros, {'animaux': animaux_heros, 'passages': passages_heros}),
     ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand}),
     ('Parvis', (2, 0), parvis, {'passages': passages_parvis, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
+    ('TempleDroit', (3, 0), temple_d, {'passages': passages_temple_d, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile droite. Derrière cette porte, la seconde moitié de l'épreuve."}),
     ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
 ]
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
@@ -263,7 +276,7 @@ interieurs = [
 depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans la maison du héros, à côté du lit
 
 
-for _g in (place, ouest, est, heros, ferme, parvis, temple_g):
+for _g in (place, ouest, est, heros, ferme, parvis, temple_g, temple_d):
     degager_maisons(_g)
 
 

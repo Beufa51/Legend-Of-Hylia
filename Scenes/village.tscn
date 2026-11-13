@@ -54,7 +54,14 @@ layout = PackedStringArray("A...A......:::..A...A...b", "..a...a....:::....a...a
 grille = Vector2i(2, 0)
 passages = PackedStringArray("12 6 ! Les grandes portes du corps du donjon sont scellées. Il faut d'abord rapporter les deux ailes du blason.")
 musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
-layout = PackedStringArray("A.a.A.a.A.....a.A.a.A.a.b", ".a.A.a.A.a.....A.a.A.a..b", "a..P................P.A..", ".......j.K.......j.......", "A.....o...........o...a..", "............:............", "::::::::::::::..........b", "::::::::::::::..........b", "::::::::::::::..........b", "........f..:::..f.....a..", "a.....w....:::.....w.....", ".A.a.A.a.A.:::.a.A.aaA...", "a.A.a.A.a..:::A.a.A.a.A.b", "...........:::..........b")
+layout = PackedStringArray("A.a.A.a.A.....a.A.a.A.a.b", ".a.A.a.A.a.....A.a.A.a..b", "a..P................P.A..", ".......j.K.......j.......", "A.....o...........o...a..", "............:............", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "........f..:::..f.....a..", "a.....w....:::.....w.....", ".A.a.A.a.A.:::.a.A.aaA...", "a.A.a.A.a..:::A.a.A.a.A.b", "...........:::..........b")
+
+[node name="TempleDroit" parent="." instance=ExtResource("2")]
+grille = Vector2i(3, 0)
+passages = PackedStringArray("12 6 @aile_droite:Vestibule 12 10 La grande porte se referme derrière toi... L'aile droite du blason : ici, tout est inversé.")
+musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
+indice = "Le temple de l'aile droite. Derrière cette porte, la seconde moitié de l'épreuve."
+layout = PackedStringArray("A.a.A.a.A.a.A.a.A.a.A.a.b", ".a.A.a.A.a.A.a.A.a.A.a..b", ".a.P................P.A..", ".......j.U.......j.......", "......o...........o...a..", "............:............", "::::::::::::::..........b", "::::::::::::::..........b", "::::::::::::::..........b", ".a......f.......f..A.....", "......w............w..A..", ".A.a.A.a.A.a.A.a.A.a.A...", "a.A.a.A.a.A.a.A.a.A.a.A.b", "........................b")
 
 [node name="TempleGauche" parent="." instance=ExtResource("2")]
 grille = Vector2i(1, 0)

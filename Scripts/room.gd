@@ -20,6 +20,8 @@ class_name Room
 #   Y  = réceptacle du rayon (lève `drapeau_rayon`)   W = fragment d'aile à ramasser (lève `drapeau_gemme`)
 #   H  = porte fermée qui s'ouvre avec `drapeau_porte2` (une 2e porte dans la même salle)
 #   ^ v < > = sentinelle (statue de garde) qui regarde dans cette direction (voir `periodes_sentinelles`)
+#   o  = plot ORANGE (levé au départ)   u = plot BLEU (baissé au départ). Dans une salle à plots,
+#        le cristal K est un commutateur : chaque coup de lance inverse les plots (voir plot.gd).
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
 # Les graphismes sont les petites images de Assets/Gemini/tuiles/ (voir Outils/traiter_gemini.py).
 
@@ -94,6 +96,9 @@ var _cones_clignotent: Array[bool] = []      # vrai si la sentinelle va bientôt
 var _calque_regards: Node2D   # dessine les cônes AU-DESSUS de l'obscurité (dans un CanvasLayer)
 var _flamme_vue := false      # le message « la flamme attire le regard » n'est montré qu'une fois
 var _repere := false       # le joueur vient d'être repéré (on attend que le garde le ramène)
+var _plots: Array[Plot] = []
+var _commutateurs: Array[Cristal] = []
+var _orange_leves := true  # vrai = les plots orange bloquent, les bleus sont baissés
 
 
 func _ready() -> void:
@@ -210,6 +215,10 @@ func _poser_mur(x: int, y: int) -> void:
 
 # Tapis, statues, braseros, vases posés d'après les lettres du plan.
 func _poser_objets() -> void:
+	var a_plots := false
+	for ligne in layout:
+		if ligne.contains("o") or ligne.contains("u"):
+			a_plots = true
 	for y in layout.size():
 		for x in layout[y].length():
 			var pos := Vector2(x * TUILE, y * TUILE)
@@ -244,7 +253,16 @@ func _poser_objets() -> void:
 					var cristal := Cristal.new()
 					cristal.position = pos
 					add_child(cristal)
-					cristal.initialiser(drapeau_cristal, "")
+					cristal.initialiser(drapeau_cristal, "", self if a_plots else null)
+					if a_plots:
+						cristal.colorer(true)
+						_commutateurs.append(cristal)
+					_occupe[Vector2i(x, y)] = cristal
+				"o", "u":
+					var plot := Plot.new()
+					add_child(plot)
+					plot.initialiser(self, Vector2i(x, y), layout[y][x] == "o")
+					_plots.append(plot)
 				"X":
 					var bloc := Bloc.new()
 					add_child(bloc)
@@ -301,7 +319,11 @@ func _poser_objets() -> void:
 					var fragment := Ramassable.new()
 					fragment.position = pos
 					add_child(fragment)
-					fragment.initialiser(drapeau_gemme, "Fragment de l'aile gauche obtenu !", _image("fragment_aile"))
+					var quelle := "droite" if drapeau_gemme.ends_with("droite") else "gauche"
+					fragment.initialiser(drapeau_gemme, "Fragment de l'aile " + quelle + " obtenu !", _image("fragment_aile"))
+					if quelle == "droite":
+						fragment.scale.x = -1.0   # l'aile droite = l'aile gauche vue dans un miroir
+						fragment.position.x += TUILE
 				"C":
 					_case_chanteur = Vector2i(x, y)
 					var chanteur := Chanteur.new()
@@ -375,7 +397,7 @@ func liberer(cellule: Vector2i) -> void:
 func case_libre(cellule: Vector2i) -> bool:
 	if cellule.y < 0 or cellule.y >= layout.size() or cellule.x < 0 or cellule.x >= layout[cellule.y].length():
 		return false
-	return ".TPFXV".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
+	return ".TPFXVou".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
 
 
 # Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
@@ -410,6 +432,17 @@ func reinitialiser() -> void:
 		if brasero.allume and not brasero.verrouille:
 			brasero.eteindre()
 	_repere = false
+	if not _plots.is_empty() and not _orange_leves:
+		basculer_plots()   # les plots reprennent leur place de départ (orange levés)
+
+
+# Un coup sur le cristal commutateur : les plots levés se baissent, les baissés se lèvent.
+func basculer_plots() -> void:
+	_orange_leves = not _orange_leves
+	for plot in _plots:
+		plot.regler((plot.couleur == Plot.ORANGE) == _orange_leves)
+	for cristal in _commutateurs:
+		cristal.colorer(_orange_leves)
 
 
 # Appelé par un brasero qui vient de s'allumer : si tous brûlent en même temps, c'est gagné.

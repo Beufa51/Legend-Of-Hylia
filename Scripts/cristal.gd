@@ -2,6 +2,8 @@ extends StaticBody2D
 class_name Cristal
 # Un cristal à frapper avec la lance : il s'allume et lève un drapeau (ouvre une porte, par exemple).
 # Dessiné en code. Il reste allumé une fois frappé.
+# Dans une salle à PLOTS (aile droite), c'est un COMMUTATEUR : chaque coup inverse les plots
+# orange et bleus, et le cristal prend la couleur des plots levés.
 
 const SON := "res://Assets/Ninja_adventure/Audio/Sounds/Magic & Skill/Magic2.wav"
 const BLEU := Color(0.25, 0.55, 0.95)
@@ -13,9 +15,12 @@ var texte := ""
 var actif := false
 var _corps: Polygon2D
 var _reflet: Polygon2D
+var _salle: Room = null       # salle à plots : le cristal est un commutateur
+var _attente := 0.0           # la lance touche pendant plusieurs images : un seul basculement par coup
 
 
-func initialiser(nom_drapeau: String, message: String) -> void:
+func initialiser(nom_drapeau: String, message: String, salle_a_plots: Room = null) -> void:
+	_salle = salle_a_plots
 	drapeau = nom_drapeau
 	texte = message
 	add_to_group("frappable")
@@ -42,13 +47,37 @@ func initialiser(nom_drapeau: String, message: String) -> void:
 	add_child(collision)
 
 
+func _process(delta: float) -> void:
+	_attente = maxf(0.0, _attente - delta)
+
+
+# Couleur du commutateur : celle des plots levés.
+func colorer(orange_leves: bool) -> void:
+	_corps.color = Plot.ORANGE if orange_leves else Plot.BLEU
+	_reflet.color = _corps.color.lightened(0.55)
+
+
 # Appelé par la lance.
 func frapper() -> void:
+	if _salle != null:   # commutateur des plots
+		if _attente > 0.0:
+			return
+		_attente = 0.45
+		_jouer_son()
+		_salle.basculer_plots()
+		return
 	if actif:
 		return
 	actif = true
 	_corps.color = OR
 	_reflet.color = Color(1, 1, 0.9)
+	_jouer_son()
+	Etat.poser(drapeau)
+	if texte != "":
+		Etat.annoncer(texte)
+
+
+func _jouer_son() -> void:
 	var flux = load(SON)
 	if flux != null:
 		var lecteur := AudioStreamPlayer.new()
@@ -57,6 +86,3 @@ func frapper() -> void:
 		get_parent().add_child(lecteur)
 		lecteur.play()
 		lecteur.finished.connect(lecteur.queue_free)
-	Etat.poser(drapeau)
-	if texte != "":
-		Etat.annoncer(texte)

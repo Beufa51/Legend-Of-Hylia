@@ -1,0 +1,46 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://Scripts/world.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/room.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://Scenes/player.tscn" id="3"]
+
+; FICHIER GÉNÉRÉ par Outils/generer_aile_droite.py : modifie les plans là-bas, pas ici.
+; AILE DROITE (en construction) : vestibule (0,1) -> entrée (0,0) -> épine vers l'ouest (-1..-5, 0), 5 plumes qui montent.
+
+[node name="World" type="Node2D"]
+script = ExtResource("1")
+cote = "droite"
+
+[node name="Vestibule" parent="." instance=ExtResource("2")]
+grille = Vector2i(0, 1)
+teinte = Color(0.98, 0.95, 1.06, 1)
+drapeau_porte2 = "fragment_droite"
+indice = "L'aile droite du blason. Ici, tout est inversé : l'épine part vers l'ouest."
+layout = PackedStringArray("###########...###########", "###########...###########", "##.........TTT.........##", "##.V.......TTT.......V.##", "##....B....TTT....B....##", "##.........TTT.........##", "##.......S.TTT.O.......##", "##.........TTT.........##", "##.........TTT.........##", "##.....V...TTT...V.....##", "##.V.......TTT.......V.##", "##.........TTT.........##", "###########HHH###########", "###########HHH###########")
+
+[node name="Entree" parent="." instance=ExtResource("2")]
+teinte = Color(1.0, 0.94, 0.92, 1)
+layout = PackedStringArray("#########################", "#########################", "##.....................##", "##.B.................B.##", "##...O.............S...##", ".......................##", "...V..TTTTTTTTTTTTT..V.##", "......TTTTTTTTTTTTT....##", ".......................##", "##.....................##", "##.B.................B.##", "##..V...............V..##", "###########...###########", "###########...###########")
+
+[node name="Epine1" parent="." instance=ExtResource("2")]
+grille = Vector2i(-1, 0)
+teinte = Color(0.9, 0.88, 0.98, 1)
+drapeau_porte = "plumeD1"
+layout = PackedStringArray("###########...###########", "###########...###########", "###########...###########", "###########...###########", "###########...###########", ".D....B...........B......", ".D.......................", ".DTTTTTTTTT...TTTTTTTTT..", ".D.......................", "#########################", "#########################", "#########################", "#########################", "#########################")
+
+[node name="PlumeD1" parent="." instance=ExtResource("2")]
+grille = Vector2i(-1, -1)
+teinte = Color(0.98, 0.94, 1.06, 1)
+drapeau_gemme = "plumeD1"
+indice = "Ce cristal commande les plots de couleur : un coup de lance, et les levés se baissent... et les baissés se lèvent !"
+layout = PackedStringArray("#########################", "#########################", "##.....................##", "##.......B..G..B.......##", "##........TTTTT........##", "###########uuu###########", "##.V.................V.##", "##....S...........O....##", "##.....................##", "##ooooooooooKoooooooooo##", "##.....................##", "##.V......TTTTT......V.##", "###########...###########", "###########...###########")
+
+[node name="Epine2" parent="." instance=ExtResource("2")]
+grille = Vector2i(-2, 0)
+teinte = Color(0.9, 0.88, 0.98, 1)
+layout = PackedStringArray("#########################", "#########################", "#########################", "#########################", "#########################", "##....B...........B......", "##.......................", "##TTTTTTTTT...TTTTTTTTT..", "##.......................", "#########################", "#########################", "#########################", "#########################", "#########################")
+
+[node name="Player" parent="." instance=ExtResource("3")]
+position = Vector2(200, 404)
+
+[node name="Camera2D" type="Camera2D" parent="."]

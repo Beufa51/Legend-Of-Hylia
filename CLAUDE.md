@@ -465,6 +465,14 @@
   (3) HABITANTS style héros : `Outils/preparer_pnj.py` recolore la planche du héros en 9 variantes (`Assets/Heros/pnj_<NomNinja>.png` : Woman, OldMan, Boy (plus petit), KnightGold, Villager..5) ; `pnj.gd` les utilise si le fichier existe (sinon ancien pack). LIMITE : tous ont le même corps/visage (barbu) = simple recoloration -> pour de vrais personnages variés, il faut d'autres planches LPC (générateur LPC).
   RESTE : aile droite (Opus), secrets, récompenses, contrôles tactiles, corps du donjon.
 
+- 2026-11-13 : **ÉTAPE 11a écrite (non testée dans Godot)** = DÉBUT DE L'AILE DROITE. Scène séparée `Scenes/aile_droite.tscn` écrite par `Outils/generer_aile_droite.py` (MIROIR de l'aile gauche : `miroir()` retourne un plan, échange < > et M N).
+  Grille : Vestibule (0,1) (pas d'énigme, grande porte sud H = `fragment_droite`), Entree (0,0) sortie OUEST, Epine1 (-1,0) porte ouest (colonne 1) = `plumeD1`, PlumeD1 (-1,-1), Epine2 (-2,0) provisoire (cul-de-sac).
+  DRAPEAUX de l'aile droite : `plumeD1`..`plumeD4`, `fragment_droite`, `vue_aerienne_droite`. `world.gd` : export `cote` ("gauche"/"droite"), `_plume(n)`, `_temple()`, table `SCENES` (passages "@donjon:", "@aile_droite:", "@village:"), F1 = aller au village / aile gauche / aile droite ; HUD, retour rapide, sortie + vue aérienne suivent `cote`.
+  PLUME D1 « LES PLOTS » : `Scripts/plot.gd` (class Plot, lettres `o` orange levé / `u` bleu baissé, dessinés en code, ne se lèvent pas sous le joueur ou un bloc) ; dans une salle à plots, le cristal `K` = COMMUTATEUR (`cristal.gd`, 1 bascule par coup, prend la couleur des plots levés ; `Room.basculer_plots`, R remet orange levés).
+  Énigme : barrière orange (rangée 9) avec le cristal dedans ; frapper du sud (orange baissés mais grille bleue du nord levée), passer, refrapper du nord -> plume.
+  VILLAGE : `TempleDroit` (3,0) (même arche `U`, porte (12,6) -> `@aile_droite:Vestibule`) ; le chemin du Parvis est ouvert vers l'est. Ordre des ailes libre.
+  PLAN PROPOSÉ (à valider) : D2 (2 écrans) SOL FRAGILE (dalles qui s'effondrent après un passage : tout parcourir une seule fois), D3 (3) GLACE (on glisse jusqu'à un obstacle), D4 (4) LE REFLET (un double inverse tes mouvements gauche/droite), D5 (5) combinaison -> fragment droit en (-5,-5).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
