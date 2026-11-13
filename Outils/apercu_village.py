@@ -1,12 +1,12 @@
 """Outil de développement : aperçu FIDÈLE d'un ou plusieurs écrans du village (mêmes images, mêmes emprises que Scripts/exterieur.gd).
-Usage : python3 Outils/apercu_village.py sortie.png Ecran1 [Ecran2 ...]      (ex. PlaceDuCoq Verger Riviere)
+Usage : python3 Outils/apercu_village.py [--collisions] sortie.png Ecran1 [Ecran2 ...]      (ex. PlaceDuCoq Verger Riviere)
 Les écrans sont posés côte à côte. Les habitants sont dessinés (première pose), pas les animaux."""
 import os
 import re
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from PIL import Image
+from PIL import Image, ImageDraw
 import generer_village as gv
 
 RACINE = os.path.join(os.path.dirname(__file__), "..")
@@ -82,13 +82,81 @@ def rendre(nom, g, props, grille):
             objets.append(((int(t[2]) + 1) * 16, case, int(t[1]) * 16 + 8 - 16, int(t[2]) * 16 + 10 - 22))
     for base, im, px, py in sorted(objets, key=lambda o: o[0]):
         out.alpha_composite(im, (px, py))
+    if COLLISIONS:   # cases bloquantes en rouge translucide
+        calque = Image.new("RGBA", out.size)
+        d = ImageDraw.Draw(calque)
+        for (cx, cy) in solides_ecran(g, props):
+            if 0 <= cx < W and 0 <= cy < H:
+                d.rectangle((cx * 16, cy * 16, cx * 16 + 15, cy * 16 + 15), fill=(255, 0, 0, 90), outline=(255, 0, 0, 160))
+        out.alpha_composite(calque)
     return out
 
 
+MEUB = {}
+for m in re.finditer(r'"(.)": \["(v_\w+)", Vector2i\((\d+), (\d+)\)', open(os.path.join(RACINE, "Scripts", "interieur.gd"), encoding="utf-8").read()):
+    MEUB[m.group(1)] = (m.group(2), int(m.group(3)), int(m.group(4)))
+STYLES_INT = {"maison": (["v_sol_bois", "v_sol_bois", "v_sol_bois", "v_sol_bois_b", "v_sol_bois_c"], "v_mur_bois", {"w": "v_mur_a", "x": "v_mur_b", "y": "v_mur_fenetre", "v": "v_mur_tableau", "z": "v_cheminee"}),
+              "caserne": (["v_sol_pierre"], "v_mur_pierre_16", {c: "v_mur_pierre" for c in "wxyv"} | {"z": "v_mur_pierre_cheminee"})}
+
+
+def solides_ecran(g, props):
+    """Cases bloquantes d'un écran extérieur (même règle que exterieur.gd : objets pleins, eau, bord et falaise des terrasses ; les portes et escaliers sont ouverts)."""
+    sol = set()
+    for y in range(H):
+        for x in range(W):
+            if g[y][x] not in gv.NON_BLOQUANTS:
+                sol |= set(gv.cases_objet(g, x, y))
+    ter, esc = props.get('terrasses', []), props.get('escaliers', [])
+    sol |= gv.cases_relief(ter, esc)[0]
+    for ligne in esc:
+        x0, y0 = (int(v) for v in ligne.split())
+        sol -= {(x0 + i, y0 + j) for i in range(2) for j in range(4)}
+    for ligne in props.get('passages', []):
+        p = ligne.split(" ", 2)
+        sol.discard((int(p[0]), int(p[1])))
+    return sol
+
+
+def rendre_interieur(g, props):
+    out = Image.new("RGBA", (W * 16, H * 16), (0, 0, 0, 255))
+    sols, mur, haut = STYLES_INT[props.get("style", "maison")]
+    for y in range(H):
+        for x in range(W):
+            c = g[y][x]
+            if c == " " or c in haut: continue
+            out.alpha_composite(img(mur) if c == "#" else img(sols[(x * 7 + y * 13) % len(sols)]), (x * 16, y * 16))
+    objets = []
+    for y in range(H):
+        for x in range(W):
+            c = g[y][x]
+            if c in haut: out.alpha_composite(img(haut[c]), (x * 16, y * 16))
+            elif c in MEUB:
+                n, ew, eh = MEUB[c]; im = img(n)
+                objets.append(((y + eh) * 16 if c not in "tYm" else -1, im, round((x + ew / 2) * 16 - im.width / 2), round((y + eh) * 16 - im.height)))
+    for ligne in props.get('pnjs', []):
+        t = ligne.split('|')[0].split()
+        f = os.path.join(RACINE, "Assets", "Heros", "pnj_%s.png" % t[0])
+        if os.path.exists(f):
+            case = Image.open(f).convert("RGBA").crop((0, 0, 32, 32))
+            objets.append(((int(t[2]) + 1) * 16, case, int(t[1]) * 16 + 8 - 16, int(t[2]) * 16 + 10 - 22))
+    for base, im, px, py in sorted(objets, key=lambda o: o[0]):
+        out.alpha_composite(im, (px, py))
+    return out
+
+
+COLLISIONS = False
+
 if __name__ == "__main__":
+    if "--collisions" in sys.argv:
+        COLLISIONS = True
+        sys.argv.remove("--collisions")
     sortie, noms = sys.argv[1], sys.argv[2:]
     toile = Image.new("RGBA", (W * 16 * len(noms), H * 16))
     for i, nom in enumerate(noms):
+        if nom.startswith("Interieur"):
+            grille, g, props = next((gr, gg, p) for n, gr, gg, p in gv.interieurs if n == nom)
+            toile.alpha_composite(rendre_interieur(g, props), (i * W * 16, 0))
+            continue
         grille, g, props = next((gr, gg, p) for n, gr, gg, p in gv.ecrans if n == nom)
         toile.alpha_composite(rendre(nom, g, props, grille), (i * W * 16, 0))
     toile.resize((toile.width * 2, toile.height * 2), Image.NEAREST).save(sortie)

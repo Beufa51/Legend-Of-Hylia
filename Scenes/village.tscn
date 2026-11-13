@@ -21,13 +21,15 @@ layout = PackedStringArray("A..a..P..a..A..a..P..a..b", ".......................
 
 [node name="Parvis" parent="." instance=ExtResource("2")]
 grille = Vector2i(2, 0)
+terrasses = PackedStringArray("0 0 6 6", "19 0 6 6")
+escaliers = PackedStringArray("3 3", "21 3")
 passages = PackedStringArray("12 6 $stele")
 musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
 drapeau_revele = "corps_revele"
-layout_revele = PackedStringArray("A..a..P.Z............a..b", "........................b", "a.....................A.b", ".........................", "A......j.........j....a..", "......o...y.:.g...o......", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "........f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A..a.:a:.P..A.aa...", "...........:::..........b", "...........:::..........b")
+layout_revele = PackedStringArray("A..a..P.Z............a..b", "...w................g...b", "a.f...................f.b", "....g....................", "Au.....j.........j...wau.", "......o...y.:.g...o......", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "........f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A..a.:a:.P..A.aa...", "...........:::..........b", "...........:::..........b")
 passages_revele = PackedStringArray("12 4 @corps:Arene 12 11 Le corps du coq. Au fond de la grande salle, quelqu'un t'attend...", "10 6 $stele")
 indice = "Une stèle se dresse devant la forêt. Un coq y est gravé, ses ailes creusées dans la pierre..."
-layout = PackedStringArray("A..a..P..a..A..a..P..a..b", ".......A.a.A.a.A.a......b", "a.....................A.b", ".........A...A...........", ".......j.........j.......", "b.....o.....Y.g...o.....b", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "b.......f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A....:::.P..A.aa...", "...........:::..........b", ".........bb:::b.........b")
+layout = PackedStringArray("......P..a..A..a..b.....b", "...w...A.a.A.a.A....g...b", "..f...................f.b", "....g....A...A...........", ".u.....j.........j...w.u.", "......o.....Y.g...o......", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "b.......f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A....:::.P..A.aa...", "...........:::..........b", ".........bb:::b.........b")
 
 [node name="TempleDroit" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, 0)
@@ -47,7 +49,9 @@ layout = PackedStringArray("A..a..P..bb:::bbbbbbbbbbb", "...........:::.........
 [node name="GrandChemin" parent="." instance=ExtResource("2")]
 grille = Vector2i(2, 1)
 animaux = PackedStringArray("c 10 4")
-layout = PackedStringArray("A..bA..bbbb:::bbA..bA..bb", "..a...a....:::....a...a.b", "a...a......:::..a...a....", "..A...A....:::.g..A...A..", "A...A....f.:::..A...A....", "..a...a....:::....a...a..", "a...a....w.:::..a...a....", "..A...A...n:::....A...A..", "A...A......:::.fA...A....", "..a...a..g.:::....a...a..", "a...a......:::.wa...a....", "..A...A....:::....A...A..", ".........w.:::..........b", "bb...b...bb:::bbbb...b..b")
+terrasses = PackedStringArray("0 1 8 8", "17 1 8 8")
+escaliers = PackedStringArray("3 6", "20 6")
+layout = PackedStringArray("bbbbbbbbbbb:::bbbbbbbbbbb", "...........:::..........b", "....g......:::.....w..u..", "..f...w....:::.g..r..g...", "...w.....f.:::.....f.....", "......f....:::........w..", "..u..gr..w.:::....g....f.", "..........n:::...........", "...........:::.f.........", "b.....a..g.:::........a..", "a...a......:::.wa...a....", "..A...A....:::....A...A..", ".........w.:::..........b", "bb...b...bb:::bbbb...b..b")
 
 [node name="TerrainGarde" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, 1)
@@ -75,7 +79,9 @@ grille = Vector2i(3, 2)
 animaux = PackedStringArray("d 20 7", "c 12 11")
 pnjs = PackedStringArray("KnightGold 16 7 gauche | Capitaine Aubrac | [fin_paix] Recrue ! Le Gardien du blason m'a parlé de toi. // Tu as baissé ta lance devant lui... Il faut plus de courage pour cela que pour frapper. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fin_combat] Recrue ! Le Gardien du blason m'a parlé de toi. // Tu l'as vaincu en l'observant, sans colère. C'est ainsi que se bat un garde. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fragment_gauche] Une aile complète ! Je n'y croyais plus. // Mais ce n'est que la moitié du blason : l'aile droite t'attend, et au centre, l'épreuve finale. // Repose-toi, recrue. Tu l'as mérité. ## [capitaine_vu] Alors, cette épreuve ? Le temple est au nord du village. // Souviens-toi : observer, réfléchir, et frapper seulement ce qui doit l'être. ## Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend au temple, au nord du village. // Deux ailes et un corps : voilà la forme du donjon. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur. >> capitaine_vu", "Villager3 7 7 droite | Soldat Merle | [plume4] La quatrième plume ? Des sentinelles qui tournent la tête ? Brr. Reste dans l'ombre, c'est le conseil d'un vétéran. ## Dix ans de garde et je n'ai jamais vu le fond du donjon. // Les anciens disent que les plumes de l'aile gauche sont de plus en plus longues. Je ne sais pas ce que ça veut dire !", "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.")
 passages = PackedStringArray("18 6 InterieurCaserne 12 9")
-layout = PackedStringArray("A..a..P..bb:::ba..P..a..b", "...........:::..........b", "a..P.......:::..........b", "......o.j..:::j...o.....b", "......o.w..:::.wK.......b", "b......f.g.:::..........b", "::::::::::::::::::::::..b", "::::::::::::::::::::::..b", "::::::::::::::::::::::..b", "b..........:::.....o..a..", "b...E...o..:::w........w.", "a..........:::.P..A.aa...", "...........:::..........b", "...bbbbbbbb:::b.........b")
+terrasses = PackedStringArray("0 0 9 6")
+escaliers = PackedStringArray("3 3")
+layout = PackedStringArray(".........bb:::ba..P..a..b", "....g.r....:::..........b", "..f..w.u...:::..........b", "..u...f.j..:::j...o.....b", ".w....ogw..:::.wK.......b", ".......f.g.:::..........b", "::::::::::::::::::::::..b", "::::::::::::::::::::::..b", "::::::::::::::::::::::..b", "b..........:::.....o..a..", "b...E...o..:::w........w.", "a..........:::.P..A.aa...", "...........:::..........b", "...bbbbbbbb:::b.........b")
 
 [node name="MaisonHeros" parent="." instance=ExtResource("2")]
 grille = Vector2i(1, 3)
@@ -121,10 +127,10 @@ layout = PackedStringArray("                         ", "                       
 
 [node name="InterieurCaserne" parent="." instance=ExtResource("4")]
 grille = Vector2i(3, 5)
-pnjs = PackedStringArray("Villager3 14 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces.")
+pnjs = PackedStringArray("Villager3 13 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces.")
 passages = PackedStringArray("12 10 VillageEst 18 7")
 style = "caserne"
-layout = PackedStringArray("                         ", "                         ", "                         ", "      #w#z#x#w#x##       ", "      ############       ", "      #G..G..H.J.#       ", "      #..........#       ", "      #..........#       ", "      #F.M.....D.#       ", "      #..........#       ", "      ######m#####       ", "                         ", "                         ", "                         ")
+layout = PackedStringArray("                         ", "                         ", "                         ", "      #w#z#x#w#x##       ", "      ############       ", "      #G..G..H...#       ", "      #..........#       ", "      #........J.#       ", "      #F.M.....D.#       ", "      #..........#       ", "      ######m#####       ", "                         ", "                         ", "                         ")
 
 [node name="Player" parent="." instance=ExtResource("3")]
 position = Vector2(1752, 1219)
