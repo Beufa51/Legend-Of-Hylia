@@ -734,6 +734,11 @@
   S'applique à TOUS les blocs et lettres `P` (aussi D4c/D4d/D5c ; le reflet allume la marque). Test auto : `Tests/verifier_scenes.gd` pousse les 3 blocs et vérifie l'ouverture.
   MÉTHODE pour la suite : à chaque salle revue, l'utilisateur veut l'AVIS de Claude (forces/faiblesses) avant de modifier.
 
+- 2026-11-13 : **ÉNIGME 2a REVUE (Plume 2a, salle sombre) = « LA TÊTE DE COQ »** (idée de l'utilisateur, validée) : 12 braseros `L` dessinent une tête de coq de profil (crête à 3 pointes, bec, barbillon, œil = le dernier). Un trait doré pâle (pointillé) est GRAVÉ au sol entre eux, dessiné dans un CanvasLayer au-dessus de l'obscurité (visible dans le noir) ;
+  on les allume à la lance DANS L'ORDRE du tracé : le prochain pulse + anneau, un mauvais brasero ou 24 s écoulées éteint tout (éclair rouge + Cancel.wav) ; les segments reliés s'illuminent ; dessin complet = tout reste allumé, la porte s'ouvre (`p2_braseros`). Un brasero `B` toujours allumé près de l'entrée. Aucun texte.
+  CODE : `room.gd` exports `chemin_braseros` ("x y" dans l'ordre) + `duree_chemin`, section « Les braseros tête de coq » (`_ordonner_braseros`, `brasero_frappe`, `_echouer`, `_rearmer_chemin`, `_gerer_chemin`, `_dessiner_chemin`) ; `brasero.gd` : `ordonne`, `attendu`, `vie` (la flamme rétrécit). Les braseros SANS `chemin_braseros` gardent l'ancien comportement (autres salles, sentinelles 4d). Plan et ordre : `COQ` dans `generer_monde.py`.
+  Test auto : mauvais ordre refusé, ordre correct = flag. Idées non faites : tête de coq gravée SUR la porte, brasero plus visible.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

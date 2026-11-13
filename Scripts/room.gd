@@ -65,6 +65,8 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 @export var drapeau_cristal := ""  # levé quand on frappe le cristal K de cette salle
 @export var drapeau_braseros := "" # levé quand TOUS les braseros L sont allumés en même temps
 @export var duree_braseros := 14.0 # secondes avant qu'un brasero L s'éteigne
+@export var chemin_braseros: PackedStringArray   # mode « tête de coq » : cases "x y" des braseros L DANS L'ORDRE où il faut les allumer (vide = mode normal)
+@export var duree_chemin := 24.0   # mode chemin : secondes pour allumer toute la série avant que tout s'éteigne
 @export var melodie := ""          # notes à rejouer sur les cloches, dans l'ordre (ex. "132")
 @export var drapeau_melodie := ""  # levé quand on a rejoué toute la mélodie sans faute
 # Sentinelles : temps (s) entre deux quarts de tour de chaque sentinelle, dans l'ordre de lecture du plan
@@ -99,6 +101,10 @@ var _occupe := {}
 var _blocs: Array[Bloc] = []
 var _plaques: Array[Vector2i] = []
 var _braseros: Array[Brasero] = []
+var _ordre := 0            # mode chemin : combien de braseros sont déjà allumés dans l'ordre
+var _t_chemin := 0.0       # mode chemin : temps écoulé depuis le premier brasero
+var _echec_t := 0.0        # mode chemin : l'éclair rouge après une erreur
+var _calque_chemin: Node2D
 var _marques_vides := {}   # { case : vrai } marques encore libres : elles pulsent pour attirer l'oeil
 var _boutons := {}   # { case : Sprite2D } image de chaque bouton (relevé / enfoncé)
 var _portes: Array[Porte] = []
@@ -167,6 +173,8 @@ func _process(delta: float) -> void:
 	for a in _animes:
 		var images: Array = a["images"]
 		a["sprite"].texture = images[int(_temps * 6.0 + a["decalage"]) % images.size()]
+	if not chemin_braseros.is_empty():
+		_gerer_chemin(delta)
 	# Les marques encore vides pulsent doucement (« il y a quelque chose à poser ici »)
 	for cellule in _boutons:
 		var v := 1.0
@@ -328,6 +336,7 @@ func _poser_objets() -> void:
 					for nom in BRASERO:
 						flammes.append(_image(nom))
 					brasero.initialiser(self, duree_braseros, _image("brasero_eteint"), flammes)
+					brasero.ordonne = not chemin_braseros.is_empty()
 					_braseros.append(brasero)
 					_occupe[Vector2i(x, y)] = brasero
 				"K":
@@ -568,6 +577,10 @@ func reinitialiser() -> void:
 	for brasero in _braseros:
 		if brasero.allume and not brasero.verrouille:
 			brasero.eteindre()
+	_ordre = 0
+	_t_chemin = 0.0
+	if _calque_chemin != null and not _braseros.is_empty() and not _braseros[0].verrouille:
+		_rearmer_chemin()
 	_repere = false
 	if not _plots.is_empty() and not _orange_leves:
 		basculer_plots()   # les plots reprennent leur place de départ (orange levés)
@@ -768,6 +781,130 @@ func basculer_plots() -> void:
 		plot.regler((plot.couleur == Plot.ORANGE) == _orange_leves)
 	for cristal in _commutateurs:
 		cristal.colorer(_orange_leves)
+
+
+# --- Les braseros « tête de coq » : on les allume dans l'ordre du tracé, avant qu'ils s'éteignent -------------
+# Un trait doré pâle est gravé au sol entre les braseros (visible même dans le noir). Le prochain à allumer pulse ;
+# un mauvais brasero, ou trop de lenteur, éteint tout. Quand le dessin est complet, il s'embrase et la porte s'ouvre.
+
+# Met les braseros dans l'ordre du chemin (une seule fois, au premier appel).
+func _ordonner_braseros() -> void:
+	var rang := {}
+	for i in chemin_braseros.size():
+		var xy := chemin_braseros[i].split(" ")
+		rang[Vector2i(int(xy[0]), int(xy[1]))] = i
+	_braseros.sort_custom(func(a: Brasero, b: Brasero) -> bool:
+		return rang.get(Vector2i(a.position / TUILE), 0) < rang.get(Vector2i(b.position / TUILE), 0))
+	if _calque_chemin == null:
+		var calque := CanvasLayer.new()
+		calque.follow_viewport_enabled = true   # au-dessus de l'obscurité : le dessin se voit dans le noir
+		add_child(calque)
+		_calque_chemin = Node2D.new()
+		_calque_chemin.position = position
+		_calque_chemin.draw.connect(_dessiner_chemin)
+		calque.add_child(_calque_chemin)
+		_braseros[0].attendu = true
+
+
+# Appelé par un brasero frappé : vrai s'il est bien le prochain de la série.
+func brasero_frappe(b: Brasero) -> bool:
+	var rang := _braseros.find(b)
+	if rang != _ordre:
+		_echouer()
+		return false
+	if _ordre == 0:
+		_t_chemin = 0.0
+	b.attendu = false
+	_ordre += 1
+	if _ordre < _braseros.size():
+		_braseros[_ordre].attendu = true
+	return true
+
+
+# Erreur ou temps écoulé : tout s'éteint, on recommence.
+func _echouer() -> void:
+	_echec_t = 0.6
+	_ordre = 0
+	_t_chemin = 0.0
+	for brasero in _braseros:
+		if brasero.allume and not brasero.verrouille:
+			brasero.eteindre()
+	_rearmer_chemin()
+	var son = load(SON_ERREUR)
+	if son:
+		var lecteur := AudioStreamPlayer.new()
+		lecteur.stream = son
+		lecteur.volume_db = -4.0
+		add_child(lecteur)
+		lecteur.play()
+		lecteur.finished.connect(lecteur.queue_free)
+
+
+# Tout est éteint : seul le premier brasero de la série pulse.
+func _rearmer_chemin() -> void:
+	for brasero in _braseros:
+		brasero.attendu = false
+		brasero.vie = 1.0
+	if not _braseros.is_empty():
+		_braseros[0].attendu = true
+
+
+func _gerer_chemin(delta: float) -> void:
+	if _calque_chemin == null:
+		if _braseros.is_empty():
+			return
+		_ordonner_braseros()
+	if _braseros[0].verrouille:
+		if grille == Etat.salle_courante:
+			_calque_chemin.queue_redraw()
+		return
+	if _ordre > 0:
+		_t_chemin += delta
+		var vie := clampf(1.0 - _t_chemin / duree_chemin, 0.0, 1.0)
+		for brasero in _braseros:
+			brasero.vie = vie
+		if _t_chemin >= duree_chemin:
+			_echouer()
+	_echec_t = maxf(0.0, _echec_t - delta)
+	if grille == Etat.salle_courante:
+		_calque_chemin.queue_redraw()
+
+
+# Le tracé de la tête de coq : pointillé pâle ; les segments déjà reliés brillent ; l'anneau marque le prochain brasero.
+func _dessiner_chemin() -> void:
+	var n := _braseros.size()
+	if n < 2:
+		return
+	var pts: Array[Vector2] = []
+	for b in _braseros:
+		pts.append(b.position + Vector2(8, 8))
+	var resolu := _braseros[0].verrouille
+	var pulse := 0.5 + 0.5 * sin(_temps * 4.0)
+	var pale := Color(1.0, 0.8, 0.35, 0.30)
+	if _echec_t > 0.0:
+		pale = Color(1.0, 0.25, 0.2, 0.3 + 0.7 * _echec_t / 0.6)
+	var contour := n - 1   # le dernier brasero est l'œil : il n'est pas relié par un trait
+	for i in contour:
+		var a := pts[i]
+		var c := pts[(i + 1) % contour]   # le dernier trait referme le contour (cou)
+		var allume_a: bool = _braseros[i].allume
+		var allume_c: bool = _braseros[(i + 1) % contour].allume
+		var relie := resolu or (i + 1 < contour and allume_a and allume_c) or (i + 1 == contour and resolu)
+		if relie:
+			var force := 0.85 + (0.15 * pulse if resolu else 0.0)
+			_calque_chemin.draw_line(a, c, Color(1.0, 0.7, 0.2, 0.30 * force), 6.0)
+			_calque_chemin.draw_line(a, c, Color(1.0, 0.92, 0.6, 0.95 * force), 2.0)
+		else:
+			_calque_chemin.draw_dashed_line(a, c, pale, 1.0, 3.0)
+	# l'œil
+	var oeil := pts[n - 1]
+	if _braseros[n - 1].allume:
+		_calque_chemin.draw_circle(oeil, 5.0, Color(1.0, 0.85, 0.4, 0.5))
+	else:
+		_calque_chemin.draw_arc(oeil, 6.0, 0, TAU, 20, pale, 1.0)
+	# prochain brasero à allumer : anneau qui pulse
+	if not resolu and _ordre < n:
+		_calque_chemin.draw_arc(pts[_ordre], 9.0 + 2.0 * pulse, 0, TAU, 24, Color(1.0, 0.9, 0.5, 0.5 + 0.4 * pulse), 1.5)
 
 
 # Appelé par un brasero qui vient de s'allumer : si tous brûlent en même temps, c'est gagné.

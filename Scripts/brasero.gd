@@ -9,6 +9,9 @@ var salle: Node2D          # la salle (Room) : on la prévient quand un brasero 
 var duree := 14.0
 var allume := false
 var verrouille := false    # vrai quand l'énigme est résolue
+var ordonne := false       # mode « chemin » (tête de coq) : la salle gère l'ordre et la durée, le brasero ne s'éteint pas seul
+var attendu := false       # c'est LUI le prochain à allumer : il pulse doucement
+var vie := 1.0             # 1 = flamme pleine, 0 = sur le point de s'éteindre (mode chemin)
 var _reste := 0.0
 var _temps := 0.0
 var _sprite: Sprite2D
@@ -44,6 +47,11 @@ func initialiser(une_salle: Node2D, secondes: float, eteint: Texture2D, flammes:
 func frapper() -> void:
 	if verrouille:
 		return
+	if ordonne:
+		if allume:
+			return
+		if not salle.brasero_frappe(self):   # mauvais ordre : la salle éteint tout
+			return
 	if not allume:
 		_jouer_son()
 	allume = true
@@ -59,6 +67,8 @@ func verrouiller() -> void:
 
 func eteindre() -> void:
 	allume = false
+	attendu = false
+	_sprite.modulate = Color.WHITE
 	_regler_lumiere(false)
 	_sprite.texture = _image_eteint
 
@@ -70,11 +80,21 @@ func _regler_lumiere(allumee: bool) -> void:
 
 
 func _process(delta: float) -> void:
-	if not allume:
-		return
 	_temps += delta
+	if not allume:
+		if attendu:   # le prochain à allumer : braise qui pulse
+			var v := 0.5 + 0.5 * sin(_temps * 5.0)
+			_lumiere.texture_scale = 0.6 + 0.5 * v
+			_lumiere.energy = 0.5 + 0.7 * v
+			_sprite.modulate = Color(1.0 + 0.5 * v, 1.0 + 0.3 * v, 1.0)
+		return
 	_sprite.texture = _images_flamme[int(_temps * 6.0) % _images_flamme.size()]
 	if verrouille:
+		return
+	if ordonne:
+		# la flamme rétrécit à mesure que le temps passe ; elle vacille dans les dernières secondes
+		_lumiere.texture_scale = 0.8 + 0.7 * vie
+		_lumiere.energy = 1.0 if vie > 0.2 else 0.4 + 0.6 * absf(sin(_temps * 10.0))
 		return
 	_reste -= delta
 	if _reste <= 0.0:

@@ -62,14 +62,15 @@ for x in range(10, 15): put(p1, 'T', (x, 4))
 put(p1, 'P', (12, 7), (12, 8), (12, 9)); put(p1, 'X', (18, 7), (18, 8), (18, 9))
 put(p1, 'V', (2, 11), (3, 11), (2, 10), (22, 11), (21, 11)); put(p1, 'S', (21, 6)); put(p1, 'O', (3, 7))
 
-# --- Plume 2, écran du bas : SALLE SOMBRE. 4 braseros (L) à allumer à la lance, tous en même temps
-#     (chacun s'éteint au bout de 14 s). Leçon : la lance allume ; on s'organise dans le noir.
+# --- Plume 2, écran du bas : SALLE SOMBRE, « LA TÊTE DE COQ ». 12 braseros (L) dessinent une tête de coq de profil (crête à 3 pointes, bec, barbillon, œil). Un trait doré pâle
+#     est gravé au sol entre eux (visible dans le noir) : on les allume à la lance DANS L'ORDRE du tracé (le prochain pulse), avant que tout
+#     s'éteigne (24 s). Un mauvais brasero éteint tout. Le dernier est l'œil. Dessin complet = la porte du haut s'ouvre.
+#     Un brasero (B) toujours allumé près de l'entrée montre d'emblée que le feu s'allume et se voit dans le noir.
+COQ = [(6, 10), (6, 6), (7, 3), (8, 5), (10, 3), (11, 5), (13, 3), (15, 6), (20, 8), (16, 9), (15, 11), (12, 7)]   # ordre du tracé ; le dernier = l'œil
 p2a = vide(); sol(p2a, 2, 22, 2, 11); sol(p2a, 11, 13, 12, 13); sol(p2a, 11, 13, 0, 1)
 for x in (11, 12, 13): p2a[0][x] = 'D'; p2a[1][x] = 'D'
-put(p2a, 'L', (4, 3), (20, 3), (4, 10), (20, 10))
-for (x0, y0) in [(8, 4), (16, 4), (8, 8), (16, 8)]:
-    for dx in (0, 1):
-        for dy in (0, 1): p2a[y0 + dy][x0 + dx] = '#'
+put(p2a, 'L', *COQ)
+put(p2a, 'B', (9, 11))
 put(p2a, 'V', (2, 2), (3, 2), (22, 2), (21, 2), (2, 11), (3, 11), (22, 11), (21, 11))
 
 # --- Plume 2, écran du haut (la pointe) : un cristal à frapper ouvre la porte de l'alcôve où est la plume
@@ -203,7 +204,8 @@ salles = [
     ('Epine1', (1, 0), e1, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume1'}),
     ('Plume1', (1, -1), p1, (0.90, 0.96, 1.08), {'drapeau_plaque': 'p1_plaque', 'drapeau_porte': 'p1_plaque', 'drapeau_gemme': 'plume1'}),
     ('Epine2', (2, 0), e2, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume2'}),
-    ('Plume2a', (2, -1), p2a, (1.0, 1.0, 1.0), {'sombre': 'true', 'drapeau_braseros': 'p2_braseros', 'drapeau_porte': 'p2_braseros'}),
+    ('Plume2a', (2, -1), p2a, (1.0, 1.0, 1.0), {'sombre': 'true', 'drapeau_braseros': 'p2_braseros', 'drapeau_porte': 'p2_braseros',
+        'chemin_braseros': 'PackedStringArray(' + ', '.join('"%d %d"' % c for c in COQ) + ')', 'duree_chemin': '24.0'}),
     ('Plume2b', (2, -2), p2b, (1.04, 0.98, 0.9), {'drapeau_cristal': 'p2_cristal', 'drapeau_porte': 'p2_cristal', 'drapeau_gemme': 'plume2'}),
     ('Epine3', (3, 0), e3, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume3'}),
     ('Plume3a', (3, -1), p3a, (1.04, 0.98, 0.9), {'melodie': '132', 'drapeau_melodie': 'p3_chant1', 'drapeau_porte': 'p3_chant1',

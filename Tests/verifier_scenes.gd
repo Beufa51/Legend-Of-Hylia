@@ -80,6 +80,27 @@ func _tester_scene(chemin: String) -> void:
 			else:
 				print("OK  Plume1 : 3 blocs sur 3 marques = porte ouverte")
 			root.get_node("Etat").drapeaux.erase("p1_plaque")
+	# Plume 2a (tête de coq) : un mauvais brasero éteint tout ; dans l'ordre du tracé, la porte s'ouvre
+	if chemin.ends_with("world.tscn"):
+		var salle2 = scene.get_node_or_null("Plume2a")
+		await process_frame
+		await process_frame
+		if salle2 == null or salle2._braseros.size() != 12:
+			_erreurs.append("Plume2a : il faut 12 braseros")
+		else:
+			var premier: Vector2 = salle2._braseros[0].position / 16.0
+			if Vector2i(premier) != Vector2i(6, 10) or Vector2i(salle2._braseros[11].position / 16.0) != Vector2i(12, 7):
+				_erreurs.append("Plume2a : les braseros ne sont pas dans l'ordre du tracé")
+			salle2._braseros[3].frapper()   # mauvais ordre
+			if salle2._braseros[3].allume:
+				_erreurs.append("Plume2a : un brasero hors ordre ne doit pas s'allumer")
+			for b in salle2._braseros:
+				b.frapper()
+			if not root.get_node("Etat").est("p2_braseros"):
+				_erreurs.append("Plume2a : tracé complet mais la porte ne s'ouvre pas")
+			else:
+				print("OK  Plume2a : tête de coq complète = porte ouverte")
+			root.get_node("Etat").drapeaux.erase("p2_braseros")
 	if nb == 0:
 		_erreurs.append("%s : aucun écran trouvé" % chemin)
 	print("OK  %s  (%d écrans)" % [chemin, nb])
