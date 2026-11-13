@@ -53,18 +53,20 @@ layout = PackedStringArray("A...A......:::..A...A...b", "..a...a....:::....a...a
 [node name="Parvis" parent="." instance=ExtResource("2")]
 grille = Vector2i(2, 0)
 passages = PackedStringArray("12 5 ! Les grandes portes du corps du donjon sont scellées. Il faut d'abord rapporter les deux ailes du blason.")
+musique_ecran = "res://Assets/Ninja_adventure/Audio/Musics/12 - Temple.ogg"
 layout = PackedStringArray("A.a.A.a.A.....a.A.a.A.a.b", ".a.A.a.A.a.....A.a.A.a..b", "a..P.....K..........P.A..", ".......j.........j.......", "A.....o...........o...a..", "............:............", "::::::::::::::..........b", "::::::::::::::..........b", "::::::::::::::..........b", "........f..:::..f.....a..", "a.....w....:::.....w.....", ".A.a.A.a.A.:::.a.A.aaA...", "a.A.a.A.a..:::A.a.A.a.A.b", "...........:::..........b")
 
 [node name="TempleGauche" parent="." instance=ExtResource("2")]
 grille = Vector2i(1, 0)
 passages = PackedStringArray("12 5 @donjon:Vestibule 12 10 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir.")
+musique_ecran = "res://Assets/Ninja_adventure/Audio/Musics/12 - Temple.ogg"
 indice = "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."
 layout = PackedStringArray("A.a.A.a.A.a.A.a.A.a.A.a.b", ".a.A.a.A.a.A.a.A.a.A.a..b", "a..P.....K..........P.A..", ".......j.........j.......", "A.....o...........o......", "............:............", "b..........::::::::::::::", "b..........::::::::::::::", "b..........::::::::::::::", "...A....f.......f.....a..", "a.....w............w.....", ".A.a.A.a.A.a.A.a.A.a.A...", "a.A.a.A.a.A.a.A.a.A.a.A.b", "........................b")
 
 [node name="InterieurHeros" parent="." instance=ExtResource("4")]
 grille = Vector2i(4, 5)
 pnjs = PackedStringArray("Woman 10 7 bas | Maman | [fragment_gauche] Ma fille, la moitié du blason ! Je vais préparer un grand repas. // Mais d'abord, va te reposer. ## [capitaine_vu] Le capitaine t'a parlé ? Alors file au temple, et fais attention à toi ! ## Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'ouest, tout près d'ici. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !")
-passages = PackedStringArray("12 10 MaisonHeros 13 6")
+passages = PackedStringArray("12 10 MaisonHeros 13 6", "14 6 $records")
 indice = "Tu te réveilles chez toi. Aujourd'hui, c'est ton adoubement ! Parle à Maman, puis rejoins le capitaine à la caserne (à l'ouest)."
 layout = PackedStringArray("                         ", "                         ", "                         ", "      #w#y#z#v#x##       ", "      ############       ", "      #L...q..S..#       ", "      #..........#       ", "      #..t......p#       ", "      #......CT..#       ", "      #o.........#       ", "      ######m#####       ", "                         ", "                         ", "                         ")
 

@@ -19,6 +19,8 @@ const DOSSIER := "res://Assets/Gemini/tuiles/"
 @export var sombre := false        # écran plongé dans le noir (seules les lumières éclairent)
 @export var indice := ""           # message affiché la première fois qu'on entre dans l'écran
 # Habitants de l'écran : "Perso x y direction | Nom | phrase // phrase" (voir l'en-tête de exterieur.gd)
+# Musique propre à cet écran (chemin .ogg) ; vide = celle de la scène (ou la musique d'intérieur dans une maison)
+@export var musique_ecran := ""
 @export var pnjs: PackedStringArray
 # Passages (portes de maison...) : "x y Ecran dx dy" = en marchant sur la case (x,y), le joueur
 # arrive dans l'écran nommé `Ecran`, sur sa case (dx,dy). "x y ! texte" = simple message (porte fermée).
@@ -129,7 +131,9 @@ func _poser_passages() -> void:
 		collision.shape = forme
 		zone.add_child(collision)
 		add_child(zone)
-		if m[2].begins_with("!"):
+		if m[2].begins_with("$records"):   # tableau d'honneur : records et rubans des mini-jeux
+			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.annoncer(Etat.texte_records()))
+		elif m[2].begins_with("!"):
 			var texte := m[2].substr(1).strip_edges()
 			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.annoncer(texte))
 		else:

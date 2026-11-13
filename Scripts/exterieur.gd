@@ -80,6 +80,7 @@ const ANIMAUX := {
 
 var _solides := {}   # cases bloquées par un objet
 var _couvertes := {} # cases recouvertes par un objet (bloquant ou non) : pas de touffe d'herbe dessus
+var _hauts: Array = []     # [sprite, ligne de base (y local)] : arbres, maisons... le héros passe DERRIÈRE quand il est plus haut qu'eux
 var _plantes: Array = []   # [sprite, amplitude, phase] : ce qui se balance au vent
 var _temps := 0.0
 var _coq: Sprite2D   # le coq de la girouette
@@ -111,8 +112,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	if grille != Etat.salle_courante or not _vent_actif:
+	if grille != Etat.salle_courante:
 		return   # inutile d'animer un écran qu'on ne voit pas
+	# Les grands objets passent DEVANT le héros quand il est derrière eux (plus haut à l'écran), sinon derrière lui
+	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
+	if joueur:
+		var y := joueur.global_position.y - global_position.y
+		for h in _hauts:
+			h[0].z_index = 1 if y + 6.0 < h[1] - TUILE else 0
+	if not _vent_actif:
+		return
 	_temps += delta
 	var force := Ambiance.force_vent
 	for p in _plantes:
@@ -186,7 +195,9 @@ func _nom_chemin(x: int, y: int) -> String:
 
 func _poser_objet_g(def: Array, cellule: Vector2i) -> void:
 	var emprise: Vector2i = def[1]
-	_poser_sprite(def[0], cellule, emprise, def[3])
+	var image := _poser_sprite(def[0], cellule, emprise, def[3])
+	if def[2] and image.texture.get_height() >= 24:   # grand objet : le héros doit pouvoir passer derrière
+		_hauts.append([image, (cellule.y + emprise.y) * TUILE])
 	for dx in emprise.x:
 		for dy in emprise.y:
 			_couvertes[cellule + Vector2i(dx, dy)] = true
@@ -195,7 +206,7 @@ func _poser_objet_g(def: Array, cellule: Vector2i) -> void:
 
 
 # Une image centrée sur son emprise, alignée en bas. `balance` > 0 : elle se balance au vent (base fixe).
-func _poser_sprite(nom: String, cellule: Vector2i, emprise: Vector2i, balance := 0.0) -> void:
+func _poser_sprite(nom: String, cellule: Vector2i, emprise: Vector2i, balance := 0.0) -> Sprite2D:
 	var sprite := Sprite2D.new()
 	sprite.texture = _image(nom)
 	sprite.centered = false
@@ -208,6 +219,7 @@ func _poser_sprite(nom: String, cellule: Vector2i, emprise: Vector2i, balance :=
 	else:
 		sprite.position = (bas_milieu - Vector2(taille.x / 2.0, taille.y)).round()
 	add_child(sprite)
+	return sprite
 
 
 func _poser_objet(def: Array, cellule: Vector2i) -> void:

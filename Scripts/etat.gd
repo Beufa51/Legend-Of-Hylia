@@ -109,3 +109,18 @@ func noter_record(id: String, valeur: float, plus_grand: bool) -> bool:
 		sauver()
 		return true
 	return false
+
+
+# Le « tableau d'honneur » : records et rubans des mini-jeux (affiché dans la maison du héros).
+func texte_records() -> String:
+	var lignes := PackedStringArray()
+	for jeu in [["tir", "Tir à la lance", "pots", "tir"], ["poules", "Chasse aux poules", "s", "poules"]]:
+		var ruban := "aucun ruban"
+		for niveau in [["or", "ruban d'or"], ["argent", "ruban d'argent"], ["bronze", "ruban de bronze"]]:
+			if est("ruban_%s_%s" % [jeu[3], niveau[0]]):
+				ruban = niveau[1]
+				break
+		var record = records.get(jeu[0])
+		var valeur := "jamais joué" if record == null else "%s %s" % [str(int(record)) if is_equal_approx(record, roundf(record)) else "%.1f" % record, jeu[2]]
+		lignes.append("%s : %s (%s)" % [jeu[1], valeur, ruban])
+	return "Tableau d'honneur. " + " // ".join(lignes)

@@ -442,6 +442,12 @@
   la porte du donjon se referme derrière le joueur (sortie seulement avec le fragment, puis vue aérienne -> village). (3) NOUVEAU HÉROS : `Assets/character-spritesheet.png` (planche LPC 1536x4736, cases 64 px) -> `Outils/preparer_heros.py` -> `Assets/Heros/heros_marche.png` + `heros_coup.png` (cases 32 px) ;
   `player.gd` les utilise (marche 8 images, estoc 8 images ; `sprite.offset` (0,-5)). Reste : écrans nord restants, secrets, musique d'intérieur, rubans/records (liste A points 4-5).
 
+- 2026-11-13 : retour utilisateur : héros OK mais « il rentre dans certains arbres » (arbres du pack plus larges que leur zone de collision 2x2) et son style jure avec les PNJ (à changer plus tard : PNJ à refaire, ex. générateur LPC, même série que le héros).
+  **ÉTAPE 10c écrite (non testée dans Godot)** : (1) `exterieur.gd` : grands objets (arbres, maisons, puits : image >= 24 px de haut) passent DEVANT le héros quand il est derrière eux (`_hauts`, z_index mis à jour dans `_process`) ;
+  (2) MUSIQUES : `@export musique_ecran` par écran (Parvis et Temple = « 12 - Temple »), maisons = « 27 - Chill » (`world.gd::_changer_musique`, fondu) ; (3) TABLEAU D'HONNEUR : passage `"x y $records"` -> `Etat.texte_records()` (records + rubans), posé en (14,6) dans InterieurHeros.
+  Liste A : points 1 (tests utilisateur), 2, 3 faits ; 4 fait à moitié (musique d'intérieur OK, SECRETS bois/cascade PAS faits) ; 5 fait (affichage rubans/records, récompenses utiles PAS faites).
+  À FAIRE : retester collisions arbres (si besoin élargir l'emprise des arbres ou ajouter une 5e valeur « emprise de collision » dans OBJETS_G) ; remplacer les PNJ ; secrets ; récompenses ; aile droite ; contrôles tactiles.
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.

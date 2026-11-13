@@ -243,12 +243,12 @@ ecrans = [
     ('VillageEst', (3, 2), est, {'animaux': animaux_est, 'pnjs': pnjs_est, 'passages': passages_est}),
     ('MaisonHeros', (4, 2), heros, {'animaux': animaux_heros, 'passages': passages_heros}),
     ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand}),
-    ('Parvis', (2, 0), parvis, {'passages': passages_parvis}),
-    ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
+    ('Parvis', (2, 0), parvis, {'passages': passages_parvis, 'musique_ecran': 'res://Assets/Ninja_adventure/Audio/Musics/12 - Temple.ogg'}),
+    ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Ninja_adventure/Audio/Musics/12 - Temple.ogg', 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
 ]
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
 interieurs = [
-    ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 13 6"],
+    ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 13 6", "14 6 $records"],
         'indice': "Tu te réveilles chez toi. Aujourd'hui, c'est ton adoubement ! Parle à Maman, puis rejoins le capitaine à la caserne (à l'ouest)."}),
     ('InterieurStand', (1, 5), int_stand, {'pnjs': pnjs_int_stand, 'passages': ["12 10 VillageOuest 14 6"], 'minijeu': 'tir'}),
     ('InterieurCaserne', (3, 5), int_caserne, {'pnjs': pnjs_int_caserne, 'passages': ["12 10 VillageEst 13 6"], 'style': 'caserne'}),
