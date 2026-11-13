@@ -698,6 +698,12 @@
   **ÉTAPE 14k écrite (non testée dans Godot, aperçu PIL vérifié)** : `Outils/traiter_statues.py` (À LANCER APRÈS `fabriquer_statues.py`, qui n'est plus qu'un repli) découpe, détoure (clé magenta + plus grande composante), réduit en 22x34 (alignées en bas) -> `statue_chevalier` (épée, utilisée par `S`), `statue_oiseau` (coq vers la droite, `O` et le chanteur `C`),
   + disponibles, pas encore branchées : `statue_lance`, `statue_oiseau_g` (coq vers la gauche), `statue_oiseau_d2`, `statue_capuche`, `statue_gargouille`, `statue_gargouille_ailee`. Offsets inchangés (-3, TUILE-34). Aperçu : `Outils/apercus/statues.png`. Idée : lettres pour capuche/gargouille dans les salles, coq inversé pour la symétrie de l'aile droite.
 
+- 2026-11-13 : statues Gemini validées par l'utilisateur. Retours : « levier et blocs de couleur jurent, levier trop petit, pots mis au hasard ». **ÉTAPE 14l écrite (non testée dans Godot, aperçu PIL vérifié)** :
+  1) LEVIER redessiné plus gros (`Outils/fabriquer_levier.py`, APRÈS traiter_pack_donjon.py : 16x24, socle de pierre, tige d'acier, pommeau rouge) ; `levier.gd` décale le sprite de -8 px ; `apercu_salle.py` aussi.
+  2) PLOTS (`plot.gd`) et DALLES de couleur (`dalle.gd`) : pierre du donjon (mêmes tons que murs/piliers) + cabochon de couleur ATTÉNUÉE, au lieu d'aplats saturés.
+  3) POTS en grappes dans les coins / le long des murs (`generer_monde.py`, `generer_aile_droite.py`) : Vestibules, Entrées, Plumes 1, 2a, 2b, 3a-3c, 5b, 5d (gauche). NON touchées (puzzles à solveur/rayons/sentinelles) : plumes 4, 5a/c/e, D1-D5 sauf Entrée droite ; le pot de la plume 1 (10,9) est une énigme.
+  Scènes régénérées (`world.tscn`, `aile_droite.tscn`) ; solveurs `resoudre_d5.py` et `simuler_sentinelles.py` relancés OK.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

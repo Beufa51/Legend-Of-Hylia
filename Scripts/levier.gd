@@ -17,6 +17,7 @@ func initialiser(nom_drapeau: String, images: Array[Texture2D]) -> void:
 	add_to_group("frappable")
 	_sprite = Sprite2D.new()
 	_sprite.centered = false
+	_sprite.position = Vector2(0, -8)   # l'image fait 16x24 : elle dépasse de 8 px au-dessus de la case
 	_sprite.texture = images[0]
 	add_child(_sprite)
 	var forme := RectangleShape2D.new()

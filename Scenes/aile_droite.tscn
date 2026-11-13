@@ -20,14 +20,14 @@ drapeau_coffre = "d_cle_vestibule"
 drapeau_cle = "d_cle_vestibule"
 drapeau_serrure = "d_porte_vestibule"
 indice = "L'aile droite du blason. La porte est fermée à clé... ce coffre, peut-être ? Un coup de lance l'ouvre."
-layout = PackedStringArray("###########EEE###########", "###########EEE###########", "##.........TTT.........##", "##.V.......TTT.......V.##", "##....B....TTT....B....##", "##.........TTT.........##", "##.......S.TTT.O.......##", "##.........TTT.........##", "##.........TTT.....Q...##", "##.....V...TTT...V.....##", "##.V.......TTT.......V.##", "##.........TTT.........##", "###########HHH###########", "###########HHH###########")
+layout = PackedStringArray("###########EEE###########", "###########EEE###########", "##VV.......TTT.......VV##", "##.........TTT.........##", "##....B....TTT....B....##", "##.........TTT.........##", "##.......S.TTT.O.......##", "##.........TTT.........##", "##.........TTT.....Q...##", "##.........TTT.........##", "##V........TTT........V##", "##VV.......TTT.......VV##", "###########HHH###########", "###########HHH###########")
 
 [node name="Entree" parent="." instance=ExtResource("2")]
 teinte = Color(1.0, 0.94, 0.92, 1)
 drapeau_levier = "d_levier_entree"
 drapeau_porte = "d_levier_entree"
 indice = "Un levier ! Bascule-le d'un coup de lance pour ouvrir la grille de l'ouest."
-layout = PackedStringArray("#########################", "#########################", "##.....................##", "##.B.................B.##", "##...O.............S...##", ".D.....................##", ".D....TTTTTTTTTTTTT..V.##", ".D....TTTTTTTTTTTTT....##", ".D.....................##", "##..J..~~~.....~~~.....##", "##.B...~~~.....~~~...B.##", "##..V...............V..##", "###########...###########", "###########...###########")
+layout = PackedStringArray("#########################", "#########################", "##.....................##", "##.B.................B.##", "##...O.............S...##", ".D.....................##", ".D....TTTTTTTTTTTTT...V##", ".D....TTTTTTTTTTTTT...V##", ".D.....................##", "##..J..~~~.....~~~.....##", "##.B...~~~.....~~~...B.##", "##VV.................VV##", "###########...###########", "###########...###########")
 
 [node name="Epine1" parent="." instance=ExtResource("2")]
 grille = Vector2i(-1, 0)
