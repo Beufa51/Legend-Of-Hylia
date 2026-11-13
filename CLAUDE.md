@@ -485,6 +485,11 @@
   (2) impasse (aucune dalle intacte à côté). Règle annoncée au 1er pas sur une dalle (« Chaque dalle s'effondre quand tu la quittes... »). Indices D2a/D2b réécrits (D2b n'exige PAS de finir devant la grille :
   dès que tout est foulé, grille ouverte + dalles raffermies). La chute (trou) ramène toujours au bas de la salle.
 
+- 2026-11-13 : utilisateur : « façon Zelda, des dalles qui CHANGENT DE COULEUR, c'est plus parlant (tout faire en bleu) ; revoir l'esthétique ». **ÉTAPE 11d (non testée dans Godot, aperçu PIL du dessin vérifié)** :
+  PLUME D2 = « LES DALLES DE COULEUR » (remplace le sol fragile : plus de trous ni de chute). `dalle.gd` RÉÉCRIT : chaque pas RETOURNE la dalle (rouge <-> bleue, animation scale:x + Menu/Move2.wav aigu/grave),
+  dessin = cadre de pierre + dalle biseautée + panneau + gemme (dorée une fois validée) ; `retourner()`, `remettre()` (R), `valider()`. `room.gd::_suivre_pas` : règle des 3 px gardée, toutes bleues -> `drapeau_fragile`.
+  Message au 1er pas. Mêmes plans D2a/D2b (indices réécrits). `Etat.chute` + `world._raccompagner(retour, chute)` restent dans le code (inutilisés pour l'instant).
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.

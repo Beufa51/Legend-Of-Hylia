@@ -5,7 +5,7 @@ Lettres des plans : voir l'en-tête de Scripts/room.gd. Une salle = 25 x 14 case
 L'aile droite est le MIROIR de l'aile gauche (voir generer_monde.py) :
   vestibule (0,1) -> entrée (0,0) -> épine qui part vers l'OUEST (-1..-5, 0) avec 5 plumes qui montent,
   de plus en plus longues de DROITE à GAUCHE. Drapeaux : plumeD1..plumeD4, fragment_droite.
-Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 sol fragile (faites) ; prévues : 3 glace, 4 reflet, 5 combinaison.
+Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur (faites) ; prévues : 3 glace, 4 reflet, 5 combinaison.
 """
 import os
 W, H, E = 25, 14, 2
@@ -74,20 +74,21 @@ put(p1, 'K', (12, 9))                                       # le cristal, DANS l
 put(p1, 'V', (3, 11), (21, 11), (3, 6), (21, 6)); put(p1, 'S', (6, 7)); put(p1, 'O', (18, 7))
 for x in range(10, 15): put(p1, 'T', (x, 11))
 
-# --- PLUME D2 : « LE SOL FRAGILE ». Les dalles z s'effondrent quand on les quitte : il faut passer sur TOUTES,
-#     une seule fois chacune. Erreur (sortir du champ trop tôt, ou impasse) = les dalles se reforment ; tomber dans un trou = retour en bas.
+# --- PLUME D2 : « LES DALLES DE COULEUR » (façon Zelda). Chaque pas sur une dalle z la retourne : rouge -> bleue,
+#     bleue -> rouge. Il faut rendre TOUTES les dalles bleues (donc passer une seule fois sur chacune, ou un nombre impair de fois).
+#     R remet tout en rouge. Toutes bleues : la grille s'ouvre et les dalles restent bleues.
 def retour_d2(n):   # bas de l'écran n de la plume D2 (case (12,12)), en position dans le monde
     return 'Vector2(%d, %d)' % (-2 * 400 + 12 * 16 + 8, -224 * n + 194)
 
-# D2a (en bas) : leçon. Un champ de 5 x 4 dalles traverse la salle ; un serpentin suffit.
+# D2a (en bas) : leçon. Un champ de 5 x 4 dalles traverse la salle ; un serpentin suffit (on peut aussi sortir et revenir).
 p2a = vide(); sol(p2a, 2, 22, 2, 3); sol(p2a, 2, 22, 8, 11); sol(p2a, 11, 13, 12, 13); sol(p2a, 11, 13, 0, 1)
 for x in (11, 12, 13): p2a[0][x] = 'D'; p2a[1][x] = 'D'
 for y in range(4, 8):
     for x in range(10, 15): p2a[y][x] = 'z'
 put(p2a, 'V', (3, 11), (21, 11), (3, 2), (21, 2)); put(p2a, 'S', (8, 9)); put(p2a, 'O', (16, 9)); put(p2a, 'B', (5, 9), (19, 9))
 
-# D2b (la pointe) : 34 dalles autour de 2 piliers ; on entre par le bas. Dès que toutes sont foulées, la grille de l'alcôve
-#     s'ouvre et les dalles se raffermissent (on peut alors marcher partout). Solutions vérifiées par un solveur.
+# D2b (la pointe) : 34 dalles autour de 2 piliers, une seule entrée (par le bas). Dès que toutes sont bleues, la grille de l'alcôve
+#     s'ouvre. Il existe des chemins qui passent une seule fois par chaque dalle (vérifié par un solveur).
 p2b = vide(); sol(p2b, 2, 22, 2, 4); sol(p2b, 2, 22, 10, 11); sol(p2b, 11, 13, 12, 13)
 for x in range(2, 23): p2b[5][x] = '#'
 for x in (11, 12, 13): p2b[5][x] = 'D'
@@ -107,9 +108,9 @@ salles = [
         'indice': "Ce cristal commande les plots de couleur : un coup de lance, et les levés se baissent... et les baissés se lèvent !"}),
     ('Epine2', (-2, 0), e2, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD2'}),
     ('PlumeD2a', (-2, -1), p2a, (1.0, 0.97, 0.92), {'drapeau_fragile': 'd2_sol1', 'drapeau_porte': 'd2_sol1', 'retour': retour_d2(1),
-        'indice': "Dalles fragiles : chacune s'effondre quand tu la quittes. Passe sur TOUTES, une seule fois chacune, pour ouvrir la grille."}),
+        'indice': "Chaque pas retourne une dalle : rouge -> bleue, bleue -> rouge. Rends-les TOUTES bleues pour ouvrir la grille."}),
     ('PlumeD2b', (-2, -2), p2b, (0.98, 0.95, 0.9), {'drapeau_fragile': 'd2_sol2', 'drapeau_porte': 'd2_sol2', 'retour': retour_d2(2),
-        'drapeau_gemme': 'plumeD2', 'indice': "Plus de dalles, et deux piliers au milieu. Choisis bien ta première dalle et trace ton chemin avant de partir..."}),
+        'drapeau_gemme': 'plumeD2', 'indice': "Plus de dalles, deux piliers, et une seule entrée : repasser sur une dalle bleue la remet en rouge. Trace ton chemin avant de partir..."}),
     ('Epine3', (-3, 0), e3, (0.90, 0.88, 0.98), {}),
 ]
 depart = (200, 224 + 180)   # (seulement si on lance la scène directement : sinon on arrive par le temple)
