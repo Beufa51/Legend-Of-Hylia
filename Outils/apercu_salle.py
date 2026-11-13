@@ -62,6 +62,7 @@ def room(lay, out):
             elif ch == "Q": P("coffre_1", x, y, -2, -6)
             elif ch == "a": P("dalle_reflet", x, y)
             elif ch == "P": P("marque", x, y)
+            elif ch == "K": P("cristal_u", x, y, 0, -2)
             elif ch == "G": P("plume_doree", x, y, 2, 2)
             elif ch == "J": P("levier_1", x, y, 0, -12)
             elif ch == "Z": P("pics_5" if x % 2 == 0 else "pics_1", x, y, 0, -8)
