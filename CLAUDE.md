@@ -677,6 +677,15 @@
   4) PNJ : pêcheur (tunique qui « mangeait » le menton : tête jusqu'à r<0,37) et mage (robe vert sauge sobre, `decaler_teinte(..., lum)`).
   5) DONJONS : comparé le pack Pixel Crawler (`Dungeon_Tiles`, `Wall_Tiles`, `Dungeon_Props`) au décor Craftpix actuel : style proche (pierre sombre, herses, bannières), pas de gain net -> NON remplacé. Pistes si voulu : bannières 3 couleurs du pack, sol sanglant/drain, herses/pics du pack.
 
+- 2026-11-13 : utilisateur : « bug dans la caserne : bloqué sur la table en entrant ; le pêcheur a toujours un peu de vert au menton ; l'aspect colline des donjons ne fait pas assez solennel ; pour les donjons, chercher des murs mieux faits dans les packs importés ».
+  **ÉTAPE 14i écrite (non testée dans Godot ; aperçus PIL vérifiés, `verifier_carte.py` OK)** :
+  1) CASERNE : la table de carte (4x2 cases) couvrait la case d'arrivée (12,9) -> déplacée en (8,8). `verifier_carte.py` vérifie maintenant aussi les INTÉRIEURS avec les emprises réelles des meubles (lues dans interieur.gd) : arrivée libre, habitants/portes atteignables.
+  2) PÊCHEUR : menton repeint par la tunique -> zone « tête et cou » jusqu'à r<0,43 (`habiller_pnj.py`). Les yeux restent verts (couleur d'origine du corps du pack).
+  3) ENTRÉE DE DONJON (lettre U) REFAITE : plus de colline ; FAÇADE DE PIERRE à créneaux, corniche, pilastres, 2 bannières rouges à croix, 2 torches, grande arche sombre ouverte ; briques/arche/pilier/bannière/torche du pack Craftpix (déjà découpés dans `Assets/Gemini/tuiles/`), construite dans `traiter_village_jadson.py` (112x72, emprise 7x3, porte colonne 3).
+     `exterieur.gd::ouvrir_porte` ne fait rien pour `U` (l'arche est déjà ouverte).
+  4) MURS DE DONJON : `Outils/fabriquer_niches.py` (APRÈS traiter_pack_donjon.py) : `mur_fond` = BRIQUES assombries (plus de vide noir : les murs épais paraissent maçonnés) et `niche_grille.png` (arche à barreaux réduite) posée dans le mur du haut des salles claires (`room.gd::COLONNES_NICHES` [9, 14]). `apercu_salle.py` les montre.
+     Comparé aux autres packs : Craftpix `walls_floor.png` (dalles claires à biseau, murs à arches/portes en bois, escaliers, piliers) et Pixel Crawler `Dungeon_Tiles` (pierre bleu-vert, herses, bannières 3 couleurs) : pistes pour aller plus loin (dalles de dessus de mur claires, escaliers, arches/portes en bois dans les murs).
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

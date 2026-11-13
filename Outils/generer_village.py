@@ -340,7 +340,7 @@ def interieur(porte, meubles, haut, gauche=6, droite=17, bas=10):
 int_heros = interieur(12, [('L', 7, 5), ('S', 14, 5), ('q', 11, 5), ('t', 9, 7), ('T', 14, 8), ('C', 13, 8), ('o', 7, 9), ('p', 16, 7)],
                       ['w', 'y', 'z', 'v', 'x'])
 pnjs_int_heros = ["Woman 10 7 bas | Maman | [epreuve_reussie] Garde du royaume ! Ma fille, garde du royaume ! // Ton père aurait été si fier de toi. Viens, le repas de fête est prêt ! ## [fragment_gauche] Ma fille, la moitié du blason ! Je vais préparer un grand repas. // Mais d'abord, va te reposer. ## [capitaine_vu] Le capitaine t'a parlé ? Alors file au temple, et fais attention à toi ! ## Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'est de la place du village. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
-int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 7), ('F', 7, 8), ('M', 9, 8), ('D', 15, 8)],
+int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 7), ('F', 7, 8), ('M', 8, 8), ('D', 15, 8)],
                         ['w', 'z', 'x', 'w', 'x'])
 pnjs_int_caserne = ["Villager3 13 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
 

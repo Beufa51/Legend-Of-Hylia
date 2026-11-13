@@ -63,7 +63,7 @@ const OBJETS_G := {
 	"S": ["v_maison_pierre", Vector2i(8, 3), true, 0.0],
 	"K": ["v_maison_caserne", Vector2i(8, 3), true, 0.0],   # la caserne
 	"L": ["v_maison_bois", Vector2i(8, 3), true, 0.0],      # la grange
-	"U": ["v_temple_entree", Vector2i(7, 3), true, 0.0],    # ENTRÉE DE DONJON : colline percée d'une arche de pierre sombre, porte en colonne 3
+	"U": ["v_temple_entree", Vector2i(7, 3), true, 0.0],    # ENTRÉE DE DONJON : façade de pierre à créneaux, pilastres, bannières, torches et grande arche sombre (porte en colonne 3)
 	"Z": ["v_corps_coq", Vector2i(9, 5), true, 0.0],       # le CORPS DU COQ (parvis révélé) : bâtiment en forme de coq, porte en colonne 4 (Outils/fabriquer_plans_mode7.py)
 	"Y": ["v_stele_vide", Vector2i(1, 1), true, 0.0],      # stèle du coq (parvis), empreintes des ailes vides (Outils/fabriquer_stele.py)
 	"y": ["v_stele_pleine", Vector2i(1, 1), true, 0.0],    # la même, avec les deux ailes posées   # entrée du temple du donjon : arche de pierre + ouverture sombre + marches (porte en colonne 3)
@@ -227,9 +227,9 @@ func ouvrir_porte(case: Vector2i, duree := 1.4) -> void:
 		var y := case.y - 2
 		if x >= 0 and y >= 0 and y < layout.size() and x < layout[y].length() and layout[y][x] == l:
 			lettre = l
-	if lettre == "":
-		return
-	var taille := Vector2(24, 24) if lettre == "U" or lettre == "Z" else Vector2(12, 19)
+	if lettre == "" or lettre == "U":
+		return   # (l'entrée de donjon est déjà une arche ouverte et sombre)
+	var taille := Vector2(24, 24) if lettre == "Z" else Vector2(12, 19)
 	var ouverture := ColorRect.new()
 	ouverture.color = Color(0.04, 0.025, 0.03)
 	ouverture.size = taille
