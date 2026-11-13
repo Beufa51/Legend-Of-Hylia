@@ -725,6 +725,10 @@
   3) DÉCOUPAGE : `world.gd` 990 -> 808 lignes : la cinématique de vue aérienne est dans `Scripts/vue_aerienne.gd` (class VueAerienne, `VueAerienne.new(self).jouer(cote)`, accède au monde via `monde.`). `room.gd` (1150 lignes) PAS découpé : ses sections (sentinelles, rayon, chant, reflet) partagent trop d'état ; à faire avec le test comme filet.
   4) À FAIRE (Opus) : points 3 (objets + récompenses : outil par aile, effets des insignes) et 4 (style visuel unique). Reste : session de test humaine de 10a-14p, build web mobile (export), perf web.
 
+- 2026-11-13 : **NOUVELLE RÈGLE DE DESIGN (utilisateur)** : les énigmes doivent être VISUELLES, à la Zelda : on les comprend SANS AUCUN TEXTE (forme de la salle, objets, couleurs, sons, animations qui montrent la règle).
+  L'utilisateur repassera sur CHAQUE énigme (aile gauche : vestibule, plumes 1-5 ; aile droite : entrée, D1-D5) pour dire quoi changer. Donc : ne PAS refactorer `room.gd` avant ce passage (son contenu va bouger) ;
+  à terme, retirer les `indice` textuels et les messages de règle (ex. dalles, glace, reflet) au profit d'indices visuels. Faire UNE énigme à la fois, sur retour de l'utilisateur.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
