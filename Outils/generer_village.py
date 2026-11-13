@@ -20,6 +20,13 @@ RACINE = os.path.join(os.path.dirname(__file__), "..")
 def vide(): return [['.'] * W for _ in range(H)]
 def put(g, c, *pts):
     for (x, y) in pts: g[y][x] = c
+def maison(g, c, x, y):
+    """Une maison 7x4 (sprite agrandi x1,3). On donne l'ANCIENNE position (coin haut-gauche d'une maison 5x4) : la nouvelle est décalée de (-1, +1),
+    donc la porte est au même x et UNE rangée plus bas (x+2, y+4). La caserne/le temple (K, 7x4) ne se décale que d'une rangée : voir `grande`."""
+    put(g, c, (x - 1, y + 1))
+def grande(g, x, y):
+    """La grande maison K (7x4) : porte en (x+3, y+4) ; on donne le x du coin et l'ANCIENNE rangée y."""
+    put(g, 'K', (x, y + 1))
 def chemin(g, x0, x1, y0, y1):
     for y in range(y0, y1 + 1):
         for x in range(x0, x1 + 1): g[y][x] = ':'
@@ -36,7 +43,7 @@ chemin(place, 19, 24, 6, 8)                 # vers l'est
 for y in range(H):                          # la place : un grand ovale de terre autour de la statue
     for x in range(W):
         if ((x - 12) / 7.6) ** 2 + ((y - 7) / 3.7) ** 2 <= 1.0: place[y][x] = ':'
-chemin(place, 4, 5, 5, 5); chemin(place, 19, 20, 5, 5)   # devant les portes des maisons
+chemin(place, 4, 5, 6, 6); chemin(place, 19, 20, 6, 6)   # devant les portes des maisons
 # Bordure d'arbres en haut et en bas, ouverture au nord (colonnes 10-14) : faite plus bas par bordure() (définie après)
 # Côtés : arbres, ouvertures ouest/est (rangées 6-8)
 for (x, y) in [(0, 2), (0, 4), (0, 9), (23, 2), (23, 4), (23, 9)]:
@@ -44,7 +51,7 @@ for (x, y) in [(0, 2), (0, 4), (0, 9), (23, 2), (23, 4), (23, 9)]:
 put(place, 'b', (0, 11), (1, 11), (23, 11), (24, 11))
 # Sortie nord provisoirement fermée (l'écran voisin n'existe pas encore) ; ouest et est sont ouvertes
 # Maisons (portes en bas : colonnes 4 et 20)
-put(place, 'M', (3, 2)); put(place, 'T', (18, 2))   # maisons 5x4 : portes en (5,5) et (20,5)
+maison(place, 'M', 3, 2); maison(place, 'T', 18, 2)   # maisons 7x4 : portes en (5,6) et (20,6)
 # Statue du coq au centre, bannières de part et d'autre
 put(place, 'Q', (11, 4)); put(place, 'j', (9, 5), (15, 5))   # girouette 3x4 au centre
 # Marché (en bas à gauche) et puits (en bas à droite)
@@ -57,7 +64,7 @@ put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10),
 # Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
 animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 5', 'd 17 8']
 
-TAILLES_MAISONS = {'M': (5, 4), 'N': (5, 4), 'T': (5, 4), 'R': (5, 4), 'S': (5, 4), 'L': (5, 4), 'K': (7, 4)}
+TAILLES_MAISONS = {'M': (7, 4), 'N': (7, 4), 'T': (7, 4), 'R': (7, 4), 'S': (7, 4), 'L': (7, 4), 'K': (7, 4)}
 
 def degager_maisons(g):
     """Retire du plan tout décor (fleurs, tonneaux...) posé SOUS une maison."""
@@ -89,9 +96,9 @@ bordure(place, trou=(10, 14))   # (la place est construite plus haut ; sa forêt
 #     Entrée par l'est (la place). L'ouest mène à la ferme (pas encore construite) : fermé par des buissons.
 ouest = vide()
 chemin(ouest, 0, 24, 6, 8)
-chemin(ouest, 4, 5, 5, 5); chemin(ouest, 13, 14, 5, 5)       # devant les portes
+chemin(ouest, 4, 5, 6, 6); chemin(ouest, 13, 14, 6, 6)       # devant les portes
 bordure(ouest)
-put(ouest, 'M', (3, 2)); put(ouest, 'R', (12, 2))   # portes en (5,5) et (14,5)
+maison(ouest, 'M', 3, 2); maison(ouest, 'R', 12, 2)   # portes en (5,6) et (14,6)
 for (x, y) in [(0, 2), (0, 4), (21, 2), (23, 4), (0, 10), (22, 10)]:
     put(ouest, 'A' if x % 2 == 0 else 'a', (x, y))
 put(ouest, 'P', (8, 2), (18, 3))
@@ -101,7 +108,7 @@ put(ouest, 'f', (2, 6 - 1), (7, 4), (19, 5), (3, 11)); put(ouest, 'g', (8, 5), (
 put(ouest, 'w', (2, 5), (11, 4), (18, 5), (4, 10), (21, 12))
 pnjs_ouest = [
     "Woman 10 9 haut | Colette | [fragment_gauche] Tu as rapporté l'aile ?! Vue du ciel, elle a la forme d'une plume géante, dit-on. // Moi, je savais bien que tu réussirais. ## [plume2] Il paraît que tu as allumé des braseros dans le noir ? Tu n'as pas peur de te brûler les moustaches ! ## Oh, tu es la nouvelle recrue ! Tout le village parle de ton épreuve d'adoubement. // On raconte que le donjon sous le temple a la forme d'un grand coq. // Un coq dans un donjon... Moi, je préfère ceux de ma basse-cour !",
-    "OldMan 8 6 droite | Vieux Gaspard | [fragment_gauche] Une aile entière... Ton père n'a jamais dépassé la quatrième plume. // Il serait fier. Moi aussi, petite. ## [plume3] Tu as réveillé le chant du coq, alors ? // Les cloches ne mentent jamais : écoute bien avant de frapper. ## Le coq chante chaque aube depuis mille ans. // S'il se taisait un jour, le royaume tremblerait. // Ton père tenait la lance avant toi. Garde-la bien, petite.",
+    "OldMan 9 7 droite | Vieux Gaspard | [fragment_gauche] Une aile entière... Ton père n'a jamais dépassé la quatrième plume. // Il serait fier. Moi aussi, petite. ## [plume3] Tu as réveillé le chant du coq, alors ? // Les cloches ne mentent jamais : écoute bien avant de frapper. ## Le coq chante chaque aube depuis mille ans. // S'il se taisait un jour, le royaume tremblerait. // Ton père tenait la lance avant toi. Garde-la bien, petite.",
     "Boy 18 5 gauche | Tom | [plume4] On dit que des statues de pierre surveillent la quatrième plume ! // Moi, je me serais caché derrière un pilier. Et toi ? ## Tu as une vraie lance de la garde ! Tu me la prêtes ? // ... Non ? Tant pis. // Un conseil : n'embête pas les poules. Elles se vengent.",
 ]
 animaux_ouest = ['c 6 10', 'h 20 9', 'c 15 12']
@@ -110,9 +117,9 @@ animaux_ouest = ['c 6 10', 'h 20 9', 'c 15 12']
 #     Entrée par l'ouest (la place). L'est mène à la maison du héros (pas encore construite) : fermé.
 est = vide()
 chemin(est, 0, 24, 6, 8)
-chemin(est, 11, 13, 5, 5)                                     # devant la porte de la caserne
+chemin(est, 11, 13, 6, 6)                                     # devant la porte de la caserne
 bordure(est)
-put(est, 'K', (10, 2)); put(est, 'j', (8, 3), (18, 3))        # caserne 7x4 : porte en (13,5)
+grande(est, 10, 2); put(est, 'j', (8, 3), (18, 3))        # caserne 7x4 : porte en (13,6)
 put(est, 'o', (6, 3), (6, 4), (18, 3), (19, 4))
 for (x, y) in [(0, 2), (0, 4), (2, 9), (22, 2), (22, 9), (20, 11)]:
     put(est, 'A' if y % 4 == 0 else 'a', (x, y))
@@ -126,7 +133,7 @@ pnjs_est = [
     "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.",
 ]
 animaux_est = ['d 20 7', 'c 12 11']
-passages_est = ["13 5 InterieurCaserne 12 9"]   # porte de la caserne (maison beige en (10,2)) ; l'intérieur est en bas de la carte
+passages_est = ["13 6 InterieurCaserne 12 9"]   # porte de la caserne (maison beige en (10,2)) ; l'intérieur est en bas de la carte
 
 # --- FERME (0,2) : tout à l'ouest. Enclos à poules (clôtures `e`/`z`, cases `k` = intérieur, entrée au sud en (5..6, 8)),
 #     grange fermée, la fermière lance la CHASSE AUX POULES (cases `s` = où apparaissent les 6 poules).
@@ -141,21 +148,21 @@ for y in range(4, 8): put(ferme, 'z', (3, y), (10, y))          # côtés
 for y in range(4, 8):
     for x in range(4, 10): put(ferme, 'k', (x, y))
 put(ferme, 'n', (4, 9))                                        # panneau de l'enclos
-put(ferme, 'L', (17, 2))                                       # grange : porte en (19,5)
-put(ferme, 's', (13, 3), (15, 5), (14, 10), (18, 10), (21, 10), (22, 4))
+maison(ferme, 'L', 17, 2)                                      # grange : porte en (19,6)
+put(ferme, 's', (13, 3), (15, 5), (14, 10), (18, 10), (21, 10), (23, 7))
 for (x, y) in [(0, 2), (0, 4), (0, 10), (12, 11), (23, 2)]:
     put(ferme, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
 put(ferme, 'x', (12, 4), (13, 4)); put(ferme, 'o', (22, 6), (21, 11))
 put(ferme, 'f', (11, 2), (16, 9), (3, 10), (8, 10)); put(ferme, 'g', (12, 3), (20, 9), (2, 7)); put(ferme, 'w', (14, 9), (2, 3), (10, 10), (22, 9))
 pnjs_ferme = ["Villager5 12 5 bas | Fermière Jeanne | Oh, par tous les coqs ! Mes poules se sont échappées de l'enclos ! // Tu peux me les ramener ? Approche-toi d'une poule et appuie sur Espace pour la prendre dans tes bras. // Puis appuie encore sur Espace pour la lancer : par-dessus la clôture, ou par l'entrée au sud ! // 5 poules, 60 secondes. Prête ? C'est parti ! | poules"]
-passages_ferme = ["19 5 ! La grange est fermée à clé."]
+passages_ferme = ["19 6 ! La grange est fermée à clé."]
 
 # --- MAISON DU HÉROS (4,2) : tout à l'est du village, au bout du chemin. Le jeu commence DANS la maison.
 heros = vide()
 chemin(heros, 0, 14, 6, 8)
 bordure(heros)
 put(heros, 'b', (24, 6), (24, 7), (24, 8))                    # l'est : falaise plus tard
-put(heros, 'N', (11, 2))                                      # la maison bleue : porte en (13,5)
+maison(heros, 'N', 11, 2)                                     # la maison bleue : porte en (13,6)
 put(heros, 'j', (9, 3), (16, 3))
 for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 3), (22, 9), (19, 11), (3, 11)]:
     put(heros, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
@@ -164,7 +171,7 @@ put(heros, 'o', (9, 4), (14, 4), (16, 9))
 put(heros, 'f', (8, 3), (15, 5), (10, 10), (18, 9)); put(heros, 'g', (9, 5), (14, 5), (6, 10), (20, 9))
 put(heros, 'w', (13, 3), (8, 11), (17, 6), (4, 9), (21, 7))
 animaux_heros = ['c 15 7', 'k 10 6']
-passages_heros = ["13 5 InterieurHeros 12 9"]
+passages_heros = ["13 6 InterieurHeros 12 9"]
 
 def interieur(porte, meubles, haut, gauche=6, droite=17, bas=10):
     """Une pièce rectangulaire : mur du haut = 2 rangées (pans de 2 cases : lettres de `haut`), côtés et bas = murs pleins."""
@@ -186,8 +193,8 @@ int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 
 pnjs_int_caserne = ["Villager3 14 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
 
 FERMEE = "La porte est fermée à clé."
-ferme_place = ["5 5 ! " + FERMEE, "20 5 ! " + FERMEE]
-ferme_ouest = ["5 5 ! " + FERMEE, "14 5 InterieurStand 12 9"]   # la maison rouge est le STAND DE TIR
+ferme_place = ["5 6 ! " + FERMEE, "20 6 ! " + FERMEE]
+ferme_ouest = ["5 6 ! " + FERMEE, "14 6 InterieurStand 12 9"]   # la maison rouge est le STAND DE TIR
 
 # STAND DE TIR (maison rouge du village ouest) : les pots du jeu apparaissent sur les cases `c` (rangée du fond)
 int_stand = interieur(12, [('t', 9, 7), ('o', 7, 5), ('q', 16, 5), ('p', 7, 9), ('U', 8, 8)], ['w', 'y', 'x', 'y', 'w'])
@@ -215,26 +222,26 @@ parvis = vide()
 chemin(parvis, 11, 13, 6, 13)                                  # vient du sud
 chemin(parvis, 0, 13, 6, 8)                                    # vers l'ouest : temple de l'aile gauche
 chemin(parvis, 12, 12, 5, 5)                                   # devant la porte du CORPS
-put(parvis, 'K', (9, 2))                                       # le CORPS du donjon : grand bâtiment scellé (porte en (12,5))
+grande(parvis, 9, 2)                                       # le CORPS du donjon : grand bâtiment scellé (porte en (12,5))
 put(parvis, 'j', (7, 3), (17, 3)); put(parvis, 'o', (6, 4), (18, 4))
 bordure(parvis, trou=(11, 13))
 for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 4), (22, 9), (20, 11)]:
     put(parvis, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
 put(parvis, 'b', (24, 6), (24, 7), (24, 8))                    # l'est : le temple de l'aile droite (plus tard)
 put(parvis, 'P', (20, 2), (3, 2)); put(parvis, 'f', (8, 9), (16, 9)); put(parvis, 'g', (10, 5), (14, 5)); put(parvis, 'w', (6, 10), (19, 10))
-passages_parvis = ["12 5 ! Les grandes portes du corps du donjon sont scellées. Il faut d'abord rapporter les deux ailes du blason."]
+passages_parvis = ["12 6 ! Les grandes portes du corps du donjon sont scellées. Il faut d'abord rapporter les deux ailes du blason."]
 
 temple_g = vide()
 chemin(temple_g, 11, 24, 6, 8)                                 # vient de l'est (le parvis)
 chemin(temple_g, 12, 12, 5, 5)                                 # devant la porte du temple
-put(temple_g, 'K', (9, 2))                                     # temple de l'aile gauche : porte en (12,5) -> donjon
+grande(temple_g, 9, 2)                                     # temple de l'aile gauche : porte en (12,5) -> donjon
 put(temple_g, 'j', (7, 3), (17, 3)); put(temple_g, 'o', (6, 4), (18, 4))
 bordure(temple_g)
 put(temple_g, 'b', (0, 6), (0, 7), (0, 8))                     # l'ouest : fermé
 for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 9), (3, 9)]:
     put(temple_g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
 put(temple_g, 'P', (20, 2), (3, 2)); put(temple_g, 'f', (8, 9), (16, 9)); put(temple_g, 'g', (10, 5), (14, 5)); put(temple_g, 'w', (6, 10), (19, 10))
-passages_temple_g = ["12 5 @donjon:Vestibule 12 10 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."]
+passages_temple_g = ["12 6 @donjon:Vestibule 12 10 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."]
 
 ecrans = [
     ('Ferme', (0, 2), ferme, {'pnjs': pnjs_ferme, 'passages': passages_ferme, 'minijeu': 'poules'}),
@@ -248,10 +255,10 @@ ecrans = [
 ]
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
 interieurs = [
-    ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 13 6", "14 6 $records"],
+    ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 13 7", "14 6 $records"],
         'indice': "Tu te réveilles chez toi. Aujourd'hui, c'est ton adoubement ! Parle à Maman, puis rejoins le capitaine à la caserne (à l'ouest)."}),
-    ('InterieurStand', (1, 5), int_stand, {'pnjs': pnjs_int_stand, 'passages': ["12 10 VillageOuest 14 6"], 'minijeu': 'tir'}),
-    ('InterieurCaserne', (3, 5), int_caserne, {'pnjs': pnjs_int_caserne, 'passages': ["12 10 VillageEst 13 6"], 'style': 'caserne'}),
+    ('InterieurStand', (1, 5), int_stand, {'pnjs': pnjs_int_stand, 'passages': ["12 10 VillageOuest 14 7"], 'minijeu': 'tir'}),
+    ('InterieurCaserne', (3, 5), int_caserne, {'pnjs': pnjs_int_caserne, 'passages': ["12 10 VillageEst 13 7"], 'style': 'caserne'}),
 ]
 depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans la maison du héros, à côté du lit
 

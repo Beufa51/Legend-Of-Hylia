@@ -67,7 +67,7 @@ func _process(_delta: float) -> void:
 		if not Etat.est("vue_aerienne_gauche"):
 			_vue_aerienne("gauche")   # on sort du donjon avec l'aile : vue du ciel
 		else:
-			_ramener("@village:TempleGauche", Vector2i(12, 6), "")   # sorties suivantes : on retourne directement au village
+			_ramener("@village:TempleGauche", Vector2i(12, 7), "")   # sorties suivantes : on retourne directement au village
 		return
 	if nouvelle != salle_actuelle:
 		_glisser_vers(nouvelle)
@@ -685,7 +685,7 @@ func _vue_aerienne(cote: String) -> void:
 	await t.finished
 	calque.queue_free()
 	# Retour au village, devant le temple (la scène change : la musique et l'état sont rechargés)
-	_changer_de_scene("@village:TempleGauche", Vector2i(12, 6), "Tu ressors du temple, l'aile à la main. Retourne voir le capitaine Aubrac !")
+	_changer_de_scene("@village:TempleGauche", Vector2i(12, 7), "Tu ressors du temple, l'aile à la main. Retourne voir le capitaine Aubrac !")
 
 
 # --- HUD : les 5 plumes de l'aile, en haut à gauche ------------------------------------
