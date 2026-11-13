@@ -121,11 +121,20 @@ func _process(delta: float) -> void:
 	if grille != Etat.salle_courante:
 		return   # inutile d'animer un écran qu'on ne voit pas
 	# Les grands objets passent DEVANT le héros quand il est derrière eux (plus haut à l'écran), sinon derrière lui
-	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
-	if joueur:
-		var y := joueur.global_position.y - global_position.y
+	var acteurs: Array = get_tree().get_nodes_in_group("joueur") + get_tree().get_nodes_in_group("animaux") + get_tree().get_nodes_in_group("pnj")
+	for a in acteurs:
+		var acteur := a as Node2D
+		if acteur == null or (acteur is Animal and acteur.portee):
+			continue   # une poule portée reste toujours devant
+		if not acteur.is_in_group("joueur") and not is_ancestor_of(acteur):
+			continue   # un acteur d'un autre écran
+		var local := acteur.global_position - global_position
+		var derriere := false
 		for h in _hauts:
-			h[0].z_index = 1 if y + 6.0 < h[1] - TUILE else 0
+			if local.x > h[2].x and local.x < h[2].y and local.y + 6.0 < h[1] - TUILE:
+				derriere = true
+				break
+		acteur.z_index = 0 if derriere else 2
 	if not _vent_actif:
 		return
 	_temps += delta
@@ -204,7 +213,8 @@ func _poser_objet_g(def: Array, cellule: Vector2i) -> void:
 	var image := _poser_sprite(def[0], cellule, emprise, def[3])
 	_objets[cellule] = image
 	if def[2] and image.texture.get_height() >= 24:   # grand objet : le héros doit pouvoir passer derrière
-		_hauts.append([image, (cellule.y + emprise.y) * TUILE])
+		image.z_index = 1   # arbres/maisons : devant le sol ; chaque acteur choisit de passer devant (2) ou derrière (0)
+		_hauts.append([image, (cellule.y + emprise.y) * TUILE, Vector2(cellule.x * TUILE - 8, (cellule.x + emprise.x) * TUILE + 8)])
 	for dx in emprise.x:
 		for dy in emprise.y:
 			_couvertes[cellule + Vector2i(dx, dy)] = true

@@ -40,6 +40,7 @@ func initialiser(planche: String, vitesse: float, peureux: bool, espece: String,
 	_zone = zone
 	collision_layer = 1   # couche 1 : la lance peut le toucher
 	collision_mask = 1    # il se cogne aux arbres, maisons...
+	add_to_group("animaux")   # exterieur.gd les place devant/derrière les arbres selon leur hauteur
 	var forme := CircleShape2D.new()
 	forme.radius = 4.0
 	var collision := CollisionShape2D.new()
