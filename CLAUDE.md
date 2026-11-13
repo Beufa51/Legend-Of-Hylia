@@ -579,6 +579,9 @@
   (4) STYLE : **auditer tous les packs** (Ninja Adventure, Aesthetic, Craftpix donjon, `generic-rpg-pack` Vaca Roxa [16 px, arbres 53x74, auberge 70x88, ponts, clôtures, PNJ 16x23 : à examiner], LPC) et compléter par des packs itch.io (à télécharger par l'utilisateur) ou Gemini.
   FAIT (non testé dans Godot) : **animaux/PNJ derrière les arbres** : `exterieur.gd::_process` règle le `z_index` du héros, des animaux (groupe `animaux`, ajouté dans `animal.gd`) et des PNJ : 0 = derrière un grand objet, 2 = devant (arbres/maisons fixés à z 1). Cause : animaux toujours dessinés au-dessus.
   À FAIRE : plan de la carte en coq (grille à définir, ex. Parvis (2,0) / ailes (1,1)-(3,1) / corps (2,2) / pattes (1,3)-(3,3)) dans `generer_village.py` ; girouette ; PNJ ; audit de style.
+- 2026-11-13 : retour utilisateur : « gros problèmes de collisions entre les PNG, le héros, les maisons et les arbres ». CAUSE : arbres du pack Aesthetic 59x72 px pour une collision de 32x32 (cimes qui se chevauchent, murs invisibles).
+  **CORRECTION 10f (non testée dans Godot, rendu fidèle PIL vérifié avec contours de collision)** : `Outils/traiter_pack_aesthetic.py` : constante `ARBRE = 0.36` -> arbres 32x39 / 28x37, sapin 26x43, buissons 15x13, puits 31x26 (emprise 2x2 = 32 px) ; images régénérées. Maisons inchangées (112x106, collision 7x4 = 112x64, le toit dépasse vers le haut).
+  Outil de contrôle : rendre un écran avec les cases bloquantes en rouge (script jetable ; la logique = `exterieur.gd::OBJETS_G`). Si d'autres collisions gênent, donner l'écran et l'endroit exact.
 
 ## PROCHAINE ÉTAPE (Opus pour la conception, puis Sonnet) : REFONTE DU VILLAGE en forme de coq (voir entrée du 2026-11-13 ci-dessus)
 - D'abord : tester le correctif d'arbres (animaux/PNJ devant-derrière), puis valider le plan de carte en coq, puis audit des packs, girouette, PNJ.
