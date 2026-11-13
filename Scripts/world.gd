@@ -38,7 +38,7 @@ func _ready() -> void:
 	_regler_obscurite(salle_actuelle)
 	Etat.secousse.connect(_secouer)
 	Etat.repere.connect(_raccompagner)
-	Etat.passage.connect(func(ecran, case): _ramener(ecran, case, Etat.passage_texte))
+	Etat.passage.connect(func(ecran, case): _passer_porte(ecran, case, Etat.passage_texte))
 	Etat.drapeau_change.connect(_sur_drapeau)
 	_creer_hud()
 	add_child(Dialogue.new())   # boîte de dialogue des habitants
@@ -50,6 +50,10 @@ func _ready() -> void:
 		_regler_obscurite(salle_actuelle)   # (si on reprend la partie dans une maison)
 	Etat.memoriser_position(joueur.position)   # la sauvegarde retient la scène où l'on est
 	if Etat.arrivee_ecran != "":   # fondu d'arrivée + message
+		if Etat.arrivee_direction != "":
+			joueur.direction = Etat.arrivee_direction
+			joueur.sprite.play("repos_" + joueur.direction)
+			Etat.arrivee_direction = ""
 		var texte := Etat.arrivee_texte
 		Etat.arrivee_ecran = ""
 		Etat.arrivee_texte = ""
@@ -67,7 +71,7 @@ func _process(_delta: float) -> void:
 		if not Etat.est("vue_aerienne_gauche"):
 			_vue_aerienne("gauche")   # on sort du donjon avec l'aile : vue du ciel
 		else:
-			_ramener("@village:TempleGauche", Vector2i(12, 6), "")   # sorties suivantes : on retourne directement au village
+			_ramener("@village:TempleGauche", Vector2i(12, 7), "")   # sorties suivantes : on retourne directement au village
 		return
 	if nouvelle != salle_actuelle:
 		_glisser_vers(nouvelle)
@@ -436,6 +440,46 @@ func _sur_drapeau(nom: String) -> void:
 
 
 # Fondu au noir, le joueur est posé dans la salle `nom_salle`, sur la case `case`.
+const SON_PORTE := "res://Assets/Sons/porte.wav"   # fabriqué par Outils/fabriquer_sons.py
+
+
+# Passage d'une porte (maison, temple) : on pousse la porte (bruit + un pas vers l'intérieur ou l'extérieur), puis fondu et arrivée juste derrière la porte, dans le bon sens.
+func _passer_porte(nom: String, case: Vector2i, texte: String) -> void:
+	if en_transition:
+		return
+	var depart: Ecran = null
+	var arrivee: Ecran = null
+	for e in get_children():
+		if e is Ecran:
+			if e.grille == salle_actuelle:
+				depart = e
+			if e.name == nom:
+				arrivee = e
+	var pas := Vector2.ZERO
+	if nom.begins_with("@donjon"):
+		pas = Vector2.UP
+	elif arrivee != null and depart != null and arrivee.interieur != depart.interieur:
+		pas = Vector2.UP if arrivee.interieur else Vector2.DOWN
+	if pas != Vector2.ZERO:
+		var dir := "haut" if pas == Vector2.UP else "bas"
+		en_transition = true
+		joueur.set_physics_process(false)
+		joueur.velocity = Vector2.ZERO
+		joueur.direction = dir
+		joueur.sprite.play("marche_" + dir)
+		joueur._jouer_son(SON_PORTE, -3.0)
+		var t := create_tween()
+		t.tween_property(joueur, "position", joueur.position + pas * 12.0, 0.35)
+		await t.finished
+		en_transition = false
+		Etat.arrivee_direction = dir
+	await _ramener(nom, case, texte)
+	if pas != Vector2.ZERO and not nom.begins_with("@"):
+		joueur.direction = Etat.arrivee_direction
+		joueur.sprite.play("repos_" + joueur.direction)
+		Etat.arrivee_direction = ""
+
+
 func _ramener(nom_salle: String, case: Vector2i, texte: String) -> void:
 	if en_transition:
 		await get_tree().create_timer(0.8).timeout   # une autre transition se termine
@@ -685,7 +729,7 @@ func _vue_aerienne(cote: String) -> void:
 	await t.finished
 	calque.queue_free()
 	# Retour au village, devant le temple (la scène change : la musique et l'état sont rechargés)
-	_changer_de_scene("@village:TempleGauche", Vector2i(12, 6), "Tu ressors du temple, l'aile à la main. Retourne voir le capitaine Aubrac !")
+	_changer_de_scene("@village:TempleGauche", Vector2i(12, 7), "Tu ressors du temple, l'aile à la main. Retourne voir le capitaine Aubrac !")
 
 
 # --- HUD : les 5 plumes de l'aile, en haut à gauche ------------------------------------

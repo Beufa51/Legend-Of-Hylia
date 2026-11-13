@@ -114,25 +114,30 @@ def objets():
 # ---------------------------------------------------------------- MAISONS (emprise 5x4 = 80 px de large, porte en colonne 2 ; caserne 7x4 = 112 px, porte colonne 3)
 P1 = "Pack 1 expansion"
 
+AGRANDIR = 1.3   # maisons plus grandes (la porte doit être plus haute que le héros : 24 px)
+
+def sur_toile(im, largeur, x):
+    toile = Image.new("RGBA", (largeur, im.height), (0, 0, 0, 0))
+    toile.alpha_composite(im, (x, 0))
+    return toile
+
 def maisons():
+    """Toutes les maisons font 7 cases de large (112 px), porte en colonne 3 ; hauteur du sprite = environ 6,5 cases (le bas est calé sur 4 rangées de collision)."""
     out = {}
-    bois = decouper(P1, (215, 0, 335, 122), 80.0 / 120.0)
-    # variantes de couleur de toit : orange (M), bleu (N), vert (T), rouge d'origine (R, L)
+    bois = decouper(P1, (215, 0, 335, 122), AGRANDIR * 80.0 / 120.0)   # 104 x 105
+    bois = sur_toile(bois, 112, (112 - bois.width) // 2)
+    # variantes de couleur de toit : orange (M), bleu (N), vert (T), rouge d'origine (R, L) ; le toit = les 60 premières lignes
     out["v_maison_rouge"] = bois
     out["v_maison_bois"] = bois
-    out["v_maison_orange"] = teinter(bois, 0.08, 1.0)
-    out["v_maison_bleue"] = teinter(bois, -0.42, 1.0)
-    out["v_maison_chaume"] = teinter(bois, -0.28, 1.0)
+    out["v_maison_orange"] = teinter(bois, 0.08, 1.0, 60)
+    out["v_maison_bleue"] = teinter(bois, -0.42, 1.0, 60)
+    out["v_maison_chaume"] = teinter(bois, -0.28, 1.0, 60)
     # maison de pierre (forge) : 'S'
-    pierre = decouper(P1, (0, 18, 84, 122), ECHELLE)
-    toile = Image.new("RGBA", (80, pierre.height), (0, 0, 0, 0))
-    toile.alpha_composite(pierre, ((80 - pierre.width) // 2, 0))
-    out["v_maison_pierre"] = toile
-    # caserne : la grande maison couverte de végétation, calée pour que sa porte tombe en colonne 3 (48 à 64 px)
-    grande = decouper(P1, (82, 0, 216, 160), 0.55)   # plus petite : elle doit tenir sous le bord haut de l'écran
-    toile = Image.new("RGBA", (112, grande.height), (0, 0, 0, 0))
-    toile.alpha_composite(grande, (20, 0))
-    out["v_maison_caserne"] = toile
+    pierre = decouper(P1, (0, 18, 84, 122), ECHELLE * AGRANDIR)
+    out["v_maison_pierre"] = sur_toile(pierre, 112, (112 - pierre.width) // 2)
+    # caserne / temple : la grande maison couverte de végétation (un peu moins agrandie : elle doit tenir sous le bord haut de l'écran), porte en colonne 3
+    grande = decouper(P1, (82, 0, 216, 160), 0.55 * 1.25)
+    out["v_maison_caserne"] = sur_toile(grande, 112, 11)
     for n, im in out.items():
         enregistrer(im, n)
     return out

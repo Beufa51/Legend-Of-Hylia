@@ -54,17 +54,18 @@ const OBJETS_G := {
 	"W": ["v_puits", Vector2i(2, 2), true, 0.0],
 	"e": ["v_cloture", Vector2i(2, 1), true, 0.0],   # clôture (2 cases de large)
 	"z": ["v_poteau", Vector2i(1, 1), true, 0.0],    # poteau de clôture
-	# Maisons : emprise 5x4, la porte est sur la dernière rangée (colonne dans PORTES_MAISONS)
-	"M": ["v_maison_orange", Vector2i(5, 4), true, 0.0],
-	"N": ["v_maison_bleue", Vector2i(5, 4), true, 0.0],
-	"T": ["v_maison_chaume", Vector2i(5, 4), true, 0.0],
-	"R": ["v_maison_rouge", Vector2i(5, 4), true, 0.0],
-	"S": ["v_maison_pierre", Vector2i(5, 4), true, 0.0],
+	# Maisons : emprise 7x4 (112 px, sprite agrandi x1,3), la porte est sur la dernière rangée (colonne dans PORTES_MAISONS)
+	"M": ["v_maison_orange", Vector2i(7, 4), true, 0.0],
+	"N": ["v_maison_bleue", Vector2i(7, 4), true, 0.0],
+	"T": ["v_maison_chaume", Vector2i(7, 4), true, 0.0],
+	"R": ["v_maison_rouge", Vector2i(7, 4), true, 0.0],
+	"S": ["v_maison_pierre", Vector2i(7, 4), true, 0.0],
 	"K": ["v_maison_caserne", Vector2i(7, 4), true, 0.0],   # la caserne est plus large (7x4)
-	"L": ["v_maison_bois", Vector2i(5, 4), true, 0.0],
+	"L": ["v_maison_bois", Vector2i(7, 4), true, 0.0],
+	"U": ["v_temple_entree", Vector2i(7, 4), true, 0.0],   # entrée du temple du donjon : arche de pierre + ouverture sombre + marches (porte en colonne 3)
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
-const PORTES_MAISONS := {"M": 2, "N": 2, "T": 2, "R": 2, "S": 2, "K": 3, "L": 2}
+const PORTES_MAISONS := {"M": 3, "N": 3, "T": 3, "R": 3, "S": 3, "K": 3, "L": 3, "U": 3}
 # Touffes d'herbe semées automatiquement (images Gemini)
 const TOUFFES_G := ["v_herbe_1", "v_herbe_2"]
 # Animaux : lettre -> [planche, vitesse (px/s), peureux ?, son quand on le frappe]
