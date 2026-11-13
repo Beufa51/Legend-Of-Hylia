@@ -73,8 +73,35 @@ func _ready() -> void:
 		Etat.arrivee_texte = ""
 		_fondu.modulate.a = 1.0
 		create_tween().tween_property(_fondu, "modulate:a", 0.0, 0.8)
+		if Etat.arrivee_descente:   # on entre dans un donjon : on descend l'escalier
+			Etat.arrivee_descente = false
+			_descendre_escalier()
 		if texte != "":
 			get_tree().create_timer(1.0).timeout.connect(func(): Etat.annoncer(texte))
+
+
+# Entrée d'un donjon : le héros DESCEND l'escalier du vestibule (3 marches, pas de pierre qui résonnent, il entre peu à peu dans la pénombre).
+const SON_PAS := "res://Assets/Sons/pas_pierre.wav"
+
+
+func _descendre_escalier() -> void:
+	en_transition = true
+	joueur.set_physics_process(false)
+	joueur.velocity = Vector2.ZERO
+	joueur.direction = "haut"
+	joueur.sprite.play("repos_haut")
+	await get_tree().create_timer(1.0).timeout   # (le fondu d'arrivée se termine)
+	joueur.sprite.play("marche_haut")
+	for i in 3:
+		joueur._jouer_son(SON_PAS, -3.0)
+		var t := create_tween().set_parallel(true)
+		t.tween_property(joueur, "position:y", joueur.position.y - 16.0, 0.42)
+		t.tween_property(joueur, "modulate", Color(0.74, 0.76, 0.9), 0.42)
+		await t.finished
+	joueur.sprite.play("repos_haut")
+	create_tween().tween_property(joueur, "modulate", Color.WHITE, 0.5)
+	joueur.set_physics_process(true)
+	en_transition = false
 
 
 # Où reprendre la partie ? On cherche l'écran par son NOM (la grille a pu changer depuis la sauvegarde) ;
@@ -447,6 +474,7 @@ func _changer_de_scene(cible: String, case: Vector2i, texte: String) -> void:
 	Etat.arrivee_case = case
 	Etat.arrivee_texte = texte
 	Etat.position_sauvee = Vector2.ZERO   # la position sera mémorisée à l'arrivée
+	Etat.arrivee_descente = morceaux[1] == "Vestibule" and (morceaux[0] == "donjon" or morceaux[0] == "aile_droite")
 	get_tree().change_scene_to_file(SCENES.get(morceaux[0], SCENES["village"]))
 
 

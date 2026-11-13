@@ -196,7 +196,7 @@ put(p5e, '1', (4, 7)); put(p5e, '2', (20, 10)); put(p5e, '3', (14, 10)); put(p5e
 put(p5e, 'V', (21, 6), (3, 6))
 
 salles = [
-    ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal', 'drapeau_porte2': 'fragment_gauche'}),
+    ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'escaliers_descente': 'PackedStringArray("11 9")', 'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal', 'drapeau_porte2': 'fragment_gauche'}),
     ('Entree', (0, 0), ent, (1.0, 0.96, 0.88), {}),
     ('Epine1', (1, 0), e1, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume1'}),
     ('Plume1', (1, -1), p1, (0.90, 0.96, 1.08), {'drapeau_plaque': 'p1_plaque', 'drapeau_porte': 'p1_plaque', 'drapeau_gemme': 'plume1'}),
@@ -254,7 +254,7 @@ for nom, (gx, gy), g, c, ex in salles:
     for k, v in ex.items():
         # Écrit sans guillemets : booléens, Vector2, tableaux et nombres à virgule (ex. 14.0).
         # ATTENTION : une mélodie comme "132" doit rester un TEXTE (sinon Godot ne la lit pas).
-        brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(')) or ('.' in v and v.replace('.', '').isdigit())
+        brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v))
     out += 'layout = %s\n' % sortie(g)
 out += '''

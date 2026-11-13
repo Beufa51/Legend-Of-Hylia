@@ -13,6 +13,7 @@ script = ExtResource("1")
 [node name="Vestibule" parent="." instance=ExtResource("2")]
 grille = Vector2i(0, 1)
 teinte = Color(0.92, 0.97, 1.05, 1)
+escaliers_descente = PackedStringArray("11 9")
 drapeau_cristal = "vestibule_cristal"
 drapeau_porte = "vestibule_cristal"
 drapeau_porte2 = "fragment_gauche"

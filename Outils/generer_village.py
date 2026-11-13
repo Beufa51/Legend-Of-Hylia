@@ -410,7 +410,7 @@ put(temple_g, 'b', (0, 6), (0, 7), (0, 8))                     # l'ouest : ferm�
 for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 9), (3, 9)]:
     put(temple_g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
 put(temple_g, 'P', (20, 2), (3, 2)); put(temple_g, 'f', (8, 9), (16, 9)); put(temple_g, 'g', (10, 5), (14, 5)); put(temple_g, 'w', (6, 10), (19, 10))
-passages_temple_g = ["12 6 @donjon:Vestibule 12 10 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."]
+passages_temple_g = ["12 6 @donjon:Vestibule 12 11 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."]
 
 # --- TEMPLE DE L'AILE DROITE (3,0) : le symétrique du temple de l'aile gauche (chemin venant de l'ouest)
 temple_d = vide()
@@ -423,7 +423,7 @@ put(temple_d, 'b', (24, 6), (24, 7), (24, 8))                  # l'est (falaise,
 for (x, y) in [(1, 2), (1, 9), (22, 2), (22, 4), (22, 10), (19, 9)]:
     put(temple_d, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
 put(temple_d, 'P', (20, 2), (3, 2)); put(temple_d, 'f', (8, 9), (16, 9)); put(temple_d, 'g', (10, 5), (14, 5)); put(temple_d, 'w', (6, 10), (19, 10))
-passages_temple_d = ["12 6 @aile_droite:Vestibule 12 10 La grande porte se referme derrière toi... L'aile droite du blason : ici, tout est inversé."]
+passages_temple_d = ["12 6 @aile_droite:Vestibule 12 11 La grande porte se referme derrière toi... L'aile droite du blason : ici, tout est inversé."]
 
 terrasses_grand, escaliers_grand = ["0 1 8 8", "17 1 8 8"], ["3 6", "20 6"]          # le cou du coq : deux collines de chaque côté du grand chemin
 terrasses_parvis, escaliers_parvis = ["0 0 6 6", "19 0 6 6"], ["3 3", "21 3"]            # la tête : deux petites terrasses qui encadrent le parvis

@@ -1,5 +1,6 @@
 """Outil de développement : fabrique en code les petits bruitages qui manquent au pack (Assets/Sons/).
   - porte.wav : grincement de bois + claquement sourd (porte qui s'ouvre quand on entre dans un bâtiment)
+  - pas_pierre.wav : un pas sur une marche de pierre, avec un peu d'écho (la descente de l'escalier du donjon)
 Usage : python3 Outils/fabriquer_sons.py"""
 import os, wave
 import numpy as np
@@ -32,6 +33,20 @@ def porte():
     ecrire("porte.wav", sortie)
 
 
+def pas_pierre():
+    rng = np.random.default_rng(7)
+    t = np.arange(int(FS * 0.35)) / FS
+    choc = np.sin(2 * np.pi * 95 * t) * np.exp(-t * 38)                       # le « toc » sourd
+    claque = np.convolve(rng.normal(0, 1, t.size), np.ones(10) / 10, mode="same") * np.exp(-t * 60)
+    sortie = choc * 1.2 + claque * 0.5
+    echo = np.zeros_like(sortie)
+    for k, (retard, gain) in enumerate(((0.11, 0.45), (0.22, 0.22))):     # l'écho de la cage d'escalier
+        n = int(FS * retard)
+        echo[n:] += sortie[:-n] * gain
+    ecrire("pas_pierre.wav", sortie + echo)
+
+
 if __name__ == "__main__":
     porte()
+    pas_pierre()
     print("ok")

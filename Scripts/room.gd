@@ -76,6 +76,8 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 @export var drapeau_rayon := ""      # levé quand le rayon de lumière touche le réceptacle Y
 @export var chanteur_au_soleil := false   # la statue du coq ne chante que si le rayon l'éclaire
 @export var drapeau_fragile := ""    # levé quand TOUTES les dalles de couleur z sont bleues
+# ESCALIERS DE DESCENTE (décor, on marche dessus) : "x y" = case du coin haut-gauche d'un escalier de 3x3 cases (image escalier_donjon). Voir world.gd::_descendre_escalier.
+@export var escaliers_descente: PackedStringArray
 @export var drapeau_coffre := ""     # levé quand on ouvre le coffre Q
 @export var texte_coffre := "Tu as trouvé une petite clé !"
 @export var drapeau_levier := ""     # levé quand on bascule le levier J
@@ -201,6 +203,7 @@ func _creer_decor() -> void:
 			else:
 				_poser_mur(x, y)
 	_poser_objets()
+	_poser_escaliers()   # (après les tapis : l'escalier se pose par-dessus)
 	_poser_portes()
 	_poser_details()
 	if _source.x >= 0:
@@ -274,6 +277,14 @@ func _poser_mur(x: int, y: int) -> void:
 				_poser("mur_dot_" + d[0], pos)
 
 
+# Escaliers de descente (export `escaliers_descente`).
+func _poser_escaliers() -> void:
+	for ligne in escaliers_descente:
+		var m := ligne.split(" ", false)
+		if m.size() == 2:
+			_poser("escalier_donjon", Vector2(int(m[0]) * TUILE, int(m[1]) * TUILE))
+
+
 # Tapis, statues, braseros, vases posés d'après les lettres du plan.
 func _poser_objets() -> void:
 	var a_plots := false
@@ -287,9 +298,9 @@ func _poser_objets() -> void:
 				"T":
 					_poser("tapis_milieu", pos)
 				"S":
-					_poser("statue_chevalier", pos + Vector2(0, TUILE - 30))
+					_poser("statue_chevalier", pos + Vector2(-3, TUILE - 34))
 				"O":
-					_poser("statue_oiseau", pos + Vector2(0, TUILE - 30))
+					_poser("statue_oiseau", pos + Vector2(-3, TUILE - 34))
 				"V":
 					var pot := Pot.new()
 					pot.position = pos

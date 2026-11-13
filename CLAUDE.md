@@ -686,6 +686,14 @@
   4) MURS DE DONJON : `Outils/fabriquer_niches.py` (APRÈS traiter_pack_donjon.py) : `mur_fond` = BRIQUES assombries (plus de vide noir : les murs épais paraissent maçonnés) et `niche_grille.png` (arche à barreaux réduite) posée dans le mur du haut des salles claires (`room.gd::COLONNES_NICHES` [9, 14]). `apercu_salle.py` les montre.
      Comparé aux autres packs : Craftpix `walls_floor.png` (dalles claires à biseau, murs à arches/portes en bois, escaliers, piliers) et Pixel Crawler `Dungeon_Tiles` (pierre bleu-vert, herses, bannières 3 couleurs) : pistes pour aller plus loin (dalles de dessus de mur claires, escaliers, arches/portes en bois dans les murs).
 
+- 2026-11-13 : utilisateur : « va plus loin pour les murs ; un effet d'ESCALIER en entrant dans le donjon ; les statues jurent (pas assez détaillées) ».
+  **ÉTAPE 14j écrite (non testée dans Godot ; aperçus PIL vérifiés)** :
+  1) MURS DE DONJON : `Outils/fabriquer_murs_donjon.py` (APRÈS traiter_pack_donjon.py et fabriquer_niches.py) refait `mur_bord_n/s/e/o`, `mur_coin_*`, `mur_dot_*` : COUVERTINE de dalles claires (biseau lumineux, joints, ombre) sur 6 px le long du sol, sur les briques sombres de `mur_fond` -> murs épais maçonnés (plus de fins liserés dans le vide).
+  2) ESCALIER : `Outils/fabriquer_escalier.py` -> `escalier_donjon.png` (48x48, marches de plus en plus sombres vers le nord, rampes) ; `room.gd` export `escaliers_descente` ("x y", 3x3 cases) posé par-dessus les tapis (`_poser_escaliers`), placé en (11,9) dans les deux vestibules (generer_monde.py / generer_aile_droite.py, qui acceptent maintenant `PackedStringArray(...)`).
+     Arrivée au donjon en (12,11) (`generer_village.py`) ; `Etat.arrivee_descente` (posé par `world.gd::_changer_de_scene` pour « Vestibule » des scènes donjon / aile_droite) -> `world.gd::_descendre_escalier()` : après le fondu, le héros monte 3 marches (16 px, 0,42 s chacune) avec un PAS DE PIERRE qui résonne (`Assets/Sons/pas_pierre.wav`, fabriqué par `Outils/fabriquer_sons.py`) et entre peu à peu dans la pénombre, puis reprend la main.
+  3) STATUES : `Outils/fabriquer_statues.py` (APRÈS fabriquer_objets.py) redessine `statue_chevalier` (armure, heaume à cimier, épée, écu à croix) et `statue_oiseau` (coq de pierre : crête, bec, queue, aile) en 22x34 sur piédestal biseauté, ombrage haut-gauche ; décalage (-3, TUILE-34) dans `room.gd`, `chanteur.gd` (collision 16x30), `apercu_salle.py`.
+  Aucune statue n'existe dans les packs importés : elles sont dessinées en code.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
