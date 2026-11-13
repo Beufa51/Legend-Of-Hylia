@@ -535,6 +535,9 @@
   Les plans 5d et 5e ont été choisis par RECHERCHE AUTOMATIQUE (milliers de dispositions testées, contrainte « impossible sans le cristal »).
   À TESTER : toute l'aile droite (D1 à D5), sortie avec le fragment -> vue aérienne droite -> village (TempleDroit). Ensuite : rééquilibrage des énigmes, CORPS du donjon (épreuve finale).
 
+- 2026-11-13 : plume D5 TESTÉE par l'utilisateur : « j'ai réussi mais il faudra revoir ça » (trop dure / pas assez lisible ; solutions détaillées données en chat). À REVOIR lors du rééquilibrage des énigmes.
+  Pistes : indices plus précis, raccourcir D5b, panneau expliquant « un plot baissé = passage qui ne retourne aucune dalle / qui arrête la glissade ».
+
 ## PROCHAINE ÉTAPE : Étape 8 = VILLAGE + CARTE EXTÉRIEURE
 - Tester 8e/8f/9a (démarrage maison, portes, sprites, stand de tir, ferme + poules). Sinon d'abord 7e (sauvegarde, HUD...) et 8d (dialogues).
 - Idées rendu : sol herbe/chemin Gemini, étal du marché, panneau lisible, bannière coq dans la caserne.
