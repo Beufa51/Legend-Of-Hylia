@@ -51,15 +51,15 @@ e3 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 3 es
 e4 = epine(porte_est=True)            # la porte est s'ouvre quand la plume 4 est obtenue
 e5 = epine(est_ferme=True)            # dernière épine : fermée à l'est, la tige monte vers la plume 5 (pointe de l'aile)
 
-# --- Plume 1 : blocs + marques au sol (leçon : pousser un bloc sur sa marque)
+# --- Plume 1 : blocs + marques au sol en triangle (leçon : pousser un bloc sur sa marque)
 p1 = vide(); sol(p1, 2, 22, 2, 11); sol(p1, 11, 13, 12, 13)
 for x in range(2, 23): p1[5][x] = '#'
 for x in (11, 12, 13): p1[5][x] = 'D'
 put(p1, 'G', (12, 3)); put(p1, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p1, 'T', (x, 4))
-# Énigme VISUELLE (sans texte) : une colonne de 3 blocs à droite, une colonne de 3 marques dorées au sol à gauche, sur les mêmes rangées :
-# on comprend qu'il faut pousser chaque bloc (vers la gauche) sur sa marque. Les 3 marques allument la porte du fond.
-put(p1, 'P', (12, 7), (12, 8), (12, 9)); put(p1, 'X', (18, 7), (18, 8), (18, 9))
+# Énigme VISUELLE (sans texte) : 3 marques dorées au sol forment un TRIANGLE dont la pointe vise la porte du fond ; 3 blocs alignés en bas
+# (une ligne), chacun pile sous sa marque : on comprend qu'il faut les pousser vers le haut pour former le triangle (2, 2 et 4 poussées).
+put(p1, 'P', (12, 6), (9, 8), (15, 8)); put(p1, 'X', (9, 10), (12, 10), (15, 10))
 put(p1, 'V', (2, 11), (3, 11), (2, 10), (22, 11), (21, 11)); put(p1, 'S', (21, 6)); put(p1, 'O', (3, 7))
 
 # --- Plume 2, écran du bas : SALLE SOMBRE, « LA TÊTE DE COQ ». 12 braseros (L) dessinent une tête de coq de profil (crête à 3 pointes, bec, barbillon, œil). Un trait doré pâle

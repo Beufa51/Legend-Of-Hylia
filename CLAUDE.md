@@ -739,6 +739,9 @@
   CODE : `room.gd` exports `chemin_braseros` ("x y" dans l'ordre) + `duree_chemin`, section « Les braseros tête de coq » (`_ordonner_braseros`, `brasero_frappe`, `_echouer`, `_rearmer_chemin`, `_gerer_chemin`, `_dessiner_chemin`) ; `brasero.gd` : `ordonne`, `attendu`, `vie` (la flamme rétrécit). Les braseros SANS `chemin_braseros` gardent l'ancien comportement (autres salles, sentinelles 4d). Plan et ordre : `COQ` dans `generer_monde.py`.
   Test auto : mauvais ordre refusé, ordre correct = flag. Idées non faites : tête de coq gravée SUR la porte, brasero plus visible.
 
+- 2026-11-13 : l'utilisateur travaille désormais sur la branche `main` (GitHub Desktop). Retours : Plume 1 = « dalles lumineuses en TRIANGLE, moins une ligne droite » -> FAIT : 3 marques en triangle pointe en haut vers la porte (12,6) / (9,8) / (15,8), 3 blocs alignés en bas (9,10) (12,10) (15,10) à pousser vers le haut (2, 2, 4 poussées) ; test auto adapté.
+  Plume 2a : « pas fan de la tête de coq en lumière, pas hyper fun » -> la mécanique « allumer dans l'ordre » est à REMPLACER (code `chemin_braseros` conservé, inutilisé si on change). Propositions faites : (1) lance enflammée qu'on recharge au feu pour allumer des braseros lointains, (2) pont de lumière (sol qui n'apparaît que là où il est éclairé, course contre la montre). En attente du choix.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

@@ -72,9 +72,11 @@ func _tester_scene(chemin: String) -> void:
 			_erreurs.append("Plume1 : il faut 3 blocs et 3 marques")
 		else:
 			salle.reinitialiser()
+			# les 3 blocs sont en bas (rangée 10) : on les pousse vers le haut sur les marques du triangle
 			for bloc in salle._blocs:
-				for i in 6:
-					await bloc.pousser(Vector2i.LEFT)
+				var poussees := 4 if bloc.case.x == 12 else 2
+				for i in poussees:
+					await bloc.pousser(Vector2i.UP)
 			if not root.get_node("Etat").est("p1_plaque"):
 				_erreurs.append("Plume1 : les 3 blocs sont sur les marques mais la porte ne s'ouvre pas")
 			else:
