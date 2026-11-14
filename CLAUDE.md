@@ -819,6 +819,11 @@
 
 - 2026-11-14 : PARVIS ASSOMBRI (crépuscule, même ambiance que le château) : `ecran.gd` nouvel export `teinte_revele` (appliqué avec le plan « révélé »), `generer_village.py` accepte les couleurs en tuple (r, g, b, a) ; Parvis révélé = (0.5, 0.56, 0.85), façade Queue = (0.82, 0.86, 1.0) (déjà nocturne). Avant la révélation le Parvis reste de jour (la cérémonie le fait virer au crépuscule). Allées/temples non touchés. Vérifié en rendu réel.
 
+- 2026-11-14 : retour : « quand la forêt s'ouvre et qu'on passe à l'écran suivant, on voit un château qui n'est pas celui de la cinématique : mur droit au village, murs non droits + UN chemin de terre sur l'image ». CAUSE : la façade de la queue (`facade_queue.jpg`, mur frontal droit à 4 tours) était une AUTRE peinture que l'image du coq (donjon rond + éventail de 5 couloirs + arc de tours à flammes).
+  **CORRIGÉ (rendu réel vérifié)** : `Outils/traiter_facade_queue.py` (APRÈS traiter_coq_cinematique.py et traiter_facades.py, AVANT generer_village.py) écrit `v_facade_queue.png` = MORCEAU de l'image de la cinématique (sol + corps, griffes retirées car ce sont les stèles du Parvis ; crop (404,432)-(1004,720) à l'échelle 2/3) et `v_facade_queue_sol.png` (bande de sol, lettre `q` en (1,12), haies sur les bords) -> l'écran Queue montre exactement la forme de l'image (rien de droit).
+  CHEMINS : l'image n'avait qu'un chemin vers la droite ; le Parvis a un carrefour (une branche par aile) -> `traiter_coq_cinematique.py` copie le chemin EN MIROIR vers la gauche dans `sol.png` : la cinématique montre le même carrefour. Les griffes du Parvis et la façade partagent la même source (Coq_forteresse). Échelle : le village a ~2/3 de l'image, la cinématique 1 ; les griffes du Parvis sont à ~0,44 (écart d'échelle toléré).
+  ORDRE DES OUTILS cinématique/queue : traiter_coq_cinematique -> traiter_facades -> traiter_facade_queue -> generer_village.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

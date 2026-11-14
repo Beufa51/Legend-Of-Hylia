@@ -519,6 +519,14 @@ PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 
 RELIEF = {'GrandChemin': (terrasses_grand, escaliers_grand), 'Parvis': (terrasses_parvis, escaliers_parvis), 'VillageEst': (terrasses_est, escaliers_est), 'Verger': (terrasses_verger, escaliers_verger), 'TerrainGarde': (terrasses_terrain, escaliers_terrain), 'RouteSud': (terrasses_route, escaliers_route)}
 for _nom, (_s, _g) in SORTIES.items():
     finaliser(_g, _s, PROFONDEURS.get(_nom), *RELIEF.get(_nom, ((), ())))
+for _x in range(W):   # Queue : sous la façade, la bande de sol de l'image (haies sur les bords)
+    for _y in (12, 13):
+        queue[_y][_x] = ':' if _x in (11, 12, 13) else '.'
+for _y in (12, 13):
+    queue[_y][0] = 'b'; queue[_y][W - 1] = 'b'
+for _x in range(W):
+    if _x not in (11, 12, 13): queue[13][_x] = 'b'
+queue[12][1] = 'q'
 finaliser(parvis_revele, 'NSOE', PROFONDEURS['Parvis'], terrasses_parvis, escaliers_parvis)
 finaliser(temple_d_ouvert, 'S', {'S': 2})
 

@@ -58,7 +58,7 @@ grille = Vector2i(2, -1)
 teinte = Color(0.82, 0.86, 1.0, 1.0)
 passages = PackedStringArray("11 11 @corps:Vestibule 12 11 Tu pénètres dans la queue du coq. Au bout, quelqu'un t'attend...", "12 11 @corps:Vestibule 12 11 Tu pénètres dans la queue du coq. Au bout, quelqu'un t'attend...", "13 11 @corps:Vestibule 12 11 Tu pénètres dans la queue du coq. Au bout, quelqu'un t'attend...")
 musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
-layout = PackedStringArray("H........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", "b....f.....:::.....f....b", "bbbbbbbbbbb:::bbbbbbbbbbb")
+layout = PackedStringArray("H........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", "bq.........:::..........b", "bbbbbbbbbbb:::bbbbbbbbbbb")
 
 [node name="Verger" parent="." instance=ExtResource("2")]
 grille = Vector2i(1, 1)
