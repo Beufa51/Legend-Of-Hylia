@@ -264,6 +264,8 @@ func _nom_sol(x: int, y: int) -> String:
 		return "glace_1" if (x * 3 + y * 5) % 4 else "glace_2"
 	var h := (x * 7 + y * 13 + x * y * 3) % 37
 	var lettre := layout[y][x]
+	if ciel_etoile and lettre == ".":   # cour du château : dalles de pierre claire et chaude, joints décalés (Outils/fabriquer_sol_corps.py)
+		return "sol_dalle_cour" + ["", "_b", "", "_c", "_b", ""][(x + y * 2 + h) % 6]
 	if lettre == "," or lettre == ";":   # donjon final : terre battue de la queue, herbe de la cour (Outils/fabriquer_sol_corps.py)
 		var base := "sol_terre" if lettre == "," else "sol_herbe"
 		return base + ("" if h % 3 else ("_b" if h % 2 else "_c"))

@@ -44,9 +44,9 @@ def masque_sol():
     return m
 
 
-def plan():
+def plan(masque=None):
     """Les 14 rangées de 25 caractères : '#' mur, '.' sol (une case est du sol si la moitié au moins de sa surface l'est)."""
-    f = np.asarray(masque_sol()) > 127
+    f = np.asarray(masque if masque is not None else masque_sol()) > 127
     rangees = []
     for cy in range(14):
         ligne = ""
@@ -56,8 +56,19 @@ def plan():
     return rangees
 
 
-def fabriquer():
-    sol_m = masque_sol()
+def masque_couloir():
+    """Le COULOIR (passage dans l'épaisseur du donjon rond) : un couloir droit de 3 cases + 2 alcôves de garde de chaque côté."""
+    m = Image.new("L", (W, H), 0)
+    d = ImageDraw.Draw(m)
+    d.rectangle([176, 0, 223, H], fill=255)
+    d.rectangle([128, 80, 175, 143], fill=255)        # alcôve gauche
+    d.rectangle([224, 80, 271, 143], fill=255)        # alcôve droite
+    return m
+
+
+def fabriquer(masque=None, fichier="fond_vestibule", lumieres=((56, 40), (120, 40), (280, 40), (344, 40)), nervures=()):
+    """Peint le fond. `lumieres` : centres des flammes (lueur chaude sur le sol et les murs) ; `nervures` : y des arcs de la voûte (bandes d'ombre en travers)."""
+    sol_m = masque if masque is not None else masque_sol()
     f = np.asarray(sol_m) > 127
     fond = paver(["mur_fond"])                                        # les murs vus de dessus : briques sombres
     sol = paver(["sol_plat", "sol_plat", "sol_plat", "sol_plat_b", "sol_plat_c", "sol_plat", "sol_plat_d"])
@@ -85,11 +96,31 @@ def fabriquer():
         sh[d:, :] = face_m[:-d, :]
         sel = sh & f
         arr[sel, :3] = (arr[sel, :3] * (1.0 - 0.07 * (7 - d) / 6.0 * 3)).astype(np.uint8)
-    # relief des cloisons : léger éclairage depuis le haut-gauche
-    Image.fromarray(arr, "RGBA").save(os.path.join(TUILES, "fond_vestibule.png"))
+    # arcs de la voûte : une bande d'ombre en travers du sol, avec un filet clair au-dessus
+    for y in nervures:
+        for dy in range(8):
+            sel = f.copy()
+            sel[:, :] = False
+            if 0 <= y + dy < H:
+                sel[y + dy, :] = f[y + dy, :]
+                arr[sel, :3] = (arr[sel, :3] * (0.78 + 0.02 * dy)).astype(np.uint8)
+        if 0 <= y - 1 < H:
+            sel = np.zeros_like(f)
+            sel[y - 1, :] = f[y - 1, :]
+            arr[sel, :3] = np.minimum(255, arr[sel, :3].astype(int) + 26).astype(np.uint8)
+    # LUEUR chaude des flammes sur le sol et les murs
+    yy, xx = np.mgrid[0:H, 0:W]
+    lum = np.zeros((H, W), float)
+    for (lx, ly) in lumieres:
+        d = np.sqrt((xx - lx) ** 2 + ((yy - ly) * 1.15) ** 2)
+        lum += np.clip(1.0 - d / 78.0, 0, 1) ** 2
+    lum = np.clip(lum, 0, 1.2)[..., None]
+    arr[..., :3] = np.minimum(255, arr[..., :3] + lum * np.array([150, 82, 28]) * 0.55).astype(np.uint8)
+    Image.fromarray(arr, "RGBA").save(os.path.join(TUILES, fichier + ".png"))
 
 
 if __name__ == "__main__":
     fabriquer()
-    print("fond_vestibule.png écrit")
+    fabriquer(masque_couloir(), "fond_couloir", lumieres=((136, 88), (264, 88)), nervures=(40, 104, 168))
+    print("fond_vestibule.png et fond_couloir.png écrits")
     print("\n".join(plan()))

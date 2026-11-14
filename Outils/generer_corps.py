@@ -51,12 +51,21 @@ def sol(g, x0, x1, y0, y1, c='.'):
             g[y][x] = c
 
 
-# --- COULOIR (0,1) : on est entré dans le CORPS. Un long couloir de 5 cases, braseros le long des murs, tapis au centre.
-couloir = vide()
-sol(couloir, 10, 14, 2, 11)            # le couloir : 5 cases de large (les ouvertures du haut et du bas : 3 cases, comme les autres salles)
-sol(couloir, 11, 13, 0, 13, 'T')
-for (x, y) in [(10, 3), (14, 3), (10, 7), (14, 7), (10, 11), (14, 11)]:
-    couloir[y][x] = 'B'
+# --- COULOIR (0,1) : on est entré dans le CORPS : le passage voûté dans l'épaisseur du donjon rond. PEINT (Outils/fabriquer_vestibule.py::masque_couloir) :
+# couloir droit de 3 cases, trois arcs de voûte, deux alcôves de garde (statue + flamme) ; tapis rouge au milieu.
+import sys
+sys.path.insert(0, os.path.dirname(__file__))
+import fabriquer_vestibule
+fabriquer_vestibule.fabriquer(fabriquer_vestibule.masque_couloir(), "fond_couloir", lumieres=((136, 88), (264, 88)), nervures=(40, 104, 168))
+couloir = [list(r) for r in fabriquer_vestibule.plan(fabriquer_vestibule.masque_couloir())]
+for y in range(H):
+    for x in (11, 12, 13):
+        if couloir[y][x] == '.':
+            couloir[y][x] = 'T'
+for (x, y) in [(8, 5), (16, 5)]:
+    couloir[y][x] = 'B'                # flammes dans les alcôves
+for (x, y) in [(9, 7), (15, 7)]:
+    couloir[y][x] = 'S'                # statues de gardes dans les alcôves
 
 # --- VESTIBULE (0,2) : la QUEUE du coq (voir Coq_forteresse.jpg) : CINQ COULOIRS DE TERRE qui se rejoignent à la porte d'entrée (en bas) et s'écartent
 # en éventail vers le donjon rond ; une flamme brûle au bout de chacun ; seul le couloir du milieu continue vers le corps.
@@ -102,6 +111,7 @@ layout = %s
 [node name="Couloir" parent="." instance=ExtResource("2")]
 grille = Vector2i(0, 1)
 teinte = Color(1.0, 0.93, 0.85, 1)
+fond_image = \"fond_couloir\"
 layout = %s
 
 [node name="Vestibule" parent="." instance=ExtResource("2")]
