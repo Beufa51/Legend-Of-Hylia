@@ -29,4 +29,22 @@ for nom, base, e, c, t in [
     ("sol_herbe", (52, 86, 44), 6, 0, 2), ("sol_herbe_b", (46, 78, 40), 7, 0, 5), ("sol_herbe_c", (58, 92, 48), 6, 2, 3),
 ]:
     tuile(base, e, c, t).save(os.path.join(SORTIE, nom + ".png"))
+
+
+def dalle(base, decalage, fissure):
+    """Une dalle de cour 16x16 : pierre claire et chaude, joints sombres (les joints sont décalés une dalle sur deux), usure légère."""
+    a = np.zeros((16, 16, 3), float) + np.array(base, float)
+    a += rng.normal(0, 4, (16, 16, 1))
+    a[0, :] *= 0.72                       # joint du haut
+    a[:, 0 if decalage else 8] *= 0.78    # joint vertical (décalé selon la rangée)
+    a[1, 1:] = np.minimum(255, a[1, 1:] * 1.12)    # filet de lumière
+    if fissure:
+        x, y = int(rng.integers(3, 12)), int(rng.integers(3, 12))
+        for k in range(4):
+            a[min(15, y + k), min(15, x + (k % 2))] *= 0.6
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).convert("RGBA")
+
+
+for nom, base, dec, fis in [("sol_dalle_cour", (164, 150, 128), 0, False), ("sol_dalle_cour_b", (158, 144, 124), 1, False), ("sol_dalle_cour_c", (168, 153, 130), 0, True)]:
+    dalle(base, dec, fis).save(os.path.join(SORTIE, nom + ".png"))
 print("sols du corps écrits")

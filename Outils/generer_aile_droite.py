@@ -7,7 +7,8 @@ L'aile droite est le MIROIR de l'aile gauche (voir generer_monde.py) :
   de plus en plus longues de DROITE à GAUCHE. Drapeaux : plumeD1..plumeD4, fragment_droite.
 Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur, 3 glace, 4 reflet, 5 combinaison -> fragment (faites). AILE DROITE COMPLÈTE.
 """
-import os
+import os, re
+PREFIXE, FRAGMENT = 'plumeD', 'fragment_droite'
 W, H, E = 25, 14, 2
 RACINE = os.path.join(os.path.dirname(__file__), "..")
 
@@ -314,6 +315,13 @@ for nom, (gx, gy), g, c, ex in salles:
         # Même règle que generer_monde.py : les mélodies ("132") restent des TEXTES.
         brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v.replace('"', '\\"')))
+    m = re.match(r'PlumeD?(\d)', nom)   # plumes de pierre gravées au mur = numéro de la plume (décor repris de la façade)
+    if m:
+        n = int(m.group(1))
+        out += 'plumes_gravees = %d\n' % n
+        # les plumes gravées deviennent dorées quand la plume de la colonne est ramassée (la 5e = le fragment)
+        out += 'drapeau_plumes_gravees = "%s"\n' % (('%s%d' % (PREFIXE, n)) if n < 5 else FRAGMENT)
+    if nom.startswith('Epine'): out += 'fenetres = true\n'   # épine = le rempart de la façade : fenêtres en arche
     out += 'layout = %s\n' % sortie(g)
 out += '''
 [node name="Player" parent="." instance=ExtResource("3")]
