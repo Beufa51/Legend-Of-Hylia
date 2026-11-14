@@ -37,7 +37,7 @@ const CHEMIN_GAUCHE := [
 	Vector2(268, 118), Vector2(300, 136), Vector2(370, 150), Vector2(430, 168), Vector2(470, 215), Vector2(520, 268),
 	Vector2(585, 282), Vector2(625, 250), Vector2(665, 228), Vector2(704, 218), Vector2(704, 150), Vector2(704, 96),
 ]
-const PATTES := [Vector2(490, 690), Vector2(918, 690)]   # pointes des deux griffes = les stèles du Parvis (gauche, droite)
+const PATTES := [Vector2(490, 690), Vector2(918, 690)]   # pointes des deux griffes du château (les stèles du Parvis leur envoient leur énergie)
 const PORTE_QUEUE := Vector2(704, 680)   # la porte de la queue, entre les griffes : on la retrouve en arrivant au Parvis
 const SON_MAGIE := "res://Assets/Ninja_adventure/Audio/Sounds/Magic & Skill/Magic2.wav"
 # Calendrier des ailes (temps « anciens », sans l'ouverture) : [le plan doré apparaît, le symbole quitte la griffe, le symbole touche le plan,
@@ -241,7 +241,7 @@ func _construire() -> void:
 		l.modulate = Color(1.0, 0.62, 0.2, 0.0)
 		l.scale = Vector2(0.42, 0.42)
 		_lueurs.append(l)
-	for p in PATTES:             # les pattes brillent comme les stèles du Parvis
+	for p in PATTES:             # les pattes brillent (l'énergie des stèles du Parvis)
 		var lp := _sprite(_tex_lueur, _chateau, p, true)
 		lp.material = _additif()
 		lp.modulate = Color(1.0, 0.82, 0.35, 0.0)
@@ -589,7 +589,7 @@ func _evaluer(x: float) -> void:
 	# --- caméra ---
 	var zoom := _kf(x, [[0.0, 1.0], [6.0, 1.04], [14.0, 1.0], [17.0, 0.95], [31.0, 0.95], [33.5, 1.0], [41.5, 1.0], [47.5, 2.6, "s"]])
 	var foyer := Vector2(CENTRE.x, _kf(x, [[0.0, 384.0], [41.5, 384.0], [47.5, PORTE_QUEUE.y - 30.0, "s"]]))
-	# ouverture : plan serré sur les pattes (comme au Parvis), puis la caméra RECULE et révèle le château entier
+	# ouverture : plan serré sur les pattes du château, puis la caméra RECULE et révèle le château entier
 	var ouv := _kf(gx, [[0.0, 3.0], [1.8, 3.0], [OUV + 3.4, 1.0, "s"]])
 	zoom *= ouv
 	foyer.y = lerpf(foyer.y, PORTE_QUEUE.y - 40.0, (ouv - 1.0) / 2.0)

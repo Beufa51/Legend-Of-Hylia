@@ -382,18 +382,16 @@ def parvis_commun():
     put(g, 'f', (8, 9), (16, 9)); put(g, 'w', (6, 10), (19, 10)); put(g, 'g', (14, 6))
     return g
 
-# AVANT : la forêt (rangée d'arbres du haut + un arbre au milieu) cache le chemin du nord. Les DEUX STÈLES sont des GRIFFES de pierre (C : pied gauche, D : pied droit ; 5x2 cases, jambe qui monte dans les arbres)
-#         avec chacune une PIERRE posée devant (V : aile gauche, X : aile droite ; 3x1). On monte vers une pierre (rangée 6) avec le symbole de l'aile correspondante : il se dépose dans sa fenêtre.
+# AVANT : la forêt (rangée d'arbres du haut + un arbre au milieu) cache le chemin du nord. Les DEUX STÈLES sont des PIERRES à fenêtre (V : aile gauche, X : aile droite ; 3x1). Les griffes ne sont PAS au Parvis : elles sont rattachées au château (façade de la Queue + cinématique).
+#         On monte vers une pierre (rangée 6) avec le symbole de l'aile correspondante : il se dépose dans sa fenêtre.
 parvis = parvis_commun()
 put(parvis, 'A', (11, 2))                          # l'arbre qui bouche le chemin du milieu (avec ceux de la rangée du haut) ; il s'écarte à la fin
-put(parvis, 'C', (5, 1)); put(parvis, 'D', (14, 1))
 put(parvis, 'V', (7, 5)); put(parvis, 'X', (15, 5))
 passages_parvis = ["%d 6 $stele_g" % x for x in (7, 8, 9)] + ["%d 6 $stele_d" % x for x in (15, 16, 17)]
 
 # APRÈS (drapeau corps_revele) : les arbres du milieu se sont écartés (ouvrir() N retire ceux qui barrent les colonnes 11-13) : un chemin de 3 cases monte vers le nord (écran « Queue ») ;
-#         les arbres des côtés restent et cachent la jambe des griffes ; les pierres brillent.
+#         les pierres brillent.
 parvis_revele = parvis_commun()
-put(parvis_revele, 'C', (5, 1)); put(parvis_revele, 'D', (14, 1))
 put(parvis_revele, 'V', (7, 5)); put(parvis_revele, 'X', (15, 5))
 passages_parvis_revele = list(passages_parvis)
 
