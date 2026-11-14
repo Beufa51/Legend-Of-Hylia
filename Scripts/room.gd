@@ -457,7 +457,10 @@ func _poser_objets() -> void:
 					if y < layout.size() - 1 and layout[y + 1][x] == "w": bits |= 2
 					if x > 0 and layout[y][x - 1] == "w": bits |= 4
 					if x < layout[y].length() - 1 and layout[y][x + 1] == "w": bits |= 8
-					_poser_anime(["flaque_%d_1" % bits, "flaque_%d_1" % bits, "flaque_%d_1" % bits, "flaque_%d_1" % bits, "flaque_%d_2" % bits, "flaque_%d_2" % bits, "flaque_%d_2" % bits, "flaque_%d_2" % bits], pos, x + y)
+					var v := (x * 3 + y * 5) % 4   # 4 variantes pour que l'eau ne se répète pas
+					var f1 := "flaque_%d_%d_1" % [bits, v]
+					var f2 := "flaque_%d_%d_2" % [bits, v]
+					_poser_anime([f1, f1, f1, f1, f2, f2, f2, f2], pos, x + y)
 					if sombre:   # on doit voir les flaques dans le noir : une faible lueur bleue
 						var l := Lumiere.creer(Color(0.4, 0.65, 1.0), 0.5, 0.6)
 						l.position = pos + Vector2(8, 8)
