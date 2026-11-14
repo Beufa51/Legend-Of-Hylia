@@ -755,6 +755,13 @@
   `cristal.gd` n'est plus dessiné en polygones : image bleue qui « respire » (pulsation + halo) tant qu'il attend ; frappé = passe à l'orange doré avec éclat blanc qui retombe + halo vif ; commutateur des plots = bleu/orange selon les plots levés. Test auto OK.
   Leçon Git : après un Pull qui apporte des `.import` de l'utilisateur, relancer `godot --headless --import` côté Claude (sinon textures introuvables dans les tests), puis `git checkout` des `.import` modifiés et supprimer les `.import` non suivis créés par Claude.
 
+- 2026-11-14 : **VISION DE LA FIN v2 (utilisateur, À VALIDER : reformulée par Claude, en attente de confirmation)** — l'utilisateur n'aime PAS la vue aérienne actuelle (mode 7 + image du blason) ni la cinématique de rassemblement. Sa vision :
+  1) LES DONJONS FORMENT UN COQ : aile gauche d'un côté, aile droite de l'autre, corps + pattes au milieu (+ queue, tête). 2) DEUX STÈLES dont la FORME représente les PATTES du coq (au Parvis) : on y insère les 2 symboles (fragments d'aile).
+  3) Les 2 insérés : la forêt s'ouvre ; on avance dans un AUTRE ÉCRAN pour voir la QUEUE (= par où on ENTRE dans le donjon final) et le CORPS (= salle du boss). 4) À l'insertion, le mécanisme se met en marche : le donjon S'ASSEMBLE, les ailes se remettent dans le bon sens à leur place.
+  5) AUCUNE image de coq : en vue aérienne, ce sont les BÂTIMENTS (leurs formes seules) qui montrent que c'est un coq.
+  Conséquences prévues (à faire après validation) : 2 stèles en forme de pattes (remplacent la stèle unique `Y`/`y`, drapeaux gauche/droite) ; nouvel écran au nord du Parvis (queue = entrée du donjon final, corps/boss à l'intérieur) ; cinématique aérienne refaite à plat (plan de tous les morceaux construit depuis les vrais `layout` des salles, ailes qui pivotent
+  depuis les temples jusqu'aux épaules) SANS `blason_*.png` ; silhouette du coq (corps, tête + crête + bec, queue en éventail, pattes) construite avec des blocs de salles de même pierre que les ailes. Ancien code concerné : `world.gd::_ceremonie_stele`, `mode7.gd`, `Outils/fabriquer_plans_mode7.py`, `exterieur.gd::ecarter_foret`.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
