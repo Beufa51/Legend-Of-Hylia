@@ -32,6 +32,7 @@ var interieur := false             # vrai dans une maison (pas de vent ni de feu
 # (ex. le parvis : la forêt s'est écartée et le corps du coq est apparu, voir world.gd::_ceremonie_stele).
 @export var drapeau_revele := ""
 @export var layout_revele: PackedStringArray
+@export var teinte_revele := Color.WHITE   # teinte de l'écran une fois révélé (ex. le Parvis au crépuscule, comme l'image du château)
 @export var passages_revele: PackedStringArray
 @export var pnjs_revele: PackedStringArray   # habitants de l'écran une fois le drapeau levé (vide = plus personne : ex. le garde qui s'écarte)
 
@@ -45,6 +46,7 @@ func _appliquer_revelation() -> void:
 		layout = layout_revele
 		passages = passages_revele
 		pnjs = pnjs_revele
+		teinte = teinte_revele
 
 
 # Remet l'écran dans son état de départ (touche R). Rien à faire par défaut.
