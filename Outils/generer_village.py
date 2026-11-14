@@ -37,7 +37,7 @@ def chemin(g, x0, x1, y0, y1):
 
 # --- Emprises des objets (même table que Scripts/exterieur.gd::OBJETS_G) : sert à retirer/fermer proprement ---
 EMPRISES = {'A': (3, 3), 'a': (3, 3), 'P': (3, 3), 'r': (1, 1), 'W': (2, 2), 'e': (2, 1), 'j': (1, 2), 'b': (1, 1), 'B': (1, 1), 'o': (1, 1),
-            'x': (1, 1), 'n': (1, 1), 'u': (1, 1), 'z': (1, 1), 'Y': (1, 1), 'y': (1, 1), 'E': (3, 2), 'Q': (3, 3), '~': (1, 1),
+            'x': (1, 1), 'n': (1, 1), 'u': (1, 1), 'z': (1, 1), 'V': (1, 1), 'X': (1, 1), 'E': (3, 2), 'Q': (3, 3), '~': (1, 1),
             'f': (1, 1), 'g': (1, 1), 'w': (1, 1)}
 NON_BLOQUANTS = set('fgw=')          # fleurs et pont : on marche dessus
 def emprise(c):
@@ -150,7 +150,7 @@ put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10),
 # Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
 animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 7', 'd 17 8']
 
-TAILLES_MAISONS = {'M': (8, 3), 'N': (5, 3), 'T': (5, 3), 'R': (5, 3), 'S': (8, 3), 'L': (8, 3), 'K': (8, 3), 'U': (7, 3), 'Z': (9, 5)}
+TAILLES_MAISONS = {'M': (8, 3), 'N': (5, 3), 'T': (5, 3), 'R': (5, 3), 'S': (8, 3), 'L': (8, 3), 'K': (8, 3), 'U': (7, 3), 'F': (25, 6), 'G': (25, 6), 'J': (25, 6), 'H': (25, 6)}   # F G J H = façades des entrées du donjon (25x6 cases, collées en haut de l'écran)
 
 def degager_maisons(g):
     """Retire du plan tout décor (fleurs, tonneaux...) posé SOUS une maison."""
@@ -380,50 +380,68 @@ def parvis_commun():
     bordure(g)
     for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 4), (22, 9), (20, 11)]:
         put(g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-    put(g, 'f', (8, 9), (16, 9)); put(g, 'w', (6, 10), (19, 10)); put(g, 'g', (14, 5))
+    put(g, 'f', (8, 9), (16, 9)); put(g, 'w', (6, 10), (19, 10)); put(g, 'g', (14, 6))
     return g
 
-# AVANT : une forêt dense (rangées 1-4) cache le corps du coq ; au bout du petit chemin, la STÈLE du coq (Y),
-#         avec les empreintes des deux ailes. On s'en approche en montant : avec les 2 fragments -> cérémonie (world.gd).
+# AVANT : une forêt dense (rangées 1-4) cache le chemin du nord. Devant elle, les DEUX STÈLES en forme de pattes de coq (V : aile gauche, X : aile droite).
+#         On s'en approche en montant (cases (10,5) et (14,5)) avec le symbole de l'aile correspondante : il se dépose dans la niche (world.gd::_ceremonie_stele).
 parvis = parvis_commun()
 for y in (1, 3):
     for x in range(7, 18, 2):
         put(parvis, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-chemin(parvis, 12, 12, 5, 5); put(parvis, 'Y', (12, 5))
-passages_parvis = ["12 6 $stele"]
+chemin(parvis, 10, 14, 5, 5); put(parvis, 'V', (10, 4)); put(parvis, 'X', (14, 4))
+passages_parvis = ["10 5 $stele_g", "14 5 $stele_d"]
 
-# APRÈS (drapeau corps_revele) : la forêt s'est écartée, le CORPS DU COQ (bâtiment en forme de coq Z, 9x5, porte en (12,4)) se dresse ;
-#         la stèle, avec les deux ailes, s'est rangée à gauche du passage.
+# APRÈS (drapeau corps_revele) : la forêt s'est écartée, un chemin de 3 cases monte vers le nord (écran « Queue » : l'entrée du donjon final) ;
+#         les deux stèles brillent de chaque côté du chemin.
 parvis_revele = parvis_commun()
-for y in range(0, 4):                       # mêmes arbres que ceux qui s'écartent pendant la cérémonie (world.gd : colonnes 7-18, rangées 0-3)
+for y in range(0, 4):                       # mêmes arbres que ceux qui s'écartent pendant le dépôt du 2e symbole (world.gd : colonnes 7-18, rangées 0-3)
     for x in range(7, 19): parvis_revele[y][x] = '.'
-put(parvis_revele, 'Z', (8, 0)); chemin(parvis_revele, 12, 12, 5, 5); put(parvis_revele, 'y', (10, 5))
-passages_parvis_revele = ["12 4 @corps:Arene 12 11 Le corps du coq. Au fond de la grande salle, quelqu'un t'attend...", "10 6 $stele"]
+chemin(parvis_revele, 10, 14, 5, 5); put(parvis_revele, 'V', (10, 4)); put(parvis_revele, 'X', (14, 4))
+passages_parvis_revele = ["10 5 $stele_g", "14 5 $stele_d"]
 
-temple_g = vide()
+
+def facade_ecran(lettre, est=True):
+    """Un écran d'entrée de donjon : la FAÇADE (F G J H) collée en haut, le chemin qui monte vers sa porte (3 cases, rangée 5), peu d'arbres sur les côtés (jamais derrière)."""
+    g = vide()
+    put(g, lettre, (0, 0))
+    chemin(g, 11, 13, 6, 13)
+    bordure(g, haut=False)
+    return g
+
+
+# --- ENTRÉE DE L'AILE GAUCHE (1,0) : 5 tours de plus en plus hautes vers la droite (les plumes de l'aile) ; porte au centre
+temple_g = facade_ecran('F')
 chemin(temple_g, 11, 24, 6, 8)                                 # vient de l'est (le parvis) ; sortie sud vers le verger
-chemin(temple_g, 12, 12, 5, 5)                                 # devant la porte du temple
-put(temple_g, 'U', (9, 4))                                     # temple de l'aile gauche (arche + marches) : porte en (12,6) -> donjon
-put(temple_g, 'j', (7, 3), (17, 3)); put(temple_g, 'o', (6, 4), (18, 4))
-bordure(temple_g)
-put(temple_g, 'b', (0, 6), (0, 7), (0, 8))                     # l'ouest : fermé
-for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 9), (3, 9)]:
+for (x, y) in [(0, 7), (0, 9), (22, 11), (3, 9)]:
     put(temple_g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-put(temple_g, 'P', (20, 2), (3, 2)); put(temple_g, 'f', (8, 9), (16, 9)); put(temple_g, 'g', (10, 5), (14, 5)); put(temple_g, 'w', (6, 10), (19, 10))
-passages_temple_g = ["12 6 @donjon:Vestibule 12 11 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."]
+put(temple_g, 'f', (8, 9), (16, 9)); put(temple_g, 'g', (7, 7), (15, 7)); put(temple_g, 'w', (6, 10), (19, 10)); put(temple_g, 'j', (9, 7), (17, 7))
+TXT_G = "La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."
+passages_temple_g = ["%d 5 @donjon:Vestibule 12 11 %s" % (x, TXT_G) for x in (11, 12, 13)]
 
-# --- TEMPLE DE L'AILE DROITE (3,0) : le symétrique du temple de l'aile gauche (chemin venant de l'ouest)
-temple_d = vide()
-chemin(temple_d, 0, 13, 6, 8)                                  # vient de l'ouest (le parvis)
-chemin(temple_d, 12, 12, 5, 5)                                 # devant la porte du temple
-put(temple_d, 'U', (9, 4))                                     # même arche que l'aile gauche : porte en (12,6) -> aile droite
-put(temple_d, 'j', (7, 3), (17, 3)); put(temple_d, 'o', (6, 4), (18, 4))
-bordure(temple_d)
-put(temple_d, 'b', (24, 6), (24, 7), (24, 8))                  # l'est (falaise, plus tard) : fermé
-for (x, y) in [(1, 2), (1, 9), (22, 2), (22, 4), (22, 10), (19, 9)]:
-    put(temple_d, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-put(temple_d, 'P', (20, 2), (3, 2)); put(temple_d, 'f', (8, 9), (16, 9)); put(temple_d, 'g', (10, 5), (14, 5)); put(temple_d, 'w', (6, 10), (19, 10))
-passages_temple_d = ["12 6 @aile_droite:Vestibule 12 11 La grande porte se referme derrière toi... L'aile droite du blason : ici, tout est inversé."]
+# --- ENTRÉE DE L'AILE DROITE (3,0) : le miroir de la gauche (tours de plus en plus hautes vers la GAUCHE).
+#     FERMÉE (herse baissée, façade G) tant que l'aile gauche n'est pas réussie : un GARDE se tient devant. Une fois `fragment_gauche` levé (le village est rechargé
+#     après le donjon), le plan « révélé » s'applique : façade J (herse levée), porte ouverte, plus de garde.
+def temple_droit(lettre):
+    g = facade_ecran(lettre)
+    chemin(g, 0, 13, 6, 8)                                     # vient de l'ouest (le parvis)
+    for (x, y) in [(22, 7), (22, 10), (1, 11), (19, 9)]:
+        put(g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+    put(g, 'f', (8, 9), (16, 9)); put(g, 'g', (7, 7), (15, 7)); put(g, 'w', (6, 10), (19, 10)); put(g, 'j', (9, 7), (17, 7))
+    return g
+temple_d = temple_droit('G')
+temple_d_ouvert = temple_droit('J')
+TXT_D = "La grande porte se referme derrière toi... L'aile droite : ici, tout est inversé."
+passages_temple_d_ouvert = ["%d 5 @aile_droite:Vestibule 12 11 %s" % (x, TXT_D) for x in (11, 12, 13)]
+pnjs_temple_d = ["Villager3 12 6 haut! | Garde du temple | Halte, recrue ! Cette aile ne s'ouvre qu'à celui qui a réussi l'aile gauche. // Va d'abord l'affronter. Reviens quand tu en rapporteras le symbole."]
+
+# --- QUEUE (2,-1) : au nord du parvis, une fois la forêt écartée. L'entrée du donjon final : un éventail de tours aux pointes en flammes (la queue du coq).
+queue = facade_ecran('H')
+for (x, y) in [(1, 8), (0, 10), (22, 9), (22, 11), (4, 11)]:
+    put(queue, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
+put(queue, 'f', (8, 9), (16, 10)); put(queue, 'g', (7, 7), (17, 8)); put(queue, 'w', (6, 11), (19, 11)); put(queue, 'j', (9, 7), (15, 7))
+TXT_Q = "Tu pénètres dans la queue du coq. Au bout, quelqu'un t'attend..."
+passages_queue = ["%d 5 @corps:Vestibule 12 11 %s" % (x, TXT_Q) for x in (11, 12, 13)]
 
 terrasses_grand, escaliers_grand = ["0 1 8 8", "17 1 8 8"], ["3 6", "20 6"]          # le cou du coq : deux collines de chaque côté du grand chemin
 terrasses_parvis, escaliers_parvis = ["0 0 6 6", "19 0 6 6"], ["3 3", "21 3"]            # la tête : deux petites terrasses qui encadrent le parvis
@@ -447,11 +465,13 @@ COFFRES = {
 }
 ecrans = [
     # --- ailes (y=0)
-    ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile gauche. Derrière cette porte, l'épreuve t'attend."}),
+    ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
     ('Parvis', (2, 0), parvis, {'terrasses': terrasses_parvis, 'escaliers': escaliers_parvis, 'passages': passages_parvis, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
-        'drapeau_revele': 'corps_revele', 'layout_revele': [''.join(r) for r in parvis_revele], 'passages_revele': passages_parvis_revele,
-        'indice': "Une stèle se dresse devant la forêt. Un coq y est gravé, ses ailes creusées dans la pierre..."}),
-    ('TempleDroit', (3, 0), temple_d, {'passages': passages_temple_d, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg', 'indice': "Le temple de l'aile droite. Derrière cette porte, la seconde moitié de l'épreuve."}),
+        'drapeau_revele': 'corps_revele', 'layout_revele': parvis_revele, 'passages_revele': passages_parvis_revele}),
+    ('TempleDroit', (3, 0), temple_d, {'passages': [], 'pnjs': pnjs_temple_d, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
+        'drapeau_revele': 'fragment_gauche', 'layout_revele': temple_d_ouvert, 'passages_revele': passages_temple_d_ouvert, 'pnjs_revele': []}),
+    # --- la QUEUE du coq (y=-1) : au nord du parvis (accessible une fois la forêt écartée)
+    ('Queue', (2, -1), queue, {'passages': passages_queue, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
     # --- cou et ailes basses (y=1)
     ('Verger', (1, 1), verger, {'animaux': animaux_verger, 'pnjs': pnjs_verger, 'terrasses': terrasses_verger, 'escaliers': escaliers_verger}),
     ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand, 'terrasses': terrasses_grand, 'escaliers': escaliers_grand}),
@@ -483,7 +503,7 @@ depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans
 
 # Sorties de chaque écran (N, S, E, O) ; `profondeurs` = longueur du chemin creusé quand ce n'est pas la valeur par défaut (voir ouvrir())
 SORTIES = {
-    'TempleGauche': ('ES', temple_g), 'Parvis': ('SOE', parvis), 'TempleDroit': ('OS', temple_d),
+    'TempleGauche': ('ES', temple_g), 'Parvis': ('SOE', parvis), 'TempleDroit': ('OS', temple_d), 'Queue': ('S', queue),
     'Verger': ('NS', verger), 'GrandChemin': ('NS', grand), 'TerrainGarde': ('NS', terrain),
     'VillageOuest': ('NES', ouest), 'PlaceDuCoq': ('NOES', place), 'VillageEst': ('NOS', est),
     'MaisonHeros': ('NE', heros), 'Riviere': ('NOES', riviere), 'Ferme': ('NO', ferme), 'RouteSud': ('N', route),
@@ -492,7 +512,8 @@ PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 
 RELIEF = {'GrandChemin': (terrasses_grand, escaliers_grand), 'Parvis': (terrasses_parvis, escaliers_parvis), 'VillageEst': (terrasses_est, escaliers_est), 'Verger': (terrasses_verger, escaliers_verger), 'TerrainGarde': (terrasses_terrain, escaliers_terrain), 'RouteSud': (terrasses_route, escaliers_route)}
 for _nom, (_s, _g) in SORTIES.items():
     finaliser(_g, _s, PROFONDEURS.get(_nom), *RELIEF.get(_nom, ((), ())))
-finaliser(parvis_revele, 'SOE', PROFONDEURS['Parvis'], terrasses_parvis, escaliers_parvis)
+finaliser(parvis_revele, 'NSOE', PROFONDEURS['Parvis'], terrasses_parvis, escaliers_parvis)
+finaliser(temple_d_ouvert, 'OS')
 
 
 def ecrire_scene():
@@ -515,6 +536,8 @@ donjon = false
         out += '[node name="%s" parent="." instance=ExtResource("%s")]\n' % (nom, "4" if nom.startswith("Interieur") else "2")
         out += 'grille = Vector2i(%d, %d)\n' % (gx, gy)
         for k, v in props.items():
+            if v and isinstance(v[0], list):   # un plan (liste de rangées-listes) : on le transforme en texte seulement ICI, une fois finalisé
+                v = [''.join(r) for r in v]
             if isinstance(v, list):   # liste de textes -> PackedStringArray
                 out += '%s = PackedStringArray(%s)\n' % (k, ', '.join('"%s"' % e for e in v))
             else:

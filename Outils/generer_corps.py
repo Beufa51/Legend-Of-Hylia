@@ -1,7 +1,9 @@
-"""Outil de développement : écrit Scenes/corps.tscn (le CORPS DU COQ = salle du GARDIEN, fin du jeu).
+"""Outil de développement : écrit Scenes/corps.tscn (le DONJON FINAL du coq : queue, corps et salle du GARDIEN).
 Usage : python3 Outils/generer_corps.py
-On y entre par le parvis révélé (porte du bâtiment en forme de coq, voir generer_village.py).
-Une seule grande salle « Arene » : le Gardien (Scripts/gardien.gd) attend au fond, sur le tapis.
+On y entre par la façade de la QUEUE (écran « Queue » du village, voir generer_village.py). Trois écrans empilés vers le haut :
+  Vestibule (0,2) = la queue du coq (hall d'entrée) -> Couloir (0,1) = on entre dans le corps -> Arene (0,0) = le boss.
+Les grilles descendent vers le bas de l'écran : monter à l'écran = aller vers y plus petit. L'arène reste en (0,0) (le Gardien y a ses coordonnées).
+Dans l'arène : le Gardien (Scripts/gardien.gd) attend au fond, sur le tapis.
 Les statues (S) et les braseros (B) servent d'obstacles : le Gardien s'y assomme quand il fonce.
 Lettres des plans : voir l'en-tête de Scripts/room.gd. Une salle = 25 x 14 cases ; murs du bord de 2 cases.
 """
@@ -29,9 +31,42 @@ for (x, y) in [(3, 3), (21, 3), (3, 10), (21, 10)]:
     arene[y][x] = 'B'              # braseros dans les coins
 arene[2][8] = 'O'; arene[2][16] = 'O'   # statues d'oiseau au fond
 
-passages = ['%d 13 @village:Parvis 12 5' % x for x in (11, 12, 13)]
+def vide():
+    g = [['#'] * W for _ in range(H)]
+    return g
+
+
+def sol(g, x0, x1, y0, y1, c='.'):
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            g[y][x] = c
+
+
+# --- COULOIR (0,1) : on est entré dans le CORPS. Un long couloir de 5 cases, braseros le long des murs, tapis au centre.
+couloir = vide()
+sol(couloir, 10, 14, 2, 11)            # le couloir : 5 cases de large (les ouvertures du haut et du bas : 3 cases, comme les autres salles)
+sol(couloir, 11, 13, 0, 13, 'T')
+for (x, y) in [(10, 3), (14, 3), (10, 7), (14, 7), (10, 11), (14, 11)]:
+    couloir[y][x] = 'B'
+
+# --- VESTIBULE (0,2) : la QUEUE du coq, le hall d'entrée. La grande porte du bas ramène à la façade de la queue (village). Tapis jusqu'au couloir.
+vestibule = vide()
+sol(vestibule, 2, 22, 2, 11)
+sol(vestibule, 11, 13, 0, 1)
+sol(vestibule, 11, 13, 12, 13)
+sol(vestibule, 11, 13, 0, 11, 'T')
+for (x, y) in [(3, 3), (21, 3), (3, 10), (21, 10)]:
+    vestibule[y][x] = 'B'
+for (x, y) in [(7, 4), (17, 4)]:
+    vestibule[y][x] = 'O'          # statues de coq qui gardent l'entrée
+for (x, y) in [(7, 9), (17, 9)]:
+    vestibule[y][x] = 'S'
+for (x, y) in [(2, 2), (3, 2), (22, 2), (21, 2), (2, 11), (22, 11)]:
+    vestibule[y][x] = 'V'
+passages_vestibule = ['%d 13 @village:Queue 12 7' % x for x in (11, 12, 13)]
+
 GARDIEN = (12 * 16 + 8, 3 * 16 + 11)     # au fond de la salle, pieds sur la case (12,3)
-JOUEUR = (12 * 16 + 8, 11 * 16 + 3)      # case (12,11) (seulement si on lance la scène directement)
+JOUEUR = (12 * 16 + 8, 2 * 224 + 11 * 16 + 3)   # case (12,11) du vestibule (seulement si on lance la scène directement)
 
 out = '''[gd_scene load_steps=5 format=3]
 
@@ -49,6 +84,16 @@ cote = "corps"
 
 [node name="Arene" parent="." instance=ExtResource("2")]
 teinte = Color(1.04, 0.96, 0.86, 1)
+layout = %s
+
+[node name="Couloir" parent="." instance=ExtResource("2")]
+grille = Vector2i(0, 1)
+teinte = Color(1.0, 0.93, 0.85, 1)
+layout = %s
+
+[node name="Vestibule" parent="." instance=ExtResource("2")]
+grille = Vector2i(0, 2)
+teinte = Color(1.06, 0.95, 0.84, 1)
 passages = PackedStringArray(%s)
 layout = %s
 
@@ -60,8 +105,6 @@ script = ExtResource("4")
 position = Vector2(%d, %d)
 
 [node name="Camera2D" type="Camera2D" parent="."]
-''' % (', '.join('"%s"' % p for p in passages), sortie(arene), GARDIEN[0], GARDIEN[1], JOUEUR[0], JOUEUR[1])
+''' % (sortie(arene), sortie(couloir), ', '.join('"%s"' % p for p in passages_vestibule), sortie(vestibule), GARDIEN[0], GARDIEN[1], JOUEUR[0], JOUEUR[1])
 open(os.path.join(RACINE, 'Scenes', 'corps.tscn'), 'w', encoding='utf-8').write(out)
-print("corps.tscn écrit")
-for r in arene:
-    print(''.join(r))
+print("corps.tscn écrit : Vestibule (0,2) -> Couloir (0,1) -> Arene (0,0)")

@@ -64,12 +64,20 @@ const OBJETS_G := {
 	"K": ["v_maison_caserne", Vector2i(8, 3), true, 0.0],   # la caserne
 	"L": ["v_maison_bois", Vector2i(8, 3), true, 0.0],      # la grange
 	"U": ["v_temple_entree", Vector2i(7, 3), true, 0.0],    # ENTRÉE DE DONJON : façade de pierre à créneaux, pilastres, bannières, torches et grande arche sombre (porte en colonne 3)
-	"Z": ["v_corps_coq", Vector2i(9, 5), true, 0.0],       # le CORPS DU COQ (parvis révélé) : bâtiment en forme de coq, porte en colonne 4 (Outils/fabriquer_plans_mode7.py)
-	"Y": ["v_stele_vide", Vector2i(1, 1), true, 0.0],      # stèle du coq (parvis), empreintes des ailes vides (Outils/fabriquer_stele.py)
-	"y": ["v_stele_pleine", Vector2i(1, 1), true, 0.0],    # la même, avec les deux ailes posées   # entrée du temple du donjon : arche de pierre + ouverture sombre + marches (porte en colonne 3)
+	# FAÇADES des trois entrées du donjon du coq (400x96 = 25x6 cases, collées en haut de l'écran : le bâtiment CONTINUE sur l'écran du dessus, sans arbres derrière).
+	# Elles sont solides ; les cases de la porte (rangée 5, colonnes 11-13) sont des `passages` (donc libres). Voir Outils/fabriquer_facade.py.
+	"F": ["v_facade_aile_g", Vector2i(25, 6), true, 0.0],          # entrée de l'aile GAUCHE : 5 tours de plus en plus hautes vers la droite
+	"G": ["v_facade_aile_d_fermee", Vector2i(25, 6), true, 0.0],   # entrée de l'aile DROITE, herse baissée (le garde barre la route)
+	"J": ["v_facade_aile_d", Vector2i(25, 6), true, 0.0],          # entrée de l'aile DROITE, herse levée
+	"H": ["v_facade_queue", Vector2i(25, 6), true, 0.0],           # entrée du donjon final : la QUEUE du coq (éventail de tours aux pointes en flammes)
+	# STÈLES en forme de pattes de coq (parvis) : on y dépose le symbole d'une aile (voir STELES, world.gd::_ceremonie_stele, Outils/fabriquer_steles_pattes.py)
+	"V": ["v_stele_g_vide", Vector2i(1, 1), true, 0.0],            # stèle de l'aile gauche
+	"X": ["v_stele_d_vide", Vector2i(1, 1), true, 0.0],            # stèle de l'aile droite
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
-const PORTES_MAISONS := {"M": 2, "N": 2, "T": 2, "R": 2, "S": 2, "K": 2, "L": 2, "U": 3, "Z": 4}
+const PORTES_MAISONS := {"M": 2, "N": 2, "T": 2, "R": 2, "S": 2, "K": 2, "L": 2, "U": 3}
+# Stèles : lettre -> [côté, image une fois le symbole déposé]
+const STELES := {"V": ["gauche", "v_stele_g_pleine"], "X": ["droite", "v_stele_d_pleine"]}
 # Touffes d'herbe semées automatiquement (images Gemini)
 const TOUFFES_G := ["v_herbe_1", "v_herbe_2"]
 # Animaux : lettre -> [planche, vitesse (px/s), peureux ?, son quand on le frappe]
@@ -370,6 +378,9 @@ func _poser_objet_g(def: Array, cellule: Vector2i) -> void:
 	var emprise: Vector2i = def[1]
 	var image := _poser_sprite(def[0], cellule, emprise, def[3])
 	_objets[cellule] = image
+	var lettre_objet := layout[cellule.y][cellule.x]
+	if STELES.has(lettre_objet) and Etat.est("stele_" + STELES[lettre_objet][0]):
+		image.texture = _image(STELES[lettre_objet][1])   # le symbole est déjà déposé
 	if def[2] and image.texture.get_height() >= 24:   # grand objet : le héros doit pouvoir passer derrière
 		image.z_index = 1   # arbres/maisons : devant le sol ; chaque acteur choisit de passer devant (2) ou derrière (0)
 		_hauts.append([image, (cellule.y + emprise.y) * TUILE, Vector2(cellule.x * TUILE - 8, (cellule.x + emprise.x) * TUILE + 8)])
@@ -502,6 +513,31 @@ func point_arrivee() -> Vector2:
 					meilleure = c
 					distance = d
 	return position + Vector2(meilleure * TUILE) + Vector2(8, 3)
+
+
+# --- Les stèles-pattes (parvis) ------------------------------------------------------------------
+# Case d'une stèle ("gauche" ou "droite") dans cet écran ; (-1, -1) s'il n'y en a pas.
+func case_stele(cote: String) -> Vector2i:
+	for lettre in STELES:
+		if STELES[lettre][0] == cote:
+			for y in layout.size():
+				var x := layout[y].find(lettre)
+				if x >= 0:
+					return Vector2i(x, y)
+	return Vector2i(-1, -1)
+
+
+# Le symbole vient d'être déposé : la stèle prend son image « pleine » avec un éclat.
+func allumer_stele(cote: String) -> void:
+	var c := case_stele(cote)
+	if c.x < 0 or not _objets.has(c):
+		return
+	var image: Sprite2D = _objets[c]
+	for lettre in STELES:
+		if STELES[lettre][0] == cote:
+			image.texture = _image(STELES[lettre][1])
+	image.modulate = Color(2.4, 2.1, 1.5)
+	create_tween().tween_property(image, "modulate", Color.WHITE, 0.8)
 
 
 # --- La forêt qui s'écarte (parvis, cérémonie de la stèle : world.gd::_ceremonie_stele) -------------------

@@ -27,6 +27,8 @@ func _initialize() -> void:
 		etat.sauvegarde_active = false
 	for chemin in SCENES:
 		await _tester_scene(chemin)
+	await _tester_garde_et_steles()
+	await _tester_donjon_final()
 	await _tester_tactile()
 	_conclure()
 
@@ -160,6 +162,81 @@ func _tester_tactile() -> void:
 		_erreurs.append("Tactile : relâcher A ne relâche pas attack")
 	print("OK  contrôles tactiles")
 	t.queue_free()
+
+
+# Village : le garde de l'aile droite (tant que l'aile gauche n'est pas réussie), les deux stèles-pattes, la forêt qui s'ouvre.
+func _tester_garde_et_steles() -> void:
+	var etat = root.get_node("Etat")
+	var paquet := load("res://Scenes/village.tscn") as PackedScene
+	# 1) aile gauche NON réussie : façade fermée (G) et un garde devant
+	etat.drapeaux.erase("fragment_gauche")
+	var v1 := paquet.instantiate()
+	root.add_child(v1)
+	await process_frame
+	var droit1 = v1.get_node("TempleDroit")
+	var gardes1 := 0
+	for c in droit1.get_children():
+		if c.has_method("parler"):
+			gardes1 += 1
+	if droit1.layout[0][0] != "G" or gardes1 != 1 or droit1.passages.size() != 0:
+		_erreurs.append("Garde : porte fermée attendue (façade G, 1 garde, aucun passage) : %s / %d / %d" % [droit1.layout[0][0], gardes1, droit1.passages.size()])
+	# 2) stèles : sans fragment, rien ; avec, le symbole se dépose ; les deux = la forêt s'ouvre
+	var parvis = v1.get_node("Parvis")
+	if parvis.case_stele("gauche") != Vector2i(10, 4) or parvis.case_stele("droite") != Vector2i(14, 4):
+		_erreurs.append("Stèles : cases inattendues %s %s" % [parvis.case_stele("gauche"), parvis.case_stele("droite")])
+	v1.peut_changer_scene = false
+	v1.joueur.direction = "haut"
+	await v1._ceremonie_stele("gauche")
+	if etat.est("stele_gauche"):
+		_erreurs.append("Stèles : la gauche s'est déposée sans le fragment")
+	etat.noter("fragment_gauche")
+	etat.noter("fragment_droite")
+	await v1._ceremonie_stele("gauche")
+	if not etat.est("stele_gauche") or etat.est("corps_revele"):
+		_erreurs.append("Stèles : après la gauche seule, stele_gauche doit être posé et la forêt fermée")
+	await v1._ceremonie_stele("droite")
+	if not etat.est("stele_droite") or not etat.est("corps_revele"):
+		_erreurs.append("Stèles : les deux symboles déposés doivent ouvrir la forêt (corps_revele)")
+	v1.queue_free()
+	await process_frame
+	# 3) rechargé avec les drapeaux : garde parti, porte ouverte (J, 3 passages), parvis ouvert au nord, stèles allumées
+	var v2 := paquet.instantiate()
+	root.add_child(v2)
+	await process_frame
+	var droit2 = v2.get_node("TempleDroit")
+	var gardes2 := 0
+	for c in droit2.get_children():
+		if c.has_method("parler"):
+			gardes2 += 1
+	if droit2.layout[0][0] != "J" or gardes2 != 0 or droit2.passages.size() != 3:
+		_erreurs.append("Garde : porte ouverte attendue après l'aile gauche (J, 0 garde, 3 passages)")
+	var parvis2 = v2.get_node("Parvis")
+	if parvis2.layout[0][12] != ":" or v2.get_node_or_null("Queue") == null:
+		_erreurs.append("Parvis : le chemin du nord doit être ouvert et l'écran Queue présent")
+	if not v2.get_node("Queue").layout[0][0] == "H":
+		_erreurs.append("Queue : façade H attendue")
+	print("OK  garde, stèles-pattes, forêt qui s'ouvre")
+	for nom in ["stele_gauche", "stele_droite", "corps_revele", "fragment_gauche", "fragment_droite"]:
+		etat.drapeaux.erase(nom)
+	v2.queue_free()
+	await process_frame
+
+
+# Donjon final : vestibule (queue) -> couloir -> arène.
+func _tester_donjon_final() -> void:
+	var scene := (load("res://Scenes/corps.tscn") as PackedScene).instantiate()
+	root.add_child(scene)
+	await process_frame
+	var attendu := {"Vestibule": Vector2i(0, 2), "Couloir": Vector2i(0, 1), "Arene": Vector2i(0, 0)}
+	for nom in attendu:
+		var e = scene.get_node_or_null(nom)
+		if e == null or e.grille != attendu[nom]:
+			_erreurs.append("Donjon final : écran %s manquant ou mal placé" % nom)
+	if scene.get_node("Vestibule").passages.size() != 3 or scene.get_node("Arene").passages.size() != 0:
+		_erreurs.append("Donjon final : le vestibule doit avoir 3 passages vers la queue, l'arène aucun")
+	print("OK  donjon final : vestibule, couloir, arène")
+	scene.queue_free()
+	await process_frame
 
 
 func _verifier_plan(chemin: String, e: Node) -> void:

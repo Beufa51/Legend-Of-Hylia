@@ -133,7 +133,11 @@ func _process(_delta: float) -> void:
 	var nouvelle := _salle_du_joueur()
 	if donjon and nouvelle == SORTIE_DONJON and Etat.est("fragment_" + cote):
 		if not Etat.est("vue_aerienne_" + cote):
-			VueAerienne.new(self).jouer(cote)   # on sort du donjon avec l'aile : vue du ciel
+			if VUE_AERIENNE_A_LA_SORTIE:
+				VueAerienne.new(self).jouer(cote)   # on sort du donjon avec l'aile : vue du ciel
+			else:   # (désactivée : la vision de la fin v2 la remplace par l'assemblage au parvis, voir CLAUDE.md)
+				Etat.noter("vue_aerienne_" + cote)
+				_ramener("@village:" + _temple(), Vector2i(12, 7), "Tu ressors du donjon avec le symbole de l'aile. Les stèles du parvis l'attendent !")
 		else:
 			_ramener("@village:" + _temple(), Vector2i(12, 7), "")   # sorties suivantes : on retourne directement au village
 		return
@@ -428,7 +432,7 @@ func _creer_menu_dev() -> void:
 	bouton_cine.pressed.connect(_dev_cinematique)
 	boite.add_child(bouton_cine)
 	var bouton_stele := Button.new()
-	bouton_stele.text = "Test stèle : donner les 2 fragments (forêt remise)"
+	bouton_stele.text = "Test stèles : donner les 2 fragments (stèles et forêt remises)"
 	bouton_stele.add_theme_font_size_override("font_size", 8)
 	bouton_stele.focus_mode = Control.FOCUS_NONE
 	bouton_stele.pressed.connect(_dev_test_stele)
@@ -483,9 +487,10 @@ func _changer_de_scene(cible: String, case: Vector2i, texte: String) -> void:
 func _dev_test_stele() -> void:
 	Etat.noter("fragment_gauche")
 	Etat.noter("fragment_droite")
-	Etat.drapeaux.erase("corps_revele")
+	for nom in ["corps_revele", "stele_gauche", "stele_droite"]:
+		Etat.drapeaux.erase(nom)
 	Etat.sauver()
-	_changer_de_scene("@village:Parvis", Vector2i(12, 8), "Monte vers la stèle avec les deux ailes du blason.")
+	_changer_de_scene("@village:Parvis", Vector2i(12, 8), "Monte vers chaque stèle pour y déposer le symbole d'une aile.")
 
 
 func _dev_nouvelle_partie() -> void:
@@ -532,6 +537,7 @@ const CENTRE_BLASON := Vector2(200, 112)   # centre du blason à l'écran (l'éc
 const TAILLE_BLASON := Vector2(244, 132)   # taille de blason_socle.png
 # Racine de chaque aile dans l'image (affichée par fabriquer_objets.py) = point où l'aile s'accroche au corps
 const PIVOTS := {"gauche": Vector2(98, 61), "droite": Vector2(146, 61)}
+const VUE_AERIENNE_A_LA_SORTIE := false   # l'ancienne vue du ciel à la sortie d'une aile (image du coq) : coupée en attendant la nouvelle cinématique
 const SORTIE_DONJON := Vector2i(0, 2)      # l'écran sous le vestibule = dehors
 const SON_ENVOL := "res://Assets/Ninja_adventure/Audio/Sounds/Whoosh & Slash/Launch.wav"
 const SON_REVELATION := "res://Assets/Ninja_adventure/Audio/Jingles/Secret1.wav"
@@ -727,83 +733,89 @@ func _maj_hud() -> void:
 	_icone_fragment.visible = Etat.est("fragment_" + cote)
 
 
-# --- La STÈLE DU COQ (parvis) : les deux ailes s'y emboîtent, la forêt s'écarte, le corps du coq apparaît ---------
-# Lancée par le passage "$stele" (ecran.gd), seulement quand le joueur MONTE vers la stèle.
-# 1) les deux fragments volent du joueur vers la stèle ; 2) la terre tremble, la FORÊT S'ÉCARTE devant le héros et le
-# corps du coq apparaît ; 3) vue MODE 7 (mode7.gd) : les bâtiments des deux ailes se soulèvent, pivotent et s'emboîtent
-# sur le bâtiment du corps ; de haut, ils dessinent le coq ; 4) on revient au parvis, rechargé avec son plan « révélé ».
-const STELE_CASE := Vector2i(12, 5)          # case de la stèle sur l'écran Parvis
+# --- Les STÈLES-PATTES (parvis) -----------------------------------------------------------------------
+# Deux stèles en forme de pattes de coq. On y dépose, une aile après l'autre (la gauche d'abord : un garde barre la droite), le symbole
+# rapporté du donjon (le fragment d'aile). Quand les DEUX sont déposés, un mécanisme se met en marche : la terre tremble, la forêt s'écarte
+# et un chemin mène vers le nord, à la QUEUE du coq (l'entrée du donjon final).
+# (La cinématique d'assemblage vue du ciel viendra plus tard : voir CLAUDE.md, « vision de la fin v2 ».)
+# Lancée par le passage "$stele_g" / "$stele_d" (ecran.gd), seulement quand le joueur MONTE vers la stèle.
 const SON_GRONDEMENT := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact.wav"
+var peut_changer_scene := true   # faux pendant les tests automatiques (on ne recharge pas la scène)
 
 
-func _ceremonie_stele() -> void:
+func _ecran_nomme(nom: String) -> Ecran:
+	for e in get_children():
+		if e is Ecran and e.name == nom:
+			return e
+	return null
+
+
+func _ceremonie_stele(cote_stele: String) -> void:
 	if en_transition or joueur.direction != "haut":
 		return
-	if Etat.est("corps_revele"):
-		Etat.annoncer("La stèle porte les deux ailes du coq. Le corps du coq t'attend.")
-		return
-	if not (Etat.est("fragment_gauche") and Etat.est("fragment_droite")):
-		var manque := 2 - int(Etat.est("fragment_gauche")) - int(Etat.est("fragment_droite"))
-		Etat.annoncer("Un coq est gravé dans la pierre, ses deux ailes creusées en creux. Il en manque %d..." % manque)
+	var drapeau := "stele_" + cote_stele
+	if Etat.est(drapeau):
+		return   # le symbole est déjà là : la stèle brille
+	if not Etat.est("fragment_" + cote_stele):
+		Etat.annoncer("Un creux en forme d'aile attend ici...")
 		return
 	en_transition = true
 	joueur.set_physics_process(false)
 	joueur.velocity = Vector2.ZERO
-	var parvis: Ecran = null
-	for e in get_children():
-		if e is Ecran and e.name == "Parvis":
-			parvis = e
-	var stele := (parvis.position if parvis else Vector2.ZERO) + Vector2(STELE_CASE * Ecran.TUILE) + Vector2(8, -6)
-	Etat.annoncer("Tu poses les deux ailes du blason dans la stèle...")
-	if _musique:
-		create_tween().tween_property(_musique, "volume_db", -30.0, 1.0)
-	# 1) Les deux ailes s'envolent vers leurs empreintes
-	var aile := _texture("res://Assets/Gemini/tuiles/fragment_aile.png")
-	var ailes: Array[Sprite2D] = []
+	var parvis := _ecran_nomme("Parvis") as Exterieur
+	var cellule := parvis.case_stele(cote_stele) if parvis else Vector2i(12, 4)
+	var cible := (parvis.position if parvis else Vector2.ZERO) + Vector2(cellule * Ecran.TUILE) + Vector2(8, -10)
+	# 1) le symbole de l'aile vole du héros vers la niche de la stèle
+	var symbole := Sprite2D.new()
+	symbole.texture = _texture("res://Assets/Gemini/tuiles/fragment_aile.png")
+	symbole.flip_h = cote_stele == "droite"
+	symbole.z_index = 5
+	symbole.position = joueur.position + Vector2(0, -14)
+	add_child(symbole)
 	var t := create_tween().set_parallel()
-	for cote_aile in [-1, 1]:
-		var sprite := Sprite2D.new()
-		sprite.texture = aile
-		sprite.flip_h = cote_aile > 0
-		sprite.z_index = 5
-		sprite.position = joueur.position + Vector2(cote_aile * 10, -14)
-		add_child(sprite)
-		ailes.append(sprite)
-		t.tween_property(sprite, "position", stele + Vector2(cote_aile * 5, 0), 1.2).set_trans(Tween.TRANS_SINE)
-		t.tween_property(sprite, "scale", Vector2(0.4, 0.4), 1.2)
+	t.tween_property(symbole, "position", cible, 1.1).set_trans(Tween.TRANS_SINE)
+	t.tween_property(symbole, "scale", Vector2(0.45, 0.45), 1.1)
 	await t.finished
-	for sprite in ailes:
-		sprite.queue_free()
+	symbole.queue_free()
+	# 2) clac : la stèle s'illumine
 	_jouer_son(SON_EMBOITE)
 	_jouer_son(JINGLE_BLASON, -2.0)
-	# 2) La terre tremble... et la forêt s'écarte devant le héros : le corps du coq apparaît derrière
-	Etat.annoncer("Clac ! La stèle s'illumine... la terre se met à trembler !")
+	if parvis:
+		parvis.allumer_stele(cote_stele)
+	Etat.noter(drapeau)
+	_secouer()
+	await get_tree().create_timer(0.9).timeout
+	if Etat.est("stele_gauche") and Etat.est("stele_droite"):
+		await _mecanisme_stele(parvis)
+	else:
+		en_transition = false
+		joueur.set_physics_process(true)
+
+
+# Les deux symboles sont déposés : tout se met en marche.
+func _mecanisme_stele(parvis: Exterieur) -> void:
+	Etat.annoncer("Les deux symboles brillent... quelque chose se met en marche !")
+	if _musique:
+		create_tween().tween_property(_musique, "volume_db", -30.0, 1.0)
 	for i in 3:
 		_jouer_son(SON_GRONDEMENT, -6.0)
 		_secouer()
 		await get_tree().create_timer(0.45).timeout
-	if parvis is Exterieur:
+	if parvis:
 		_jouer_son(SON_ENVOL, -4.0)
-		parvis.ecarter_foret(Rect2i(7, 0, 12, 4), (STELE_CASE.x + 0.5) * Ecran.TUILE)   # arbres des colonnes 7-18, rangées 0-3
-		parvis.faire_apparaitre("Z", Vector2i(8, 0))
-		Etat.annoncer("La forêt s'écarte devant toi... Derrière, un immense bâtiment : le CORPS DU COQ !")
+		parvis.ecarter_foret(Rect2i(7, 0, 12, 4), (12 + 0.5) * Ecran.TUILE)   # les arbres des colonnes 7-18, rangées 0-3 s'écartent
+		Etat.annoncer("La forêt s'écarte devant toi... un chemin mène vers le nord.")
 		for i in 4:
 			_secouer()
 			await get_tree().create_timer(0.6).timeout
 		await get_tree().create_timer(1.2).timeout
-	t = create_tween()
+	var t := create_tween()
 	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
 	await t.finished
-	# 3) Vue mode 7 : les deux ailes rejoignent le corps du coq
-	var vue := Mode7.new()
-	add_child(vue)
-	_hud.visible = false
-	t = create_tween()
-	t.tween_property(_fondu, "modulate:a", 0.0, 0.8)
-	await vue.jouer()
-	t = create_tween()
-	t.tween_property(_fondu, "modulate:a", 1.0, 0.8)
-	await t.finished
-	# 4) On revient au parvis : la forêt a disparu, le corps du coq se dresse
 	Etat.noter("corps_revele")
-	_changer_de_scene("@village:Parvis", Vector2i(12, 7), "La forêt s'est écartée : le CORPS DU COQ se dresse devant toi !")
+	if peut_changer_scene:
+		_changer_de_scene("@village:Parvis", Vector2i(12, 7), "La forêt s'est écartée. Au nord, une grande bâtisse se dresse...")
+	else:
+		_fondu.modulate.a = 0.0
+		en_transition = false
+		joueur.set_physics_process(true)

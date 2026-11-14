@@ -96,6 +96,11 @@ func _ajouter(f: SpriteFrames, nom: String, fichier: String, n: int, haut: int, 
 
 
 # --- Comportement --------------------------------------------------------------------------------
+# Le Gardien ne quitte jamais l'arène : l'ouverture du bas mène au couloir du corps du coq, mais lui reste dans sa salle.
+func _borner_a_l_arene() -> void:
+	position.y = minf(position.y, 11 * 16.0 + 8.0)
+
+
 func _physics_process(delta: float) -> void:
 	if _joueur == null or Etat.en_dialogue:
 		return
@@ -140,6 +145,7 @@ func _physics_process(delta: float) -> void:
 			if _temps > (1.8 if phase2 else 2.4):
 				_sprite.modulate = Color.WHITE
 				_changer(MARCHE)
+	_borner_a_l_arene()
 
 
 func _changer(nouvel: int) -> void:
