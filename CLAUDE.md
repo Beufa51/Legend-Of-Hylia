@@ -799,3 +799,7 @@
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
+
+- 2026-11-14 : retour : « on voit encore les niches, et le haut des pattes n'est pas naturel (arbres) ». **STÈLES REFAITES (non testées dans Godot, tests headless OK)** : les GRIFFES sont LISSES (aucune niche/gravure ; `Outils/traiter_griffes.py` -> `v_griffe_g|d.png`, jambe prolongée vers le haut) et dessinées SOUS les arbres (`exterieur.gd`, lettres `C`/`D`, emprise 5x2, en (6,3)/(14,3)) ;
+  la fenêtre du symbole est sur une PIERRE de briques Gemini posée DEVANT chaque griffe (`Outils/traiter_pierres.py`, source `Assets/Gemini/originaux/pierres_steles.jpg` -> `v_pierre_g|d_vide|pleine.png`, lettres `V`/`X` en (7,5)/(15,5), emprise 3x1, déclencheurs rangée 6). L'insertion illumine aussi la griffe.
+  La forêt qui s'écarte ne retire plus que les colonnes 9-12 (rangées 0-2) : les arbres des côtés cachent les jambes. À valider visuellement par l'utilisateur (l'aperçu PIL ne reproduit pas l'ordre de dessin : les jambes y semblent nues).

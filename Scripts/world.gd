@@ -802,7 +802,7 @@ func _mecanisme_stele(parvis: Exterieur) -> void:
 		await get_tree().create_timer(0.45).timeout
 	if parvis:
 		_jouer_son(SON_ENVOL, -4.0)
-		parvis.ecarter_foret(Rect2i(7, 0, 12, 4), (12 + 0.5) * Ecran.TUILE)   # les arbres des colonnes 7-18, rangées 0-3 s'écartent
+		parvis.ecarter_foret(Rect2i(9, 0, 4, 3), (12 + 0.5) * Ecran.TUILE)   # les arbres du milieu (colonnes 9-12) s'écartent ; ceux des côtés restent et cachent les jambes des griffes
 		Etat.annoncer("La forêt s'écarte devant toi... un chemin mène vers le nord.")
 		for i in 4:
 			_secouer()

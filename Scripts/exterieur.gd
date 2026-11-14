@@ -70,17 +70,19 @@ const OBJETS_G := {
 	"G": ["v_facade_aile_d_fermee", Vector2i(25, 6), true, 0.0],   # entrée de l'aile DROITE, herse baissée (le garde barre la route)
 	"J": ["v_facade_aile_d", Vector2i(25, 6), true, 0.0],          # entrée de l'aile DROITE, herse levée
 	"H": ["v_facade_queue", Vector2i(25, 6), true, 0.0],           # entrée du donjon final : la QUEUE du coq (éventail de tours aux pointes en flammes)
-	# STÈLES en forme de pattes de coq (parvis) : on y dépose le symbole d'une aile (voir STELES, world.gd::_ceremonie_stele, Outils/fabriquer_steles_pattes.py)
-	# (ce sont les GRIFFES de pierre de l'image du coq-forteresse : 72x44 px, découpées par Outils/traiter_griffes.py ; orteils vers le sud, niche dans la paume)
-	"V": ["v_stele_g_vide", Vector2i(5, 3), true, 0.0],            # stèle de l'aile gauche (griffe gauche)
-	"X": ["v_stele_d_vide", Vector2i(5, 3), true, 0.0],            # stèle de l'aile droite (griffe droite)
+	# LES DEUX STÈLES DU PARVIS : une GRIFFE de pierre (le pied du coq de l'image du coq-forteresse, jambe qui monte et disparaît dans la forêt) + une PIERRE posée DEVANT elle,
+	# où l'on dépose le symbole d'une aile (fenêtre ornée d'ailes). Images : Outils/traiter_griffes.py et Outils/traiter_pierres.py ; logique : STELES, world.gd::_ceremonie_stele.
+	"C": ["v_griffe_g", Vector2i(5, 2), true, 0.0],                # griffe GAUCHE (décor : le pied de l'aile gauche)
+	"D": ["v_griffe_d", Vector2i(5, 2), true, 0.0],                # griffe DROITE
+	"V": ["v_pierre_g_vide", Vector2i(3, 1), true, 0.0],           # pierre de l'aile gauche (devant la griffe gauche)
+	"X": ["v_pierre_d_vide", Vector2i(3, 1), true, 0.0],           # pierre de l'aile droite
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
 const PORTES_MAISONS := {"M": 2, "N": 2, "T": 2, "R": 2, "S": 2, "K": 2, "L": 2, "U": 3}
-# Centre de la GRAVURE (le symbole d'aile dans la paume) d'une stèle, depuis le coin haut-gauche de son emprise 5x3 (en pixels)
-const NICHE_STELE := {"gauche": Vector2(54, 16), "droite": Vector2(26, 15)}
+# Centre de la fenêtre d'une pierre-stèle, depuis le coin haut-gauche de son emprise 3x1 (en pixels) : là où vole le symbole
+const NICHE_STELE := Vector2(24, 0)
 # Stèles : lettre -> [côté, image une fois le symbole déposé]
-const STELES := {"V": ["gauche", "v_stele_g_pleine"], "X": ["droite", "v_stele_d_pleine"]}
+const STELES := {"V": ["gauche", "v_pierre_g_pleine"], "X": ["droite", "v_pierre_d_pleine"]}
 # Touffes d'herbe semées automatiquement (images Gemini)
 const TOUFFES_G := ["v_herbe_1", "v_herbe_2"]
 # Animaux : lettre -> [planche, vitesse (px/s), peureux ?, son quand on le frappe]
@@ -200,6 +202,13 @@ func _creer_decor() -> void:
 					for dy in 2:
 						_solides[Vector2i(x + dx, y + dy)] = true
 						_couvertes[Vector2i(x + dx, y + dy)] = true
+	# Les GRIFFES du parvis sont dessinées SOUS les arbres (leur jambe monte et disparaît dans la forêt : les arbres en cachent le haut)
+	var premier := get_child_count()
+	for c in _objets:
+		premier = mini(premier, _objets[c].get_index())
+	for c in _objets:
+		if layout[c.y][c.x] == "C" or layout[c.y][c.x] == "D":
+			move_child(_objets[c], premier)
 	# Touffes d'herbe, une fois les objets posés (jamais sous un objet)
 	for y in layout.size():
 		for x in layout[y].length():
@@ -533,7 +542,7 @@ func case_stele(cote: String) -> Vector2i:
 # Position (monde) de la niche d'une stèle : là où vole le symbole.
 func position_niche(cote: String) -> Vector2:
 	var c := case_stele(cote)
-	return position + Vector2(c * TUILE) + NICHE_STELE[cote]
+	return position + Vector2(c * TUILE) + NICHE_STELE
 
 
 # Le symbole vient d'être déposé : la stèle prend son image « pleine » avec un éclat.
@@ -547,6 +556,11 @@ func allumer_stele(cote: String) -> void:
 			image.texture = _image(STELES[lettre][1])
 	image.modulate = Color(2.4, 2.1, 1.5)
 	create_tween().tween_property(image, "modulate", Color.WHITE, 0.8)
+	for cellule in _objets:   # la griffe derrière la pierre s'illumine aussi
+		if layout[cellule.y][cellule.x] == ("C" if cote == "gauche" else "D"):
+			var griffe: Sprite2D = _objets[cellule]
+			griffe.modulate = Color(1.9, 1.6, 1.1)
+			create_tween().tween_property(griffe, "modulate", Color.WHITE, 1.2)
 
 
 # --- La forêt qui s'écarte (parvis, cérémonie de la stèle : world.gd::_ceremonie_stele) -------------------

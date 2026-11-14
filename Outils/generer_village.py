@@ -37,7 +37,7 @@ def chemin(g, x0, x1, y0, y1):
 
 # --- Emprises des objets (même table que Scripts/exterieur.gd::OBJETS_G) : sert à retirer/fermer proprement ---
 EMPRISES = {'A': (3, 3), 'a': (3, 3), 'P': (3, 3), 'r': (1, 1), 'W': (2, 2), 'e': (2, 1), 'j': (1, 2), 'b': (1, 1), 'B': (1, 1), 'o': (1, 1),
-            'x': (1, 1), 'n': (1, 1), 'u': (1, 1), 'z': (1, 1), 'V': (5, 3), 'X': (5, 3), 'E': (3, 2), 'Q': (3, 3), '~': (1, 1),
+            'x': (1, 1), 'n': (1, 1), 'u': (1, 1), 'z': (1, 1), 'C': (5, 2), 'D': (5, 2), 'V': (3, 1), 'X': (3, 1), 'E': (3, 2), 'Q': (3, 3), '~': (1, 1),
             'f': (1, 1), 'g': (1, 1), 'w': (1, 1)}
 NON_BLOQUANTS = set('fgw=')          # fleurs et pont : on marche dessus
 def emprise(c):
@@ -382,21 +382,19 @@ def parvis_commun():
     put(g, 'f', (8, 9), (16, 9)); put(g, 'w', (6, 10), (19, 10)); put(g, 'g', (14, 6))
     return g
 
-# AVANT : une forêt dense (rangées 1-4) cache le chemin du nord. Devant elle, les DEUX STÈLES = les GRIFFES de pierre du coq (V : pied gauche = aile gauche, X : pied droit = aile droite),
-#         5x3 cases chacune, orteils vers le sud. On s'en approche en montant (cases du bas, rangée 6) avec le symbole de l'aile correspondante : il se dépose dans la niche de la paume (world.gd::_ceremonie_stele).
+# AVANT : la forêt (rangée d'arbres du haut + un arbre au milieu) cache le chemin du nord. Les DEUX STÈLES sont des GRIFFES de pierre (C : pied gauche, D : pied droit ; 5x2 cases, jambe qui monte dans les arbres)
+#         avec chacune une PIERRE posée devant (V : aile gauche, X : aile droite ; 3x1). On monte vers une pierre (rangée 6) avec le symbole de l'aile correspondante : il se dépose dans sa fenêtre.
 parvis = parvis_commun()
-for y in (1, 3):
-    for x in range(7, 18, 2):
-        put(parvis, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-put(parvis, 'V', (6, 3)); put(parvis, 'X', (14, 3))
+put(parvis, 'A', (11, 2))                          # l'arbre qui bouche le chemin du milieu (avec ceux de la rangée du haut) ; il s'écarte à la fin
+put(parvis, 'C', (6, 3)); put(parvis, 'D', (14, 3))
+put(parvis, 'V', (7, 5)); put(parvis, 'X', (15, 5))
 passages_parvis = ["%d 6 $stele_g" % x for x in (7, 8, 9)] + ["%d 6 $stele_d" % x for x in (15, 16, 17)]
 
-# APRÈS (drapeau corps_revele) : la forêt s'est écartée, un chemin de 3 cases monte vers le nord (écran « Queue » : l'entrée du donjon final) ;
-#         les deux griffes brillent de chaque côté du chemin.
+# APRÈS (drapeau corps_revele) : les arbres du milieu se sont écartés (ouvrir() N retire ceux qui barrent les colonnes 11-13) : un chemin de 3 cases monte vers le nord (écran « Queue ») ;
+#         les arbres des côtés restent et cachent la jambe des griffes ; les pierres brillent.
 parvis_revele = parvis_commun()
-for y in range(0, 4):                       # mêmes arbres que ceux qui s'écartent pendant le dépôt du 2e symbole (world.gd : colonnes 7-18, rangées 0-3)
-    for x in range(7, 19): parvis_revele[y][x] = '.'
-put(parvis_revele, 'V', (6, 3)); put(parvis_revele, 'X', (14, 3))
+put(parvis_revele, 'C', (6, 3)); put(parvis_revele, 'D', (14, 3))
+put(parvis_revele, 'V', (7, 5)); put(parvis_revele, 'X', (15, 5))
 passages_parvis_revele = list(passages_parvis)
 
 
