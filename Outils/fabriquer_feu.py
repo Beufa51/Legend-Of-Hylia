@@ -7,15 +7,21 @@ from PIL import Image, ImageDraw, ImageChops
 
 SORTIE = os.path.join(os.path.dirname(__file__), "..", "Assets", "Gemini", "tuiles")
 S = 8   # sur-échantillonnage pour des bords propres
-RIVE = (14, 28, 58, 255)
-BORD = (36, 92, 160, 255)
-EAU = (30, 84, 160, 255)
-EAU_CLAIRE = (44, 112, 188, 255)
-RIDE = (110, 190, 235, 255)
-RIDE_FORTE = (190, 232, 250, 255)
+# Palette tirée de la planche Gemini `eau.jpg` (rebord clair, eau vert sombre). Canal creusé dans la dalle : lèvre de pierre claire, ombre sous la lèvre, eau sombre vert-bleu (peu saturée, accordée à la pierre)
+RIVE = (18, 34, 44, 255)        # contour sombre
+BORD = (170, 192, 180, 255)     # lèvre de pierre éclairée
+OMBRE = (8, 52, 52, 255)       # ombre portée du rebord nord
+EAU = (22, 96, 84, 255)
+EAU_CLAIRE = (34, 124, 102, 255)
+RIDE = (140, 214, 188, 255)
+RIDE_FORTE = (214, 240, 240, 255)
 
-# (colonne de départ, rangée, longueur) des traînées claires dans la tuile, pour chaque image
-RIDES = {1: [(3, 5, 6), (8, 11, 5), (2, 9, 3)], 2: [(5, 4, 5), (3, 11, 6), (10, 8, 3)]}
+# TEXTURE DE L'EAU = celle de la planche Gemini `eau.jpg` (canal vertical, eau seule), réduite à 8 px de large puis découpée
+# par variante et par image (l'image 2 décale la texture d'1 px : l'eau « coule »).
+SRC_EAU = os.path.join(os.path.dirname(__file__), "..", "Assets", "Gemini", "originaux", "eau.jpg")
+_im = Image.open(SRC_EAU).convert("RGB").crop((790, 30, 868, 765))
+TEXTURE = _im.resize((8, round(735 * 8 / 78)), Image.LANCZOS).quantize(16, dither=Image.NONE).convert("RGB")
+VAR_DECALAGE = [0, 19, 41, 62]
 
 
 def masque(bits, marge):
@@ -30,32 +36,46 @@ def masque(bits, marge):
     return m.resize((16, 16), Image.LANCZOS).point(lambda v: 255 if v > 127 else 0)
 
 
-def flaque(bits, n):
-    ext = masque(bits, 1)
-    corps = masque(bits, 2)
-    cœur = masque(bits, 3)
+def flaque(bits, v, n):
+    """Même profil que la planche Gemini : contour sombre, lèvre de pierre claire (2 px), contour, ombre du rebord, eau texturée."""
     t = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-    t.paste(Image.new("RGBA", (16, 16), RIVE), mask=ext)        # rive sombre
-    t.paste(Image.new("RGBA", (16, 16), BORD), mask=corps)      # liseré d'eau claire au bord
-    t.paste(Image.new("RGBA", (16, 16), EAU), mask=cœur)        # eau profonde
+    couches = [(0, RIVE), (1, BORD), (3, RIVE)]
+    for marge, couleur in couches:
+        t.paste(Image.new("RGBA", (16, 16), couleur), mask=masque(bits, marge))
+    eau = masque(bits, 4)
+    horizontal = bool(bits & 12) and not (bits & 3)   # canal horizontal : la texture est tournée d'un quart de tour
+    th = TEXTURE.height
+    decalage = VAR_DECALAGE[v] + (n - 1)
     d = ImageDraw.Draw(t)
-    for (x, y, l) in RIDES[n]:
-        for i in range(l):
-            if cœur.getpixel((x + i, y)) and cœur.getpixel((x + i, y - 1)):
-                d.point((x + i, y), fill=RIDE)
-        if cœur.getpixel((x + l // 2, y)):
-            d.point((x + l // 2, y), fill=RIDE_FORTE)
-    # reflet de lumière sur le bord haut-gauche de la flaque
-    for (x, y) in ((3, 3), (4, 3), (3, 4)):
-        if cœur.getpixel((x, y)):
-            d.point((x, y), fill=EAU_CLAIRE if n == 1 else RIDE)
+    def dedans(x, y):
+        if y < 0: return bool(bits & 1)
+        if y > 15: return bool(bits & 2)
+        if x < 0: return bool(bits & 4)
+        if x > 15: return bool(bits & 8)
+        return bool(eau.getpixel((x, y)))
+    for y in range(16):
+        for x in range(16):
+            if not eau.getpixel((x, y)): continue
+            u, w = (y - 4) % 8, x + decalage
+            if not horizontal:
+                u, w = (x - 4) % 8, y + decalage
+            c = TEXTURE.getpixel((u, w % th))
+            # ombre du rebord nord et ouest sur l'eau
+            if not dedans(x, y - 1): c = OMBRE
+            elif not dedans(x, y - 2): c = (10, 62, 60)
+            elif not dedans(x - 1, y) and not (bits & 4): c = OMBRE
+            t.putpixel((x, y), tuple(c[:3]) + (255,))
     return t
 
 
 if __name__ == "__main__":
     for bits in range(16):
-        for n in (1, 2):
-            flaque(bits, n).save(os.path.join(SORTIE, "flaque_%d_%d.png" % (bits, n)))
+        for v in range(4):
+            for n in (1, 2):
+                flaque(bits, v, n).save(os.path.join(SORTIE, "flaque_%d_%d_%d.png" % (bits, v, n)))
+        for n in (1, 2):   # anciens noms (sans variante)
+            p = os.path.join(SORTIE, "flaque_%d_%d.png" % (bits, n))
+            if os.path.exists(p): os.remove(p)
     for ancien in ("flaque_1.png", "flaque_2.png"):
         p = os.path.join(SORTIE, ancien)
         if os.path.exists(p): os.remove(p)
