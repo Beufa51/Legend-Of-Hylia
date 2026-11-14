@@ -12,8 +12,18 @@ script = ExtResource("1")
 musique = "res://Assets/Musique/First Light in the Village.mp3"
 donjon = false
 
-[node name="TempleGauche" parent="." instance=ExtResource("2")]
+[node name="AlleeGauche" parent="." instance=ExtResource("2")]
 grille = Vector2i(1, 0)
+musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
+layout = PackedStringArray("A..a..P..bb:::bbP..A..a..", ".........j.:::.j.........", "...........:::...........", "a..P..a....:::..A..a..a..", ".........f.:::.f.........", "...........:::...........", "P..a..A....::::::::::::::", "...........::::::::::::::", "...........::::::::::::::", "a..A..a....:::..a..P..A..", ".........j.:::.j.........", "...........:::...........", "b........fw:::wf........b", "bbbbbbbbbbb:::bbbbbbbbbbb")
+
+[node name="AlleeDroite" parent="." instance=ExtResource("2")]
+grille = Vector2i(3, 0)
+musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
+layout = PackedStringArray("A..a..P..bb:::bbP..A..a..", ".........j.:::.j.........", "...........:::...........", "a..P..a....:::..A..a..a..", ".........f.:::.f.........", "...........:::...........", "::::::::::::::..a..a..P..", "::::::::::::::...........", "::::::::::::::...........", "a..A..a....:::..a..P..A..", ".........j.:::.j.........", "...........:::...........", "b........fw:::wf........b", "bbbbbbbbbbb:::bbbbbbbbbbb")
+
+[node name="TempleGauche" parent="." instance=ExtResource("2")]
+grille = Vector2i(1, -1)
 passages = PackedStringArray("11 11 @donjon:Vestibule 12 11 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir.", "12 11 @donjon:Vestibule 12 11 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir.", "13 11 @donjon:Vestibule 12 11 La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir.")
 musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
 layout = PackedStringArray("F........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", ".........................", "b....f.....:::.....f....b", "bbbbbbbbbbb:::bbbbbbbbbbb")
@@ -25,14 +35,14 @@ escaliers = PackedStringArray("3 3", "21 3")
 passages = PackedStringArray("7 6 $stele_g", "8 6 $stele_g", "9 6 $stele_g", "15 6 $stele_d", "16 6 $stele_d", "17 6 $stele_d")
 musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"
 drapeau_revele = "corps_revele"
-layout_revele = PackedStringArray("......bbbbb:::bbbbb.....b", "..fw..C....:::D.....g.f.b", "....g......:::..........b", ".u.........:::......uw...", "...........:::...........", ".......V...:::.X.........", "b.::::::::::::g::::::::.b", "b.:::::::::::::::::::::.b", "b.:::::::::::::::::::::.b", "b.......f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A....:::.P..A.aa...", "...........:::..........b", ".........bb:::b.........b")
+layout_revele = PackedStringArray("......bbbbb:::bbbbb.....b", "..fw..C....:::D.....g.f.b", "....g......:::..........b", ".u.........:::......uw...", "...........:::...........", ".......V...:::.X.........", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "b.......f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A....:::.P..A.aa...", "...........:::..........b", ".........bb:::b.........b")
 passages_revele = PackedStringArray("7 6 $stele_g", "8 6 $stele_g", "9 6 $stele_g", "15 6 $stele_d", "16 6 $stele_d", "17 6 $stele_d")
 coffres = PackedStringArray("2 2 insigne_pa1 | Un insigne de la Garde ! (%d / 9)")
 secrets = PackedStringArray("21 2 23 2 insigne_pa2 | Un insigne de la Garde ! (%d / 9)")
-layout = PackedStringArray("......bbbbbbbbbbbbb.....b", "..fw..C.......D.....g.f.b", "....g......A............b", ".u..................uw...", ".........................", ".......V.......X.........", "b.::::::::::::g::::::::.b", "b.:::::::::::::::::::::.b", "b.:::::::::::::::::::::.b", "b.......f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A....:::.P..A.aa...", "...........:::..........b", ".........bb:::b.........b")
+layout = PackedStringArray("......bbbbbbbbbbbbb.....b", "..fw..C.......D.....g.f.b", "....g......A............b", ".u..................uw...", ".........................", ".......V.......X.........", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", ":::::::::::::::::::::::::", "b.......f..:::..f.....a..", "a.....w....:::.....w.....", "a..P..A....:::.P..A.aa...", "...........:::..........b", ".........bb:::b.........b")
 
 [node name="TempleDroit" parent="." instance=ExtResource("2")]
-grille = Vector2i(3, 0)
+grille = Vector2i(3, -1)
 passages = PackedStringArray()
 pnjs = PackedStringArray("Villager3 12 12 haut! | Garde du temple | Halte, recrue ! Cette aile ne s'ouvre qu'à celui qui a réussi l'aile gauche. // Va d'abord l'affronter. Reviens quand tu en rapporteras le symbole.")
 musique_ecran = "res://Assets/Musique/13_magic_temple.ogg"

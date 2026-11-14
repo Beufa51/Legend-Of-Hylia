@@ -375,7 +375,7 @@ def parvis_commun():
     """Le parvis, commun aux deux versions : chemins, forêt du bord, bannières, fleurs."""
     g = vide()
     chemin(g, 11, 13, 6, 13)                                  # vient du sud
-    chemin(g, 2, 22, 6, 8)                                    # le parvis (les escaliers des deux terrasses y descendent) ; les temples ne s'atteignent plus d'ici : on les rejoint par le sud
+    chemin(g, 0, 24, 6, 8)                                    # vers l'ouest et l'est : les ALLÉES qui montent vers les temples des deux ailes
     bordure(g)
     for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 4), (22, 9), (20, 11)]:
         put(g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
@@ -406,6 +406,22 @@ def facade_ecran(lettre, est=True):
     put(g, 'b', *[(x, 13) for x in range(25) if not 11 <= x <= 13])    # la haie du bas (la sortie sud est creusée ensuite)
     return g
 
+
+# --- LES ALLÉES (1,0) et (3,0) : le chemin qui monte vers chaque temple (on n'arrive plus d'un coup devant la façade). Entrées : sud (verger / terrain de la garde), côté parvis ; sortie nord = le temple.
+def allee(cote):
+    """Avenue bordée de forêt dense et de bannières : le chemin vient du parvis (côté `cote`), tourne et monte vers la façade du temple."""
+    g = vide()
+    chemin(g, 11, 13, 0, 13)
+    if cote == 'gauche': chemin(g, 11, 24, 6, 8)      # vient de l'est (le parvis)
+    else:                chemin(g, 0, 13, 6, 8)       # vient de l'ouest (le parvis)
+    for y in (0, 3, 6, 9):
+        for x in (0, 3, 6):  put(g, 'AaPa'[(x // 3 + y // 3) % 4], (x, y))
+        for x in (16, 19, 22): put(g, 'aPAa'[(x // 3 + y // 3) % 4], (x, y))
+    put(g, 'j', (9, 1), (15, 1), (9, 10), (15, 10))
+    put(g, 'f', (9, 4), (15, 4), (9, 12), (15, 12)); put(g, 'w', (10, 12), (14, 12))
+    return g
+allee_g = allee('gauche')
+allee_d = allee('droite')
 
 # --- ENTRÉE DE L'AILE GAUCHE (1,0) : 5 plumes de pierre de plus en plus hautes vers la droite ; porte au centre ; on y arrive par le sud (verger)
 temple_g = facade_ecran('F')
@@ -453,11 +469,13 @@ COFFRES = {
     'RouteSud': (["2 4 insigne_rs1 | " + INS], ["19 4 22 5 insigne_rs2 | " + INS]),
 }
 ecrans = [
-    # --- ailes (y=0)
-    ('TempleGauche', (1, 0), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
+    # --- ailes : temples (y=-1), allées qui y montent (y=0), parvis au centre
+    ('AlleeGauche', (1, 0), allee_g, {'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
+    ('AlleeDroite', (3, 0), allee_d, {'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
+    ('TempleGauche', (1, -1), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
     ('Parvis', (2, 0), parvis, {'terrasses': terrasses_parvis, 'escaliers': escaliers_parvis, 'passages': passages_parvis, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
         'drapeau_revele': 'corps_revele', 'layout_revele': parvis_revele, 'passages_revele': passages_parvis_revele}),
-    ('TempleDroit', (3, 0), temple_d, {'passages': [], 'pnjs': pnjs_temple_d, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
+    ('TempleDroit', (3, -1), temple_d, {'passages': [], 'pnjs': pnjs_temple_d, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
         'drapeau_revele': 'fragment_gauche', 'layout_revele': temple_d_ouvert, 'passages_revele': passages_temple_d_ouvert, 'pnjs_revele': []}),
     # --- la QUEUE du coq (y=-1) : au nord du parvis (accessible une fois la forêt écartée)
     ('Queue', (2, -1), queue, {'passages': passages_queue, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
@@ -492,16 +510,16 @@ depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans
 
 # Sorties de chaque écran (N, S, E, O) ; `profondeurs` = longueur du chemin creusé quand ce n'est pas la valeur par défaut (voir ouvrir())
 SORTIES = {
-    'TempleGauche': ('S', temple_g), 'Parvis': ('S', parvis), 'TempleDroit': ('S', temple_d), 'Queue': ('S', queue),
+    'TempleGauche': ('S', temple_g), 'AlleeGauche': ('NSE', allee_g), 'AlleeDroite': ('NSO', allee_d), 'Parvis': ('SOE', parvis), 'TempleDroit': ('S', temple_d), 'Queue': ('S', queue),
     'Verger': ('NS', verger), 'GrandChemin': ('NS', grand), 'TerrainGarde': ('NS', terrain),
     'VillageOuest': ('NES', ouest), 'PlaceDuCoq': ('NOES', place), 'VillageEst': ('NOS', est),
     'MaisonHeros': ('NE', heros), 'Riviere': ('NOES', riviere), 'Ferme': ('NO', ferme), 'RouteSud': ('N', route),
 }
-PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 2}, 'Parvis': {'S': 6}, 'TempleGauche': {'S': 2}, 'TempleDroit': {'S': 2}, 'Queue': {'S': 2}}
+PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 2}, 'Parvis': {'S': 6, 'O': 12, 'E': 12}, 'TempleGauche': {'S': 2}, 'TempleDroit': {'S': 2}, 'Queue': {'S': 2}}
 RELIEF = {'GrandChemin': (terrasses_grand, escaliers_grand), 'Parvis': (terrasses_parvis, escaliers_parvis), 'VillageEst': (terrasses_est, escaliers_est), 'Verger': (terrasses_verger, escaliers_verger), 'TerrainGarde': (terrasses_terrain, escaliers_terrain), 'RouteSud': (terrasses_route, escaliers_route)}
 for _nom, (_s, _g) in SORTIES.items():
     finaliser(_g, _s, PROFONDEURS.get(_nom), *RELIEF.get(_nom, ((), ())))
-finaliser(parvis_revele, 'NS', PROFONDEURS['Parvis'], terrasses_parvis, escaliers_parvis)
+finaliser(parvis_revele, 'NSOE', PROFONDEURS['Parvis'], terrasses_parvis, escaliers_parvis)
 finaliser(temple_d_ouvert, 'S', {'S': 2})
 
 
