@@ -1,7 +1,7 @@
 """Outil de développement : écrit Scenes/world.tscn (aile gauche) à partir des plans ci-dessous.
 Usage : python3 Outils/generer_monde.py
 Lettres des plans : voir l'en-tête de Scripts/room.gd. Une salle = 25 x 14 cases ; murs du bord de 2 cases."""
-import os
+import os, re
 W, H, E = 25, 14, 2
 RACINE = os.path.join(os.path.dirname(__file__), "..")
 
@@ -260,6 +260,8 @@ for nom, (gx, gy), g, c, ex in salles:
         # ATTENTION : une mélodie comme "132" doit rester un TEXTE (sinon Godot ne la lit pas).
         brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v))
+    m = re.match(r'PlumeD?(\d)', nom)   # plumes de pierre gravées au mur = numéro de la plume (décor repris de la façade)
+    if m: out += 'plumes_gravees = %s\n' % m.group(1)
     out += 'layout = %s\n' % sortie(g)
 out += '''
 [node name="Player" parent="." instance=ExtResource("3")]

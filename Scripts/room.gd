@@ -62,6 +62,7 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 
 # Énigmes : noms de drapeaux (voir etat.gd). Vide = rien.
 @export var fond_image := ""      # salle dont le sol et les murs sont UNE image peinte (Assets/Gemini/tuiles/<nom>.png, 400x224) : formes non carrées (éventail du vestibule du donjon final) ; le plan sert aux collisions
+@export var plumes_gravees := 0   # nombre de plumes de pierre gravées dans le mur du haut (= numéro de la plume : 1 à 5, comme sur le HUD) ; 0 = aucune
 @export var ciel_etoile := false   # (avec ciel_ouvert) murs en CRÉNEAUX et CIEL ÉTOILÉ au-delà des remparts au lieu de briques pleines (arène du boss)
 @export var ciel_ouvert := false   # salle SANS TOIT (cour du château, couloirs de la queue) : ombres de nuages, oiseaux, lumière de lune, feuilles (Scripts/ciel_ouvert.gd)
 @export var drapeau_plaque := ""   # levé quand TOUTES les plaques P portent un bloc
@@ -1300,6 +1301,8 @@ func _sur_drapeau(nom: String) -> void:
 func _poser_details() -> void:
 	if sombre or fond_image != "":
 		return  # pas de torches dans une salle sombre
+	if not ciel_ouvert:
+		_poser_frise()
 	for x in COLONNES_BANNIERES:
 		if _mur_haut_libre(x):
 			_poser("banniere", Vector2(x * TUILE, EPAISSEUR * TUILE - 26))
@@ -1314,6 +1317,27 @@ func _poser_details() -> void:
 		if _mur_haut_libre(x):
 			_poser_anime(TORCHE, Vector2(x * TUILE + 2, EPAISSEUR * TUILE - 24), x)
 			_poser_lumiere(Vector2(x * TUILE + 8, EPAISSEUR * TUILE + 2), 52.0)
+
+
+# Décor des ailes repris de la FAÇADE : frise de runes dorées sur la corniche (elle scintille doucement)
+# et plumes de pierre gravées dans le mur (autant que le numéro de la plume).
+const EMPLACEMENTS_PLUMES := [2, 22, 5, 19, 8]
+
+func _poser_frise() -> void:
+	for x in range(2, 23):
+		if not _mur_haut_libre(x):
+			continue
+		var rune := _poser("frise_runes_%d" % ((x * 5 + x / 3) % 4 + 1), Vector2(x * TUILE, 3))
+		rune.modulate.a = 0.78
+		var tw := create_tween().set_loops()
+		tw.tween_interval(x * 0.12)
+		tw.tween_property(rune, "modulate:a", 1.0, 1.1)
+		tw.tween_property(rune, "modulate:a", 0.78, 1.1)
+		tw.tween_interval(maxf(0.1, (23 - x) * 0.12))
+	for i in mini(plumes_gravees, EMPLACEMENTS_PLUMES.size()):
+		var x: int = EMPLACEMENTS_PLUMES[i]
+		if _mur_haut_libre(x):
+			_poser("plume_pierre", Vector2(x * TUILE, EPAISSEUR * TUILE - 21))
 
 
 # Vrai si la dernière ligne du mur du haut en (x) est un mur avec du sol juste en dessous.
