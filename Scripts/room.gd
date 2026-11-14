@@ -61,6 +61,7 @@ const TORCHE := ["torche_1", "torche_2", "torche_3", "torche_4", "torche_5", "to
 const DECALAGE_BRASERO := Vector2(-2, -10)
 
 # Énigmes : noms de drapeaux (voir etat.gd). Vide = rien.
+@export var ciel_ouvert := false   # salle SANS TOIT (cour du château, couloirs de la queue) : ombres de nuages, oiseaux, lumière de lune, feuilles (Scripts/ciel_ouvert.gd)
 @export var drapeau_plaque := ""   # levé quand TOUTES les plaques P portent un bloc
 @export var drapeau_porte := ""    # les portes D de cette salle s'ouvrent quand ce drapeau est levé
 @export var drapeau_gemme := ""    # levé quand on ramasse la plume G de cette salle
@@ -227,6 +228,9 @@ func _creer_decor() -> void:
 	_poser_escaliers()   # (après les tapis : l'escalier se pose par-dessus)
 	_poser_portes()
 	_poser_details()
+	if ciel_ouvert:
+		var ciel := CielOuvert.new()
+		add_child(ciel)
 	if _source.x >= 0:
 		_calque_rayon = Node2D.new()
 		_calque_rayon.z_index = 1
@@ -245,7 +249,7 @@ func _nom_sol(x: int, y: int) -> String:
 	var lettre := layout[y][x]
 	if lettre == "," or lettre == ";":   # donjon final : terre battue de la queue, herbe de la cour (Outils/fabriquer_sol_corps.py)
 		var base := "sol_terre" if lettre == "," else "sol_herbe"
-		return base + ("" if h % 5 else ("_b" if h % 2 else "_c"))
+		return base + ("" if h % 3 else ("_b" if h % 2 else "_c"))
 	if h == 0:
 		return "sol_plat_c"
 	if h == 18:
@@ -1264,9 +1268,13 @@ func _poser_details() -> void:
 	for x in COLONNES_BANNIERES:
 		if _mur_haut_libre(x):
 			_poser("banniere", Vector2(x * TUILE, EPAISSEUR * TUILE - 26))
-	for x in COLONNES_NICHES:
-		if _mur_haut_libre(x) and _mur_haut_libre(x + 1):
-			_poser("niche_grille", Vector2(x * TUILE, EPAISSEUR * TUILE - 21))
+	if ciel_ouvert:   # pas de barreaux de cachot en plein air : une seule grande arche au fond (la porte vers la tour de tête)
+		if _mur_haut_libre(11) and _mur_haut_libre(12):
+			_poser("niche_grille", Vector2(11 * TUILE, EPAISSEUR * TUILE - 21))
+	else:
+		for x in COLONNES_NICHES:
+			if _mur_haut_libre(x) and _mur_haut_libre(x + 1):
+				_poser("niche_grille", Vector2(x * TUILE, EPAISSEUR * TUILE - 21))
 	for x in COLONNES_TORCHES:
 		if _mur_haut_libre(x):
 			_poser_anime(TORCHE, Vector2(x * TUILE + 2, EPAISSEUR * TUILE - 24), x)

@@ -24,6 +24,10 @@ for y in range(2, 12):
 for y in range(4, 10):             # l'herbe de la cour
     for x in range(5, 20):
         arene[y][x] = ';'
+for y in range(2, 12):             # l'herbe déborde sur le chemin de pierre de la cour : des plaques, pas un cadre régulier
+    for x in range(2, 23):
+        if arene[y][x] == '.' and (x * 7 + y * 13 + x * y) % 4 == 0 and not (11 <= x <= 13):
+            arene[y][x] = ';'
 for y in range(3, 12):             # chemin de pierre jusqu'au Gardien
     for x in range(11, 14):
         arene[y][x] = '.'
@@ -57,19 +61,14 @@ for (x, y) in [(10, 3), (14, 3), (10, 7), (14, 7), (10, 11), (14, 11)]:
 # --- VESTIBULE (0,2) : la QUEUE du coq (voir Coq_forteresse.jpg) : CINQ COULOIRS DE TERRE qui se rejoignent à la porte d'entrée (en bas) et s'écartent
 # en éventail vers le donjon rond ; une flamme brûle au bout de chacun ; seul le couloir du milieu continue vers le corps.
 vestibule = vide()
-for y in range(2, 12):
-    t = (11 - y) / 9.0                         # 0 en bas (couloirs serrés) -> 1 en haut (écartés)
-    for dx in (-9.0, -4.5, 0.0, 4.5, 9.0):
-        c = 12 + dx * (0.12 + 0.88 * t)
-        for x in range(25):
-            if abs(x - c) <= 1.15:
-                vestibule[y][x] = ','
+for (x0, x1) in [(2, 3), (6, 7), (11, 13), (17, 18), (21, 22)]:     # les 5 couloirs (le grand du milieu continue vers le corps)
+    sol(vestibule, x0, x1, 2, 9, ',')
+sol(vestibule, 2, 22, 9, 11, ',')              # la barre commune où ils se rejoignent, devant la porte d'entrée
 sol(vestibule, 11, 13, 0, 1, ',')              # sortie du haut vers le couloir du corps
 sol(vestibule, 11, 13, 12, 13, ',')            # porte d'entrée (en bas)
-sol(vestibule, 9, 15, 10, 11, ',')             # petit parvis derrière la porte : les couloirs se rejoignent
-for (x, y) in [(3, 2), (7, 2), (17, 2), (21, 2)]:
-    vestibule[y][x] = 'B'                      # flammes au bout des couloirs extérieurs
-for (x, y) in [(8, 10), (16, 10)]:
+for (x, y) in [(2, 2), (7, 2), (17, 2), (22, 2)]:
+    vestibule[y][x] = 'B'                      # une flamme au bout de chaque couloir extérieur
+for (x, y) in [(6, 10), (18, 10)]:
     vestibule[y][x] = 'O'                      # coqs de pierre qui gardent l'entrée
 passages_vestibule = ['%d 13 @village:Queue 12 12' % x for x in (11, 12, 13)]
 
@@ -91,7 +90,8 @@ musique = "res://Assets/Ninja_adventure/Audio/Musics/24 - Final Area.ogg"
 cote = "corps"
 
 [node name="Arene" parent="." instance=ExtResource("2")]
-teinte = Color(1.04, 0.96, 0.86, 1)
+teinte = Color(0.9, 0.95, 1.1, 1)
+ciel_ouvert = true
 layout = %s
 
 [node name="Couloir" parent="." instance=ExtResource("2")]
@@ -101,7 +101,8 @@ layout = %s
 
 [node name="Vestibule" parent="." instance=ExtResource("2")]
 grille = Vector2i(0, 2)
-teinte = Color(1.06, 0.95, 0.84, 1)
+teinte = Color(0.92, 0.95, 1.1, 1)
+ciel_ouvert = true
 passages = PackedStringArray(%s)
 layout = %s
 

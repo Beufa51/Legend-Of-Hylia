@@ -824,6 +824,12 @@
   CHEMINS : l'image n'avait qu'un chemin vers la droite ; le Parvis a un carrefour (une branche par aile) -> `traiter_coq_cinematique.py` copie le chemin EN MIROIR vers la gauche dans `sol.png` : la cinématique montre le même carrefour. Les griffes du Parvis et la façade partagent la même source (Coq_forteresse). Échelle : le village a ~2/3 de l'image, la cinématique 1 ; les griffes du Parvis sont à ~0,44 (écart d'échelle toléré).
   ORDRE DES OUTILS cinématique/queue : traiter_coq_cinematique -> traiter_facades -> traiter_facade_queue -> generer_village.
 
+- 2026-11-14 : retours : « les chemins de terre à droite/gauche dans la cinématique sont de trop (on ne les revoit pas devant le château) ; je n'aime pas la 1re salle du corps ; l'arène du boss doit être À CIEL OUVERT, là on dirait une salle avec de l'herbe ».
+  **CORRIGÉ (rendu réel vérifié, pas joué)** : (1) `traiter_coq_cinematique.py` EFFACE les chemins de `sol.png` (herbe à la place ; reste seulement le bout sous la porte de la queue) ; la miroir ajoutée avant est supprimée.
+  (2) NOUVEAU `Scripts/ciel_ouvert.gd` (class CielOuvert, ajouté par `Room` si l'export `ciel_ouvert` est vrai) : ombres de NUAGES qui glissent sur le sol, lueur froide de LUNE, ombre d'OISEAU qui traverse la cour toutes les 9-16 s, feuilles poussées par le vent. `room.gd` : en ciel ouvert, plus de barreaux de cachot dans le mur du haut mais UNE grande arche au centre (la porte vers la tour de tête).
+  (3) `generer_corps.py` : ARÈNE `ciel_ouvert` + teinte crépuscule froide, herbe qui déborde sur le chemin de pierre par plaques (plus de « tapis » régulier) ; VESTIBULE refait en PEIGNE (5 couloirs de terre droits - 1 grand au milieu - débouchant sur une barre commune devant la porte), `ciel_ouvert`, flammes au bout des couloirs extérieurs, 2 coqs de pierre. Sols : variantes de terre/herbe plus variées (`fabriquer_sol_corps.py`).
+  Idées si encore insuffisant : murs de l'arène en créneaux (parapet) au lieu de briques pleines, étoiles/ciel visible derrière les murs, fleurs et rochers sur l'herbe, brèche dans le mur laissant voir le ciel.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

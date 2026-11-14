@@ -26,7 +26,7 @@ def tuile(base, ecart, cailloux=0, touffes=0, clair=(1.0, 1.0, 1.0)):
 
 for nom, base, e, c, t in [
     ("sol_terre", (112, 84, 60), 5, 0, 0), ("sol_terre_b", (108, 81, 58), 5, 3, 0), ("sol_terre_c", (116, 87, 62), 6, 1, 1),
-    ("sol_herbe", (58, 92, 48), 6, 0, 2), ("sol_herbe_b", (54, 86, 45), 6, 0, 4), ("sol_herbe_c", (62, 96, 50), 6, 1, 3),
+    ("sol_herbe", (52, 86, 44), 6, 0, 2), ("sol_herbe_b", (46, 78, 40), 7, 0, 5), ("sol_herbe_c", (58, 92, 48), 6, 2, 3),
 ]:
     tuile(base, e, c, t).save(os.path.join(SORTIE, nom + ".png"))
 print("sols du corps écrits")
