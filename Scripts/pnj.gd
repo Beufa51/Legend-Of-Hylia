@@ -37,6 +37,7 @@ var _gauche := false          # regarde à gauche (miroir)
 var _vue := 2                 # rangée de la planche à 3 vues : 0 bas, 1 haut, 2 côté
 var _rangees := 1             # 1 ou 3 rangées dans les planches animées
 var _temps := 0.0
+var fixe := false             # un garde qui ne bouge pas de sa place (direction écrite avec un « ! » dans `pnjs`, ex. « haut! »)
 var _delai_marche := 0.0      # durée max d'une promenade (au cas où il se coince)
 
 
@@ -150,7 +151,9 @@ func _animer(delta: float, joueur: Node2D, proche: bool) -> void:
 		return
 	_montrer(int(_temps * 3.0) % 4)
 	_chrono -= delta
-	if _chrono <= 0.0:
+	if _chrono <= 0.0 and fixe:
+		_chrono = 2.0   # il reste à son poste
+	elif _chrono <= 0.0:
 		_cible = _origine + Vector2(randf_range(-RAYON_X, RAYON_X), randf_range(-RAYON_Y, RAYON_Y))
 		_delai_marche = 5.0
 		_marche = true

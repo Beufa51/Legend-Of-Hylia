@@ -14,14 +14,24 @@ cote = "corps"
 
 [node name="Arene" parent="." instance=ExtResource("2")]
 teinte = Color(1.04, 0.96, 0.86, 1)
-passages = PackedStringArray("11 13 @village:Parvis 12 5", "12 13 @village:Parvis 12 5", "13 13 @village:Parvis 12 5")
 layout = PackedStringArray("#########################", "#########################", "##......O.......O......##", "##.B.................B.##", "##.........TTT.........##", "##....S....TTT....S....##", "##.........TTT.........##", "##.........TTT.........##", "##.........TTT.........##", "##....S....TTT....S....##", "##.B.......TTT.......B.##", "##.........TTT.........##", "###########...###########", "###########...###########")
+
+[node name="Couloir" parent="." instance=ExtResource("2")]
+grille = Vector2i(0, 1)
+teinte = Color(1.0, 0.93, 0.85, 1)
+layout = PackedStringArray("###########TTT###########", "###########TTT###########", "##########.TTT.##########", "##########BTTTB##########", "##########.TTT.##########", "##########.TTT.##########", "##########.TTT.##########", "##########BTTTB##########", "##########.TTT.##########", "##########.TTT.##########", "##########.TTT.##########", "##########BTTTB##########", "###########TTT###########", "###########TTT###########")
+
+[node name="Vestibule" parent="." instance=ExtResource("2")]
+grille = Vector2i(0, 2)
+teinte = Color(1.06, 0.95, 0.84, 1)
+passages = PackedStringArray("11 13 @village:Queue 12 7", "12 13 @village:Queue 12 7", "13 13 @village:Queue 12 7")
+layout = PackedStringArray("###########TTT###########", "###########TTT###########", "##VV.......TTT.......VV##", "##.B.......TTT.......B.##", "##.....O...TTT...O.....##", "##.........TTT.........##", "##.........TTT.........##", "##.........TTT.........##", "##.........TTT.........##", "##.....S...TTT...S.....##", "##.B.......TTT.......B.##", "##V........TTT........V##", "###########...###########", "###########...###########")
 
 [node name="Gardien" type="CharacterBody2D" parent="."]
 position = Vector2(200, 59)
 script = ExtResource("4")
 
 [node name="Player" parent="." instance=ExtResource("3")]
-position = Vector2(200, 179)
+position = Vector2(200, 627)
 
 [node name="Camera2D" type="Camera2D" parent="."]

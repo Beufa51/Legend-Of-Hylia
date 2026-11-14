@@ -16,7 +16,7 @@ signal repere(retour: Vector2)       # une sentinelle a vu le joueur : un garde 
 signal chute(retour: Vector2)        # le joueur est tombé dans un trou : retour à `retour`
 signal choix_demande(nom: String, lignes: PackedStringArray, options: PackedStringArray)   # dialogue qui finit par un CHOIX
 signal choix_fait(index: int)        # le joueur a choisi l'option n° index (0 = la première)
-signal stele_touchee                 # le joueur s'approche de la stèle du coq (parvis) : world.gd lance la cérémonie
+signal stele_touchee(cote: String)   # le joueur s'approche d'une stèle-patte (parvis), "gauche" ou "droite" : world.gd lance le dépôt du symbole
 signal pique(retour: Vector2)        # le joueur a marché sur des pics sortis : retour à `retour`
 
 const FICHIER := "user://sauvegarde.json"

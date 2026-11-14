@@ -33,6 +33,7 @@ var interieur := false             # vrai dans une maison (pas de vent ni de feu
 @export var drapeau_revele := ""
 @export var layout_revele: PackedStringArray
 @export var passages_revele: PackedStringArray
+@export var pnjs_revele: PackedStringArray   # habitants de l'écran une fois le drapeau levé (vide = plus personne : ex. le garde qui s'écarte)
 
 # Cache des images déjà chargées (partagé entre tous les écrans)
 static var _cache := {}
@@ -43,6 +44,7 @@ func _appliquer_revelation() -> void:
 	if drapeau_revele != "" and Etat.est(drapeau_revele) and not layout_revele.is_empty():
 		layout = layout_revele
 		passages = passages_revele
+		pnjs = pnjs_revele
 
 
 # Remet l'écran dans son état de départ (touche R). Rien à faire par défaut.
@@ -131,7 +133,8 @@ func _poser_pnjs() -> void:
 		var pnj := Pnj.new()
 		pnj.position = Vector2(int(tete[1]) * TUILE + 8, int(tete[2]) * TUILE + 13)
 		add_child(pnj)
-		pnj.initialiser(tete[0], parties[1].strip_edges(), versions, tete[3], grille)
+		pnj.fixe = tete[3].ends_with("!")   # « haut! » : un garde qui reste à son poste
+		pnj.initialiser(tete[0], parties[1].strip_edges(), versions, tete[3].trim_suffix("!"), grille)
 		if parties.size() == 4:
 			pnj.minijeu = parties[3].strip_edges()
 
@@ -153,8 +156,9 @@ func _poser_passages() -> void:
 		collision.shape = forme
 		zone.add_child(collision)
 		add_child(zone)
-		if m[2].begins_with("$stele"):   # la stèle du coq (parvis) : on y pose les deux ailes (en montant vers elle)
-			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.stele_touchee.emit())
+		if m[2].begins_with("$stele"):   # une stèle-patte (parvis) : "$stele_g" ou "$stele_d" ; on y dépose le symbole d'une aile (en montant vers elle)
+			var cote_stele := "droite" if m[2].begins_with("$stele_d") else "gauche"
+			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.stele_touchee.emit(cote_stele))
 		elif m[2].begins_with("$records"):   # tableau d'honneur : records et rubans des mini-jeux
 			zone.body_entered.connect(func(corps): if corps.is_in_group("joueur"): Etat.annoncer(Etat.texte_records()))
 		elif m[2].begins_with("!"):

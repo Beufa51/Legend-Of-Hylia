@@ -15,10 +15,21 @@ sys.path.insert(0, os.path.dirname(__file__))
 import generer_village as gv
 
 W, H = gv.W, gv.H
-PORTES = {'M': 2, 'N': 2, 'T': 2, 'R': 2, 'S': 2, 'K': 2, 'L': 2, 'U': 3, 'Z': 4}   # colonne de la porte (PORTES_MAISONS de exterieur.gd)
+PORTES = {'M': 2, 'N': 2, 'T': 2, 'R': 2, 'S': 2, 'K': 2, 'L': 2, 'U': 3}   # colonne de la porte (PORTES_MAISONS de exterieur.gd)
+FACADES = 'FGJH'   # façades 25x6 : la porte = les 3 cases (11..13, 5)
 
 ext = {nom: (grille, g) for nom, grille, g, _ in gv.ecrans}
-props = {nom: p for nom, _, _, p in gv.ecrans}
+props = {nom: dict(p) for nom, _, _, p in gv.ecrans}
+REVELE = "--revele" in sys.argv   # 2e passe : écrans dans leur état « révélé » (forêt écartée, garde parti)
+if not REVELE:   # tant que la forêt est là, l'écran « Queue » (au nord du parvis) n'est pas accessible : on ne le vérifie qu'à la 2e passe
+    ext.pop('Queue', None)
+    props.pop('Queue', None)
+if REVELE:
+    for nom in list(ext):
+        if props[nom].get('layout_revele'):
+            ext[nom] = (ext[nom][0], [list(l) for l in props[nom]['layout_revele']])
+            props[nom]['passages'] = props[nom].get('passages_revele', [])
+            props[nom]['pnjs'] = props[nom].get('pnjs_revele', [])
 inte = {nom: (grille, g) for nom, grille, g, _ in gv.interieurs}
 props.update({nom: p for nom, _, _, p in gv.interieurs})
 erreurs = []
@@ -144,8 +155,9 @@ for nom in props:
             erreurs.append("%s : le passage (%d,%d) arrive sur une case bloquée de %s (%s,%s)" % (nom, x, y, cible, m[1], m[2]))
         if nom in ext:
             g = ext[nom][1]
-            if not any(g[y - (gv.TAILLES_MAISONS[c][1] - 1)][x - col] == c for c, col in PORTES.items()
-                       if 0 <= y - (gv.TAILLES_MAISONS[c][1] - 1) < H and 0 <= x - col < W):
+            facade = g[0][0] in FACADES and y == 5 and 11 <= x <= 13
+            if not facade and not any(g[y - (gv.TAILLES_MAISONS[c][1] - 1)][x - col] == c for c, col in PORTES.items()
+                                      if 0 <= y - (gv.TAILLES_MAISONS[c][1] - 1) < H and 0 <= x - col < W):
                 erreurs.append("%s : le passage (%d,%d) n'est sous la porte d'aucune maison" % (nom, x, y))
             if (nom, x, y + 1) not in vus:
                 erreurs.append("%s : la porte (%d,%d) n'est pas atteignable à pied" % (nom, x, y))
@@ -191,4 +203,9 @@ if "--carte" in sys.argv:
                 ligne += "|"
             print(ligne)
         print("-" * 5)
-sys.exit(1 if erreurs else 0)
+code = 1 if erreurs else 0
+if not REVELE and "--seul" not in sys.argv:
+    import subprocess
+    print("\n=== 2e passe : écrans « révélés » (forêt écartée, garde parti) ===")
+    code |= subprocess.call([sys.executable, __file__, "--revele", "--seul"])
+sys.exit(code)
