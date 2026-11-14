@@ -148,17 +148,15 @@ for y in range(0, H, th):
 herbe = ndi.gaussian_filter(herbe, (0.8, 0.8, 0))
 alpha = ndi.gaussian_filter(trou.astype(np.float32), 5)[..., None]
 sol = sol * (1 - alpha) + herbe * alpha
-# Le chemin de terre : sur l'image il ne part que vers la DROITE ; au village, le Parvis a deux branches (vers chaque aile) -> on le copie en MIROIR vers la gauche,
-# pour que la cinématique montre le même carrefour que le Parvis.
+# Les chemins de terre de l'image sont EFFACÉS (herbe à la place) : en arrivant devant le château, au village, on ne les voit pas.
+# On ne garde que le bout de chemin juste sous la porte de la queue (x 640-770).
 chemin = (S[..., 0] > S[..., 1] + 6) & (S[..., 0] > S[..., 2] + 12) & (S[..., 0] < 190)
 chemin[:480, :] = False
-chemin[:, :640] = False
 chemin &= ~ndi.binary_dilation(chateau | cote["g"] | cote["d"], iterations=14)
-chemin = ndi.binary_closing(chemin, iterations=2)
-chemin = ndi.binary_opening(chemin, iterations=1)
-miroir_chemin = chemin[:, ::-1]
-a_m = ndi.gaussian_filter(miroir_chemin.astype(np.float32), 1.0)[..., None]
-sol = sol * (1 - a_m) + np.asarray(sans).astype(np.float32)[:, ::-1] * a_m
+chemin[:, 640:770] = False
+chemin = ndi.binary_dilation(ndi.binary_closing(chemin, iterations=2), iterations=3)
+a_c = ndi.gaussian_filter(chemin.astype(np.float32), 1.5)[..., None]
+sol = sol * (1 - a_c) + herbe * a_c
 Image.fromarray(np.clip(sol, 0, 255).astype(np.uint8)).save(os.path.join(SORTIE, "sol.png"))
 
 # --- Contrôle : recomposition ------------------------------------------------------------------------------
