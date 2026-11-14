@@ -62,6 +62,8 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 
 # Énigmes : noms de drapeaux (voir etat.gd). Vide = rien.
 @export var fond_image := ""      # salle dont le sol et les murs sont UNE image peinte (Assets/Gemini/tuiles/<nom>.png, 400x224) : formes non carrées (éventail du vestibule du donjon final) ; le plan sert aux collisions
+@export var drapeau_plumes_gravees := ""   # quand ce drapeau est levé (la plume de cette colonne est ramassée), les plumes gravées deviennent dorées
+@export var fenetres := false      # fenêtres en arche dans le mur du haut (épines = le rempart de la façade)
 @export var plumes_gravees := 0   # nombre de plumes de pierre gravées dans le mur du haut (= numéro de la plume : 1 à 5, comme sur le HUD) ; 0 = aucune
 @export var ciel_etoile := false   # (avec ciel_ouvert) murs en CRÉNEAUX et CIEL ÉTOILÉ au-delà des remparts au lieu de briques pleines (arène du boss)
 @export var ciel_ouvert := false   # salle SANS TOIT (cour du château, couloirs de la queue) : ombres de nuages, oiseaux, lumière de lune, feuilles (Scripts/ciel_ouvert.gd)
@@ -1299,10 +1301,10 @@ func _sur_drapeau(nom: String) -> void:
 
 # Torches et bannières sur le mur du haut (seulement là où il y a du mur au-dessus du sol).
 func _poser_details() -> void:
+	if fond_image == "" and not ciel_ouvert:
+		_poser_frise()
 	if sombre or fond_image != "":
 		return  # pas de torches dans une salle sombre
-	if not ciel_ouvert:
-		_poser_frise()
 	for x in COLONNES_BANNIERES:
 		if _mur_haut_libre(x):
 			_poser("banniere", Vector2(x * TUILE, EPAISSEUR * TUILE - 26))
@@ -1319,25 +1321,80 @@ func _poser_details() -> void:
 			_poser_lumiere(Vector2(x * TUILE + 8, EPAISSEUR * TUILE + 2), 52.0)
 
 
-# Décor des ailes repris de la FAÇADE : frise de runes dorées sur la corniche (elle scintille doucement)
-# et plumes de pierre gravées dans le mur (autant que le numéro de la plume).
+# Décor des ailes repris de la FAÇADE : frise de runes dorées sur la corniche du mur du haut (elle scintille doucement),
+# plumes de pierre gravées dans le mur (autant que le numéro de la plume ; elles deviennent DORÉES une fois la plume ramassée),
+# fenêtres en arche dans les épines. Dans une salle sombre, la frise luit très faiblement (calque au-dessus de l'obscurité).
 const EMPLACEMENTS_PLUMES := [2, 22, 5, 19, 8]
+const COLONNES_FENETRES := [3, 9, 15, 21]
+var _plumes_murales: Array[Sprite2D] = []
 
 func _poser_frise() -> void:
+	var parent: Node = self
+	if sombre:
+		var calque := CanvasLayer.new()
+		calque.follow_viewport_enabled = true   # l'obscurité (CanvasModulate) ne touche pas ce calque
+		add_child(calque)
+		parent = Node2D.new()
+		parent.position = position
+		parent.modulate.a = 0.3
+		calque.add_child(parent)
 	for x in range(2, 23):
-		if not _mur_haut_libre(x):
+		var ys := _haut_du_sol(x)
+		if ys < 0:
 			continue
-		var rune := _poser("frise_runes_%d" % ((x * 5 + x / 3) % 4 + 1), Vector2(x * TUILE, 3))
+		var rune := _sprite_dans(parent, "frise_runes_%d" % ((x * 5 + x / 3) % 4 + 1), Vector2(x * TUILE, (ys - 2) * TUILE + 3))
 		rune.modulate.a = 0.78
 		var tw := create_tween().set_loops()
 		tw.tween_interval(x * 0.12)
 		tw.tween_property(rune, "modulate:a", 1.0, 1.1)
 		tw.tween_property(rune, "modulate:a", 0.78, 1.1)
 		tw.tween_interval(maxf(0.1, (23 - x) * 0.12))
+	var doree := Etat.est(drapeau_plumes_gravees)
 	for i in mini(plumes_gravees, EMPLACEMENTS_PLUMES.size()):
 		var x: int = EMPLACEMENTS_PLUMES[i]
-		if _mur_haut_libre(x):
-			_poser("plume_pierre", Vector2(x * TUILE, EPAISSEUR * TUILE - 21))
+		var ys := _haut_du_sol(x)
+		if ys >= 0:
+			var plume := _sprite_dans(self, "plume_pierre_or" if doree else "plume_pierre", Vector2(x * TUILE, ys * TUILE - 21))
+			_plumes_murales.append(plume)
+	if not doree and drapeau_plumes_gravees != "" and not _plumes_murales.is_empty():
+		Etat.drapeau_change.connect(_sur_drapeau_plumes)
+	if fenetres:
+		for x in COLONNES_FENETRES:
+			var ys := _haut_du_sol(x)
+			if ys >= 0:
+				_poser("fenetre_arche", Vector2(x * TUILE + 2, ys * TUILE - 20))
+
+
+# La plume vient d'être ramassée : les plumes gravées de la salle se changent en or, avec un éclat.
+func _sur_drapeau_plumes(nom: String) -> void:
+	if nom != drapeau_plumes_gravees:
+		return
+	Etat.drapeau_change.disconnect(_sur_drapeau_plumes)
+	for i in _plumes_murales.size():
+		var plume := _plumes_murales[i]
+		var tw := create_tween()
+		tw.tween_interval(0.25 * i)
+		tw.tween_callback(func() -> void:
+			plume.texture = _image("plume_pierre_or")
+			plume.modulate = Color(2.2, 2.0, 1.4))
+		tw.tween_property(plume, "modulate", Color.WHITE, 0.6)
+
+
+# Rangée du sol le plus haut dans la colonne x, s'il y a au moins 2 rangées de mur au-dessus (la corniche) ; sinon -1.
+func _haut_du_sol(x: int) -> int:
+	for y in layout.size():
+		if _est_sol(x, y):
+			return y if y >= 2 and _est_mur(x, y - 1) and _est_mur(x, y - 2) else -1
+	return -1
+
+
+func _sprite_dans(parent: Node, nom: String, pos: Vector2) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.texture = _image(nom)
+	sprite.centered = false
+	sprite.position = pos
+	parent.add_child(sprite)
+	return sprite
 
 
 # Vrai si la dernière ligne du mur du haut en (x) est un mur avec du sol juste en dessous.

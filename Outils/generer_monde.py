@@ -2,6 +2,7 @@
 Usage : python3 Outils/generer_monde.py
 Lettres des plans : voir l'en-tête de Scripts/room.gd. Une salle = 25 x 14 cases ; murs du bord de 2 cases."""
 import os, re
+PREFIXE, FRAGMENT = 'plume', 'fragment_gauche'
 W, H, E = 25, 14, 2
 RACINE = os.path.join(os.path.dirname(__file__), "..")
 
@@ -261,7 +262,12 @@ for nom, (gx, gy), g, c, ex in salles:
         brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v))
     m = re.match(r'PlumeD?(\d)', nom)   # plumes de pierre gravées au mur = numéro de la plume (décor repris de la façade)
-    if m: out += 'plumes_gravees = %s\n' % m.group(1)
+    if m:
+        n = int(m.group(1))
+        out += 'plumes_gravees = %d\n' % n
+        # les plumes gravées deviennent dorées quand la plume de la colonne est ramassée (la 5e = le fragment)
+        out += 'drapeau_plumes_gravees = "%s"\n' % (('%s%d' % (PREFIXE, n)) if n < 5 else FRAGMENT)
+    if nom.startswith('Epine'): out += 'fenetres = true\n'   # épine = le rempart de la façade : fenêtres en arche
     out += 'layout = %s\n' % sortie(g)
 out += '''
 [node name="Player" parent="." instance=ExtResource("3")]

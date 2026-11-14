@@ -1,7 +1,7 @@
 extends Node
 ## Test de la cinématique d'assemblage (Scripts/assemblage.gd) : la joue en accéléré et vérifie qu'elle se termine sans erreur.
 ## Lancer : godot --headless --path . res://Tests/verifier_assemblage.tscn   (scène, pour avoir les autoloads ; code de sortie 0 = bon)
-## Option : -- capture   -> prend des captures d'écran (il faut un vrai rendu : xvfb-run, pas --headless) dans user://captures/
+## Option : -- capture [t=19.5,22,25]  -> prend des captures d'écran (il faut un vrai rendu : xvfb-run, pas --headless) dans user://captures/
 
 func _ready() -> void:
 	_lancer.call_deferred()
@@ -17,6 +17,9 @@ func _lancer() -> void:
 	if capture:
 		DirAccess.make_dir_recursive_absolute("user://captures")
 		var instants := [0.3, 1.8, 3.5, 5.5, 8.0, 14.5, 19.0, 21.0, 27.0, 29.0, 30.2, 33.0, 36.5, 40.5, 44.0, 47.5, 50.5, 52.8]
+		for arg in OS.get_cmdline_user_args():   # option : t=19.5,22,25 -> seulement ces instants
+			if arg.begins_with("t="):
+				instants = Array(arg.substr(2).split(",")).map(func(v): return float(v))
 		await get_tree().process_frame
 		await get_tree().process_frame
 		await get_tree().process_frame

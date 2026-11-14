@@ -41,9 +41,13 @@ const PATTES := [Vector2(490, 690), Vector2(918, 690)]   # pointes des deux grif
 const PORTE_QUEUE := Vector2(704, 680)   # la porte de la queue, entre les griffes : on la retrouve en arrivant au Parvis
 const SON_MAGIE := "res://Assets/Ninja_adventure/Audio/Sounds/Magic & Skill/Magic2.wav"
 # Calendrier des ailes (temps « anciens », sans l'ouverture) : [le plan doré apparaît, le symbole quitte la griffe, le symbole touche le plan,
-# l'aile a remplacé le plan, début du quart de tour, fin du quart de tour, fin de la glissade (= emboîtement)]
+# (inutilisé), le PLAN commence son quart de tour, le plan devenu aile commence sa glissade, fin de la glissade (= emboîtement)]
+# Le plan pivote d'abord (même sens que dans le donjon), puis se change en aile de pierre DÉJÀ dans le bon sens, juste avant de s'emboîter.
 const CALENDRIER := {"g": [14.6, 15.8, 17.2, 18.4, 23.4, 24.6, 25.5], "d": [15.4, 16.6, 18.0, 19.2, 24.4, 25.6, 26.5]}
-const DEC_AILE := Vector2(330, 330)       # écart de l'aile en attente par rapport à son épaule (elle se tient à la verticale à côté du corps)
+const DEC_AILE := Vector2(330, 330)       # écart du plan en attente par rapport à l'épaule
+const GLISSE := 150.0                      # longueur de la glissade de l'aile vers l'épaule (l'aile naît du plan à cette distance, bien dans le cadre)
+const MUE := 0.45                          # le plan se change en aile pendant les MUE secondes avant la glissade (fondu + éclat)
+const ECHELLE_PLAN_TOURNE := Vector2(1.5, 2.3)   # le plan tourné couvre à peu près l'aile de pierre (530x448)
 
 var monde: Node
 var t := 0.0
@@ -275,7 +279,9 @@ func _construire() -> void:
 		halo_s.material = _additif()
 		halo_s.modulate = Color(1.0, 0.8, 0.3, 0.7)
 		halo_s.scale = Vector2(0.22, 0.22)
-		_aile[cote] = {"pivot": pivot, "sprite": s, "halo": halo, "epaule": epaule, "cote": sens, "plan": plan, "symbole": symbole}
+		var centre_aile := epaule + Vector2(sens * GLISSE, 0.0) + (origine - epaule) + tex.get_size() / 2.0   # centre de l'aile au début de sa glissade
+		_aile[cote] = {"pivot": pivot, "sprite": s, "halo": halo, "epaule": epaule, "cote": sens, "plan": plan, "symbole": symbole,
+			"plan_depart": plan.position, "centre_aile": centre_aile}
 	# chemins d'énergie (runes qui s'allument) : un trait large et doux + un trait fin brillant par aile
 	for i in 4:
 		var ligne := Line2D.new()
@@ -365,6 +371,7 @@ func _preparer_evenements() -> void:
 		e.append([OUV + c[0], func(): _son(SON_MAGIE, -6.0, 1.2)])
 		e.append([OUV + c[2], func(): _symbole_arrive(cote)])
 		e.append([OUV + c[4] + 0.3, func(): _son(SON_AILES, -6.0, 0.8)])
+		e.append([OUV + c[5] - MUE, func(): _plan_devient_aile(cote)])
 		e.append([OUV + c[5], func(): _son(SON_ENVOL, -8.0, 1.2)])
 		e.append([OUV + c[6], func(): _clac(cote)])
 	# 4) l'énergie court le long des remparts, le coq s'éveille
@@ -429,6 +436,15 @@ func _symbole_arrive(cote: String) -> void:
 	_eclairer(0.25)
 	_anneau(pos, 1.6)
 	_etincelles(pos, 40)
+
+
+# Le plan a fini son quart de tour : il se change en aile de pierre (éclat doré).
+func _plan_devient_aile(cote: String) -> void:
+	var pos: Vector2 = _aile[cote]["centre_aile"]
+	_son(SON_MAGIE, -4.0, 0.8)
+	_eclairer(0.2)
+	_anneau(pos, 1.8)
+	_etincelles(pos, 34)
 
 
 func _eveil_tete() -> void:
@@ -672,8 +688,9 @@ func _partiel(points: PackedVector2Array, p: float) -> PackedVector2Array:
 	return sortie
 
 
-# Les deux ailes : le PLAN DORÉ des salles parcourues apparaît, le symbole du fragment vole de la griffe jusqu'à lui, il se change en aile de pierre
-# (qui flotte à la verticale, comme dans le donjon), puis l'aile fait un quart de tour et GLISSE dans l'épaule avec un petit dépassement (verrou).
+# Les deux ailes : le PLAN DORÉ des salles parcourues apparaît (dans le sens du donjon : racine en bas, plumes vers le haut), le symbole du fragment
+# vole de la griffe jusqu'à lui, le PLAN fait son quart de tour et vient se placer à côté de l'épaule, il se change en aile de pierre (déjà dans
+# le bon sens), puis l'aile GLISSE dans l'épaule avec un petit dépassement (verrou).
 func _ailes(x: float) -> void:
 	for cote in _aile:
 		var a: Dictionary = _aile[cote]
@@ -683,14 +700,19 @@ func _ailes(x: float) -> void:
 		var plan: Sprite2D = a["plan"]
 		var sym: Sprite2D = a["symbole"]
 		var c: Array = CALENDRIER[cote]
-		var attente := epaule + Vector2(sens * DEC_AILE.x, DEC_AILE.y)
-		var centre_plan := plan.position
+		var plan_depart: Vector2 = a["plan_depart"]
 		var depart: Vector2 = PATTES[0 if cote == "g" else 1] + Vector2(0, -70)
-		# --- le plan doré ---
-		var pa := _kf(x, [[c[0], 0.0], [c[0] + 1.0, 0.9], [c[2], 0.9], [c[3], 0.0]])
+		var mue: float = c[5] - MUE
+		# --- le plan doré : flotte, puis quart de tour (même sens que le pivot de l'aile du donjon) vers l'emplacement de l'aile ---
+		var pa := _kf(x, [[c[0], 0.0], [c[0] + 1.0, 0.9], [c[2], 0.9], [c[2] + 0.2, 1.0], [mue, 1.0], [c[5] + 0.15, 0.0]])
 		plan.visible = pa > 0.01
-		plan.modulate.a = pa * (0.78 + 0.22 * sin(x * 9.0))
-		plan.scale = Vector2.ONE * lerpf(1.45, 1.3, clampf((x - c[2]) / (c[3] - c[2]), 0.0, 1.0))
+		var eveil := clampf((x - c[2]) / 0.4, 0.0, 1.0)   # le symbole l'a touché : il s'éclaire
+		plan.modulate = Color(1.0, lerpf(0.74, 0.88, eveil), lerpf(0.3, 0.5, eveil), pa * (0.78 + 0.22 * sin(x * 9.0)))
+		var v := clampf((x - c[4]) / (mue - c[4]), 0.0, 1.0)
+		v = v * v * (3.0 - 2.0 * v)
+		plan.position = plan_depart.lerp(a["centre_aile"], v) + Vector2(0, sin(x * 1.8 + sens) * 8.0 * (1.0 - v))
+		plan.rotation = sens * PI / 2.0 * v
+		plan.scale = (Vector2.ONE * 1.45).lerp(ECHELLE_PLAN_TOURNE, v)
 		# --- le symbole : flotte au-dessus de la griffe, puis vole vers le plan ---
 		sym.visible = x <= c[2] + 0.05
 		if x < c[1]:
@@ -699,34 +721,24 @@ func _ailes(x: float) -> void:
 		else:
 			var u := clampf((x - c[1]) / (c[2] - c[1]), 0.0, 1.0)
 			var e := u * u * (3.0 - 2.0 * u)
-			sym.position = depart.lerp(centre_plan, e) + Vector2(sens * -80.0 * sin(PI * e), -170.0 * sin(PI * e))
+			sym.position = depart.lerp(plan_depart, e) + Vector2(sens * -80.0 * sin(PI * e), -170.0 * sin(PI * e))
 			sym.scale = Vector2.ONE * lerpf(2.6, 1.8, e)
 		sym.rotation = 0.25 * sin(x * 4.0)
-		# --- l'aile ---
-		pivot.visible = x >= c[2]
+		# --- l'aile de pierre : naît du plan tourné, puis glisse dans l'épaule ---
+		pivot.visible = x >= mue
 		if not pivot.visible:
 			continue
-		var apparait := clampf((x - c[2]) / (c[3] - c[2]), 0.0, 1.0)
+		var apparait := clampf((x - mue) / (MUE + 0.15), 0.0, 1.0)
 		(a["sprite"] as Sprite2D).modulate.a = apparait
-		var vertical := -sens * PI / 2.0
 		var lueur := 0.0
-		if x < c[4]:
-			# flotte à la verticale à côté du corps
-			pivot.position = attente + Vector2(0, (1.0 - apparait) * 50.0 + sin(x * 1.8 + sens) * 8.0)
-			pivot.rotation = vertical
-			lueur = 0.35 + 0.15 * sin(x * 6.0)
-		elif x < c[5]:
-			# quart de tour sur place
-			var v := clampf((x - c[4]) / (c[5] - c[4]), 0.0, 1.0)
-			v = v * v * (3.0 - 2.0 * v)
-			pivot.position = attente + Vector2(0, -DEC_AILE.y * v)
-			pivot.rotation = vertical * (1.0 - v)
-			lueur = 0.45 + 0.3 * v
+		pivot.rotation = 0.0
+		if x < c[5]:
+			pivot.position = epaule + Vector2(sens * GLISSE, 0.0)
+			lueur = 0.9
 		else:
 			# glissade dans l'épaule (elle accélère), s'enfonce de 14 px, puis se cale
-			var sortie := _kf(x, [[c[5], DEC_AILE.x], [c[6], -14.0, "i"], [c[6] + 0.5, 0.0, "o"]])
+			var sortie := _kf(x, [[c[5], GLISSE], [c[6], -14.0, "i"], [c[6] + 0.5, 0.0, "o"]])
 			pivot.position = epaule + Vector2(sens * sortie, 0.0)
-			pivot.rotation = 0.0
 			lueur = 0.75 if x < c[6] else clampf(1.0 - (x - c[6]) / 1.8, 0.0, 1.0) * 0.9
 		pivot.scale = Vector2.ONE
 		(a["halo"] as Sprite2D).modulate.a = lueur * (0.7 + 0.3 * sin(x * 12.0)) * apparait

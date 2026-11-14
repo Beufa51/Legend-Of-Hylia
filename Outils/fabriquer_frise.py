@@ -68,3 +68,33 @@ for y in range(haut + 5, bas, 3):
                 im.putpixel((x, yy), NERV)
 im.save(os.path.join(T, "plume_pierre.png"))
 print("frise_runes_1..4 et plume_pierre écrites")
+
+# --- Plume DORÉE (la même, recolorée en or) : remplace la plume de pierre une fois la plume ramassée
+ORS = {LISERE: (150, 112, 40, 255), PIERRE: (226, 170, 52, 255), CLAIR: (255, 228, 128, 255), OMBRE: (168, 112, 30, 255), NERV: (110, 66, 18, 255)}
+dore = im.copy()
+for y in range(H):
+    for x in range(W):
+        p = dore.getpixel((x, y))
+        if p in ORS: dore.putpixel((x, y), ORS[p])
+dore.save(os.path.join(T, "plume_pierre_or.png"))
+
+# --- Fenêtre en arche (12x18), comme celles de la façade : cadre de pierre, nuit bleutée derrière, appui clair
+FW, FH = 12, 18
+f = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
+CADRE, CADRE_C, NUIT, LUNE, APPUI = (58, 70, 98, 255), (98, 114, 148, 255), (10, 13, 26, 255), (34, 46, 80, 255), (120, 136, 168, 255)
+def dans_arche(x, y, marge):
+    cx, r = (FW - 1) / 2, FW / 2 - marge
+    if y < FW / 2:
+        return (x - cx) ** 2 + (y + 0.5 - FW / 2) ** 2 <= r * r
+    return marge <= x <= FW - 1 - marge
+for y in range(FH - 2):
+    for x in range(FW):
+        if dans_arche(x, y, 1.4):
+            f.putpixel((x, y), LUNE if y > FH - 7 else NUIT)
+        elif dans_arche(x, y, 0):
+            f.putpixel((x, y), CADRE_C if x < FW / 2 else CADRE)
+for x in range(FW):
+    f.putpixel((x, FH - 2), APPUI)
+    f.putpixel((x, FH - 1), CADRE)
+f.save(os.path.join(T, "fenetre_arche.png"))
+print("plume_pierre_or et fenetre_arche écrites")
