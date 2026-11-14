@@ -13,6 +13,8 @@ const ECLAT := Color(1.8, 1.7, 1.3)
 const ROUGE := Color(1.6, 0.45, 0.4)
 const DOREE := Color(1.3, 1.2, 0.85)
 const NORMALE := Color(1, 1, 1)
+# Couleur propre à chaque note (rouge, orange, vert, bleu, violet) : on RECONNAÎT la cloche qui s'allume sans aucun texte
+const COULEURS := [Color(1.0, 0.3, 0.25), Color(1.0, 0.62, 0.15), Color(0.35, 0.9, 0.35), Color(0.3, 0.6, 1.0), Color(0.75, 0.4, 1.0)]
 
 var salle: Node2D   # la salle (Room) : on la prévient quand la cloche est frappée
 var note := 1       # 1 à 5
@@ -20,6 +22,7 @@ var _pivot: Node2D  # la cloche se balance autour de ce point (le crochet)
 var _image: Sprite2D
 var _repos := NORMALE        # teinte au repos (dorée une fois l'énigme résolue)
 var _lumiere: PointLight2D
+var _gemme: Polygon2D
 var _base_lumiere := 0.0     # lumière au repos (un peu dans le noir, pour la repérer)
 var _dernier_coup := -1000   # en millisecondes : un coup de lance ne compte qu'une fois
 var _tween: Tween
@@ -41,9 +44,14 @@ func initialiser(une_salle: Node2D, sa_note: int, dans_le_noir: bool, support: T
 	_image.centered = false
 	_image.position = Vector2(-8, 0)
 	_pivot.add_child(_image)
+	# Plaque de couleur au sol, sous la cloche : rappelle sa note (s'allume quand la cloche sonne)
+	_gemme = Polygon2D.new()
+	_gemme.polygon = PackedVector2Array([Vector2(8, 13), Vector2(11, 15), Vector2(8, 17), Vector2(5, 15)])
+	_gemme.color = COULEURS[clampi(note - 1, 0, 4)].darkened(0.35)
+	add_child(_gemme)
 	# Lumière : éteinte en salle claire, petite lueur en salle sombre
 	_base_lumiere = 0.35 if dans_le_noir else 0.0
-	_lumiere = Lumiere.creer(Color(1.0, 0.85, 0.5), 0.6, _base_lumiere)
+	_lumiere = Lumiere.creer(COULEURS[clampi(note - 1, 0, 4)].lerp(Color(1, 0.85, 0.5), 0.5), 0.6, _base_lumiere)
 	_lumiere.position = Vector2(8, 9)
 	add_child(_lumiere)
 	# Collision (couche 1 : la lance la détecte, le joueur ne passe pas)
@@ -61,8 +69,22 @@ func frapper() -> void:
 	if maintenant - _dernier_coup < 400:
 		return
 	_dernier_coup = maintenant
+	# La lance ne passe pas à travers un bloc ou une grille : il faut avoir la cloche en ligne de vue
+	if not _en_ligne_de_vue():
+		return
 	sonner(ECLAT)
 	salle.cloche_frappee(note)
+
+
+# Vrai si rien de solide (bloc, grille, mur) ne se trouve entre le joueur et la cloche.
+func _en_ligne_de_vue() -> bool:
+	var joueur := get_tree().get_first_node_in_group("joueur")
+	if joueur == null:
+		return true
+	var requete := PhysicsRayQueryParameters2D.create(joueur.global_position, global_position + Vector2(8, 8))
+	requete.collision_mask = 1
+	requete.exclude = [get_rid(), joueur.get_rid()]
+	return get_world_2d().direct_space_state.intersect_ray(requete).is_empty()
 
 
 # Joue la note, balance la cloche et l'illumine un instant de la teinte donnée.
@@ -71,7 +93,9 @@ func sonner(teinte: Color) -> void:
 	if _tween:
 		_tween.kill()
 	_pivot.rotation = 0.0
-	_image.modulate = teinte
+	var c: Color = COULEURS[clampi(note - 1, 0, 4)]
+	_image.modulate = teinte if teinte != ECLAT else c.lerp(Color(1, 1, 1), 0.35) * 1.7
+	_gemme.color = c
 	_lumiere.energy = 1.2
 	_tween = create_tween()
 	_tween.tween_property(_pivot, "rotation", 0.35, 0.08)
@@ -100,6 +124,7 @@ func dorer() -> void:
 
 
 func _au_repos() -> void:
+	_gemme.color = COULEURS[clampi(note - 1, 0, 4)].darkened(0.35)
 	_image.modulate = _repos
 	_lumiere.energy = _base_lumiere
 

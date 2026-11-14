@@ -907,3 +907,9 @@
   LES DEUX : export `niches` (faux dans les vestibules : plus de niches à barreaux qui ressemblaient à la herse). Images : `Outils/fabriquer_runes_sol.py` (`rune_sol_1..3`, `rune_sol_on_1..3`, `cadenas`). Les générateurs écrivent `false` sans guillemets.
   Réutilisable : `chemin_runes` pour relier n'importe quel mécanisme (levier de l'Entrée droite, cristaux...) à sa porte. IDÉE EN ATTENTE : fresque de l'aile (5 plumes gravées qui se dorent) au mur des vestibules.
   SUITE de la revue : Entrée gauche / Entrée droite (levier), puis plumes une par une.
+
+- 2026-11-14 : retours : « eau de 2a moche ; 3a ok en principe mais meilleur rendu ; 3b : le bloc ne sert à rien, on tape la cloche quand même ». **ÉTAPE 15d (tests headless TOUT BON, pas jouée)** :
+  1) EAU de 2a refaite (`Outils/fabriquer_feu.py`) : canaux creusés dans la dalle (lèvre de pierre claire, ombre du rebord nord, eau vert-bleu sombre, rides pâles) au lieu d'aplats bleu vif.
+  2) CLOCHES (`cloche.gd`) : chaque note a SA COULEUR (1 rouge, 2 orange, 3 vert, 4 bleu, 5 violet) : plaque en losange au sol sous la cloche, éclat et lueur de la couleur de la note quand elle sonne.
+  3) 3b : `Cloche._en_ligne_de_vue()` (rayon physique joueur -> cloche, masque 1) : la lance ne frappe plus à travers un bloc/grille/mur -> le bloc devant la niche (17,3) est enfin indispensable (le pousser de côté).
+  À JUGER : lisibilité des couleurs, et si l'on veut des images Gemini (cloches plus grosses, support de pierre) : prompt à donner.
