@@ -137,9 +137,9 @@ func _process(_delta: float) -> void:
 				VueAerienne.new(self).jouer(cote)   # on sort du donjon avec l'aile : vue du ciel
 			else:   # (désactivée : la vision de la fin v2 la remplace par l'assemblage au parvis, voir CLAUDE.md)
 				Etat.noter("vue_aerienne_" + cote)
-				_ramener("@village:" + _temple(), Vector2i(12, 7), "Tu ressors du donjon avec le symbole de l'aile. Les stèles du parvis l'attendent !")
+				_ramener("@village:" + _temple(), Vector2i(12, 12), "Tu ressors du donjon avec le symbole de l'aile. Les stèles du parvis l'attendent !")
 		else:
-			_ramener("@village:" + _temple(), Vector2i(12, 7), "")   # sorties suivantes : on retourne directement au village
+			_ramener("@village:" + _temple(), Vector2i(12, 12), "")   # sorties suivantes : on retourne directement au village
 		return
 	if nouvelle != salle_actuelle:
 		_glisser_vers(nouvelle)

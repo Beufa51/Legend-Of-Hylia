@@ -66,10 +66,10 @@ const OBJETS_G := {
 	"U": ["v_temple_entree", Vector2i(7, 3), true, 0.0],    # ENTRÉE DE DONJON : façade de pierre à créneaux, pilastres, bannières, torches et grande arche sombre (porte en colonne 3)
 	# FAÇADES des trois entrées du donjon du coq (400x96 = 25x6 cases, collées en haut de l'écran : le bâtiment CONTINUE sur l'écran du dessus, sans arbres derrière).
 	# Elles sont solides ; les cases de la porte (rangée 5, colonnes 11-13) sont des `passages` (donc libres). Voir Outils/fabriquer_facade.py.
-	"F": ["v_facade_aile_g", Vector2i(25, 6), true, 0.0],          # entrée de l'aile GAUCHE : 5 tours de plus en plus hautes vers la droite
-	"G": ["v_facade_aile_d_fermee", Vector2i(25, 6), true, 0.0],   # entrée de l'aile DROITE, herse baissée (le garde barre la route)
-	"J": ["v_facade_aile_d", Vector2i(25, 6), true, 0.0],          # entrée de l'aile DROITE, herse levée
-	"H": ["v_facade_queue", Vector2i(25, 6), true, 0.0],           # entrée du donjon final : la QUEUE du coq (éventail de tours aux pointes en flammes)
+	"F": ["v_facade_aile_g", Vector2i(25, 12), true, 0.0],          # entrée de l'aile GAUCHE : 5 tours de plus en plus hautes vers la droite
+	"G": ["v_facade_aile_d_fermee", Vector2i(25, 12), true, 0.0],   # entrée de l'aile DROITE, herse baissée (le garde barre la route)
+	"J": ["v_facade_aile_d", Vector2i(25, 12), true, 0.0],          # entrée de l'aile DROITE, herse levée
+	"H": ["v_facade_queue", Vector2i(25, 12), true, 0.0],           # entrée du donjon final : la QUEUE du coq (éventail de tours aux pointes en flammes)
 	# LES DEUX STÈLES DU PARVIS : une GRIFFE de pierre (le pied du coq de l'image du coq-forteresse, jambe qui monte et disparaît dans la forêt) + une PIERRE posée DEVANT elle,
 	# où l'on dépose le symbole d'une aile (fenêtre ornée d'ailes). Images : Outils/traiter_griffes.py et Outils/traiter_pierres.py ; logique : STELES, world.gd::_ceremonie_stele.
 	"C": ["v_griffe_g", Vector2i(5, 2), true, 0.0],                # griffe GAUCHE (décor : le pied de l'aile gauche)

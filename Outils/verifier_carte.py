@@ -16,7 +16,7 @@ import generer_village as gv
 
 W, H = gv.W, gv.H
 PORTES = {'M': 2, 'N': 2, 'T': 2, 'R': 2, 'S': 2, 'K': 2, 'L': 2, 'U': 3}   # colonne de la porte (PORTES_MAISONS de exterieur.gd)
-FACADES = 'FGJH'   # façades 25x6 : la porte = les 3 cases (11..13, 5)
+FACADES = 'FGJH'   # façades 25x12 : la porte = les 3 cases (11..13, 11)
 
 ext = {nom: (grille, g) for nom, grille, g, _ in gv.ecrans}
 props = {nom: dict(p) for nom, _, _, p in gv.ecrans}
@@ -155,7 +155,7 @@ for nom in props:
             erreurs.append("%s : le passage (%d,%d) arrive sur une case bloquée de %s (%s,%s)" % (nom, x, y, cible, m[1], m[2]))
         if nom in ext:
             g = ext[nom][1]
-            facade = g[0][0] in FACADES and y == 5 and 11 <= x <= 13
+            facade = g[0][0] in FACADES and y == 11 and 11 <= x <= 13
             if not facade and not any(g[y - (gv.TAILLES_MAISONS[c][1] - 1)][x - col] == c for c, col in PORTES.items()
                                       if 0 <= y - (gv.TAILLES_MAISONS[c][1] - 1) < H and 0 <= x - col < W):
                 erreurs.append("%s : le passage (%d,%d) n'est sous la porte d'aucune maison" % (nom, x, y))

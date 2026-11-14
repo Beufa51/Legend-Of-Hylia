@@ -63,7 +63,7 @@ for (x, y) in [(7, 9), (17, 9)]:
     vestibule[y][x] = 'S'
 for (x, y) in [(2, 2), (3, 2), (22, 2), (21, 2), (2, 11), (22, 11)]:
     vestibule[y][x] = 'V'
-passages_vestibule = ['%d 13 @village:Queue 12 7' % x for x in (11, 12, 13)]
+passages_vestibule = ['%d 13 @village:Queue 12 12' % x for x in (11, 12, 13)]
 
 GARDIEN = (12 * 16 + 8, 3 * 16 + 11)     # au fond de la salle, pieds sur la case (12,3)
 JOUEUR = (12 * 16 + 8, 2 * 224 + 11 * 16 + 3)   # case (12,11) du vestibule (seulement si on lance la scène directement)

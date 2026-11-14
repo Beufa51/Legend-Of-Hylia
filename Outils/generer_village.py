@@ -150,7 +150,7 @@ put(place, 'w', (9, 2), (16, 2), (2, 10), (3, 11), (15, 11), (11, 11), (22, 10),
 # Animaux : 3 poules (c blanche, h rousse) qui picorent sur la place, un chat qui dort devant la maison, un chien
 animaux_place = ['c 9 9', 'c 15 10', 'h 14 4', 'k 6 7', 'd 17 8']
 
-TAILLES_MAISONS = {'M': (8, 3), 'N': (5, 3), 'T': (5, 3), 'R': (5, 3), 'S': (8, 3), 'L': (8, 3), 'K': (8, 3), 'U': (7, 3), 'F': (25, 6), 'G': (25, 6), 'J': (25, 6), 'H': (25, 6)}   # F G J H = façades des entrées du donjon (25x6 cases, collées en haut de l'écran)
+TAILLES_MAISONS = {'M': (8, 3), 'N': (5, 3), 'T': (5, 3), 'R': (5, 3), 'S': (8, 3), 'L': (8, 3), 'K': (8, 3), 'U': (7, 3), 'F': (25, 12), 'G': (25, 12), 'J': (25, 12), 'H': (25, 12)}   # F G J H = façades des entrées du donjon (25x12 cases, images Gemini, collées en haut de l'écran)
 
 def degager_maisons(g):
     """Retire du plan tout décor (fleurs, tonneaux...) posé SOUS une maison."""
@@ -375,7 +375,7 @@ def parvis_commun():
     """Le parvis, commun aux deux versions : chemins, forêt du bord, bannières, fleurs."""
     g = vide()
     chemin(g, 11, 13, 6, 13)                                  # vient du sud
-    chemin(g, 0, 24, 6, 8)                                    # vers l'ouest : temple de l'aile gauche ; vers l'est : temple de l'aile droite
+    chemin(g, 2, 22, 6, 8)                                    # le parvis (les escaliers des deux terrasses y descendent) ; les temples ne s'atteignent plus d'ici : on les rejoint par le sud
     bordure(g)
     for (x, y) in [(0, 2), (0, 4), (0, 10), (22, 2), (22, 4), (22, 9), (20, 11)]:
         put(g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
@@ -399,46 +399,38 @@ passages_parvis_revele = list(passages_parvis)
 
 
 def facade_ecran(lettre, est=True):
-    """Un écran d'entrée de donjon : la FAÇADE (F G J H) collée en haut, le chemin qui monte vers sa porte (3 cases, rangée 5), peu d'arbres sur les côtés (jamais derrière)."""
+    """Un écran d'entrée de donjon : la FAÇADE (F G J H, image Gemini 400x192) occupe les rangées 0-11 ; la porte = les 3 cases (11..13, rangée 11) ; en dessous, 2 rangées de sol et le chemin qui vient du sud."""
     g = vide()
     put(g, lettre, (0, 0))
-    chemin(g, 11, 13, 6, 13)
-    bordure(g, haut=False)
+    chemin(g, 11, 13, 12, 13)
+    put(g, 'b', *[(x, 13) for x in range(25) if not 11 <= x <= 13])    # la haie du bas (la sortie sud est creusée ensuite)
     return g
 
 
-# --- ENTRÉE DE L'AILE GAUCHE (1,0) : 5 tours de plus en plus hautes vers la droite (les plumes de l'aile) ; porte au centre
+# --- ENTRÉE DE L'AILE GAUCHE (1,0) : 5 plumes de pierre de plus en plus hautes vers la droite ; porte au centre ; on y arrive par le sud (verger)
 temple_g = facade_ecran('F')
-chemin(temple_g, 11, 24, 6, 8)                                 # vient de l'est (le parvis) ; sortie sud vers le verger
-for (x, y) in [(0, 7), (0, 9), (22, 11), (3, 9)]:
-    put(temple_g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-put(temple_g, 'f', (8, 9), (16, 9)); put(temple_g, 'g', (7, 7), (15, 7)); put(temple_g, 'w', (6, 10), (19, 10)); put(temple_g, 'j', (9, 7), (17, 7))
+put(temple_g, 'f', (5, 12), (19, 12)); put(temple_g, 'w', (7, 13), (17, 13))
 TXT_G = "La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."
-passages_temple_g = ["%d 5 @donjon:Vestibule 12 11 %s" % (x, TXT_G) for x in (11, 12, 13)]
+passages_temple_g = ["%d 11 @donjon:Vestibule 12 11 %s" % (x, TXT_G) for x in (11, 12, 13)]
 
-# --- ENTRÉE DE L'AILE DROITE (3,0) : le miroir de la gauche (tours de plus en plus hautes vers la GAUCHE).
+# --- ENTRÉE DE L'AILE DROITE (3,0) : le miroir de la gauche (plumes de plus en plus hautes vers la GAUCHE).
 #     FERMÉE (herse baissée, façade G) tant que l'aile gauche n'est pas réussie : un GARDE se tient devant. Une fois `fragment_gauche` levé (le village est rechargé
 #     après le donjon), le plan « révélé » s'applique : façade J (herse levée), porte ouverte, plus de garde.
 def temple_droit(lettre):
     g = facade_ecran(lettre)
-    chemin(g, 0, 13, 6, 8)                                     # vient de l'ouest (le parvis)
-    for (x, y) in [(22, 7), (22, 10), (1, 11), (19, 9)]:
-        put(g, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-    put(g, 'f', (8, 9), (16, 9)); put(g, 'g', (7, 7), (15, 7)); put(g, 'w', (6, 10), (19, 10)); put(g, 'j', (9, 7), (17, 7))
+    put(g, 'f', (5, 12), (19, 12)); put(g, 'w', (7, 13), (17, 13))
     return g
 temple_d = temple_droit('G')
 temple_d_ouvert = temple_droit('J')
 TXT_D = "La grande porte se referme derrière toi... L'aile droite : ici, tout est inversé."
-passages_temple_d_ouvert = ["%d 5 @aile_droite:Vestibule 12 11 %s" % (x, TXT_D) for x in (11, 12, 13)]
-pnjs_temple_d = ["Villager3 12 6 haut! | Garde du temple | Halte, recrue ! Cette aile ne s'ouvre qu'à celui qui a réussi l'aile gauche. // Va d'abord l'affronter. Reviens quand tu en rapporteras le symbole."]
+passages_temple_d_ouvert = ["%d 11 @aile_droite:Vestibule 12 11 %s" % (x, TXT_D) for x in (11, 12, 13)]
+pnjs_temple_d = ["Villager3 12 12 haut! | Garde du temple | Halte, recrue ! Cette aile ne s'ouvre qu'à celui qui a réussi l'aile gauche. // Va d'abord l'affronter. Reviens quand tu en rapporteras le symbole."]
 
-# --- QUEUE (2,-1) : au nord du parvis, une fois la forêt écartée. L'entrée du donjon final : un éventail de tours aux pointes en flammes (la queue du coq).
+# --- QUEUE (2,-1) : au nord du parvis, une fois la forêt écartée. L'entrée du donjon final : un éventail de tours aux flammes (la queue du coq).
 queue = facade_ecran('H')
-for (x, y) in [(1, 8), (0, 10), (22, 9), (22, 11), (4, 11)]:
-    put(queue, 'A' if (x + y) % 4 == 0 else 'a', (x, y))
-put(queue, 'f', (8, 9), (16, 10)); put(queue, 'g', (7, 7), (17, 8)); put(queue, 'w', (6, 11), (19, 11)); put(queue, 'j', (9, 7), (15, 7))
+put(queue, 'f', (5, 12), (19, 12)); put(queue, 'w', (7, 13), (17, 13))
 TXT_Q = "Tu pénètres dans la queue du coq. Au bout, quelqu'un t'attend..."
-passages_queue = ["%d 5 @corps:Vestibule 12 11 %s" % (x, TXT_Q) for x in (11, 12, 13)]
+passages_queue = ["%d 11 @corps:Vestibule 12 11 %s" % (x, TXT_Q) for x in (11, 12, 13)]
 
 terrasses_grand, escaliers_grand = ["0 1 8 8", "17 1 8 8"], ["3 6", "20 6"]          # le cou du coq : deux collines de chaque côté du grand chemin
 terrasses_parvis, escaliers_parvis = ["0 0 6 6", "19 0 6 6"], ["3 3", "21 3"]            # la tête : deux petites terrasses qui encadrent le parvis
@@ -500,17 +492,17 @@ depart = (4 * 400 + 9 * 16 + 8, 5 * 224 + 6 * 16 + 3)   # nouvelle partie : dans
 
 # Sorties de chaque écran (N, S, E, O) ; `profondeurs` = longueur du chemin creusé quand ce n'est pas la valeur par défaut (voir ouvrir())
 SORTIES = {
-    'TempleGauche': ('ES', temple_g), 'Parvis': ('SOE', parvis), 'TempleDroit': ('OS', temple_d), 'Queue': ('S', queue),
+    'TempleGauche': ('S', temple_g), 'Parvis': ('S', parvis), 'TempleDroit': ('S', temple_d), 'Queue': ('S', queue),
     'Verger': ('NS', verger), 'GrandChemin': ('NS', grand), 'TerrainGarde': ('NS', terrain),
     'VillageOuest': ('NES', ouest), 'PlaceDuCoq': ('NOES', place), 'VillageEst': ('NOS', est),
     'MaisonHeros': ('NE', heros), 'Riviere': ('NOES', riviere), 'Ferme': ('NO', ferme), 'RouteSud': ('N', route),
 }
-PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 2}, 'Parvis': {'S': 6, 'O': 12, 'E': 12}}
+PROFONDEURS = {'PlaceDuCoq': {'N': 4, 'S': 4, 'E': 6, 'O': 6}, 'Riviere': {'N': 2}, 'Parvis': {'S': 6}, 'TempleGauche': {'S': 2}, 'TempleDroit': {'S': 2}, 'Queue': {'S': 2}}
 RELIEF = {'GrandChemin': (terrasses_grand, escaliers_grand), 'Parvis': (terrasses_parvis, escaliers_parvis), 'VillageEst': (terrasses_est, escaliers_est), 'Verger': (terrasses_verger, escaliers_verger), 'TerrainGarde': (terrasses_terrain, escaliers_terrain), 'RouteSud': (terrasses_route, escaliers_route)}
 for _nom, (_s, _g) in SORTIES.items():
     finaliser(_g, _s, PROFONDEURS.get(_nom), *RELIEF.get(_nom, ((), ())))
-finaliser(parvis_revele, 'NSOE', PROFONDEURS['Parvis'], terrasses_parvis, escaliers_parvis)
-finaliser(temple_d_ouvert, 'OS')
+finaliser(parvis_revele, 'NS', PROFONDEURS['Parvis'], terrasses_parvis, escaliers_parvis)
+finaliser(temple_d_ouvert, 'S', {'S': 2})
 
 
 def ecrire_scene():
