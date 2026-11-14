@@ -1363,7 +1363,7 @@ func _poser_details() -> void:
 	else:
 		for x in (COLONNES_NICHES if niches else []):
 			if _mur_haut_libre(x) and _mur_haut_libre(x + 1):
-				_poser("niche_grille", Vector2(x * TUILE, EPAISSEUR * TUILE - 21))
+				_poser("meurtriere", Vector2(x * TUILE + 4, EPAISSEUR * TUILE - 15))   # fente étroite (les niches à barreaux faisaient « portes »)
 	for x in COLONNES_TORCHES:
 		if _mur_haut_libre(x):
 			_poser_anime(TORCHE, Vector2(x * TUILE + 2, EPAISSEUR * TUILE - 24), x)

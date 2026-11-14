@@ -9,7 +9,7 @@ SRC = "Assets/Gemini/originaux/cloches.jpg"
 SORTIE = "Assets/Gemini/tuiles/"
 LIMITES_X = [0, 366, 652, 916, 1152, 1408]   # séparation entre les 5 colonnes
 Y_PLAQUES = 572                              # en dessous : les plaques de couleur
-ECHELLE = 0.065
+LARGEUR_CLOCHE = 18   # TOUTES les cloches ont la même taille (sinon la taille suggérerait un ordre de frappe)
 CONTOUR = (28, 20, 14)
 LARGEUR, HAUTEUR = 22, 34
 
@@ -28,7 +28,8 @@ def decouper(img, x0, x1, y0, y1, cadre):
     bx0, bx1, by0, by1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
     rgb = c[by0:by1, bx0:bx1].copy(); mm = m[by0:by1, bx0:bx1]
     rgb[~mm] = CONTOUR
-    w, h = max(1, round((bx1 - bx0) * ECHELLE)), max(1, round((by1 - by0) * ECHELLE))
+    # taille EXACTEMENT identique pour toutes les cloches (et pour toutes les plaques)
+    w, h = (LARGEUR_CLOCHE, 28) if cadre[0] == LARGEUR else (14, 7)
     p = Image.fromarray(rgb).resize((w, h), Image.LANCZOS)
     a = Image.fromarray((mm * 255).astype(np.uint8)).resize((w, h), Image.LANCZOS).point(lambda v: 255 if v > 110 else 0)
     p = p.quantize(colors=24, dither=Image.NONE).convert("RGB")
