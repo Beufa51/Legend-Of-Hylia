@@ -79,10 +79,8 @@ for y in range(H):
     for x in (11, 12, 13):
         if vestibule[y][x] == '.':
             vestibule[y][x] = 'T'
-for (x, y) in [(3, 2), (7, 2), (17, 2), (21, 2)]:
-    vestibule[y][x] = 'B'
-for (x, y) in [(10, 10), (14, 10)]:
-    vestibule[y][x] = 'O'                      # coqs de pierre qui gardent l'entrée
+for (x, y) in [(3, 10), (6, 10), (18, 10), (21, 10), (10, 10), (14, 10)]:
+    vestibule[y][x] = 'B'                      # flammes des 6 tours du bas, comme sur l'image
 passages_vestibule = ['%d 13 @village:Queue 12 12' % x for x in (11, 12, 13)]
 
 GARDIEN = (12 * 16 + 8, 3 * 16 + 11)     # au fond de la salle, pieds sur la case (12,3)

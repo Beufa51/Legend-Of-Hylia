@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""VESTIBULE DU DONJON FINAL (la QUEUE du coq vue de l'intérieur) : un ÉVENTAIL de 5 couloirs de pierre qui convergent vers la porte d'entrée,
+"""VESTIBULE DU DONJON FINAL (la QUEUE du coq vue de l'intérieur) : un ÉVENTAIL de 5 couloirs de pierre SÉPARÉS (pincé en haut, large en bas, porte au centre du bas),
 comme sur l'image Coq_forteresse.jpg. La forme est trop diagonale pour des tuiles : on PEINT le fond de la salle (400x224) avec des polygones,
 dans le style du donjon (briques, liserés, faces de mur vues de 3/4), et on en tire le plan de collisions (cases 16 px).
 Sorties : Assets/Gemini/tuiles/fond_vestibule.png ; la fonction plan() renvoie les 14 rangées du `layout` (utilisée par generer_corps.py).
@@ -11,10 +11,10 @@ from PIL import Image, ImageDraw, ImageFilter
 RACINE = os.path.join(os.path.dirname(__file__), "..")
 TUILES = os.path.join(RACINE, "Assets", "Gemini", "tuiles")
 W, H = 400, 224
-FOYER = (200.0, 208.0)                      # point où se rejoignent les couloirs (sous la porte d'entrée)
-HAUT, BAS = 32, 176                         # l'éventail va de y=32 (bout des couloirs) à y=176 (porte)
-# cloisons entre les couloirs : (intervalle en haut, profondeur de la pointe : 0 = en haut, 1 = au foyer)
-CLOISONS = [((80, 96), 0.62), ((144, 176), 0.72), ((224, 256), 0.72), ((304, 320), 0.62)]
+HAUT, BAS = 32, 176                         # les couloirs vont de y=32 (arches du donjon rond) à y=176 (tours à flammes + porte)
+# Comme sur l'image : l'éventail est PINCÉ en HAUT (côté donjon) et s'ÉLARGIT vers le BAS ; les 5 couloirs restent SÉPARÉS par des murs sur toute leur longueur.
+# (x au centre en haut, x au centre en bas, demi-largeur en haut, demi-largeur en bas)
+COULOIRS = [(114, 52, 11, 14), (156, 109, 11, 14), (200, 200, 20, 28), (244, 291, 11, 14), (286, 348, 11, 14)]
 
 
 def tuile(nom):
@@ -32,15 +32,13 @@ def paver(nom_tuiles, taille=(W, H)):
 
 
 def masque_sol():
+    """5 couloirs séparés (le central relie la porte du bas à la sortie du haut ; les 4 autres finissent contre une tour à flamme en bas)."""
     m = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(m)
-    d.polygon([(32, HAUT), (368, HAUT), (224, BAS), (176, BAS)], fill=255)     # l'éventail (bords extérieurs à 45°)
+    for (ah, ab, wh, wb) in COULOIRS:
+        d.polygon([(ah - wh, HAUT), (ah + wh, HAUT), (ab + wb, BAS), (ab - wb, BAS)], fill=255)
     d.rectangle([176, 0, 223, HAUT + 4], fill=255)                              # sortie du haut (vers le couloir du corps)
     d.rectangle([176, BAS - 2, 223, H], fill=255)                               # porte d'entrée (en bas)
-    for (x0, x1), t in CLOISONS:                                                # les cloisons : triangles dont la pointe vise le foyer
-        cx = (x0 + x1) / 2.0
-        ax, ay = cx + t * (FOYER[0] - cx), HAUT + t * (FOYER[1] - HAUT)
-        d.polygon([(x0, HAUT - 1), (x1, HAUT - 1), (ax, ay)], fill=0)
     return m
 
 
@@ -66,7 +64,7 @@ def masque_couloir():
     return m
 
 
-def fabriquer(masque=None, fichier="fond_vestibule", lumieres=((56, 40), (120, 40), (280, 40), (344, 40)), nervures=()):
+def fabriquer(masque=None, fichier="fond_vestibule", lumieres=((52, 168), (109, 168), (291, 168), (348, 168), (114, 40), (156, 40), (244, 40), (286, 40)), nervures=()):
     """Peint le fond. `lumieres` : centres des flammes (lueur chaude sur le sol et les murs) ; `nervures` : y des arcs de la voûte (bandes d'ombre en travers)."""
     sol_m = masque if masque is not None else masque_sol()
     f = np.asarray(sol_m) > 127
