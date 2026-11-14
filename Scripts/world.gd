@@ -437,6 +437,12 @@ func _creer_menu_dev() -> void:
 	bouton_stele.focus_mode = Control.FOCUS_NONE
 	bouton_stele.pressed.connect(_dev_test_stele)
 	boite.add_child(bouton_stele)
+	var bouton_assemblage := Button.new()
+	bouton_assemblage.text = "Rejouer la cinématique d'assemblage du coq"
+	bouton_assemblage.add_theme_font_size_override("font_size", 8)
+	bouton_assemblage.focus_mode = Control.FOCUS_NONE
+	bouton_assemblage.pressed.connect(_dev_assemblage)
+	boite.add_child(bouton_assemblage)
 	var bouton_vieille := Button.new()
 	bouton_vieille.text = "Simuler une vieille sauvegarde (village)"
 	bouton_vieille.add_theme_font_size_override("font_size", 8)
@@ -500,6 +506,15 @@ func _dev_nouvelle_partie() -> void:
 
 func _dev_changer_scene(chemin: String) -> void:
 	get_tree().change_scene_to_file(chemin)
+
+
+func _dev_assemblage() -> void:
+	_menu_dev.visible = false
+	en_transition = true
+	joueur.set_physics_process(false)
+	await Assemblage.jouer(self)
+	en_transition = false
+	joueur.set_physics_process(true)
 
 
 func _dev_cinematique() -> void:
@@ -808,9 +823,15 @@ func _mecanisme_stele(parvis: Exterieur) -> void:
 			_secouer()
 			await get_tree().create_timer(0.6).timeout
 		await get_tree().create_timer(1.2).timeout
-	var t := create_tween()
-	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
-	await t.finished
+	# LA GRANDE CINÉMATIQUE : le château-coq s'envole, ses ailes s'emboîtent, il se repose (Scripts/assemblage.gd).
+	# Elle finit sur un écran noir ; on le garde pendant le rechargement du parvis.
+	if peut_changer_scene:
+		await Assemblage.jouer(self)
+		_fondu.modulate.a = 1.0
+	else:
+		var t := create_tween()
+		t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
+		await t.finished
 	Etat.noter("corps_revele")
 	if peut_changer_scene:
 		_changer_de_scene("@village:Parvis", Vector2i(12, 7), "La forêt s'est écartée. Au nord, une grande bâtisse se dresse...")
