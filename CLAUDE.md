@@ -762,6 +762,12 @@
   Conséquences prévues (à faire après validation) : 2 stèles en forme de pattes (remplacent la stèle unique `Y`/`y`, drapeaux gauche/droite) ; nouvel écran au nord du Parvis (queue = entrée du donjon final, corps/boss à l'intérieur) ; cinématique aérienne refaite à plat (plan de tous les morceaux construit depuis les vrais `layout` des salles, ailes qui pivotent
   depuis les temples jusqu'aux épaules) SANS `blason_*.png` ; silhouette du coq (corps, tête + crête + bec, queue en éventail, pattes) construite avec des blocs de salles de même pierre que les ailes. Ancien code concerné : `world.gd::_ceremonie_stele`, `mode7.gd`, `Outils/fabriquer_plans_mode7.py`, `exterieur.gd::ecarter_foret`.
 
+- 2026-11-14 : **VISION DE LA FIN v2 : RÉPONSES DE L'UTILISATEUR** : (1) ORDRE FORCÉ : d'abord l'aile GAUCHE, ensuite la DROITE ; un GARDE devant la droite dit qu'il faut d'abord réussir la gauche (emplacement exact à confirmer : entrée de l'aile droite ou stèle droite) ;
+  (2) donjon final TRÈS SIMPLE : QUEUE = vestibule d'entrée -> on entre dans le CORPS : couloir -> boss (3 écrans empilés vers le haut) ; (3) vue aérienne À PLAT (carte vue de dessus, pas de perspective) ;
+  (4) rejette : l'image du coq, un ensemble « pas construit », et les ENTRÉES D'AILES actuelles (arbres derrière la façade : on n'a pas l'impression d'entrer dans un bâtiment qui CONTINUE) -> les façades (temples gauche/droit, queue) doivent être de GRANDS BÂTIMENTS qui montent jusqu'en haut de l'écran
+  (la suite est « sur l'écran du dessus », même si on ne le voit pas), SANS arbres derrière, murs latéraux qui continuent. L'aérien et le sol doivent rester cohérents.
+  Ordre de travail proposé : A) garde + 2 stèles-pattes + insertion gauche puis droite ; B) façades refaites (2 temples + queue) ; C) vestibule/couloir/arène du boss ; D) IMAGE FIXE de la silhouette finale du coq faite de bâtiments (à valider par l'utilisateur AVANT d'animer) ; E) cinématique d'assemblage à plat.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
