@@ -628,6 +628,8 @@ func _passer_porte(nom: String, case: Vector2i, texte: String) -> void:
 	var pas := Vector2.ZERO
 	if nom.begins_with("@donjon") or nom.begins_with("@aile_droite") or nom.begins_with("@corps"):
 		pas = Vector2.UP
+	elif nom.begins_with("@village") and donjon:
+		pas = Vector2.DOWN   # on SORT du donjon : un pas vers la porte
 	elif arrivee != null and depart != null and arrivee.interieur != depart.interieur:
 		pas = Vector2.UP if arrivee.interieur else Vector2.DOWN
 	if pas != Vector2.ZERO:

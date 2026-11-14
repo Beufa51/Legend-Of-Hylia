@@ -36,8 +36,8 @@ for y in range(12, 14):            # la grande porte du bas (retour au parvis)
         arene[y][x] = '.'
 for (x, y) in [(6, 5), (18, 5), (6, 8), (18, 8)]:
     arene[y][x] = 'S'              # statues de chevaliers : obstacles
-for (x, y) in [(4, 4), (20, 4), (4, 9), (20, 9)]:
-    arene[y][x] = 'B'              # braseros aux angles de la cour
+for (x, y) in [(4, 4), (20, 4), (3, 6), (21, 6), (4, 9), (20, 9)]:
+    arene[y][x] = 'B'              # SIX braseros autour de la cour (comme sur l'image)
 arene[2][8] = 'O'; arene[2][16] = 'O'   # statues d'oiseau au fond
 
 def vide():
@@ -60,15 +60,19 @@ for (x, y) in [(10, 3), (14, 3), (10, 7), (14, 7), (10, 11), (14, 11)]:
 
 # --- VESTIBULE (0,2) : la QUEUE du coq (voir Coq_forteresse.jpg) : CINQ COULOIRS DE TERRE qui se rejoignent à la porte d'entrée (en bas) et s'écartent
 # en éventail vers le donjon rond ; une flamme brûle au bout de chacun ; seul le couloir du milieu continue vers le corps.
-vestibule = vide()
-for (x0, x1) in [(2, 3), (6, 7), (11, 13), (17, 18), (21, 22)]:     # les 5 couloirs (le grand du milieu continue vers le corps)
-    sol(vestibule, x0, x1, 2, 9, ',')
-sol(vestibule, 2, 22, 9, 11, ',')              # la barre commune où ils se rejoignent, devant la porte d'entrée
-sol(vestibule, 11, 13, 0, 1, ',')              # sortie du haut vers le couloir du corps
-sol(vestibule, 11, 13, 12, 13, ',')            # porte d'entrée (en bas)
-for (x, y) in [(2, 2), (7, 2), (17, 2), (22, 2)]:
-    vestibule[y][x] = 'B'                      # une flamme au bout de chaque couloir extérieur
-for (x, y) in [(6, 10), (18, 10)]:
+# L'éventail est PEINT (Outils/fabriquer_vestibule.py) : le plan ne sert qu'aux collisions ; tapis rouge sur le couloir du milieu, flammes au bout des 4 couloirs extérieurs.
+import sys
+sys.path.insert(0, os.path.dirname(__file__))
+import fabriquer_vestibule
+fabriquer_vestibule.fabriquer()
+vestibule = [list(r) for r in fabriquer_vestibule.plan()]
+for y in range(H):
+    for x in (11, 12, 13):
+        if vestibule[y][x] == '.':
+            vestibule[y][x] = 'T'
+for (x, y) in [(3, 2), (7, 2), (17, 2), (21, 2)]:
+    vestibule[y][x] = 'B'
+for (x, y) in [(10, 10), (14, 10)]:
     vestibule[y][x] = 'O'                      # coqs de pierre qui gardent l'entrée
 passages_vestibule = ['%d 13 @village:Queue 12 12' % x for x in (11, 12, 13)]
 
@@ -104,6 +108,7 @@ layout = %s
 grille = Vector2i(0, 2)
 teinte = Color(0.92, 0.95, 1.1, 1)
 ciel_ouvert = true
+fond_image = \"fond_vestibule\"
 passages = PackedStringArray(%s)
 layout = %s
 

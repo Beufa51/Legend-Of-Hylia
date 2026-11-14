@@ -61,6 +61,7 @@ const TORCHE := ["torche_1", "torche_2", "torche_3", "torche_4", "torche_5", "to
 const DECALAGE_BRASERO := Vector2(-2, -10)
 
 # Énigmes : noms de drapeaux (voir etat.gd). Vide = rien.
+@export var fond_image := ""      # salle dont le sol et les murs sont UNE image peinte (Assets/Gemini/tuiles/<nom>.png, 400x224) : formes non carrées (éventail du vestibule du donjon final) ; le plan sert aux collisions
 @export var ciel_etoile := false   # (avec ciel_ouvert) murs en CRÉNEAUX et CIEL ÉTOILÉ au-delà des remparts au lieu de briques pleines (arène du boss)
 @export var ciel_ouvert := false   # salle SANS TOIT (cour du château, couloirs de la queue) : ombres de nuages, oiseaux, lumière de lune, feuilles (Scripts/ciel_ouvert.gd)
 @export var drapeau_plaque := ""   # levé quand TOUTES les plaques P portent un bloc
@@ -158,6 +159,7 @@ func _ready() -> void:
 	modulate = teinte  # ne teinte que cette salle (le joueur est ailleurs dans la scène)
 	_creer_decor()
 	_creer_collisions()
+	_poser_passages()   # sorties vers un autre écran / une autre scène (ex. la porte du vestibule du donjon final vers le village)
 	Etat.drapeau_change.connect(_sur_drapeau)
 	for d in [drapeau_porte, drapeau_porte2, drapeau_serrure]:
 		if Etat.est(d):
@@ -215,7 +217,11 @@ func _creer_decor() -> void:
 	for ligne in layout:
 		if ligne.contains("i"):
 			_a_glace = true
+	if fond_image != "":
+		_poser(fond_image, Vector2.ZERO)
 	for y in layout.size():
+		if fond_image != "":
+			break   # (le fond peint remplace les tuiles de sol et de mur)
 		for x in layout[y].length():
 			var pos := Vector2(x * TUILE, y * TUILE)
 			if not _est_mur(x, y):
@@ -1290,7 +1296,7 @@ func _sur_drapeau(nom: String) -> void:
 
 # Torches et bannières sur le mur du haut (seulement là où il y a du mur au-dessus du sol).
 func _poser_details() -> void:
-	if sombre:
+	if sombre or fond_image != "":
 		return  # pas de torches dans une salle sombre
 	for x in COLONNES_BANNIERES:
 		if _mur_haut_libre(x):
