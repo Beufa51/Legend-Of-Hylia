@@ -11,7 +11,8 @@ extends CanvasLayer
 
 signal termine
 
-const DUREE := 46.0
+const OUV := 3.5                      # durée de l'ouverture sur les pattes (avant le temps « ancien » où tout a commencé)
+const DUREE := 54.0
 const DOSSIER := "res://Assets/Cinematique/"
 const TAILLE_IMAGE := Vector2(1408, 768)
 const CENTRE := Vector2(704, 384)       # centre de l'image = centre du donjon rond
@@ -36,7 +37,13 @@ const CHEMIN_GAUCHE := [
 	Vector2(268, 118), Vector2(300, 136), Vector2(370, 150), Vector2(430, 168), Vector2(470, 215), Vector2(520, 268),
 	Vector2(585, 282), Vector2(625, 250), Vector2(665, 228), Vector2(704, 218), Vector2(704, 150), Vector2(704, 96),
 ]
-const DEC_AILE := Vector2(330, 40)       # écart de l'aile en attente par rapport à son épaule (elle se tient à la verticale à côté du corps)
+const PATTES := [Vector2(490, 690), Vector2(918, 690)]   # pointes des deux griffes = les stèles du Parvis (gauche, droite)
+const PORTE_QUEUE := Vector2(704, 680)   # la porte de la queue, entre les griffes : on la retrouve en arrivant au Parvis
+const SON_MAGIE := "res://Assets/Ninja_adventure/Audio/Sounds/Magic & Skill/Magic2.wav"
+# Calendrier des ailes (temps « anciens », sans l'ouverture) : [le plan doré apparaît, le symbole quitte la griffe, le symbole touche le plan,
+# l'aile a remplacé le plan, début du quart de tour, fin du quart de tour, fin de la glissade (= emboîtement)]
+const CALENDRIER := {"g": [14.6, 15.8, 17.2, 18.4, 23.4, 24.6, 25.5], "d": [15.4, 16.6, 18.0, 19.2, 24.4, 25.6, 26.5]}
+const DEC_AILE := Vector2(330, 330)       # écart de l'aile en attente par rapport à son épaule (elle se tient à la verticale à côté du corps)
 
 var monde: Node
 var t := 0.0
@@ -61,6 +68,8 @@ var _lueurs: Array[Sprite2D] = []
 var _aile := {}                    # "g" / "d" -> {pivot, sprite, halo, epaule, cote}
 var _energie: Array[Line2D] = []
 var _halo_tete: Sprite2D
+var _lueurs_pattes: Array[Sprite2D] = []
+var _lueur_porte: Sprite2D
 var _eclats: Node2D
 var _flash: ColorRect
 var _noir: ColorRect
@@ -116,7 +125,7 @@ func _lire_meta() -> void:
 # --- Construction ------------------------------------------------------------------------------------------------
 
 func _texture(nom: String) -> Texture2D:
-	var chemin := DOSSIER + nom
+	var chemin := nom if nom.begins_with("res://") else DOSSIER + nom
 	var tex = load(chemin) if ResourceLoader.exists(chemin) else null
 	if tex == null:
 		var img := Image.load_from_file(ProjectSettings.globalize_path(chemin))
@@ -228,6 +237,16 @@ func _construire() -> void:
 		l.modulate = Color(1.0, 0.62, 0.2, 0.0)
 		l.scale = Vector2(0.42, 0.42)
 		_lueurs.append(l)
+	for p in PATTES:             # les pattes brillent comme les stèles du Parvis
+		var lp := _sprite(_tex_lueur, _chateau, p, true)
+		lp.material = _additif()
+		lp.modulate = Color(1.0, 0.82, 0.35, 0.0)
+		lp.scale = Vector2(0.9, 0.9)
+		_lueurs_pattes.append(lp)
+	_lueur_porte = _sprite(_tex_lueur, _chateau, PORTE_QUEUE, true)
+	_lueur_porte.material = _additif()
+	_lueur_porte.modulate = Color(1.0, 0.7, 0.3, 0.0)
+	_lueur_porte.scale = Vector2(0.8, 0.8)
 	# les ailes : un pivot placé à l'épaule ; l'image est décalée pour que l'épaule soit à l'origine du pivot
 	for cote in ["g", "d"]:
 		var epaule := _pt(_meta["epaule_" + cote])
@@ -240,7 +259,23 @@ func _construire() -> void:
 		var halo := _sprite(tex, pivot, origine - epaule)
 		halo.material = _additif()
 		halo.modulate = Color(0.9, 0.75, 0.3, 0.0)
-		_aile[cote] = {"pivot": pivot, "sprite": s, "halo": halo, "epaule": epaule, "cote": -1.0 if cote == "g" else 1.0}
+		var sens := -1.0 if cote == "g" else 1.0
+		# le PLAN doré des salles parcourues (le vrai plan du donjon, Outils/fabriquer_plans_mode7.py) : c'est de lui que naît l'aile
+		var plan := _sprite(_texture("res://Assets/Gemini/embleme/plan_aile_%s.png" % ("gauche" if cote == "g" else "droite")), _chateau,
+			epaule + Vector2(sens * DEC_AILE.x, DEC_AILE.y) + Vector2(-sens * 20.0, -275.0), true)
+		plan.modulate = Color(1.0, 0.74, 0.3, 0.0)   # (mélange normal : l'or reste de l'or, même devant un nuage clair)
+		plan.scale = Vector2(1.45, 1.45)
+		plan.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		# le symbole du fragment (celui du HUD) qui vole de la griffe jusqu'au plan
+		var symbole := _sprite(_texture("res://Assets/Gemini/tuiles/fragment_aile.png"), _chateau, PATTES[0 if cote == "g" else 1] + Vector2(0, -70), true)
+		symbole.flip_h = cote == "d"
+		symbole.scale = Vector2(2.6, 2.6)
+		symbole.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var halo_s := _sprite(_tex_lueur, symbole, Vector2.ZERO, true)
+		halo_s.material = _additif()
+		halo_s.modulate = Color(1.0, 0.8, 0.3, 0.7)
+		halo_s.scale = Vector2(0.22, 0.22)
+		_aile[cote] = {"pivot": pivot, "sprite": s, "halo": halo, "epaule": epaule, "cote": sens, "plan": plan, "symbole": symbole}
 	# chemins d'énergie (runes qui s'allument) : un trait large et doux + un trait fin brillant par aile
 	for i in 4:
 		var ligne := Line2D.new()
@@ -308,36 +343,40 @@ func _son(chemin: String, volume := 0.0, hauteur := 1.0) -> void:
 
 func _preparer_evenements() -> void:
 	var e := _evenements
-	# 1) le réveil : grondements, torches
+	# 0) ouverture sur les pattes : les torches s'allument une à une
 	for i in 10:
-		e.append([1.6 + 0.25 * i, func(): _son(SON_FLAMME, -14.0, 1.0 + 0.04 * randf())])
-	e.append([1.6, func(): _gronder(0.9)])
-	e.append([2.9, func(): _gronder(1.1)])
-	e.append([4.2, func(): _gronder(1.4)])
-	e.append([5.5, func(): _gronder(1.8)])
-	e.append([5.6, func(): _poussiere(Vector2(480, 700), 28, 90.0); _poussiere(Vector2(930, 700), 28, 90.0)])
-	e.append([6.2, func(): _poussiere(Vector2(704, 660), 40, 140.0)])
+		e.append([0.8 + 0.25 * i, func(): _son(SON_FLAMME, -14.0, 1.0 + 0.04 * randf())])
+	e.append([0.5, func(): _son(SON_MAGIE, -4.0, 0.7)])
+	e.append([2.0, func(): _gronder(0.8)])
+	# 1) le réveil : grondements (temps « anciens » + OUV)
+	e.append([OUV + 1.6, func(): _gronder(0.9)])
+	e.append([OUV + 2.9, func(): _gronder(1.1)])
+	e.append([OUV + 4.2, func(): _gronder(1.4)])
+	e.append([OUV + 5.5, func(): _gronder(1.8)])
+	e.append([OUV + 5.6, func(): _poussiere(Vector2(480, 700), 28, 90.0); _poussiere(Vector2(930, 700), 28, 90.0)])
+	e.append([OUV + 6.2, func(): _poussiere(Vector2(704, 660), 40, 140.0)])
 	# 2) le décollage
-	e.append([7.0, func(): _son(SON_ENVOL, -2.0); _son(SON_AILES, -8.0, 0.7); _secouer(9.0)])
-	e.append([7.3, func(): _poussiere(Vector2(704, 640), 60, 220.0); _poussiere(Vector2(520, 690), 30, 180.0); _poussiere(Vector2(900, 690), 30, 180.0)])
-	e.append([10.0, func(): _son(SON_AILES, -10.0, 0.6)])
-	# 3) les ailes
-	e.append([16.6, func(): _eclat_horizon(-1.0)])
-	e.append([17.4, func(): _eclat_horizon(1.0)])
-	e.append([17.6, func(): _son(SON_AILES, -4.0, 0.9)])
-	e.append([18.5, func(): _son(SON_AILES, -4.0, 1.0)])
-	e.append([23.6, func(): _son(SON_ENVOL, -6.0, 1.3)])
-	e.append([25.8, func(): _clac("g")])
-	e.append([26.9, func(): _clac("d")])
+	e.append([OUV + 7.0, func(): _son(SON_ENVOL, -2.0); _son(SON_AILES, -8.0, 0.7); _secouer(9.0)])
+	e.append([OUV + 7.3, func(): _poussiere(Vector2(704, 640), 60, 220.0); _poussiere(Vector2(520, 690), 30, 180.0); _poussiere(Vector2(900, 690), 30, 180.0)])
+	e.append([OUV + 10.0, func(): _son(SON_AILES, -10.0, 0.6)])
+	# 3) les plans dorés, les symboles, les ailes
+	for cote in ["g", "d"]:
+		var c: Array = CALENDRIER[cote]
+		e.append([OUV + c[0], func(): _son(SON_MAGIE, -6.0, 1.2)])
+		e.append([OUV + c[2], func(): _symbole_arrive(cote)])
+		e.append([OUV + c[4] + 0.3, func(): _son(SON_AILES, -6.0, 0.8)])
+		e.append([OUV + c[5], func(): _son(SON_ENVOL, -8.0, 1.2)])
+		e.append([OUV + c[6], func(): _clac(cote)])
 	# 4) l'énergie court le long des remparts, le coq s'éveille
-	e.append([27.8, func(): _son(JINGLE, -2.0)])
-	e.append([30.3, func(): _eveil_tete()])
-	e.append([31.4, func(): _son(SON_CRI, 2.0, 0.55)])
-	e.append([32.2, func(): _son(SON_CRI, 0.0, 0.5)])
-	# 5) l'atterrissage
-	e.append([33.5, func(): _son(SON_ENVOL, -8.0, 0.55)])
-	e.append([39.6, func(): _atterrir()])
-	e.append([42.0, func(): _son(SON_FLAMME, -8.0, 0.8)])
+	e.append([OUV + 27.8, func(): _son(JINGLE, -2.0)])
+	e.append([OUV + 30.3, func(): _eveil_tete()])
+	e.append([OUV + 31.4, func(): _son(SON_CRI, 2.0, 0.55)])
+	e.append([OUV + 32.2, func(): _son(SON_CRI, 0.0, 0.5)])
+	# 5) l'atterrissage, puis on descend jusqu'à la porte de la queue
+	e.append([OUV + 33.5, func(): _son(SON_ENVOL, -8.0, 0.55)])
+	e.append([OUV + 39.6, func(): _atterrir()])
+	e.append([OUV + 42.0, func(): _son(SON_FLAMME, -8.0, 0.8)])
+	e.append([OUV + 44.5, func(): _son(SON_MAGIE, -8.0, 0.6)])
 	e.sort_custom(func(a, b): return a[0] < b[0])
 
 
@@ -364,6 +403,32 @@ func _clac(cote: String) -> void:
 	_anneau(p, 1.8, 0.25)
 	_etincelles(p, 36)
 	_poussiere(p + Vector2(0, 40), 24, 120.0)
+	# la COUTURE : une ligne de lumière court sur la jointure aile / épaule, puis un second « clac » plus sec (le verrou)
+	var ligne := Line2D.new()
+	ligne.points = PackedVector2Array([p + Vector2(0, -120), p + Vector2(0, 70)])
+	ligne.width = 12.0
+	ligne.default_color = Color(1.0, 0.85, 0.4, 1.0)
+	ligne.material = _additif()
+	ligne.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	ligne.end_cap_mode = Line2D.LINE_CAP_ROUND
+	_chateau.add_child(ligne)
+	var tw := create_tween()
+	tw.tween_property(ligne, "modulate:a", 0.0, 1.6)
+	tw.tween_callback(ligne.queue_free)
+	get_tree().create_timer(0.32).timeout.connect(func():
+		_son(SON_CLAC, -3.0, 1.35)
+		_secouer(7.0)
+		_etincelles(p + Vector2(0, -20), 18))
+
+
+# Le symbole du fragment touche le plan doré : un éclat, puis le plan se change en aile de pierre.
+func _symbole_arrive(cote: String) -> void:
+	var a: Dictionary = _aile[cote]
+	var pos: Vector2 = (a["plan"] as Sprite2D).position
+	_son(SON_MAGIE, -2.0, 1.0)
+	_eclairer(0.25)
+	_anneau(pos, 1.6)
+	_etincelles(pos, 40)
 
 
 func _eveil_tete() -> void:
@@ -502,10 +567,16 @@ func _terminer() -> void:
 
 
 func _evaluer(x: float) -> void:
+	var gx := x            # temps réel de la scène ; `x` devient le temps « ancien » (0 = début du réveil, après l'ouverture sur les pattes)
+	x = x - OUV
 	var alt := _kf(x, [[0.0, 0.0], [6.8, 0.0], [14.0, 1.0, "s"], [32.8, 1.0], [39.6, 0.0, "i"]])
 	# --- caméra ---
-	var zoom := _kf(x, [[0.0, 1.0], [6.0, 1.04], [14.0, 1.0], [17.0, 0.95], [31.0, 0.95], [33.5, 1.0], [40.0, 1.0], [44.0, 1.5, "i"], [46.0, 2.1, "o"]])
-	var foyer := Vector2(CENTRE.x, _kf(x, [[0.0, 384.0], [40.0, 384.0], [46.0, 320.0]]))
+	var zoom := _kf(x, [[0.0, 1.0], [6.0, 1.04], [14.0, 1.0], [17.0, 0.95], [31.0, 0.95], [33.5, 1.0], [41.5, 1.0], [47.5, 2.6, "s"]])
+	var foyer := Vector2(CENTRE.x, _kf(x, [[0.0, 384.0], [41.5, 384.0], [47.5, PORTE_QUEUE.y - 30.0, "s"]]))
+	# ouverture : plan serré sur les pattes (comme au Parvis), puis la caméra RECULE et révèle le château entier
+	var ouv := _kf(gx, [[0.0, 3.0], [1.8, 3.0], [OUV + 3.4, 1.0, "s"]])
+	zoom *= ouv
+	foyer.y = lerpf(foyer.y, PORTE_QUEUE.y - 40.0, (ouv - 1.0) / 2.0)
 	var dec := Vector2.ZERO
 	if _secousse > 0.0:
 		dec = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * _secousse
@@ -543,11 +614,16 @@ func _evaluer(x: float) -> void:
 	_chateau.position = CENTRE * (1.0 - sc) + j + flotte
 	# --- torches : s'allument une à une, puis vacillent ---
 	for i in _lueurs.size():
-		var a := clampf((x - (1.6 + 0.25 * i)) / 0.5, 0.0, 1.0)
+		var a := clampf((gx - (0.8 + 0.25 * i)) / 0.5, 0.0, 1.0)
 		var vacille := 0.82 + 0.18 * sin(x * 9.0 + i * 1.7)
 		var sursaut := clampf(1.0 - absf(x - 39.7) * 1.2, 0.0, 1.0) * 0.6
 		_lueurs[i].modulate.a = a * vacille * 0.8 + sursaut * a
 		_lueurs[i].scale = Vector2.ONE * (0.42 + 0.35 * sursaut + 0.04 * sin(x * 7.0 + i))
+	# --- pattes (lueur des stèles) et porte de la queue ---
+	var lueur_pattes := _kf(gx, [[0.0, 0.0], [0.5, 0.95], [OUV + 2.0, 0.95], [OUV + 5.0, 0.15]])
+	for i in _lueurs_pattes.size():
+		_lueurs_pattes[i].modulate.a = lueur_pattes * (0.8 + 0.2 * sin(gx * 4.0 + i * 2.0))
+	_lueur_porte.modulate.a = _kf(x, [[44.0, 0.0], [47.5, 0.85]]) * (0.85 + 0.15 * sin(gx * 6.0))
 	# --- ailes ---
 	_ailes(x)
 	# --- énergie le long des remparts ---
@@ -568,11 +644,11 @@ func _evaluer(x: float) -> void:
 	_halo_tete.modulate.a = ha * (0.8 + 0.2 * sin(x * 3.0))
 	_halo_tete.scale = Vector2.ONE * (1.1 + 0.5 * clampf(1.0 - absf(x - 31.0), 0.0, 1.0))
 	# --- voile noir : ouverture au début, fermeture à la fin ---
-	_noir.modulate.a = _kf(x, [[0.0, 1.0], [1.6, 0.0], [44.6, 0.0], [46.0, 1.0]])
+	_noir.modulate.a = _kf(gx, [[0.0, 1.0], [1.2, 0.0], [DUREE - 2.2, 0.0], [DUREE - 0.4, 1.0]])
 	# --- sons ---
 	var vent := _kf(x, [[0.0, -80.0], [8.0, -60.0], [11.0, -12.0], [17.0, -22.0], [32.0, -22.0], [38.0, -50.0], [40.0, -80.0]])
 	_lecteur_vent.volume_db = vent
-	_lecteur_musique.volume_db = _kf(x, [[0.0, -40.0], [3.0, -8.0], [42.0, -8.0], [46.0, -40.0]])
+	_lecteur_musique.volume_db = _kf(gx, [[0.0, -40.0], [3.0, -8.0], [DUREE - 4.0, -8.0], [DUREE, -40.0]])
 
 
 # Début d'une ligne brisée jusqu'à la fraction `p` (0..1) de sa longueur.
@@ -596,63 +672,61 @@ func _partiel(points: PackedVector2Array, p: float) -> PackedVector2Array:
 	return sortie
 
 
-# Les deux ailes : arrivée en vol, dépliage autour de l'épaule, verrouillage.
+# Les deux ailes : le PLAN DORÉ des salles parcourues apparaît, le symbole du fragment vole de la griffe jusqu'à lui, il se change en aile de pierre
+# (qui flotte à la verticale, comme dans le donjon), puis l'aile fait un quart de tour et GLISSE dans l'épaule avec un petit dépassement (verrou).
 func _ailes(x: float) -> void:
-	var calendrier := {"g": [17.0, 23.4, 25.8], "d": [18.0, 24.4, 26.9]}   # début du vol, début du dépliage, verrouillage
 	for cote in _aile:
 		var a: Dictionary = _aile[cote]
 		var sens: float = a["cote"]
 		var pivot: Node2D = a["pivot"]
 		var epaule: Vector2 = a["epaule"]
-		var c: Array = calendrier[cote]
-		pivot.visible = x >= c[0]
+		var plan: Sprite2D = a["plan"]
+		var sym: Sprite2D = a["symbole"]
+		var c: Array = CALENDRIER[cote]
+		var attente := epaule + Vector2(sens * DEC_AILE.x, DEC_AILE.y)
+		var centre_plan := plan.position
+		var depart: Vector2 = PATTES[0 if cote == "g" else 1] + Vector2(0, -70)
+		# --- le plan doré ---
+		var pa := _kf(x, [[c[0], 0.0], [c[0] + 1.0, 0.9], [c[2], 0.9], [c[3], 0.0]])
+		plan.visible = pa > 0.01
+		plan.modulate.a = pa * (0.78 + 0.22 * sin(x * 9.0))
+		plan.scale = Vector2.ONE * lerpf(1.45, 1.3, clampf((x - c[2]) / (c[3] - c[2]), 0.0, 1.0))
+		# --- le symbole : flotte au-dessus de la griffe, puis vole vers le plan ---
+		sym.visible = x <= c[2] + 0.05
+		if x < c[1]:
+			sym.position = depart + Vector2(0, sin(x * 3.0 + sens) * 6.0)
+			sym.scale = Vector2.ONE * (2.6 + 0.2 * sin(x * 5.0))
+		else:
+			var u := clampf((x - c[1]) / (c[2] - c[1]), 0.0, 1.0)
+			var e := u * u * (3.0 - 2.0 * u)
+			sym.position = depart.lerp(centre_plan, e) + Vector2(sens * -80.0 * sin(PI * e), -170.0 * sin(PI * e))
+			sym.scale = Vector2.ONE * lerpf(2.6, 1.8, e)
+		sym.rotation = 0.25 * sin(x * 4.0)
+		# --- l'aile ---
+		pivot.visible = x >= c[2]
 		if not pivot.visible:
 			continue
-		var attente := epaule + Vector2(sens * DEC_AILE.x, DEC_AILE.y)
-		var vertical := -sens * PI / 2.0      # l'aile gauche (qui pointe à gauche) tourne de +90° : elle se dresse vers le haut
+		var apparait := clampf((x - c[2]) / (c[3] - c[2]), 0.0, 1.0)
+		(a["sprite"] as Sprite2D).modulate.a = apparait
+		var vertical := -sens * PI / 2.0
 		var lueur := 0.0
-		if x < c[1]:
-			# vol : de très loin, grande (proche de la caméra), qui se balance
-			var u := clampf((x - c[0]) / (c[1] - c[0]), 0.0, 1.0)
-			var v := 1.0 - pow(1.0 - u, 3.0)
-			var depart := attente + Vector2(sens * 1050.0, 380.0)
-			pivot.position = depart.lerp(attente, v) + Vector2(0, -190.0 * sin(PI * u))
-			pivot.rotation = vertical + 0.14 * sin(u * 9.0) * (1.0 - u)
-			var s := lerpf(1.7, 1.0, v)
-			pivot.scale = Vector2(s, s)
-			lueur = 0.85
-			_trainee(a, x, u)
-		elif x < c[2]:
-			# dépliage : pivote d'un quart de tour en revenant à l'épaule, avec un petit dépassement (« s'emboîte »)
-			var u := clampf((x - c[1]) / (c[2] - c[1]), 0.0, 1.0)
-			var v := _depassement(u)
-			pivot.position = epaule + Vector2(sens * DEC_AILE.x, DEC_AILE.y) * (1.0 - v)
+		if x < c[4]:
+			# flotte à la verticale à côté du corps
+			pivot.position = attente + Vector2(0, (1.0 - apparait) * 50.0 + sin(x * 1.8 + sens) * 8.0)
+			pivot.rotation = vertical
+			lueur = 0.35 + 0.15 * sin(x * 6.0)
+		elif x < c[5]:
+			# quart de tour sur place
+			var v := clampf((x - c[4]) / (c[5] - c[4]), 0.0, 1.0)
+			v = v * v * (3.0 - 2.0 * v)
+			pivot.position = attente + Vector2(0, -DEC_AILE.y * v)
 			pivot.rotation = vertical * (1.0 - v)
-			pivot.scale = Vector2.ONE
-			lueur = 0.85
+			lueur = 0.45 + 0.3 * v
 		else:
-			pivot.position = epaule
+			# glissade dans l'épaule (elle accélère), s'enfonce de 14 px, puis se cale
+			var sortie := _kf(x, [[c[5], DEC_AILE.x], [c[6], -14.0, "i"], [c[6] + 0.5, 0.0, "o"]])
+			pivot.position = epaule + Vector2(sens * sortie, 0.0)
 			pivot.rotation = 0.0
-			pivot.scale = Vector2.ONE
-			lueur = clampf(1.0 - (x - c[2]) / 1.8, 0.0, 1.0) * 0.9
-		(a["halo"] as Sprite2D).modulate.a = lueur * (0.7 + 0.3 * sin(x * 12.0))
-
-
-# Traînée dorée derrière une aile en vol : des copies qui s'estompent.
-func _trainee(a: Dictionary, x: float, u: float) -> void:
-	if x - float(a.get("trace", -1.0)) < 0.07 or u >= 1.0:
-		return
-	a["trace"] = x
-	var pivot: Node2D = a["pivot"]
-	var s: Sprite2D = a["sprite"]
-	var copie := Sprite2D.new()
-	copie.texture = s.texture
-	copie.centered = false
-	copie.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	copie.material = _additif()
-	copie.modulate = Color(1.0, 0.8, 0.35, 0.5)
-	_vue.add_child(copie)
-	copie.global_transform = s.global_transform   # même place que l'aile, mais dans la caméra (elle ne suit plus l'aile)
-	var tw := create_tween()
-	tw.tween_property(copie, "modulate:a", 0.0, 0.5)
-	tw.tween_callback(copie.queue_free)
+			lueur = 0.75 if x < c[6] else clampf(1.0 - (x - c[6]) / 1.8, 0.0, 1.0) * 0.9
+		pivot.scale = Vector2.ONE
+		(a["halo"] as Sprite2D).modulate.a = lueur * (0.7 + 0.3 * sin(x * 12.0)) * apparait

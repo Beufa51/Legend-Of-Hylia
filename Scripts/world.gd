@@ -809,6 +809,9 @@ func _ceremonie_stele(cote_stele: String) -> void:
 # Les deux symboles sont déposés : tout se met en marche.
 func _mecanisme_stele(parvis: Exterieur) -> void:
 	Etat.annoncer("Les deux symboles brillent... quelque chose se met en marche !")
+	# le jour tombe sur le Parvis : la cinématique qui suit se passe au crépuscule (même ambiance que l'image du château)
+	if _modulation:
+		create_tween().tween_property(_modulation, "color", Color(0.42, 0.48, 0.78), 3.5)
 	if _musique:
 		create_tween().tween_property(_musique, "volume_db", -30.0, 1.0)
 	for i in 3:

@@ -16,7 +16,7 @@ func _lancer() -> void:
 	monde.add_child(a)
 	if capture:
 		DirAccess.make_dir_recursive_absolute("user://captures")
-		var instants := [0.5, 3.0, 6.5, 9.5, 12.0, 15.0, 19.0, 22.0, 24.5, 26.0, 28.5, 30.8, 33.5, 37.0, 39.8, 42.0, 45.0]
+		var instants := [0.3, 1.8, 3.5, 5.5, 8.0, 14.5, 19.0, 21.0, 27.0, 29.0, 30.2, 33.0, 36.5, 40.5, 44.0, 47.5, 50.5, 52.8]
 		await get_tree().process_frame
 		await get_tree().process_frame
 		await get_tree().process_frame
