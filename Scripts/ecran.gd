@@ -50,6 +50,11 @@ func _appliquer_revelation() -> void:
 
 
 # Remet l'écran dans son état de départ (touche R). Rien à faire par défaut.
+# Le sol sous `pos` (position monde) pour le bruit des pas : « dalle », « herbe », « terre » ou « bois ». Redéfini par les écrans extérieurs et intérieurs.
+func surface_pas(_pos: Vector2) -> String:
+	return "dalle"
+
+
 func reinitialiser() -> void:
 	pass
 

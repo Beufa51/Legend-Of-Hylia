@@ -104,7 +104,37 @@ func _physics_process(delta: float) -> void:
 	sprite.speed_scale = 1.6 if court else 1.0   # les jambes vont plus vite quand on court
 	move_and_slide()
 	_pousser_les_blocs(entree, delta)
+	_bruit_de_pas(delta, court)
 	_mettre_a_jour_animation(entree)
+
+
+# --- Bruit des pas : un pas tous les ~20 px parcourus (26 en courant), selon le sol (voir Ecran.surface_pas) ---
+var _distance_pas := 0.0
+
+
+func _bruit_de_pas(delta: float, court: bool) -> void:
+	var v := get_real_velocity().length()
+	if v < 8.0:
+		_distance_pas = 0.0
+		return
+	_distance_pas += v * delta
+	if _distance_pas < (26.0 if court else 20.0):
+		return
+	_distance_pas = 0.0
+	var sol := "dalle"
+	var monde := get_parent()
+	if monde != null and monde.has_method("surface_pas"):
+		sol = monde.surface_pas(global_position)
+	var flux = load("res://Assets/Sons/pas_%s.wav" % sol)
+	if flux == null:
+		return
+	var lecteur := AudioStreamPlayer.new()
+	lecteur.stream = flux
+	lecteur.volume_db = -21.0 + randf_range(-2.0, 1.0)
+	lecteur.pitch_scale = randf_range(0.9, 1.12)   # jamais deux pas identiques
+	add_child(lecteur)
+	lecteur.play()
+	lecteur.finished.connect(lecteur.queue_free)
 
 
 # --- Glace -----------------------------------------------------------------------

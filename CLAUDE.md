@@ -23,16 +23,15 @@
   Toujours mettre à jour ce fichier AVANT de conseiller un `/clear`.
 - Réponses courtes et ciblées, pas de répétition inutile.
 
-## GDD résumé (version 1, fournie par l'utilisateur)
-- **Genre** : action-aventure 2D top-down, esprit "Link's Awakening". **Zéro combat** :
-  exploration, observation, énigmes logiques et spatiales.
-- **Pitch** : une recrue de la garde royale passe son examen d'adoubement via un mini-donjon d'énigmes.
-- **Donjon en forme de blason** (bouclier + oiseau héraldique) :
-  - Entrée en bas, progression vers le haut.
-  - Aile gauche : **5 salles** linéaires (une par plume du coq) reliées par couloirs, 1 énigme par salle, 1 fragment à la fin. (Changé le 2026-11-12 : 3 -> 5, car l'utilisateur voit 5 plumes par aile sur le coq.)
-  - Aile droite : idem, en symétrie.
-  - Convergence (corps + tête) : épreuve finale une fois les 2 fragments obtenus.
-- **Twist** : à la fin d'une aile, cinématique où l'aile pivote et s'emboîte sur le grand blason.
+## GDD (version 2, réécrite le 2026-11-14 : reflète le jeu tel qu'il est)
+- **Genre** : action-aventure 2D top-down, esprit « Link's Awakening » / ALttP. **Quasi sans combat** : exploration, observation, énigmes visuelles ; la **lance** est le verbe unique (frapper cristaux, braseros, miroirs, cloches, pots...).
+  Seul affrontement : le **Gardien** (boss final), que le joueur peut **combattre OU refuser** (« un garde ne choisit pas toujours la violence ») : les deux issues sont des victoires. Partout ailleurs : aucun dégât, une sanction = retour au début de la salle.
+- **Pitch** : une recrue de la garde royale passe son **épreuve d'adoubement** dans la **Forteresse du Coq**, un bâtiment mystérieux au nord du **Village du Coq Chantant**.
+- **La Forteresse a la forme d'un coq héraldique** vu du ciel : **aile gauche** (5 plumes = 5 salles-couloirs de plus en plus longues/dures), **aile droite** (idem, mécaniques différentes), **corps** (cour à ciel ouvert = arène du Gardien) et **queue** (vestibule en éventail de 5 couloirs = l'entrée du corps), 2 **griffes**.
+- **Déroulé** : maison du héros -> caserne (le capitaine lance l'épreuve) -> aile GAUCHE (ordre forcé : un garde barre l'aile droite) -> fragment (symbole d'aile) -> aile DROITE -> 2 fragments déposés dans les 2 **stèles** du Parvis -> la forêt s'écarte, **cinématique d'assemblage** (la Forteresse s'envole, les ailes s'emboîtent) -> la Queue s'ouvre -> couloir -> arène : le Gardien -> adoubement au village.
+- **Règles de design** : 1) une mécanique nouvelle par plume (1er écran = leçon, suivants = complication, dernier = combinaison) ; 2) **énigmes 100 % visuelles : AUCUN texte** (forme de la salle, objets, couleurs, sons ; en dernier recours un anneau doré pulse sur l'objet à frapper après 50 s d'inactivité) ; 3) tout doit être faisable au clavier, à la manette tactile ; 4) chaque salle a une identité (teinte, décor) ; 5) la fin (corps du coq) est le sommet visuel : le reste doit s'en approcher.
+- **Vocabulaire officiel (textes du joueur)** : **la Forteresse** (le grand bâtiment ; jamais « temple » ni « donjon »), **aile** gauche/droite, **plume** (une salle d'aile), **corps** et **queue** (la partie finale), **le Gardien** (le boss), **l'épreuve** (l'examen), **blason** = l'emblème du coq (pas un lieu). En interne (noms d'écrans, scènes, code) : `TempleGauche`, `donjon`, `world.tscn`... restent tels quels pour ne pas casser les sauvegardes.
+- **Cible** : navigateur PC + mobile (export web, à faire), contrôles tactiles, sauvegarde auto (`user://`).
 
 ## Décisions prises
 - Dépôt GitHub : https://github.com/Beufa51/Legend-Of-Hylia (branche `main`). Nom à changer
@@ -889,3 +888,13 @@
 
 - 2026-11-14 : **AUDIT DE COHÉRENCE COMPLET** (game designer + joueur) -> `Audit_coherence_2026-11-14.md` (24 constats, plan de 10 priorités). Tests Godot 4.4.1 headless TOUT BON ; 8 écrans capturés en rendu réel. **NOTE OBJECTIVE : 6,5/10** (boucle 8, énigmes 7, monde 6, visuel 6, audio 5, mobile 6,5, technique 7, publication 3).
   Priorités : export web (absent), licences + écran Crédits (LPC = attribution obligatoire), GDD périmé (« zéro combat »), vocabulaire temple/donjon/épreuve, 27 indices texte à retirer (règle « sans texte »), insignes/rubans sans effet, héros/PNJ/façades de styles différents, code mort (mode7, vue_aerienne, Etat.chute).
+
+- 2026-11-14 : **PRIORITÉS 3, 4 et 8 DE L'AUDIT FAITES** (tests Godot 4.4.1 headless TOUT BON, aide visuelle vérifiée en rendu réel ; pas jouées) :
+  P3) GDD v2 réécrit (section ci-dessus, « zéro combat » corrigé) + VOCABULAIRE : « la Forteresse » partout dans les textes du joueur (dialogues de `generer_village.py`, messages de `world.gd`, `Noms.FORTERESSE`) ; titre de travail `Noms.TITRE_JEU = "L'Épreuve de la Garde"` (le HUD l'utilise ; titre définitif encore à choisir par l'utilisateur).
+  P4) ÉNIGMES SANS TEXTE : les 27 `indice` des générateurs d'ailes sont SUPPRIMÉS (reste seulement celui du réveil au village) ; messages de règle retirés (dalles, flamme/sentinelle, statue muette -> son sourd, « bruit sourd », rappel du cristal, sanctions réduites à « Repéré ! », porte « Fermée à clé. »).
+  REMPLACEMENT VISUEL : `world.gd::_surveiller_aide` : après 50 s sans coup de lance ni drapeau dans une salle d'aile non résolue, un ANNEAU DORÉ pulse (2 fois, puis toutes les 25 s) autour des objets à frapper (seule la statue du coq dans la salle des cloches). Les salles sans objet à frapper (glace, dalles) n'ont pas d'aide : à revoir salle par salle avec l'utilisateur.
+  P8) AUDIO : (1) `Outils/rogner_musiques.py` : les 28 musiques MIDI rendues finissaient par 3 à 14 s de SILENCE (la boucle s'interrompait) -> rognées (0,6 s de queue + fondu) ; mesure EBU R128 de chaque piste -> `Scripts/niveaux_musiques.gd` (gain vers -16 LUFS, borné -6/+4 dB, appliqué par `world.gd::_volume_piste`) ; le MP3 du village était 4 dB plus fort que les autres.
+  (2) BRUITS DE PAS : `Assets/Sons/pas_herbe|terre|bois|dalle.wav` (fabriqués par `Outils/fabriquer_sons.py`), `Player::_bruit_de_pas` (un pas tous les 20 px, 26 en courant, hauteur variable), sol demandé à l'écran : `Ecran.surface_pas()` (Exterieur : terre sur chemin / herbe ; Interieur : bois en maison / dalle à la caserne ; donjon : dalle).
+  (3) AMBIANCE DU DONJON : `ambiance_donjon.wav` (16 s en boucle : grondement, souffle, gouttes), jouée par `world.gd::_lancer_ambiance_donjon` dans les 2 ailes (-19 dB).
+  NON FAIT (impossible côté Claude) : ÉCOUTER les musiques (qualité des rendus MIDI à juger par l'utilisateur ; niveaux et silences vérifiés par mesure seulement). Le test auto vérifie maintenant aussi l'audio et l'absence d'`indice` dans les ailes.
+  ORDRE des outils audio : rendre_musiques.py -> rogner_musiques.py ; fabriquer_sons.py indépendant.

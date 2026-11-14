@@ -188,7 +188,7 @@ put(ouest, 'j', (9, 5), (21, 5))
 put(ouest, 'f', (2, 6 - 1), (7, 4), (19, 5), (3, 11)); put(ouest, 'g', (8, 5), (10, 3), (20, 4), (6, 11), (5, 10))
 put(ouest, 'w', (2, 5), (11, 4), (18, 5), (4, 10), (21, 12))
 pnjs_ouest = [
-    "Woman 10 9 haut | Colette | [fragment_gauche] Tu as rapporté l'aile ?! Vue du ciel, elle a la forme d'une plume géante, dit-on. // Moi, je savais bien que tu réussirais. ## [plume2] Il paraît que tu as allumé des braseros dans le noir ? Tu n'as pas peur de te brûler les moustaches ! ## Oh, tu es la nouvelle recrue ! Tout le village parle de ton épreuve d'adoubement. // On raconte que le donjon sous le temple a la forme d'un grand coq. // Un coq dans un donjon... Moi, je préfère ceux de ma basse-cour !",
+    "Woman 10 9 haut | Colette | [fragment_gauche] Tu as rapporté l'aile ?! Vue du ciel, elle a la forme d'une plume géante, dit-on. // Moi, je savais bien que tu réussirais. ## [plume2] Il paraît que tu as allumé des braseros dans le noir ? Tu n'as pas peur de te brûler les moustaches ! ## Oh, tu es la nouvelle recrue ! Tout le village parle de ton épreuve d'adoubement. // On raconte que la Forteresse, là-haut, a la forme d'un grand coq. // Un coq dans une forteresse... Moi, je préfère ceux de ma basse-cour !",
     "OldMan 9 7 droite | Vieux Gaspard | [fragment_gauche] Une aile entière... Ton père n'a jamais dépassé la quatrième plume. // Il serait fier. Moi aussi, petite. ## [plume3] Tu as réveillé le chant du coq, alors ? // Les cloches ne mentent jamais : écoute bien avant de frapper. ## Le coq chante chaque aube depuis mille ans. // S'il se taisait un jour, le royaume tremblerait. // Ton père tenait la lance avant toi. Garde-la bien, petite.",
     "Boy 20 8 gauche | Tom | [plume4] On dit que des statues de pierre surveillent la quatrième plume ! // Moi, je me serais caché derrière un pilier. Et toi ? ## Tu as une vraie lance de la garde ! Tu me la prêtes ? // ... Non ? Tant pis. // Un conseil : n'embête pas les poules. Elles se vengent.",
 ]
@@ -209,8 +209,8 @@ put(est, 'E', (4, 10)); put(est, 'o', (8, 10), (19, 9))
 put(est, 'g', (9, 5), (16, 5), (13, 10), (2, 6)); put(est, 'f', (7, 5), (17, 4), (12, 11))
 put(est, 'w', (8, 4), (15, 4), (14, 10), (23, 10), (1, 7))
 pnjs_est = [
-    "KnightGold 16 7 gauche | Capitaine Aubrac | [fin_paix] Recrue ! Le Gardien du blason m'a parlé de toi. // Tu as baissé ta lance devant lui... Il faut plus de courage pour cela que pour frapper. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fin_combat] Recrue ! Le Gardien du blason m'a parlé de toi. // Tu l'as vaincu en l'observant, sans colère. C'est ainsi que se bat un garde. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fragment_gauche] Une aile complète ! Je n'y croyais plus. // Mais ce n'est que la moitié du blason : l'aile droite t'attend, et au centre, l'épreuve finale. // Repose-toi, recrue. Tu l'as mérité. ## [capitaine_vu] Alors, cette épreuve ? Le temple est au nord du village. // Souviens-toi : observer, réfléchir, et frapper seulement ce qui doit l'être. ## Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend au temple, au nord du village. // Deux ailes et un corps : voilà la forme du donjon. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur. >> capitaine_vu",
-    "Villager3 7 7 droite | Soldat Merle | [plume4] La quatrième plume ? Des sentinelles qui tournent la tête ? Brr. Reste dans l'ombre, c'est le conseil d'un vétéran. ## Dix ans de garde et je n'ai jamais vu le fond du donjon. // Les anciens disent que les plumes de l'aile gauche sont de plus en plus longues. Je ne sais pas ce que ça veut dire !",
+    "KnightGold 16 7 gauche | Capitaine Aubrac | [fin_paix] Recrue ! Le Gardien de la Forteresse m'a parlé de toi. // Tu as baissé ta lance devant lui... Il faut plus de courage pour cela que pour frapper. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fin_combat] Recrue ! Le Gardien de la Forteresse m'a parlé de toi. // Tu l'as vaincu en l'observant, sans colère. C'est ainsi que se bat un garde. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fragment_gauche] Une aile complète ! Je n'y croyais plus. // Mais ce n'est que la moitié du blason : l'aile droite t'attend, et au centre, l'épreuve finale. // Repose-toi, recrue. Tu l'as mérité. ## [capitaine_vu] Alors, cette épreuve ? La Forteresse est au nord du village. // Souviens-toi : observer, réfléchir, et frapper seulement ce qui doit l'être. ## Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend à la Forteresse, au nord du village. // Deux ailes et un corps : voilà la forme de la Forteresse. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur. >> capitaine_vu",
+    "Villager3 7 7 droite | Soldat Merle | [plume4] La quatrième plume ? Des sentinelles qui tournent la tête ? Brr. Reste dans l'ombre, c'est le conseil d'un vétéran. ## Dix ans de garde et je n'ai jamais vu le fond de la Forteresse. // Les anciens disent que les plumes de l'aile gauche sont de plus en plus longues. Je ne sais pas ce que ça veut dire !",
     "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.",
 ]
 animaux_est = ['d 20 7', 'c 12 11']
@@ -289,7 +289,7 @@ escaliers_route = ["3 7", "20 7"]
 put(route, 'f', (9, 4), (15, 6), (2, 3), (21, 3)); put(route, 'g', (9, 8), (15, 3), (5, 4), (19, 5)); put(route, 'w', (10, 6), (14, 8), (9, 1), (3, 5), (22, 4))
 put(route, 'n', (10, 10)); put(route, 'u', (6, 3), (18, 3))
 animaux_route = ['c 9 6']
-pnjs_route = ["Villager3 12 9 bas | Garde de la route | [epreuve_reussie] Garde du royaume ! La route est ouverte pour toi... mais pas encore aujourd'hui : le capitaine veut te voir. ## Halte ! Cette route mène au royaume. // Elle est fermée aux recrues. Passe d'abord l'épreuve d'adoubement, au temple."]
+pnjs_route = ["Villager3 12 9 bas | Garde de la route | [epreuve_reussie] Garde du royaume ! La route est ouverte pour toi... mais pas encore aujourd'hui : le capitaine veut te voir. ## Halte ! Cette route mène au royaume. // Elle est fermée aux recrues. Passe d'abord l'épreuve d'adoubement, à la Forteresse."]
 
 # --- VERGER (1,1) : l'aile gauche du coq, entre le temple (nord) et le village ouest (sud).
 verger = vide()
@@ -307,7 +307,7 @@ put(verger, 'f', (10, 2), (14, 2), (10, 12), (17, 2), (21, 3)); put(verger, 'g',
 terrasses_verger = ["16 1 7 6"]
 escaliers_verger = ["18 4"]
 animaux_verger = ['c 8 6', 'h 15 6']
-pnjs_verger = ["OldMan 10 8 droite | Jardinier Anselme | Mes pommiers ont vu passer bien des recrues. // Ceux qui montent au temple de l'aile gauche passent toujours par ici. // Prends ton temps : l'épreuve ne se gagne pas en courant. ... Quoique tu aies un joli coup de jarret."]
+pnjs_verger = ["OldMan 10 8 droite | Jardinier Anselme | Mes pommiers ont vu passer bien des recrues. // Ceux qui montent à la Forteresse par l'aile gauche passent toujours par ici. // Prends ton temps : l'épreuve ne se gagne pas en courant. ... Quoique tu aies un joli coup de jarret."]
 
 # --- TERRAIN DE LA GARDE (3,1) : l'aile droite du coq, entre le temple (nord) et la caserne (sud).
 terrain = vide()
@@ -339,7 +339,7 @@ def interieur(porte, meubles, haut, gauche=6, droite=17, bas=10):
 
 int_heros = interieur(12, [('L', 7, 5), ('S', 14, 5), ('q', 11, 5), ('t', 9, 7), ('T', 14, 8), ('C', 13, 8), ('o', 7, 9), ('p', 16, 7)],
                       ['w', 'y', 'z', 'v', 'x'])
-pnjs_int_heros = ["Woman 10 7 bas | Maman | [epreuve_reussie] Garde du royaume ! Ma fille, garde du royaume ! // Ton père aurait été si fier de toi. Viens, le repas de fête est prêt ! ## [fragment_gauche] Ma fille, la moitié du blason ! Je vais préparer un grand repas. // Mais d'abord, va te reposer. ## [capitaine_vu] Le capitaine t'a parlé ? Alors file au temple, et fais attention à toi ! ## Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'est de la place du village. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
+pnjs_int_heros = ["Woman 10 7 bas | Maman | [epreuve_reussie] Garde du royaume ! Ma fille, garde du royaume ! // Ton père aurait été si fier de toi. Viens, le repas de fête est prêt ! ## [fragment_gauche] Ma fille, la moitié du blason ! Je vais préparer un grand repas. // Mais d'abord, va te reposer. ## [capitaine_vu] Le capitaine t'a parlé ? Alors file à la Forteresse, et fais attention à toi ! ## Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'est de la place du village. // N'oublie pas la lance de ton père : elle est posée près de la porte. ... Ah, tu l'as déjà. Brave petite !"]
 int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 7), ('F', 7, 8), ('M', 8, 8), ('D', 15, 8)],
                         ['w', 'z', 'x', 'w', 'x'])
 pnjs_int_caserne = ["Villager3 13 7 gauche | Soldat Gilles | Ici dorment les recrues de la garde royale. // Ne touche pas aux lits, on dit qu'ils sont habités... par des puces."]
@@ -424,7 +424,7 @@ allee_d = allee('droite')
 # --- ENTRÉE DE L'AILE GAUCHE (1,0) : 5 plumes de pierre de plus en plus hautes vers la droite ; porte au centre ; on y arrive par le sud (verger)
 temple_g = facade_ecran('F')
 put(temple_g, 'f', (5, 12), (19, 12)); put(temple_g, 'w', (7, 13), (17, 13))
-TXT_G = "La grande porte du donjon se referme derrière toi... Il faudra finir l'épreuve pour ressortir."
+TXT_G = "La grande porte de la Forteresse se referme derrière toi... Il faudra finir l'épreuve pour ressortir."
 passages_temple_g = ["%d 11 @donjon:Vestibule 12 11 %s" % (x, TXT_G) for x in (11, 12, 13)]
 
 # --- ENTRÉE DE L'AILE DROITE (3,0) : le miroir de la gauche (plumes de plus en plus hautes vers la GAUCHE).
@@ -438,7 +438,7 @@ temple_d = temple_droit('G')
 temple_d_ouvert = temple_droit('J')
 TXT_D = "La grande porte se referme derrière toi... L'aile droite : ici, tout est inversé."
 passages_temple_d_ouvert = ["%d 11 @aile_droite:Vestibule 12 11 %s" % (x, TXT_D) for x in (11, 12, 13)]
-pnjs_temple_d = ["Villager3 12 12 haut! | Garde du temple | Halte, recrue ! Cette aile ne s'ouvre qu'à celui qui a réussi l'aile gauche. // Va d'abord l'affronter. Reviens quand tu en rapporteras le symbole."]
+pnjs_temple_d = ["Villager3 12 12 haut! | Garde de la Forteresse | Halte, recrue ! Cette aile ne s'ouvre qu'à celui qui a réussi l'aile gauche. // Va d'abord l'affronter. Reviens quand tu en rapporteras le symbole."]
 
 # --- QUEUE (2,-1) : au nord du parvis, une fois la forêt écartée. L'entrée du donjon final : un éventail de tours aux flammes (la queue du coq).
 queue = facade_ecran('H')

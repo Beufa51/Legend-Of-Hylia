@@ -62,11 +62,10 @@ func _touchee(corps: Node) -> void:
 		return
 	if Etat.est(_drapeau_cle):
 		_jouer(SON_SERRURE, -4.0)
-		Etat.annoncer("Tu tournes la clé dans la serrure...")
 		Etat.poser(_drapeau_serrure)
 	elif not _message_vu:
 		_message_vu = true
-		Etat.annoncer("Cette porte est fermée à clé. Il doit y avoir une clé quelque part...")
+		Etat.annoncer("Fermée à clé.")
 
 
 # La porte s'ouvre : elle ne bloque plus. `instantane` : sans bruit ni animation (salle déjà résolue au chargement).

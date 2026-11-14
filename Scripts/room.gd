@@ -144,7 +144,6 @@ var _commutateurs: Array[Cristal] = []
 var _orange_leves := true  # vrai = les plots orange bloquent, les bleus sont baissés
 var _dalles := {}          # { case : Dalle } dalles de couleur
 var _case_pied := Vector2i(-1, -1)   # case où le joueur avait les pieds à l'image précédente
-var _regle_dite := false   # la règle des dalles a été expliquée (au 1er pas sur une dalle)
 var _portes_cle: Array[Porte] = []
 var _pics := {}            # { case : Pics }
 var _pique := false        # le joueur vient d'être touché par des pics (on attend le retour)
@@ -690,9 +689,6 @@ func _suivre_pas() -> void:
 	_case_pied = c
 	if not _dalles.has(c) or _dalles_resolues():
 		return
-	if not _regle_dite:
-		_regle_dite = true
-		Etat.annoncer("Chaque pas retourne la dalle : rouge -> bleue, bleue -> rouge. Rends-les TOUTES bleues ! (R pour recommencer)")
 	_dalles[c].retourner()
 	for d in _dalles.values():
 		if not d.bleue:
@@ -1054,7 +1050,7 @@ func _surveiller(delta: float) -> void:
 		sentinelle.avancer(delta)
 		if attiree and not _flamme_vue:
 			_flamme_vue = true
-			Etat.annoncer("La flamme attire le regard de la sentinelle !")
+			pass   # (aucun texte : la bulle « ? » au-dessus de la sentinelle suffit)
 		_cones.append(_cone(sentinelle))
 		_cones_clignotent.append(sentinelle.va_tourner())
 	_calque_regards.queue_redraw()
@@ -1233,7 +1229,7 @@ func _dessiner_rayon() -> void:
 # La statue du coq a été frappée : elle chante... sauf si elle attend le soleil.
 func statue_frappee() -> void:
 	if chanteur_au_soleil and not _statue_au_soleil:
-		Etat.annoncer("La statue reste muette... Le coq ne chante qu'au lever du soleil.")
+		_jouer_son("res://Assets/Ninja_adventure/Audio/Sounds/Menu/Cancel.wav", -8.0)   # la statue reste muette : un son sourd, sans texte
 		return
 	jouer_melodie()
 
@@ -1293,7 +1289,7 @@ func _sur_drapeau(nom: String) -> void:
 			continue
 		var liste: Array = paire[1]
 		if not liste.is_empty() and grille != Etat.salle_courante and not _chargement:
-			Etat.annoncer("Un bruit sourd : une porte s'est ouverte quelque part...")
+			pass   # (aucun texte : la secousse et le bruit sourd de la porte suffisent)
 		for porte in liste:
 			if is_instance_valid(porte):
 				porte.ouvrir(_chargement)

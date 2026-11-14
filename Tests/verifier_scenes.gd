@@ -30,6 +30,7 @@ func _initialize() -> void:
 	await _tester_garde_et_steles()
 	await _tester_donjon_final()
 	await _tester_tactile()
+	await _tester_audio_et_sans_texte()
 	_conclure()
 
 
@@ -246,6 +247,42 @@ func _verifier_plan(chemin: String, e: Node) -> void:
 	for i in e.layout.size():
 		if e.layout[i].length() != COLONNES:
 			_erreurs.append("%s/%s : la rangée %d fait %d colonnes (attendu %d)" % [chemin, e.name, i, e.layout[i].length(), COLONNES])
+
+
+# Audio (pas, ambiance, niveaux des musiques) et règle « énigmes sans texte » (aucun `indice` dans les ailes du donjon).
+func _tester_audio_et_sans_texte() -> void:
+	for nom in ["herbe", "terre", "bois", "dalle", "pierre"]:
+		if load("res://Assets/Sons/pas_%s.wav" % nom) == null:
+			_erreurs.append("Bruit de pas manquant : pas_%s.wav" % nom)
+	var amb = load("res://Assets/Sons/ambiance_donjon.wav")
+	if not (amb is AudioStreamWAV):
+		_erreurs.append("ambiance_donjon.wav introuvable")
+	var gains: Dictionary = (load("res://Scripts/niveaux_musiques.gd") as GDScript).get_script_constant_map()["GAINS"]
+	if gains.size() < 20:
+		_erreurs.append("niveaux_musiques.gd vide (lancer Outils/rogner_musiques.py)")
+	for chemin in ["res://Scenes/world.tscn", "res://Scenes/aile_droite.tscn"]:
+		var monde: Node = (load(chemin) as PackedScene).instantiate()
+		root.add_child(monde)
+		await process_frame
+		for e in monde.get_children():
+			if _est_ecran(e) and e.indice != "":
+				_erreurs.append("%s / %s : un indice texte reste (les énigmes sont sans texte)" % [chemin, e.name])
+		monde.queue_free()
+		await process_frame
+	# surface des pas : herbe/terre au village, bois dans la maison, dalle dans le donjon
+	var village: Node = (load("res://Scenes/village.tscn") as PackedScene).instantiate()
+	root.add_child(village)
+	await process_frame
+	var vus := {}
+	for e in village.get_children():
+		if _est_ecran(e):
+			vus[e.surface_pas(e.global_position + Vector2(200, 112))] = true
+	for attendu in ["herbe", "bois"]:
+		if not vus.has(attendu):
+			_erreurs.append("Surface de pas « %s » jamais renvoyée au village" % attendu)
+	village.queue_free()
+	await process_frame
+	print("OK  audio (pas, ambiance, niveaux) et énigmes sans texte")
 
 
 func _conclure() -> void:

@@ -369,6 +369,12 @@ func _est_chemin(x: int, y: int) -> bool:
 	return layout[y][x] == ":"
 
 
+# Bruit des pas : terre sur le chemin, herbe ailleurs.
+func surface_pas(pos: Vector2) -> String:
+	var l := to_local(pos)
+	return "terre" if _est_chemin(int(l.x / TUILE), int(l.y / TUILE)) else "herbe"
+
+
 # Quelle image de chemin ? Elle dépend des 4 voisins (bits : 1 nord, 2 sud, 4 ouest, 8 est) ;
 # entouré de chemin partout : v_chemin_f + 4 bits pour les coins en herbe (1 NE, 2 NO, 4 SE, 8 SO).
 func _nom_chemin(x: int, y: int) -> String:

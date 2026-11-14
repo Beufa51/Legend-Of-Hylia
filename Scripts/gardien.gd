@@ -216,7 +216,7 @@ func _proposer_choix() -> void:
 	if not _deja_parle:
 		lignes = [
 			"Recrue... Tu as rassemblé les deux ailes du coq. Rares sont ceux qui arrivent jusqu'ici.",
-			"Je suis le Gardien du blason. Depuis des siècles, je mets à l'épreuve ceux qui veulent servir la Garde.",
+			"Je suis le Gardien de la Forteresse. Depuis des siècles, je mets à l'épreuve ceux qui veulent servir la Garde.",
 			"Ta lance est prête, je le vois. Alors dis-moi : que fais-tu face à moi ?"]
 	else:
 		lignes = ["Te revoilà debout. Alors, recrue... que choisis-tu cette fois ?"]

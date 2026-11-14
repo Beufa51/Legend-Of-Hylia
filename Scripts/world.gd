@@ -40,6 +40,8 @@ func _ready() -> void:
 			if e is Ecran and e.name == Etat.arrivee_ecran:
 				joueur.position = e.position + Vector2(Etat.arrivee_case * Ecran.TUILE) + Vector2(8, 3)
 	_lancer_musique()
+	if donjon and (cote == "gauche" or cote == "droite"):
+		_lancer_ambiance_donjon()
 	_creer_messages()
 	Etat.drapeau_change.connect(_jouer_jingle)
 	salle_actuelle = _salle_du_joueur()
@@ -55,6 +57,7 @@ func _ready() -> void:
 	Etat.stele_touchee.connect(_ceremonie_stele)
 	Etat.passage.connect(func(ecran, case): _passer_porte(ecran, case, Etat.passage_texte))
 	Etat.drapeau_change.connect(_sur_drapeau)
+	Etat.drapeau_change.connect(func(_nom): _inactif = 0.0)
 	_creer_hud()
 	add_child(Dialogue.new())   # boîte de dialogue des habitants
 	add_child(Tactile.new())    # joystick + boutons (visibles seulement sur écran tactile)
@@ -128,9 +131,10 @@ func _position_reprise() -> Vector2:
 	return Etat.position_sauvee
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if en_transition:
 		return
+	_surveiller_aide(delta)
 	var nouvelle := _salle_du_joueur()
 	if donjon and nouvelle == SORTIE_DONJON and Etat.est("fragment_" + cote):
 		if not Etat.est("vue_aerienne_" + cote):
@@ -138,7 +142,7 @@ func _process(_delta: float) -> void:
 				VueAerienne.new(self).jouer(cote)   # on sort du donjon avec l'aile : vue du ciel
 			else:   # (désactivée : la vision de la fin v2 la remplace par l'assemblage au parvis, voir CLAUDE.md)
 				Etat.noter("vue_aerienne_" + cote)
-				_ramener("@village:" + _temple(), Vector2i(12, 12), "Tu ressors du donjon avec le symbole de l'aile. Les stèles du parvis l'attendent !")
+				_ramener("@village:" + _temple(), Vector2i(12, 12), "Tu ressors de la Forteresse avec le symbole de l'aile. Les stèles du parvis l'attendent !")
 		else:
 			_ramener("@village:" + _temple(), Vector2i(12, 12), "")   # sorties suivantes : on retourne directement au village
 		return
@@ -187,15 +191,99 @@ func _glisser_vers(salle: Vector2i) -> void:
 	en_transition = false
 
 
+# --- Aide VISUELLE (les énigmes n'ont pas de texte) --------------------------------------------------
+# Si le joueur reste 50 s dans une salle du donjon sans rien déclencher (aucun coup de lance, aucun drapeau, pas de changement de salle),
+# les objets à frapper de la salle émettent un anneau doré (toutes les 25 s tant qu'il ne fait rien). Dans la salle des cloches, seule la statue du coq pulse.
+const DELAI_AIDE := 50.0
+const REPETITION_AIDE := 25.0
+var _inactif := 0.0
+
+
+func _surveiller_aide(delta: float) -> void:
+	if not donjon or (cote != "gauche" and cote != "droite") or Etat.en_dialogue:
+		_inactif = 0.0
+		return
+	if Input.is_action_just_pressed("attack"):
+		_inactif = 0.0
+	_inactif += delta
+	if _inactif >= DELAI_AIDE:
+		_inactif = DELAI_AIDE - REPETITION_AIDE
+		_aide_visuelle()
+
+
+func _aide_visuelle() -> void:
+	var ecran: Ecran = null
+	for enfant in get_children():
+		if enfant is Ecran and enfant.grille == salle_actuelle:
+			ecran = enfant
+	if ecran == null:
+		return
+	if "drapeau_porte" in ecran and ecran.drapeau_porte != "" and Etat.est(ecran.drapeau_porte):
+		return   # la salle est déjà résolue
+	var cibles: Array[Node2D] = []
+	for n in get_tree().get_nodes_in_group("frappable"):
+		if n is Node2D and ecran.is_ancestor_of(n):
+			cibles.append(n)
+	for n in cibles:
+		if n is Chanteur:   # salle des cloches : le chanteur seul
+			cibles = [n]
+			break
+	for n in cibles:
+		_anneau_aide(n)
+
+
+func _anneau_aide(cible: Node2D) -> void:
+	var anneau := Line2D.new()
+	var points := PackedVector2Array()
+	for i in 25:
+		points.append(Vector2(cos(TAU * i / 24.0), sin(TAU * i / 24.0)) * 9.0)
+	anneau.points = points
+	anneau.width = 1.5
+	anneau.default_color = Color(1.0, 0.85, 0.35, 0.9)
+	anneau.z_index = 50
+	anneau.position = cible.position + Vector2(8, 0)
+	cible.get_parent().add_child(anneau)
+	var t := anneau.create_tween().set_loops(2)
+	t.tween_property(anneau, "scale", Vector2(2.4, 2.4), 1.0).from(Vector2(0.5, 0.5))
+	t.parallel().tween_property(anneau, "modulate:a", 0.0, 1.0).from(1.0)
+	await get_tree().create_timer(2.2).timeout
+	if is_instance_valid(anneau):
+		anneau.queue_free()
+
+
 # Indice d'une salle (export `indice` de Room) : affiché une seule fois, à la première visite.
 var _indices_vus := {}
 
 
 func _montrer_indice(salle: Vector2i) -> void:
+	_inactif = 0.0
 	for enfant in get_children():
 		if enfant is Ecran and enfant.grille == salle and enfant.indice != "" and not _indices_vus.has(salle):
 			_indices_vus[salle] = true
 			Etat.annoncer(enfant.indice)
+
+
+# Sur quel sol marche le joueur (bruit de pas) : demandé à l'écran où il se trouve.
+func surface_pas(pos: Vector2) -> String:
+	for enfant in get_children():
+		if enfant is Ecran and enfant.grille == salle_actuelle:
+			return enfant.surface_pas(pos)
+	return "dalle"
+
+
+# Ambiance sonore des ailes du donjon : grondement grave, souffle et gouttes lointaines, en boucle sous la musique.
+func _lancer_ambiance_donjon() -> void:
+	var flux = load("res://Assets/Sons/ambiance_donjon.wav")
+	if not (flux is AudioStreamWAV):
+		return
+	flux.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	flux.loop_begin = 0
+	flux.loop_end = flux.data.size() / 2   # 16 bits, mono
+	var lecteur := AudioStreamPlayer.new()
+	lecteur.stream = flux
+	lecteur.volume_db = -19.0
+	add_child(lecteur)
+	lecteur.play()
 
 
 # Joue la musique en boucle (volume baissé pour ne pas couvrir les futurs bruitages).
@@ -217,7 +305,12 @@ func _changer_musique(chemin: String) -> void:
 		return   # on a déjà changé d'avis entre-temps
 	_musique.stream = flux
 	_musique.play()
-	create_tween().tween_property(_musique, "volume_db", VOLUME_MUSIQUE_DB, 0.6)
+	create_tween().tween_property(_musique, "volume_db", _volume_piste(chemin), 0.6)
+
+
+# Volume d'une piste : le réglage de base + sa correction de niveau (toutes les musiques sonnent aussi fort ; Outils/rogner_musiques.py).
+func _volume_piste(chemin: String) -> float:
+	return VOLUME_MUSIQUE_DB + float(NiveauxMusiques.GAINS.get(chemin, 0.0))
 
 
 func _lancer_musique() -> void:
@@ -228,7 +321,7 @@ func _lancer_musique() -> void:
 	flux.loop = true
 	var lecteur := AudioStreamPlayer.new()
 	lecteur.stream = flux
-	lecteur.volume_db = VOLUME_MUSIQUE_DB
+	lecteur.volume_db = _volume_piste(musique)
 	add_child(lecteur)
 	lecteur.play()
 	_musique = lecteur
@@ -280,10 +373,7 @@ func _creer_messages() -> void:
 	Etat.message.connect(_afficher_message)
 	# Rappel des touches au début
 	await get_tree().create_timer(0.8).timeout
-	Etat.annoncer((Noms.VILLAGE if not donjon else "L'Épreuve de la Garde") + " — Flèches/ZQSD : bouger   Maj/K : courir   Espace/J : lance   R : recommencer")
-	await get_tree().create_timer(5.5).timeout
-	if cote == "gauche" and donjon and not Etat.est("vestibule_cristal") and salle_actuelle == Vector2i(0, 1):   # seulement si on est encore au vestibule
-		Etat.annoncer("Frappe le cristal bleu avec ta lance pour ouvrir la porte")
+	Etat.annoncer((Noms.VILLAGE if not donjon else Noms.TITRE_JEU) + " — Flèches/ZQSD : bouger   Maj/K : courir   Espace/J : lance   R : recommencer")
 
 
 func _afficher_message(texte: String) -> void:
@@ -370,7 +460,6 @@ func _raccompagner(retour: Vector2, raison := "garde") -> void:
 		var t_chute := create_tween()
 		t_chute.tween_property(joueur.sprite, "scale", Vector2(0.1, 0.1), 0.5)
 		t_chute.parallel().tween_property(joueur.sprite, "rotation", 3.0, 0.5)
-		Etat.annoncer("Tu es tombé ! Retour au début de la salle.")
 	var flux = load(SON_ALERTE) if raison == "garde" else null
 	if flux != null:
 		var lecteur := AudioStreamPlayer.new()
@@ -379,13 +468,12 @@ func _raccompagner(retour: Vector2, raison := "garde") -> void:
 		lecteur.play()
 		lecteur.finished.connect(lecteur.queue_free)
 	if raison == "garde":
-		Etat.annoncer("Repéré ! Un garde te raccompagne au début de la salle.")
+		Etat.annoncer("Repéré !")
 	elif raison == "recommencer":
-		Etat.annoncer("Tu recommences la salle.")
+		pass   # (R : le fondu suffit)
 	elif raison == "pics":
 		_jouer_son(SON_PIQUE, -2.0)
 		joueur.sprite.modulate = Color(1.0, 0.4, 0.4)
-		Etat.annoncer("Aïe, les pics ! Retour au début de la salle. Passe quand ils sont rentrés.")
 	await get_tree().create_timer(0.7).timeout
 	var tween := create_tween()
 	tween.tween_property(_fondu, "modulate:a", 1.0, 0.4)
@@ -591,7 +679,7 @@ func _sur_drapeau(nom: String) -> void:
 		return
 	if nom == "fragment_" + cote:
 		await get_tree().create_timer(1.8).timeout   # laisser le temps au jingle et au message
-		_ramener("Entree", Vector2i(12, 9), "Une force t'a ramené à l'entrée. La grande porte du vestibule est ouverte : sors du donjon !")
+		_ramener("Entree", Vector2i(12, 9), "Une force t'a ramené à l'entrée. La grande porte du vestibule est ouverte : sors de la Forteresse !")
 		return
 	for n in range(1, 5):
 		if nom == _plume(n):

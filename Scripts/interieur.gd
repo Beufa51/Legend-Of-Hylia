@@ -62,6 +62,11 @@ func _init() -> void:
 	interieur = true
 
 
+# Bruit des pas : planches dans une maison, dalles à la caserne.
+func surface_pas(_pos: Vector2) -> String:
+	return "bois" if style == "maison" else "dalle"
+
+
 func _ready() -> void:
 	position = Vector2(grille * TAILLE_SALLE)
 	modulate = teinte
