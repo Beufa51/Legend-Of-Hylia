@@ -16,13 +16,12 @@ EAU_CLAIRE = (34, 124, 102, 255)
 RIDE = (140, 214, 188, 255)
 RIDE_FORTE = (214, 240, 240, 255)
 
-# 4 variantes de tuile (pour que l'eau ne se répète pas) : chacune a UNE ondelette courbe (suite de points (dx, dy)) et un éclat
-VARIANTES = [
-    {"onde": [(0, 1), (1, 0), (2, 0), (3, 1), (4, 1)], "pos": (3, 9), "eclat": (11, 4), "ton": (2, 11)},
-    {"onde": [(0, 0), (1, 1), (2, 1), (3, 0)], "pos": (9, 5), "eclat": (4, 11), "ton": (9, 9)},
-    {"onde": [(0, 1), (1, 1), (2, 0), (3, 0), (4, 1), (5, 1)], "pos": (4, 4), "eclat": (12, 10), "ton": (3, 3)},
-    {"onde": [(0, 0), (1, 0), (2, 1)], "pos": (8, 10), "eclat": (6, 3), "ton": (10, 2)},
-]
+# TEXTURE DE L'EAU = celle de la planche Gemini `eau.jpg` (canal vertical, eau seule), réduite à 8 px de large puis découpée
+# par variante et par image (l'image 2 décale la texture d'1 px : l'eau « coule »).
+SRC_EAU = os.path.join(os.path.dirname(__file__), "..", "Assets", "Gemini", "originaux", "eau.jpg")
+_im = Image.open(SRC_EAU).convert("RGB").crop((790, 30, 868, 765))
+TEXTURE = _im.resize((8, round(735 * 8 / 78)), Image.LANCZOS).quantize(16, dither=Image.NONE).convert("RGB")
+VAR_DECALAGE = [0, 19, 41, 62]
 
 
 def masque(bits, marge):
@@ -38,45 +37,34 @@ def masque(bits, marge):
 
 
 def flaque(bits, v, n):
-    ext = masque(bits, 1)
-    corps = masque(bits, 2)
-    cœur = masque(bits, 3)
-    var = VARIANTES[v]
+    """Même profil que la planche Gemini : contour sombre, lèvre de pierre claire (2 px), contour, ombre du rebord, eau texturée."""
     t = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-    t.paste(Image.new("RGBA", (16, 16), RIVE), mask=ext)        # contour sombre
-    t.paste(Image.new("RGBA", (16, 16), BORD), mask=corps)      # lèvre de pierre
-    t.paste(Image.new("RGBA", (16, 16), EAU), mask=cœur)        # eau lisse
+    couches = [(0, RIVE), (1, BORD), (3, RIVE)]
+    for marge, couleur in couches:
+        t.paste(Image.new("RGBA", (16, 16), couleur), mask=masque(bits, marge))
+    eau = masque(bits, 4)
+    horizontal = bool(bits & 12) and not (bits & 3)   # canal horizontal : la texture est tournée d'un quart de tour
+    th = TEXTURE.height
+    decalage = VAR_DECALAGE[v] + (n - 1)
     d = ImageDraw.Draw(t)
-    def dedans(x, y):   # hors de la tuile : on regarde si la voisine est de l'eau (bits)
+    def dedans(x, y):
         if y < 0: return bool(bits & 1)
         if y > 15: return bool(bits & 2)
         if x < 0: return bool(bits & 4)
         if x > 15: return bool(bits & 8)
-        return bool(cœur.getpixel((x, y)))
+        return bool(eau.getpixel((x, y)))
     for y in range(16):
         for x in range(16):
-            if not dedans(x, y): continue
-            haut = not dedans(x, y - 1)
-            haut2 = not haut and not dedans(x, y - 2)
-            bas = not dedans(x, y + 1)
-            if haut: d.point((x, y), fill=OMBRE)                 # le rebord nord fait de l'ombre sur l'eau
-            elif haut2: d.point((x, y), fill=(14, 72, 66, 255))
-            elif bas: d.point((x, y), fill=EAU_CLAIRE)           # reflet contre le rebord sud
-    # une tache de ton plus clair, tramée (damier) : donne du volume sans traits répétitifs
-    tx, ty = var["ton"]
-    for dy in range(3):
-        for dx in range(4):
-            if (dx + dy) % 2 == 0 and dedans(tx + dx, ty + dy) and dedans(tx + dx, ty + dy - 1) and dedans(tx + dx, ty + dy + 2):
-                d.point((tx + dx, ty + dy), fill=EAU_CLAIRE)
-    # l'ondelette glisse d'1 pixel entre les 2 images ; l'éclat ne brille que dans l'image 2
-    ox, oy = var["pos"]
-    ox += (n - 1)
-    for (dx, dy) in var["onde"]:
-        if dedans(ox + dx, oy + dy) and dedans(ox + dx, oy + dy - 2):
-            d.point((ox + dx, oy + dy), fill=RIDE)
-    ex, ey = var["eclat"]
-    if n == 2 and dedans(ex, ey) and dedans(ex, ey - 2):
-        d.point((ex, ey), fill=RIDE_FORTE)
+            if not eau.getpixel((x, y)): continue
+            u, w = (y - 4) % 8, x + decalage
+            if not horizontal:
+                u, w = (x - 4) % 8, y + decalage
+            c = TEXTURE.getpixel((u, w % th))
+            # ombre du rebord nord et ouest sur l'eau
+            if not dedans(x, y - 1): c = OMBRE
+            elif not dedans(x, y - 2): c = (10, 62, 60)
+            elif not dedans(x - 1, y) and not (bits & 4): c = OMBRE
+            t.putpixel((x, y), tuple(c[:3]) + (255,))
     return t
 
 
