@@ -792,6 +792,10 @@
   chorégraphie : griffes qui s'enfoncent, donjon et queue qui montent du sol (poussière), tête qui se dresse, ailes qui pivotent et se verrouillent (flash, secousse), runes dorées qui s'allument une à une le long des remparts (chemins de lueurs additives), torches de la queue, zoom final vers la cour/arène.
   IDÉE DE L'UTILISATEUR (validée par Claude) : refaire aussi avec GEMINI les FAÇADES vues du village (entrées des 2 ailes + queue) et, en option, les 2 stèles-griffes, pour que tout ait la même qualité que l'image du coq. Prompts donnés à l'utilisateur (façade aile gauche ouverte ; aile droite herse baissée ; queue en éventail de tours-flammes ; planche des stèles).
 
+- 2026-11-14 : retour utilisateur : « la stèle n'est pas exactement pareille que les pattes de l'image globale, qui sont déjà censées être la stèle ». **STÈLES REFAITES = LES VRAIES GRIFFES DE L'IMAGE** : `Outils/traiter_griffes.py` (remplace `fabriquer_steles_pattes.py`, supprimé) découpe les 2 griffes de `Coq_forteresse.jpg` (masque polygonal + clé « vert = sol »), réduit à 72x44 px (palette 28 couleurs, +22 % de clarté),
+  creuse une NICHE dans la paume (symbole d'aile : vide = gravure sombre, pleine = or qui brille) -> `v_stele_g|d_vide|pleine.png`. Griffe gauche = stèle de l'aile gauche. Emprise 5x3 cases (`V` en (6,3), `X` en (14,3)), orteils vers le sud ; déclencheurs `$stele_g` en (7..9, 6) et `$stele_d` en (15..17, 6) ; niche à `cell*16 + (40,22)` (`Exterieur.position_niche`, `NICHE_STELE`).
+  Parvis : bannières/tonneaux retirés (la place est aux griffes). Même principe pour les façades Gemini à venir : découper dans les images reçues plutôt que redessiner. Tests OK, `verifier_carte.py` OK (2 passes).
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.

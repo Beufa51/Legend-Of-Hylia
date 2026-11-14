@@ -71,11 +71,14 @@ const OBJETS_G := {
 	"J": ["v_facade_aile_d", Vector2i(25, 6), true, 0.0],          # entrée de l'aile DROITE, herse levée
 	"H": ["v_facade_queue", Vector2i(25, 6), true, 0.0],           # entrée du donjon final : la QUEUE du coq (éventail de tours aux pointes en flammes)
 	# STÈLES en forme de pattes de coq (parvis) : on y dépose le symbole d'une aile (voir STELES, world.gd::_ceremonie_stele, Outils/fabriquer_steles_pattes.py)
-	"V": ["v_stele_g_vide", Vector2i(1, 1), true, 0.0],            # stèle de l'aile gauche
-	"X": ["v_stele_d_vide", Vector2i(1, 1), true, 0.0],            # stèle de l'aile droite
+	# (ce sont les GRIFFES de pierre de l'image du coq-forteresse : 72x44 px, découpées par Outils/traiter_griffes.py ; orteils vers le sud, niche dans la paume)
+	"V": ["v_stele_g_vide", Vector2i(5, 3), true, 0.0],            # stèle de l'aile gauche (griffe gauche)
+	"X": ["v_stele_d_vide", Vector2i(5, 3), true, 0.0],            # stèle de l'aile droite (griffe droite)
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
 const PORTES_MAISONS := {"M": 2, "N": 2, "T": 2, "R": 2, "S": 2, "K": 2, "L": 2, "U": 3}
+# Centre de la niche d'une stèle, depuis le coin haut-gauche de son emprise 5x3 (en pixels)
+const NICHE_STELE := Vector2(40, 22)
 # Stèles : lettre -> [côté, image une fois le symbole déposé]
 const STELES := {"V": ["gauche", "v_stele_g_pleine"], "X": ["droite", "v_stele_d_pleine"]}
 # Touffes d'herbe semées automatiquement (images Gemini)
@@ -525,6 +528,12 @@ func case_stele(cote: String) -> Vector2i:
 				if x >= 0:
 					return Vector2i(x, y)
 	return Vector2i(-1, -1)
+
+
+# Position (monde) de la niche d'une stèle : là où vole le symbole.
+func position_niche(cote: String) -> Vector2:
+	var c := case_stele(cote)
+	return position + Vector2(c * TUILE) + NICHE_STELE
 
 
 # Le symbole vient d'être déposé : la stèle prend son image « pleine » avec un éclat.

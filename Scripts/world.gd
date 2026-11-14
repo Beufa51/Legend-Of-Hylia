@@ -763,8 +763,7 @@ func _ceremonie_stele(cote_stele: String) -> void:
 	joueur.set_physics_process(false)
 	joueur.velocity = Vector2.ZERO
 	var parvis := _ecran_nomme("Parvis") as Exterieur
-	var cellule := parvis.case_stele(cote_stele) if parvis else Vector2i(12, 4)
-	var cible := (parvis.position if parvis else Vector2.ZERO) + Vector2(cellule * Ecran.TUILE) + Vector2(8, -10)
+	var cible := parvis.position_niche(cote_stele) if parvis else joueur.position + Vector2(0, -40)
 	# 1) le symbole de l'aile vole du héros vers la niche de la stèle
 	var symbole := Sprite2D.new()
 	symbole.texture = _texture("res://Assets/Gemini/tuiles/fragment_aile.png")

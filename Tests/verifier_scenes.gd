@@ -182,7 +182,7 @@ func _tester_garde_et_steles() -> void:
 		_erreurs.append("Garde : porte fermée attendue (façade G, 1 garde, aucun passage) : %s / %d / %d" % [droit1.layout[0][0], gardes1, droit1.passages.size()])
 	# 2) stèles : sans fragment, rien ; avec, le symbole se dépose ; les deux = la forêt s'ouvre
 	var parvis = v1.get_node("Parvis")
-	if parvis.case_stele("gauche") != Vector2i(10, 4) or parvis.case_stele("droite") != Vector2i(14, 4):
+	if parvis.case_stele("gauche") != Vector2i(6, 3) or parvis.case_stele("droite") != Vector2i(14, 3):
 		_erreurs.append("Stèles : cases inattendues %s %s" % [parvis.case_stele("gauche"), parvis.case_stele("droite")])
 	v1.peut_changer_scene = false
 	v1.joueur.direction = "haut"
