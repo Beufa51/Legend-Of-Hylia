@@ -15,20 +15,25 @@ RACINE = os.path.join(os.path.dirname(__file__), "..")
 def sortie(g): return 'PackedStringArray(' + ', '.join('"' + ''.join(r) + '"' for r in g) + ')'
 
 
+# --- ARÈNE (0,0) : la COUR du château (voir Coq_forteresse.jpg) : un octogone d'herbe ceint d'un chemin de pierre, braseros, statues ; le Gardien attend au fond.
 arene = [['#'] * W for _ in range(H)]
 for y in range(2, 12):
     for x in range(2, 23):
+        coupe = min((x - 2) + (y - 2), (22 - x) + (y - 2), (x - 2) + (11 - y), (22 - x) + (11 - y)) < 3   # coins coupés : octogone
+        arene[y][x] = '#' if coupe else '.'
+for y in range(4, 10):             # l'herbe de la cour
+    for x in range(5, 20):
+        arene[y][x] = ';'
+for y in range(3, 12):             # chemin de pierre jusqu'au Gardien
+    for x in range(11, 14):
         arene[y][x] = '.'
 for y in range(12, 14):            # la grande porte du bas (retour au parvis)
     for x in range(11, 14):
         arene[y][x] = '.'
-for y in range(4, 12):             # tapis rouge jusqu'au Gardien
-    for x in range(11, 14):
-        arene[y][x] = 'T'
-for (x, y) in [(6, 5), (18, 5), (6, 9), (18, 9)]:
+for (x, y) in [(6, 5), (18, 5), (6, 8), (18, 8)]:
     arene[y][x] = 'S'              # statues de chevaliers : obstacles
-for (x, y) in [(3, 3), (21, 3), (3, 10), (21, 10)]:
-    arene[y][x] = 'B'              # braseros dans les coins
+for (x, y) in [(4, 4), (20, 4), (4, 9), (20, 9)]:
+    arene[y][x] = 'B'              # braseros aux angles de la cour
 arene[2][8] = 'O'; arene[2][16] = 'O'   # statues d'oiseau au fond
 
 def vide():
@@ -49,20 +54,23 @@ sol(couloir, 11, 13, 0, 13, 'T')
 for (x, y) in [(10, 3), (14, 3), (10, 7), (14, 7), (10, 11), (14, 11)]:
     couloir[y][x] = 'B'
 
-# --- VESTIBULE (0,2) : la QUEUE du coq, le hall d'entrée. La grande porte du bas ramène à la façade de la queue (village). Tapis jusqu'au couloir.
+# --- VESTIBULE (0,2) : la QUEUE du coq (voir Coq_forteresse.jpg) : CINQ COULOIRS DE TERRE qui se rejoignent à la porte d'entrée (en bas) et s'écartent
+# en éventail vers le donjon rond ; une flamme brûle au bout de chacun ; seul le couloir du milieu continue vers le corps.
 vestibule = vide()
-sol(vestibule, 2, 22, 2, 11)
-sol(vestibule, 11, 13, 0, 1)
-sol(vestibule, 11, 13, 12, 13)
-sol(vestibule, 11, 13, 0, 11, 'T')
-for (x, y) in [(3, 3), (21, 3), (3, 10), (21, 10)]:
-    vestibule[y][x] = 'B'
-for (x, y) in [(7, 4), (17, 4)]:
-    vestibule[y][x] = 'O'          # statues de coq qui gardent l'entrée
-for (x, y) in [(7, 9), (17, 9)]:
-    vestibule[y][x] = 'S'
-for (x, y) in [(2, 2), (3, 2), (22, 2), (21, 2), (2, 11), (22, 11)]:
-    vestibule[y][x] = 'V'
+for y in range(2, 12):
+    t = (11 - y) / 9.0                         # 0 en bas (couloirs serrés) -> 1 en haut (écartés)
+    for dx in (-9.0, -4.5, 0.0, 4.5, 9.0):
+        c = 12 + dx * (0.12 + 0.88 * t)
+        for x in range(25):
+            if abs(x - c) <= 1.15:
+                vestibule[y][x] = ','
+sol(vestibule, 11, 13, 0, 1, ',')              # sortie du haut vers le couloir du corps
+sol(vestibule, 11, 13, 12, 13, ',')            # porte d'entrée (en bas)
+sol(vestibule, 9, 15, 10, 11, ',')             # petit parvis derrière la porte : les couloirs se rejoignent
+for (x, y) in [(3, 2), (7, 2), (17, 2), (21, 2)]:
+    vestibule[y][x] = 'B'                      # flammes au bout des couloirs extérieurs
+for (x, y) in [(8, 10), (16, 10)]:
+    vestibule[y][x] = 'O'                      # coqs de pierre qui gardent l'entrée
 passages_vestibule = ['%d 13 @village:Queue 12 12' % x for x in (11, 12, 13)]
 
 GARDIEN = (12 * 16 + 8, 3 * 16 + 11)     # au fond de la salle, pieds sur la case (12,3)
