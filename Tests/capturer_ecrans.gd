@@ -7,7 +7,12 @@ func _ready() -> void:
 	_lancer.call_deferred()
 
 
+var _attente := 0.5
+
+
 func _lancer() -> void:
+	if OS.get_environment("ATTENTE") != "":
+		_attente = float(OS.get_environment("ATTENTE"))
 	var args := OS.get_cmdline_user_args()
 	Etat.sauvegarde_active = false
 	if args.size() > 2:
@@ -27,7 +32,7 @@ func _lancer() -> void:
 		monde._menu_dev = null
 		for i in 8:
 			await get_tree().process_frame
-		await get_tree().create_timer(0.5).timeout
+		await get_tree().create_timer(_attente).timeout
 		get_tree().root.get_texture().get_image().save_png("user://captures/%s.png" % nom)
 		print("capture ", nom)
 	get_tree().quit(0)

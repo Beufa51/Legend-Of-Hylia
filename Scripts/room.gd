@@ -61,6 +61,7 @@ const TORCHE := ["torche_1", "torche_2", "torche_3", "torche_4", "torche_5", "to
 const DECALAGE_BRASERO := Vector2(-2, -10)
 
 # Énigmes : noms de drapeaux (voir etat.gd). Vide = rien.
+@export var ciel_etoile := false   # (avec ciel_ouvert) murs en CRÉNEAUX et CIEL ÉTOILÉ au-delà des remparts au lieu de briques pleines (arène du boss)
 @export var ciel_ouvert := false   # salle SANS TOIT (cour du château, couloirs de la queue) : ombres de nuages, oiseaux, lumière de lune, feuilles (Scripts/ciel_ouvert.gd)
 @export var drapeau_plaque := ""   # levé quand TOUTES les plaques P portent un bloc
 @export var drapeau_porte := ""    # les portes D de cette salle s'ouvrent quand ce drapeau est levé
@@ -224,12 +225,22 @@ func _creer_decor() -> void:
 					_poser_rect(pos, Vector2(TUILE, TUILE), Color(0, 0, 0, 0.35))
 			else:
 				_poser_mur(x, y)
+	if ciel_ouvert:   # fleurs et cailloux dans l'herbe de la cour (décor, sans collision)
+		for y in layout.size():
+			for x in layout[y].length():
+				if layout[y][x] == ";":
+					var h := (x * 17 + y * 29 + x * y * 5) % 23
+					if h == 0 or h == 9:
+						_poser("v_fleur_rouge", Vector2(x * TUILE, y * TUILE) + Vector2(0, 1))
+					elif h == 4:
+						_poser("v_roche", Vector2(x * TUILE, y * TUILE) + Vector2(0, 1))
 	_poser_objets()
 	_poser_escaliers()   # (après les tapis : l'escalier se pose par-dessus)
 	_poser_portes()
 	_poser_details()
 	if ciel_ouvert:
 		var ciel := CielOuvert.new()
+		ciel.cases_etoiles = _cases_ciel
 		add_child(ciel)
 	if _source.x >= 0:
 		_calque_rayon = Node2D.new()
@@ -263,6 +274,13 @@ func _nom_sol(x: int, y: int) -> String:
 # - les autres murs sont vus DE DESSUS : sombres, avec un rebord de briques du côté du sol ;
 # - un mur isolé d'une seule case est un petit pilier (`pilier`, 8 px plus haut que sa case).
 # Images : Outils/traiter_pack_donjon.py.
+var _cases_ciel: Array[Vector2] = []   # cases de ciel étoilé (étoiles qui scintillent : ciel_ouvert.gd)
+
+
+func _nom_ciel(x: int, y: int) -> String:
+	return "ciel_nuit_" + ["a", "b", "c", "a", "b"][(x * 5 + y * 11) % 5]
+
+
 func _face_bas(x: int, y: int) -> bool:
 	return _est_mur(x, y) and y + 1 < layout.size() and _est_sol(x, y + 1)
 
@@ -282,9 +300,18 @@ func _poser_mur(x: int, y: int) -> void:
 			nom += "_d"   # bout droit
 		if bas:
 			_poser("sol_plat", pos)   # le bas de la face est transparent (ombre portée sur le sol)
+		if ciel_etoile and nom == "mur_face_haut" and y == 0:
+			_poser(_nom_ciel(x, y), pos)   # créneaux : entre les merlons on voit le ciel
+			_cases_ciel.append(pos)
+			_poser("mur_creneaux", pos)
+			return
 		_poser(nom, pos)
 		return
-	_poser("mur_fond", pos)
+	if ciel_etoile:
+		_poser(_nom_ciel(x, y), pos)   # au-delà du rempart : le ciel du soir (les liserés posés plus bas dessinent le parapet)
+		_cases_ciel.append(pos)
+	else:
+		_poser("mur_fond", pos)
 	var n := _est_sol(x, y - 1)
 	var s := _est_sol(x, y + 1)
 	var e := _est_sol(x + 1, y)

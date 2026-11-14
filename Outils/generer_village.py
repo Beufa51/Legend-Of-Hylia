@@ -37,7 +37,7 @@ def chemin(g, x0, x1, y0, y1):
 
 # --- Emprises des objets (même table que Scripts/exterieur.gd::OBJETS_G) : sert à retirer/fermer proprement ---
 EMPRISES = {'A': (3, 3), 'a': (3, 3), 'P': (3, 3), 'r': (1, 1), 'W': (2, 2), 'e': (2, 1), 'j': (1, 2), 'b': (1, 1), 'B': (1, 1), 'o': (1, 1),
-            'x': (1, 1), 'n': (1, 1), 'u': (1, 1), 'z': (1, 1), 'C': (5, 2), 'D': (5, 2), 'V': (3, 1), 'X': (3, 1), 'E': (3, 2), 'Q': (3, 3), '~': (1, 1),
+            'x': (1, 1), 'n': (1, 1), 'u': (1, 1), 'z': (1, 1), 'C': (6, 2), 'D': (6, 2), 'V': (3, 1), 'X': (3, 1), 'E': (3, 2), 'Q': (3, 3), '~': (1, 1),
             'f': (1, 1), 'g': (1, 1), 'w': (1, 1)}
 NON_BLOQUANTS = set('fgw=')          # fleurs et pont : on marche dessus
 def emprise(c):
@@ -386,14 +386,14 @@ def parvis_commun():
 #         avec chacune une PIERRE posée devant (V : aile gauche, X : aile droite ; 3x1). On monte vers une pierre (rangée 6) avec le symbole de l'aile correspondante : il se dépose dans sa fenêtre.
 parvis = parvis_commun()
 put(parvis, 'A', (11, 2))                          # l'arbre qui bouche le chemin du milieu (avec ceux de la rangée du haut) ; il s'écarte à la fin
-put(parvis, 'C', (6, 1)); put(parvis, 'D', (14, 1))
+put(parvis, 'C', (5, 1)); put(parvis, 'D', (14, 1))
 put(parvis, 'V', (7, 5)); put(parvis, 'X', (15, 5))
 passages_parvis = ["%d 6 $stele_g" % x for x in (7, 8, 9)] + ["%d 6 $stele_d" % x for x in (15, 16, 17)]
 
 # APRÈS (drapeau corps_revele) : les arbres du milieu se sont écartés (ouvrir() N retire ceux qui barrent les colonnes 11-13) : un chemin de 3 cases monte vers le nord (écran « Queue ») ;
 #         les arbres des côtés restent et cachent la jambe des griffes ; les pierres brillent.
 parvis_revele = parvis_commun()
-put(parvis_revele, 'C', (6, 1)); put(parvis_revele, 'D', (14, 1))
+put(parvis_revele, 'C', (5, 1)); put(parvis_revele, 'D', (14, 1))
 put(parvis_revele, 'V', (7, 5)); put(parvis_revele, 'X', (15, 5))
 passages_parvis_revele = list(passages_parvis)
 

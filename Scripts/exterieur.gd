@@ -73,8 +73,8 @@ const OBJETS_G := {
 	"H": ["v_facade_queue", Vector2i(25, 12), true, 0.0],           # entrée du donjon final : la QUEUE du coq (éventail de tours aux pointes en flammes)
 	# LES DEUX STÈLES DU PARVIS : une GRIFFE de pierre (le pied du coq de l'image du coq-forteresse, jambe qui monte et disparaît dans la forêt) + une PIERRE posée DEVANT elle,
 	# où l'on dépose le symbole d'une aile (fenêtre ornée d'ailes). Images : Outils/traiter_griffes.py et Outils/traiter_pierres.py ; logique : STELES, world.gd::_ceremonie_stele.
-	"C": ["v_griffe_g", Vector2i(5, 2), true, 0.0],                # griffe GAUCHE (décor : le pied de l'aile gauche)
-	"D": ["v_griffe_d", Vector2i(5, 2), true, 0.0],                # griffe DROITE
+	"C": ["v_griffe_g", Vector2i(6, 2), true, 0.0],                # griffe GAUCHE (décor : le pied de l'aile gauche)
+	"D": ["v_griffe_d", Vector2i(6, 2), true, 0.0],                # griffe DROITE
 	"V": ["v_pierre_g_vide", Vector2i(3, 1), true, 0.0],           # pierre de l'aile gauche (devant la griffe gauche)
 	"X": ["v_pierre_d_vide", Vector2i(3, 1), true, 0.0],           # pierre de l'aile droite
 }

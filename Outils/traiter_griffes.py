@@ -99,7 +99,7 @@ def prolonger(img):
 
 
 if __name__ == "__main__":
-    largeur = int(sys.argv[1]) if len(sys.argv) > 1 else 76
+    largeur = int(sys.argv[1]) if len(sys.argv) > 1 else 96
     for cote, zone, miroir in (("g", ZONE_G, False), ("d", ZONE_D, True)):
         petit = reduire(decouper(zone, miroir), largeur)
         petit.save(os.path.join(SORTIE, "v_griffe_%s.png" % cote))

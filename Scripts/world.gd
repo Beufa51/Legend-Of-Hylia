@@ -32,6 +32,7 @@ var en_transition := false
 
 
 func _ready() -> void:
+	get_tree().root.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT   # (sécurité : l'écran redevient 400x224 mis à l'échelle, même si une cinématique HD a été interrompue)
 	if Etat.position_sauvee != Vector2.ZERO and Etat.scene_sauvee == scene_file_path:
 		joueur.position = _position_reprise()   # partie sauvegardée : on reprend là où on était
 	if Etat.arrivee_ecran != "":   # on arrive d'une autre scène (village <-> donjon)
@@ -142,7 +143,21 @@ func _process(_delta: float) -> void:
 			_ramener("@village:" + _temple(), Vector2i(12, 12), "")   # sorties suivantes : on retourne directement au village
 		return
 	if nouvelle != salle_actuelle:
+		if not _ecran_existe_en(nouvelle):
+			# Le joueur sortirait du monde (écran GRIS : rien n'est dessiné là) : on le retient au bord de la salle où il est.
+			var origine := Vector2(salle_actuelle * TAILLE_SALLE)
+			joueur.position = joueur.position.clamp(origine + Vector2(2, 2), origine + Vector2(TAILLE_SALLE) - Vector2(2, 2))
+			joueur.velocity = Vector2.ZERO
+			return
 		_glisser_vers(nouvelle)
+
+
+# Y a-t-il un écran (salle, extérieur, intérieur) à cette case de la grille ?
+func _ecran_existe_en(salle: Vector2i) -> bool:
+	for e in get_children():
+		if e is Ecran and e.grille == salle:
+			return true
+	return false
 
 
 # Dans quelle case de la grille se trouve le joueur ?

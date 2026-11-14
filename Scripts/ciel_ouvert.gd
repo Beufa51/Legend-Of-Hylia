@@ -8,7 +8,9 @@ extends Node2D
 ## Tout est dessiné par-dessus la salle (z_index), en mélange doux : ça ne gêne ni le jeu ni les collisions.
 
 const TAILLE := Vector2(400, 224)
+var cases_etoiles: Array[Vector2] = []   # cases de ciel (coin haut-gauche) où des étoiles scintillent
 var _t := 0.0
+var _etoiles: Array[ColorRect] = []
 var _ombres: Array[Sprite2D] = []
 var _lune: Sprite2D
 var _oiseau: Node2D
@@ -37,6 +39,15 @@ func _ready() -> void:
 	_lune.material = additif
 	_lune.modulate = Color(0.3, 0.4, 0.75, 0.13)
 	add_child(_lune)
+	for c in cases_etoiles:   # étoiles qui scintillent (quelques-unes par case de ciel)
+		if randf() < 0.55:
+			var e := ColorRect.new()
+			e.size = Vector2(2, 2) if randf() < 0.25 else Vector2(1, 1)
+			e.color = Color(0.85, 0.9, 1.0, 1.0)
+			e.position = c + Vector2(randi() % 15, randi() % 15)
+			e.set_meta("phase", randf() * 6.28)
+			add_child(e)
+			_etoiles.append(e)
 	var feuilles := CPUParticles2D.new()
 	feuilles.position = Vector2(-10, 112)
 	feuilles.amount = 9
@@ -65,6 +76,8 @@ func _process(delta: float) -> void:
 		s.position.y += sin(_t * 0.2 + i) * 2.0 * delta
 		if s.position.x > TAILLE.x + 200.0:
 			s.position.x = -200.0
+	for e in _etoiles:
+		e.modulate.a = 0.45 + 0.55 * sin(_t * 2.2 + float(e.get_meta("phase"))) * sin(_t * 0.7 + float(e.get_meta("phase")))
 	_lune.modulate.a = 0.12 + 0.03 * sin(_t * 0.6)
 	_prochain_oiseau -= delta
 	if _prochain_oiseau <= 0.0 and _oiseau == null:

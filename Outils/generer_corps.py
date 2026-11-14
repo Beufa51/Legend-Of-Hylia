@@ -92,6 +92,7 @@ cote = "corps"
 [node name="Arene" parent="." instance=ExtResource("2")]
 teinte = Color(0.9, 0.95, 1.1, 1)
 ciel_ouvert = true
+ciel_etoile = true
 layout = %s
 
 [node name="Couloir" parent="." instance=ExtResource("2")]
