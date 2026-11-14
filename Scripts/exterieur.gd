@@ -77,8 +77,8 @@ const OBJETS_G := {
 }
 # Colonne de la porte de chaque maison (0 à 3, depuis la gauche) : sert à placer les `passages` (voir generer_village.py)
 const PORTES_MAISONS := {"M": 2, "N": 2, "T": 2, "R": 2, "S": 2, "K": 2, "L": 2, "U": 3}
-# Centre de la niche d'une stèle, depuis le coin haut-gauche de son emprise 5x3 (en pixels)
-const NICHE_STELE := Vector2(40, 22)
+# Centre de la GRAVURE (le symbole d'aile dans la paume) d'une stèle, depuis le coin haut-gauche de son emprise 5x3 (en pixels)
+const NICHE_STELE := {"gauche": Vector2(54, 16), "droite": Vector2(26, 15)}
 # Stèles : lettre -> [côté, image une fois le symbole déposé]
 const STELES := {"V": ["gauche", "v_stele_g_pleine"], "X": ["droite", "v_stele_d_pleine"]}
 # Touffes d'herbe semées automatiquement (images Gemini)
@@ -533,7 +533,7 @@ func case_stele(cote: String) -> Vector2i:
 # Position (monde) de la niche d'une stèle : là où vole le symbole.
 func position_niche(cote: String) -> Vector2:
 	var c := case_stele(cote)
-	return position + Vector2(c * TUILE) + NICHE_STELE
+	return position + Vector2(c * TUILE) + NICHE_STELE[cote]
 
 
 # Le symbole vient d'être déposé : la stèle prend son image « pleine » avec un éclat.
