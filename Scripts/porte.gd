@@ -9,6 +9,8 @@ class_name Porte
 
 const SON_OUVERTURE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact5.wav"
 const SON_SERRURE := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Accept.wav"
+const SON_REFUS := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Cancel.wav"
+const CADENAS := "res://Assets/Gemini/tuiles/cadenas.png"   # Outils/fabriquer_runes_sol.py
 const DUREE_ANIMATION := 0.6
 
 var _collision: CollisionShape2D
@@ -19,7 +21,8 @@ var ouverte := false
 # Serrure
 var _drapeau_cle := ""
 var _drapeau_serrure := ""
-var _message_vu := false
+var _cadenas: Sprite2D   # gros cadenas doré sur la porte : « il faut une clé », sans texte
+var _refus_t := 0.0
 
 
 # `taille` : taille de la porte en pixels (multiple de 16) ; `texture` : son image (fermée) ;
@@ -55,6 +58,13 @@ func activer_serrure(cle: String, serrure: String) -> void:
 	zone.add_child(collision)
 	add_child(zone)
 	zone.body_entered.connect(_touchee)
+	var tex = load(CADENAS)
+	if tex != null:
+		_cadenas = Sprite2D.new()
+		_cadenas.texture = tex
+		_cadenas.position = Vector2(_taille.x / 2.0, _taille.y - 9)   # bas de la porte, au milieu (là où les battants se rejoignent)
+		_cadenas.z_index = 1
+		add_child(_cadenas)
 
 
 func _touchee(corps: Node) -> void:
@@ -62,10 +72,31 @@ func _touchee(corps: Node) -> void:
 		return
 	if Etat.est(_drapeau_cle):
 		_jouer(SON_SERRURE, -4.0)
+		_faire_sauter_cadenas()
 		Etat.poser(_drapeau_serrure)
-	elif not _message_vu:
-		_message_vu = true
-		Etat.annoncer("Fermée à clé.")
+	elif Time.get_ticks_msec() / 1000.0 - _refus_t > 0.8:
+		# Pas de clé : le cadenas tremble et claque (aucun texte)
+		_refus_t = Time.get_ticks_msec() / 1000.0
+		_jouer(SON_REFUS, -6.0)
+		if _cadenas != null:
+			var x0 := _cadenas.position.x
+			var tween := create_tween()
+			for dx in [-2.0, 2.0, -1.0, 1.0, 0.0]:
+				tween.tween_property(_cadenas, "position:x", x0 + dx, 0.05)
+
+
+# La clé tourne : le cadenas saute, tournoie et disparaît.
+func _faire_sauter_cadenas() -> void:
+	if _cadenas == null:
+		return
+	var c := _cadenas
+	_cadenas = null
+	var tween := create_tween().set_parallel()
+	tween.tween_property(c, "position", c.position + Vector2(10, -6), 0.25).set_ease(Tween.EASE_OUT)
+	tween.tween_property(c, "rotation", 2.5, 0.45)
+	tween.chain().tween_property(c, "position:y", c.position.y + 14, 0.25).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(c, "modulate:a", 0.0, 0.25)
+	tween.chain().tween_callback(c.queue_free)
 
 
 # La porte s'ouvre : elle ne bloque plus. `instantane` : sans bruit ni animation (salle déjà résolue au chargement).
@@ -74,6 +105,9 @@ func ouvrir(instantane := false) -> void:
 		return
 	ouverte = true
 	_collision.set_deferred("disabled", true)
+	if _cadenas != null:   # ouverte au chargement (ou par un autre drapeau) : plus de cadenas
+		_cadenas.queue_free()
+		_cadenas = null
 	if not _images.is_empty():
 		if instantane:
 			_sprite.texture = _images[-1]

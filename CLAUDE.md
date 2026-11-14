@@ -898,3 +898,12 @@
   (3) AMBIANCE DU DONJON : `ambiance_donjon.wav` (16 s en boucle : grondement, souffle, gouttes), jouée par `world.gd::_lancer_ambiance_donjon` dans les 2 ailes (-19 dB).
   NON FAIT (impossible côté Claude) : ÉCOUTER les musiques (qualité des rendus MIDI à juger par l'utilisateur ; niveaux et silences vérifiés par mesure seulement). Le test auto vérifie maintenant aussi l'audio et l'absence d'`indice` dans les ailes.
   ORDRE des outils audio : rendre_musiques.py -> rogner_musiques.py ; fabriquer_sons.py indépendant.
+
+- 2026-11-14 : **REVUE DES VESTIBULES (énigmes sans texte ; tests headless TOUT BON + captures en rendu réel vérifiées, pas joué)** :
+  GAUCHE : tapis retiré (l'escalier le cachait : il n'en restait qu'une rangée) ; CHEMIN DE RUNES gravées au sol du cristal (12,7) à la porte (cases (12,6)..(12,2)) : frappé, l'énergie court de rune en rune (or + lueur) et la porte ne s'ouvre QU'ENSUITE
+  (`room.gd` exports `chemin_runes` (cases "x y" dans l'ordre) + `drapeau_runes`, `_poser_runes`, `_allumer_runes` ; `_sur_drapeau` attend la cascade ; instantané au chargement) ; braseros de part et d'autre de la porte (9,2)/(15,2) ; pots en 2 grappes.
+  DROIT : CADENAS doré sur la porte à serrure `E` (`porte.gd` : sans clé = il tremble + Cancel.wav, plus de texte « Fermée à clé » ; avec la clé = il saute, tournoie, tombe) ; ICÔNE DE CLÉ au HUD (`world.gd::_maj_hud`, sous les plumes : une salle de l'aile a sa `drapeau_cle` levée mais pas sa `drapeau_serrure`) ;
+  braseros autour de la porte, pots en 2 grappes + 2 près du coffre.
+  LES DEUX : export `niches` (faux dans les vestibules : plus de niches à barreaux qui ressemblaient à la herse). Images : `Outils/fabriquer_runes_sol.py` (`rune_sol_1..3`, `rune_sol_on_1..3`, `cadenas`). Les générateurs écrivent `false` sans guillemets.
+  Réutilisable : `chemin_runes` pour relier n'importe quel mécanisme (levier de l'Entrée droite, cristaux...) à sa porte. IDÉE EN ATTENTE : fresque de l'aile (5 plumes gravées qui se dorent) au mur des vestibules.
+  SUITE de la revue : Entrée gauche / Entrée droite (levier), puis plumes une par une.

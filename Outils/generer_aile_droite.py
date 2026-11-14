@@ -33,7 +33,8 @@ vest = vide(); sol(vest, 2, 22, 2, 11); sol(vest, 11, 13, 0, 1)
 for x in (11, 12, 13): vest[0][x] = 'E'; vest[1][x] = 'E'
 put(vest, 'Q', (19, 8))
 for x in (11, 12, 13): vest[12][x] = 'H'; vest[13][x] = 'H'   # grande porte du sud = sortie (s'ouvre avec le fragment)
-put(vest, 'B', (6, 4), (18, 4)); put(vest, 'V', (2, 11), (3, 11), (2, 10), (22, 11), (21, 11), (22, 10), (2, 2), (3, 2), (22, 2), (21, 2))
+put(vest, 'B', (9, 2), (15, 2))   # braseros de part et d'autre de la porte
+put(vest, 'V', (22, 11), (21, 11), (22, 10), (20, 11), (2, 2), (3, 2), (2, 3), (21, 7), (21, 9))   # 2 grappes + 2 pots près du coffre
 put(vest, 'S', (9, 6)); put(vest, 'O', (15, 6))
 for x in range(11, 14):
     for y in range(2, 12): put(vest, 'T', (x, y))
@@ -247,7 +248,7 @@ put(p5e, 'o', (22, 7), (11, 9)); put(p5e, 'u', (9, 10), (12, 7)); put(p5e, 'K', 
 put(p5e, 'B', (9, 2), (15, 2))
 
 salles = [
-    ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'escaliers_descente': 'PackedStringArray("11 9")', 'drapeau_porte2': 'fragment_droite',
+    ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'escaliers_descente': 'PackedStringArray("11 9")', 'drapeau_porte2': 'fragment_droite', 'niches': 'false',
         'drapeau_coffre': 'd_cle_vestibule', 'drapeau_cle': 'd_cle_vestibule', 'drapeau_serrure': 'd_porte_vestibule'}),
     ('Entree', (0, 0), ent, (1.0, 0.94, 0.92), {'drapeau_levier': 'd_levier_entree', 'drapeau_porte': 'd_levier_entree'}),
     ('Epine1', (-1, 0), e1, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD1'}),
@@ -296,7 +297,7 @@ for nom, (gx, gy), g, c, ex in salles:
     out += 'teinte = Color(%s, %s, %s, 1)\n' % c
     for k, v in ex.items():
         # Même règle que generer_monde.py : les mélodies ("132") restent des TEXTES.
-        brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
+        brut = v in ('true', 'false') or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v.replace('"', '\\"')))
     m = re.match(r'PlumeD?(\d)', nom)   # plumes de pierre gravées au mur = numéro de la plume (décor repris de la façade)
     if m:

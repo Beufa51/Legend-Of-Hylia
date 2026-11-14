@@ -110,6 +110,45 @@ func _tester_scene(chemin: String) -> void:
 				print("OK  Plume2a : lance enflammée, 6 braseros = porte ouverte")
 			heros.eteindre_feu()
 			root.get_node("Etat").drapeaux.erase("p2_braseros")
+	# Vestibule gauche : le cristal lance l'énergie dans les runes du sol ; la porte ne s'ouvre qu'une fois les runes dorées
+	if chemin.ends_with("world.tscn"):
+		var v = scene.get_node_or_null("Vestibule")
+		var et = root.get_node("Etat")
+		if v == null or v._runes.size() != 5 or v._portes.is_empty():
+			_erreurs.append("Vestibule gauche : il faut 5 runes et une porte")
+		else:
+			et.poser("vestibule_cristal")
+			await process_frame
+			var trop_tot: bool = v._portes[0].ouverte
+			await create_timer(1.0).timeout
+			var dorees: bool = v._runes.all(func(r): return r.modulate.a > 0.99)
+			if trop_tot or not dorees or not v._portes[0].ouverte:
+				_erreurs.append("Vestibule gauche : runes (%s) puis porte (trop tôt %s, ouverte %s)" % [dorees, trop_tot, v._portes[0].ouverte])
+			else:
+				print("OK  Vestibule gauche : cristal -> runes -> porte")
+			et.drapeaux.erase("vestibule_cristal")
+	# Vestibule droit : cadenas sur la porte, refus sans clé, icône de clé au HUD, le cadenas saute avec la clé
+	if chemin.ends_with("aile_droite.tscn"):
+		var v = scene.get_node_or_null("Vestibule")
+		var et = root.get_node("Etat")
+		var heros = scene.get("joueur")
+		if v == null or v._portes_cle.is_empty() or v._portes_cle[0]._cadenas == null:
+			_erreurs.append("Vestibule droit : porte à serrure sans cadenas")
+		else:
+			var p = v._portes_cle[0]
+			p._touchee(heros)
+			var refus: bool = not p.ouverte
+			et.poser("d_cle_vestibule")
+			var cle_hud: bool = scene._icone_cle.visible
+			p._refus_t = -10.0
+			p._touchee(heros)
+			await process_frame
+			if not (refus and cle_hud and p.ouverte and p._cadenas == null and not scene._icone_cle.visible):
+				_erreurs.append("Vestibule droit : refus %s, clé au HUD %s, ouverte %s, cadenas parti %s, clé rangée %s" % [refus, cle_hud, p.ouverte, p._cadenas == null, not scene._icone_cle.visible])
+			else:
+				print("OK  Vestibule droit : cadenas, clé au HUD, ouverture")
+			et.drapeaux.erase("d_cle_vestibule")
+			et.drapeaux.erase("d_porte_vestibule")
 	if nb == 0:
 		_erreurs.append("%s : aucun écran trouvé" % chemin)
 	print("OK  %s  (%d écrans)" % [chemin, nb])

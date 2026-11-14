@@ -16,10 +16,11 @@ grille = Vector2i(0, 1)
 teinte = Color(0.98, 0.95, 1.06, 1)
 escaliers_descente = PackedStringArray("11 9")
 drapeau_porte2 = "fragment_droite"
+niches = false
 drapeau_coffre = "d_cle_vestibule"
 drapeau_cle = "d_cle_vestibule"
 drapeau_serrure = "d_porte_vestibule"
-layout = PackedStringArray("###########EEE###########", "###########EEE###########", "##VV.......TTT.......VV##", "##.........TTT.........##", "##....B....TTT....B....##", "##.........TTT.........##", "##.......S.TTT.O.......##", "##.........TTT.........##", "##.........TTT.....Q...##", "##.........TTT.........##", "##V........TTT........V##", "##VV.......TTT.......VV##", "###########HHH###########", "###########HHH###########")
+layout = PackedStringArray("###########EEE###########", "###########EEE###########", "##VV.....B.TTT.B.......##", "##V........TTT.........##", "##.........TTT.........##", "##.........TTT.........##", "##.......S.TTT.O.......##", "##.........TTT.......V.##", "##.........TTT.....Q...##", "##.........TTT.......V.##", "##.........TTT........V##", "##.........TTT......VVV##", "###########HHH###########", "###########HHH###########")
 
 [node name="Entree" parent="." instance=ExtResource("2")]
 teinte = Color(1.0, 0.94, 0.92, 1)

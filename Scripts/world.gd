@@ -826,6 +826,7 @@ func _sprite(texture: Texture2D, pos: Vector2, parent: Node) -> Sprite2D:
 var _hud: CanvasLayer
 var _icones_plumes: Array[Sprite2D] = []
 var _icone_fragment: Sprite2D
+var _icone_cle: Sprite2D   # petite clé : visible tant qu'on porte une clé qui n'a pas encore servi
 const TEINTE_MANQUANTE := Color(0.12, 0.12, 0.18, 0.75)
 
 
@@ -840,6 +841,7 @@ func _creer_hud() -> void:
 	_icone_fragment = _sprite(_texture("res://Assets/Gemini/tuiles/fragment_aile.png"), Vector2(62, 1), _hud)
 	if cote == "droite":   # l'aile droite = l'aile gauche dans un miroir
 		_icone_fragment.flip_h = true
+	_icone_cle = _sprite(_texture("res://Assets/Gemini/tuiles/cle.png"), Vector2(4, 16), _hud)
 	_hud.visible = donjon and cote in ["gauche", "droite"]   # les plumes ne s'affichent que dans les ailes du donjon
 	_maj_hud()
 
@@ -851,6 +853,15 @@ func _maj_hud() -> void:
 	if Etat.est("fragment_" + cote):
 		_icones_plumes[4].modulate = Color.WHITE
 	_icone_fragment.visible = Etat.est("fragment_" + cote)
+	# Clé en poche : une salle de cette aile a sa clé (drapeau_cle) mais sa porte à serrure n'est pas encore ouverte
+	var cle := false
+	for e in get_children():
+		if e is Room and e.drapeau_cle != "" and Etat.est(e.drapeau_cle) and not Etat.est(e.drapeau_serrure):
+			cle = true
+	if _icone_cle.visible != cle and cle:   # elle vient d'arriver : petit rebond
+		_icone_cle.scale = Vector2(1.8, 1.8)
+		create_tween().tween_property(_icone_cle, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK)
+	_icone_cle.visible = cle
 
 
 # --- Les STÈLES-PATTES (parvis) -----------------------------------------------------------------------

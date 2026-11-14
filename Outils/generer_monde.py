@@ -17,13 +17,15 @@ def sortie(g): return 'PackedStringArray(' + ', '.join('"' + ''.join(r) + '"' fo
 
 
 # --- Vestibule (0,1) : on commence ici. Leçon : frapper le cristal avec la lance ouvre la porte du nord.
+#     Une ligne de RUNES gravées au sol relie le cristal à la porte : frappé, l'énergie court jusqu'à la herse (sans texte).
+#     Pas de tapis (l'escalier d'arrivée le cachait) ; braseros de part et d'autre de la porte ; pots en 2 grappes.
 vest = vide(); sol(vest, 2, 22, 2, 11); sol(vest, 11, 13, 0, 1)
 for x in (11, 12, 13): vest[0][x] = 'D'; vest[1][x] = 'D'   # porte de 3 x 2 cases
 for x in (11, 12, 13): vest[12][x] = 'H'; vest[13][x] = 'H'   # grande porte du sud = sortie du donjon (s'ouvre avec le fragment)
 put(vest, 'K', (12, 7))
-put(vest, 'B', (6, 4), (18, 4)); put(vest, 'V', (2, 11), (3, 11), (2, 10), (22, 11), (21, 11), (22, 10), (2, 2), (3, 2), (22, 2), (21, 2))
-for x in range(11, 14):
-    for y in range(8, 12): put(vest, 'T', (x, y))
+RUNES_VEST = ['12 %d' % y for y in (6, 5, 4, 3, 2)]   # du cristal vers la porte
+put(vest, 'B', (9, 2), (15, 2))
+put(vest, 'V', (2, 11), (3, 11), (2, 10), (4, 11), (22, 2), (21, 2), (22, 3))
 
 # --- Entrée (0,0) : grande salle, porte au sud (vers le vestibule) et sortie à l'est (rangées 5-8)
 ent = vide(); sol(ent, 2, 22, 2, 11); sol(ent, 23, 24, 5, 8); sol(ent, 11, 13, 12, 13)
@@ -201,7 +203,8 @@ put(p5e, '1', (4, 7)); put(p5e, '2', (20, 10)); put(p5e, '3', (14, 10)); put(p5e
 put(p5e, 'V', (21, 6), (3, 6))
 
 salles = [
-    ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'escaliers_descente': 'PackedStringArray("11 9")', 'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal', 'drapeau_porte2': 'fragment_gauche'}),
+    ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'escaliers_descente': 'PackedStringArray("11 9")', 'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal', 'drapeau_porte2': 'fragment_gauche',
+        'niches': 'false', 'chemin_runes': 'PackedStringArray(%s)' % ', '.join('"%s"' % r for r in RUNES_VEST), 'drapeau_runes': 'vestibule_cristal'}),
     ('Entree', (0, 0), ent, (1.0, 0.96, 0.88), {}),
     ('Epine1', (1, 0), e1, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume1'}),
     ('Plume1', (1, -1), p1, (0.90, 0.96, 1.08), {'drapeau_plaque': 'p1_plaque', 'drapeau_porte': 'p1_plaque', 'drapeau_gemme': 'plume1'}),
@@ -250,7 +253,7 @@ for nom, (gx, gy), g, c, ex in salles:
     for k, v in ex.items():
         # Écrit sans guillemets : booléens, Vector2, tableaux et nombres à virgule (ex. 14.0).
         # ATTENTION : une mélodie comme "132" doit rester un TEXTE (sinon Godot ne la lit pas).
-        brut = v == 'true' or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
+        brut = v in ('true', 'false') or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v))
     m = re.match(r'PlumeD?(\d)', nom)   # plumes de pierre gravées au mur = numéro de la plume (décor repris de la façade)
     if m:

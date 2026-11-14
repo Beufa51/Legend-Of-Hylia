@@ -96,6 +96,11 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 @export var drapeau_serrure := ""    # levé quand une porte E est ouverte (elle s'ouvre avec ce drapeau)
 @export var periode_pics := 2.4      # durée d'un cycle des pics Z (secondes)
 @export var drapeau_reflet := ""     # levé quand toutes les dalles du reflet `a` sont occupées en même temps
+@export var niches := true           # niches voûtées à barreaux dans le mur du haut (faux = mur nu : évite de confondre avec une herse)
+# CHEMIN DE RUNES (énigme sans texte) : cases "x y" d'une ligne de runes gravées au sol, DANS L'ORDRE (du mécanisme vers la porte).
+# Quand `drapeau_runes` est levé, l'énergie court d'une rune à l'autre (elles se remplissent d'or), PUIS les portes s'ouvrent.
+@export var chemin_runes: PackedStringArray
+@export var drapeau_runes := ""
 
 # Lueur des flammes (texture et matériau partagés par toutes les lumières)
 static var _tex_lumiere: GradientTexture2D
@@ -242,6 +247,7 @@ func _creer_decor() -> void:
 						_poser("v_fleur_rouge", Vector2(x * TUILE, y * TUILE) + Vector2(0, 1))
 					elif h == 4:
 						_poser("v_roche", Vector2(x * TUILE, y * TUILE) + Vector2(0, 1))
+	_poser_runes()
 	_poser_objets()
 	_poser_escaliers()   # (après les tapis : l'escalier se pose par-dessus)
 	_poser_portes()
@@ -341,6 +347,48 @@ func _poser_mur(x: int, y: int) -> void:
 		for d in [["se", 1, 1], ["so", -1, 1], ["ne", 1, -1], ["no", -1, -1]]:
 			if _est_sol(x + d[1], y + d[2]):
 				_poser("mur_dot_" + d[0], pos)
+
+
+# --- Chemin de runes (exports `chemin_runes`, `drapeau_runes`) ------------------------------
+var _runes: Array[Sprite2D] = []   # la rune dorée de chaque case (invisible tant que l'énergie n'est pas passée)
+var _runes_allumees := false
+const PAS_RUNES := 0.09            # secondes entre deux runes qui s'allument
+
+
+func _poser_runes() -> void:
+	for i in chemin_runes.size():
+		var m := chemin_runes[i].split(" ", false)
+		if m.size() != 2:
+			continue
+		var pos := Vector2(int(m[0]) * TUILE, int(m[1]) * TUILE)
+		var k := 1 + (int(m[0]) * 7 + int(m[1]) * 3) % 3
+		_poser("rune_sol_%d" % k, pos)
+		var dore := _poser("rune_sol_on_%d" % k, pos)
+		dore.modulate.a = 0.0
+		_runes.append(dore)
+
+
+# Les runes se remplissent d'or l'une après l'autre (instantane = salle déjà résolue au chargement).
+func _allumer_runes(instantane: bool) -> void:
+	if _runes_allumees:
+		return
+	_runes_allumees = true
+	for i in _runes.size():
+		var rune := _runes[i]
+		if instantane:
+			rune.modulate.a = 1.0
+			continue
+		var tween := create_tween()
+		rune.modulate = Color(2.2, 2.0, 1.4, 0.0)   # éclat blanc-doré qui retombe vers l'or
+		tween.tween_property(rune, "modulate", Color(2.2, 2.0, 1.4, 1.0), 0.08)
+		tween.tween_property(rune, "modulate", Color.WHITE, 0.35)
+		_poser_lumiere(rune.position + Vector2(8, 8), 14.0)
+		await get_tree().create_timer(PAS_RUNES).timeout
+	if instantane:
+		for rune in _runes:
+			_poser_lumiere(rune.position + Vector2(8, 8), 14.0)
+	else:
+		await get_tree().create_timer(0.15).timeout
 
 
 # Escaliers de descente (export `escaliers_descente`).
@@ -1284,6 +1332,8 @@ func _jouer_son(chemin: String, volume_db: float) -> void:
 func _sur_drapeau(nom: String) -> void:
 	if nom == "":
 		return
+	if nom == drapeau_runes and not _runes.is_empty():
+		await _allumer_runes(_chargement)   # l'énergie court jusqu'à la porte, qui ne s'ouvre qu'ensuite
 	for paire in [[drapeau_porte, _portes], [drapeau_porte2, _portes2], [drapeau_serrure, _portes_cle]]:
 		if nom != paire[0]:
 			continue
@@ -1308,7 +1358,7 @@ func _poser_details() -> void:
 		if _mur_haut_libre(11) and _mur_haut_libre(12):
 			_poser("niche_grille", Vector2(11 * TUILE, EPAISSEUR * TUILE - 21))
 	else:
-		for x in COLONNES_NICHES:
+		for x in (COLONNES_NICHES if niches else []):
 			if _mur_haut_libre(x) and _mur_haut_libre(x + 1):
 				_poser("niche_grille", Vector2(x * TUILE, EPAISSEUR * TUILE - 21))
 	for x in COLONNES_TORCHES:
