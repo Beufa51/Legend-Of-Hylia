@@ -474,11 +474,11 @@ ecrans = [
     ('AlleeDroite', (3, 0), allee_d, {'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
     ('TempleGauche', (1, -1), temple_g, {'passages': passages_temple_g, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
     ('Parvis', (2, 0), parvis, {'terrasses': terrasses_parvis, 'escaliers': escaliers_parvis, 'passages': passages_parvis, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
-        'drapeau_revele': 'corps_revele', 'layout_revele': parvis_revele, 'passages_revele': passages_parvis_revele}),
+        'drapeau_revele': 'corps_revele', 'teinte_revele': (0.5, 0.56, 0.85, 1.0), 'layout_revele': parvis_revele, 'passages_revele': passages_parvis_revele}),
     ('TempleDroit', (3, -1), temple_d, {'passages': [], 'pnjs': pnjs_temple_d, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg',
         'drapeau_revele': 'fragment_gauche', 'layout_revele': temple_d_ouvert, 'passages_revele': passages_temple_d_ouvert, 'pnjs_revele': []}),
     # --- la QUEUE du coq (y=-1) : au nord du parvis (accessible une fois la forêt écartée)
-    ('Queue', (2, -1), queue, {'passages': passages_queue, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
+    ('Queue', (2, -1), queue, {'teinte': (0.82, 0.86, 1.0, 1.0), 'passages': passages_queue, 'musique_ecran': 'res://Assets/Musique/13_magic_temple.ogg'}),
     # --- cou et ailes basses (y=1)
     ('Verger', (1, 1), verger, {'animaux': animaux_verger, 'pnjs': pnjs_verger, 'terrasses': terrasses_verger, 'escaliers': escaliers_verger}),
     ('GrandChemin', (2, 1), grand, {'animaux': animaux_grand, 'terrasses': terrasses_grand, 'escaliers': escaliers_grand}),
@@ -545,7 +545,9 @@ donjon = false
         for k, v in props.items():
             if v and isinstance(v[0], list):   # un plan (liste de rangées-listes) : on le transforme en texte seulement ICI, une fois finalisé
                 v = [''.join(r) for r in v]
-            if isinstance(v, list):   # liste de textes -> PackedStringArray
+            if isinstance(v, tuple):   # une couleur (r, g, b, a)
+                out += '%s = Color(%s)\n' % (k, ', '.join(str(c) for c in v))
+            elif isinstance(v, list):   # liste de textes -> PackedStringArray
                 out += '%s = PackedStringArray(%s)\n' % (k, ', '.join('"%s"' % e for e in v))
             else:
                 out += '%s = "%s"\n' % (k, v)

@@ -817,6 +817,8 @@
   il se change en AILE DE PIERRE qui flotte à la verticale (comme dans le donjon), fait un quart de tour sur place puis GLISSE dans l'épaule en accélérant, s'enfonce de 14 px, se cale (clac, ligne de LUMIÈRE sur la couture, second clac plus sec) ; l'énergie court sur les remparts ; atterrissage ; la caméra DESCEND sur la PORTE DE LA QUEUE entre les pattes (= la dernière image est la façade qu'on retrouve au Parvis) puis fondu.
   Calendrier des ailes : constante `CALENDRIER`. Outils : `Tests/capturer_ecrans.tscn` (captures d'écrans d'une scène : `-- scene.tscn Ecran1,Ecran2 [drapeaux]`).
 
+- 2026-11-14 : PARVIS ASSOMBRI (crépuscule, même ambiance que le château) : `ecran.gd` nouvel export `teinte_revele` (appliqué avec le plan « révélé »), `generer_village.py` accepte les couleurs en tuple (r, g, b, a) ; Parvis révélé = (0.5, 0.56, 0.85), façade Queue = (0.82, 0.86, 1.0) (déjà nocturne). Avant la révélation le Parvis reste de jour (la cérémonie le fait virer au crépuscule). Allées/temples non touchés. Vérifié en rendu réel.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
