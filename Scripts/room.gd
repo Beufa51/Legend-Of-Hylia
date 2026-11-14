@@ -534,7 +534,7 @@ func _poser_objets() -> void:
 					var cloche := Cloche.new()
 					cloche.position = pos
 					add_child(cloche)
-					cloche.initialiser(self, int(layout[y][x]), sombre, _image("cloche_support"), _image("cloche_" + layout[y][x]))
+					cloche.initialiser(self, int(layout[y][x]), sombre, _image("plaque_cloche_" + layout[y][x]), _image("cloche_" + layout[y][x]))
 					_cloches[int(layout[y][x])] = cloche
 					_occupe[Vector2i(x, y)] = cloche
 				"^", "v", "<", ">":

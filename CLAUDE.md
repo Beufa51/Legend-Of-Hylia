@@ -913,3 +913,5 @@
   2) CLOCHES (`cloche.gd`) : chaque note a SA COULEUR (1 rouge, 2 orange, 3 vert, 4 bleu, 5 violet) : plaque en losange au sol sous la cloche, éclat et lueur de la couleur de la note quand elle sonne.
   3) 3b : `Cloche._en_ligne_de_vue()` (rayon physique joueur -> cloche, masque 1) : la lance ne frappe plus à travers un bloc/grille/mur -> le bloc devant la niche (17,3) est enfin indispensable (le pousser de côté).
   À JUGER : lisibilité des couleurs, et si l'on veut des images Gemini (cloches plus grosses, support de pierre) : prompt à donner.
+- 2026-11-14 : **ÉTAPE 15e** : planches Gemini reçues `originaux/cloches.jpg` (5 cloches sur portique + 5 plaques de couleur) et `eau.jpg`. `Outils/traiter_cloches.py` (APRÈS fabriquer_objets.py) -> `cloche_1..5.png` (22x34) + `plaque_cloche_1..5.png` (14x7) ;
+  `cloche.gd` : plaque Gemini au sol + cloche sur portique, rebond (scale) au lieu de rotation. Eau : palette de `fabriquer_feu.py` alignée sur `eau.jpg` (rebord clair, eau vert sombre). Tests OK, capture réelle de Plume3a vérifiée.

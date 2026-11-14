@@ -7,13 +7,13 @@ from PIL import Image, ImageDraw, ImageChops
 
 SORTIE = os.path.join(os.path.dirname(__file__), "..", "Assets", "Gemini", "tuiles")
 S = 8   # sur-échantillonnage pour des bords propres
-# Canal creusé dans la dalle : lèvre de pierre claire, ombre sous la lèvre, eau sombre vert-bleu (peu saturée, accordée à la pierre)
-RIVE = (26, 32, 46, 255)        # contour sombre
-BORD = (122, 136, 158, 255)     # lèvre de pierre éclairée
-OMBRE = (14, 38, 54, 255)       # ombre portée du rebord nord
-EAU = (28, 78, 98, 255)
-EAU_CLAIRE = (42, 108, 126, 255)
-RIDE = (120, 190, 200, 255)
+# Palette tirée de la planche Gemini `eau.jpg` (rebord clair, eau vert sombre). Canal creusé dans la dalle : lèvre de pierre claire, ombre sous la lèvre, eau sombre vert-bleu (peu saturée, accordée à la pierre)
+RIVE = (18, 34, 44, 255)        # contour sombre
+BORD = (170, 192, 180, 255)     # lèvre de pierre éclairée
+OMBRE = (8, 52, 52, 255)       # ombre portée du rebord nord
+EAU = (22, 96, 84, 255)
+EAU_CLAIRE = (34, 124, 102, 255)
+RIDE = (140, 214, 188, 255)
 RIDE_FORTE = (214, 240, 240, 255)
 
 # (colonne de départ, rangée, longueur) des traînées claires dans la tuile, pour chaque image
@@ -48,7 +48,7 @@ def flaque(bits, n):
             haut2 = y > 1 and not cœur.getpixel((x, y - 2)) and not haut
             bas = y == 15 or not cœur.getpixel((x, y + 1))
             if haut: d.point((x, y), fill=OMBRE)                 # le rebord nord fait de l'ombre sur l'eau
-            elif haut2: d.point((x, y), fill=(22, 58, 78, 255))
+            elif haut2: d.point((x, y), fill=(14, 72, 66, 255))
             elif bas: d.point((x, y), fill=EAU_CLAIRE)           # reflet du ciel contre le rebord sud
     for (x, y, l) in RIDES[n]:
         for i in range(l):

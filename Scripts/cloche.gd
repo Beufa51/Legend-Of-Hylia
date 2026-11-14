@@ -22,7 +22,7 @@ var _pivot: Node2D  # la cloche se balance autour de ce point (le crochet)
 var _image: Sprite2D
 var _repos := NORMALE        # teinte au repos (dorée une fois l'énigme résolue)
 var _lumiere: PointLight2D
-var _gemme: Polygon2D
+var _plaque: Sprite2D
 var _base_lumiere := 0.0     # lumière au repos (un peu dans le noir, pour la repérer)
 var _dernier_coup := -1000   # en millisecondes : un coup de lance ne compte qu'une fois
 var _tween: Tween
@@ -32,23 +32,21 @@ func initialiser(une_salle: Node2D, sa_note: int, dans_le_noir: bool, support: T
 	salle = une_salle
 	note = sa_note
 	add_to_group("frappable")
-	var bois := Sprite2D.new()
-	bois.texture = support
-	bois.centered = false
-	add_child(bois)
+	# Plaque de couleur au sol (image Gemini), puis la cloche sur son portique (22x34, aligné en bas)
+	var plaque := Sprite2D.new()
+	plaque.texture = support
+	plaque.centered = false
+	plaque.position = Vector2(1, 9)
+	add_child(plaque)
+	_plaque = plaque
 	_pivot = Node2D.new()
-	_pivot.position = Vector2(8, 4)
+	_pivot.position = Vector2(8, 13)   # la cloche se balance autour de sa base
 	add_child(_pivot)
 	_image = Sprite2D.new()
 	_image.texture = image
 	_image.centered = false
-	_image.position = Vector2(-8, 0)
+	_image.position = Vector2(-11, -34)
 	_pivot.add_child(_image)
-	# Plaque de couleur au sol, sous la cloche : rappelle sa note (s'allume quand la cloche sonne)
-	_gemme = Polygon2D.new()
-	_gemme.polygon = PackedVector2Array([Vector2(8, 13), Vector2(11, 15), Vector2(8, 17), Vector2(5, 15)])
-	_gemme.color = COULEURS[clampi(note - 1, 0, 4)].darkened(0.35)
-	add_child(_gemme)
 	# Lumière : éteinte en salle claire, petite lueur en salle sombre
 	_base_lumiere = 0.35 if dans_le_noir else 0.0
 	_lumiere = Lumiere.creer(COULEURS[clampi(note - 1, 0, 4)].lerp(Color(1, 0.85, 0.5), 0.5), 0.6, _base_lumiere)
@@ -92,15 +90,15 @@ func sonner(teinte: Color) -> void:
 	_jouer_note()
 	if _tween:
 		_tween.kill()
-	_pivot.rotation = 0.0
+	_pivot.scale = Vector2.ONE
 	var c: Color = COULEURS[clampi(note - 1, 0, 4)]
 	_image.modulate = teinte if teinte != ECLAT else c.lerp(Color(1, 1, 1), 0.35) * 1.7
-	_gemme.color = c
+	plaque_eclat(c)
 	_lumiere.energy = 1.2
 	_tween = create_tween()
-	_tween.tween_property(_pivot, "rotation", 0.35, 0.08)
-	_tween.tween_property(_pivot, "rotation", -0.25, 0.14)
-	_tween.tween_property(_pivot, "rotation", 0.0, 0.12)
+	_tween.tween_property(_pivot, "scale", Vector2(1.12, 0.9), 0.07)
+	_tween.tween_property(_pivot, "scale", Vector2(0.95, 1.05), 0.12)
+	_tween.tween_property(_pivot, "scale", Vector2(1, 1), 0.12)
 	_tween.tween_interval(0.15)
 	_tween.tween_callback(_au_repos)
 
@@ -109,7 +107,7 @@ func sonner(teinte: Color) -> void:
 func rougir() -> void:
 	if _tween:
 		_tween.kill()
-	_pivot.rotation = 0.0
+	_pivot.scale = Vector2.ONE
 	_image.modulate = ROUGE
 	_tween = create_tween()
 	_tween.tween_interval(0.5)
@@ -123,8 +121,14 @@ func dorer() -> void:
 	_au_repos()
 
 
+# La plaque de couleur s'illumine quand la cloche sonne.
+func plaque_eclat(c: Color) -> void:
+	if _plaque != null:
+		_plaque.modulate = NORMALE if c == NORMALE else Color(1.5, 1.5, 1.5)
+
+
 func _au_repos() -> void:
-	_gemme.color = COULEURS[clampi(note - 1, 0, 4)].darkened(0.35)
+	plaque_eclat(NORMALE)
 	_image.modulate = _repos
 	_lumiere.energy = _base_lumiere
 
