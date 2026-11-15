@@ -77,26 +77,48 @@ def case(boite):
     return p, cx * E
 
 
-def poser(feuille, p, cx, col, ligne, miroir=False):
+def poser(feuille, p, cx, col, ligne, miroir=False, dy=0):
     if miroir:
         p = ImageOps.mirror(p)
         cx = p.width - cx
     x = col * CW + round(CW / 2 - cx)
-    y = ligne * CH + PIEDS + 1 - p.height
+    y = ligne * CH + PIEDS + 1 - p.height + dy
     feuille.alpha_composite(p, (max(col * CW, x) if x < col * CW else x, y))
 
 
 lignes = 4 + 1 + 4 + 1
-colonnes = 5
+colonnes = 8
 feuille = Image.new("RGBA", (colonnes * CW, lignes * CH), (0, 0, 0, 0))
 cases_marche = {n: [case(b) for b in bs] for n, bs in boites_marche.items()}
-# marche vers la droite : les images 2, 3, 5, 3 (lance calée sous le bras) ; l'image 1 n'a pas de lance visible, la 4 la tient droite
-droite = [cases_marche["droite"][i] for i in (1, 2, 4, 2, 1)]
-ordre = {"bas": cases_marche["bas"], "haut": cases_marche["haut"], "droite": droite}
+# MARCHE : les 5 images de marche de la planche Gemini sont presque identiques (on ne voyait pas les pas) : on fabrique un vrai cycle
+# de 8 images à partir d'UNE image de base : un pied se lève (jusqu'à 2 px, les bottes montent), puis l'autre, et le corps monte d'1 px
+# quand un pied est au plus haut (balancement). Les images de base : face = 1re de la ligne du haut, dos = 1re, profil = 2e (lance calée sous le bras).
+ZONE_PIEDS = 7                       # les 6 dernières lignes (bottes + bas du pantalon) bougent
+LEVEE_G = [0, 2, 3, 2, 0, 0, 0, 0]   # hauteur du pied gauche (de l'image) à chaque image du cycle
+LEVEE_D = [0, 0, 0, 0, 0, 2, 3, 2]   # hauteur du pied droit
+BALANCEMENT = [0, 0, -1, 0, 0, 0, -1, 0]
+
+
+def pas(p, cx, levee_g, levee_d):
+    h = p.height
+    res = p.copy()
+    coupe = max(1, min(p.width - 1, round(cx)))
+    for (x0, x1, levee) in ((0, coupe, levee_g), (coupe, p.width, levee_d)):
+        if levee == 0:
+            continue
+        boite = (x0, h - ZONE_PIEDS, x1, h)
+        zone = p.crop(boite)
+        res.paste(Image.new("RGBA", zone.size, (0, 0, 0, 0)), boite)
+        res.alpha_composite(zone, (x0, h - ZONE_PIEDS - levee))
+    return res
+
+
+bases = {"bas": cases_marche["bas"][0], "haut": cases_marche["haut"][0], "droite": cases_marche["droite"][1]}
 for ligne, d in enumerate(("bas", "haut", "gauche", "droite")):
-    src = ordre["droite" if d == "gauche" else d]
-    for col, (p, cx) in enumerate(src):
-        poser(feuille, p, cx, col, ligne, miroir=(d == "gauche"))
+    p, cx = bases["droite" if d == "gauche" else d]
+    for col in range(8):
+        image = pas(p, cx, LEVEE_G[col], LEVEE_D[col])
+        poser(feuille, image, cx, col, ligne, miroir=(d == "gauche"), dy=BALANCEMENT[col])
 # repos : une image par direction
 repos = {"bas": cases_marche["bas"][0], "haut": cases_marche["haut"][0], "droite": cases_marche["droite"][1]}
 for col, d in enumerate(("bas", "haut", "gauche", "droite")):
