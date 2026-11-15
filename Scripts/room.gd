@@ -507,7 +507,9 @@ func _poser_objets() -> void:
 					coll.position = Vector2(TUILE / 2.0, TUILE / 2.0)
 					corps.add_child(coll)
 					add_child(corps)
-					_eaux_a_combler[Vector2i(x, y)] = {"corps": corps, "pont": null, "sprite": sprite_trou}
+					var sprite_dalle := _poser("trou_comble", pos)     # la case rebouchée (cachée tant que le trou est ouvert), SOUS les blocs
+					sprite_dalle.visible = false
+					_eaux_a_combler[Vector2i(x, y)] = {"corps": corps, "pont": null, "sprite": sprite_trou, "dalle": sprite_dalle}
 				"r":
 					_case_reflet = Vector2i(x, y)
 				"a":
@@ -682,26 +684,49 @@ func _poser_canal(x: int, y: int, pos: Vector2, lettres: String) -> void:
 	_poser_anime([f1, f1, f1, f1, f2, f2, f2, f2], pos, x + y)
 
 
+# Un trou encore OUVERT (pas rebouché).
+func _trou_vide(c: Vector2i) -> bool:
+	return _eaux_a_combler.has(c) and _eaux_a_combler[c]["pont"] == null
+
+
+# Montre / cache les lèvres selon l'état des cases : la lèvre sud d'un trou ouvert apparaît dès que la case au sud n'est plus un trou ouvert ;
+# une dalle rebouchée a une lèvre sur chaque côté qui touche un trou resté ouvert.
+func _maj_levres() -> void:
+	for c in _eaux_a_combler.keys():
+		var e: Dictionary = _eaux_a_combler[c]
+		var rempli: bool = e["pont"] != null
+		if e.has("levre"):
+			e["levre"].visible = (not rempli) and not _trou_vide(c + Vector2i(0, 1))
+			e["levre_o"].visible = rempli and _trou_vide(c + Vector2i(-1, 0))
+			e["levre_e"].visible = rempli and _trou_vide(c + Vector2i(1, 0))
+
+
+func _afficher_dalle(c: Vector2i) -> void:
+	if _eaux_a_combler.has(c) and _eaux_a_combler[c]["pont"] != null:
+		_eaux_a_combler[c]["dalle"].visible = true
+		_eaux_a_combler[c]["sprite"].visible = false
+
+
 func _trou_ou_mur(x: int, y: int) -> bool:
 	if y < 0 or y >= layout.size() or x < 0 or x >= layout[y].length():
 		return true
 	return layout[y][x] == "q" or layout[y][x] == "#"
 
 
-# Un bloc poussé dans un trou « q » le comble : le bloc reste en place, de niveau avec le sol (pont marchable).
+# Un bloc poussé dans un trou « q » TOMBE dedans (derrière le bord, avec de la poussière) et le REBOUCHE : la case devient une dalle de sol, le bloc a disparu.
 func bloc_arrive(bloc: Bloc) -> void:
 	var cellule := bloc.case
 	if not _eaux_a_combler.has(cellule) or _eaux_a_combler[cellule]["pont"] != null:
 		return
 	var trou: Dictionary = _eaux_a_combler[cellule]
 	liberer(cellule)
-	bloc.combler()
+	bloc.tomber()
 	trou["corps"].process_mode = Node.PROCESS_MODE_DISABLED
 	for c in trou["corps"].get_children():
 		c.set_deferred("disabled", true)
 	trou["pont"] = bloc
-	if trou.has("levre"):
-		trou["levre"].visible = false          # le bord est comblé : le bloc affleure le sol
+	_maj_levres()
+	get_tree().create_timer(0.26).timeout.connect(_afficher_dalle.bind(cellule))
 	_jouer_effet("res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact4.wav", -4.0)
 
 
@@ -755,8 +780,7 @@ func reinitialiser() -> void:
 		if eau["pont"] != null:
 			eau["pont"] = null
 			eau["sprite"].visible = true
-			if eau.has("levre"):
-				eau["levre"].visible = true
+			eau["dalle"].visible = false
 			eau["corps"].process_mode = Node.PROCESS_MODE_INHERIT
 			for c in eau["corps"].get_children():
 				c.set_deferred("disabled", false)
@@ -764,6 +788,7 @@ func reinitialiser() -> void:
 		_reflet.reinitialiser()
 	for bloc in _blocs:
 		bloc.reinitialiser()
+	_maj_levres()
 	_maj_boutons()
 	_progression = 0
 	for sentinelle in _sentinelles:
@@ -1521,10 +1546,13 @@ func _sprite_dans(parent: Node, nom: String, pos: Vector2) -> Sprite2D:
 func _poser_vie_gouffre() -> void:
 	if _eaux_a_combler.is_empty():
 		return
-	# lèvre de pierre du bord SUD de chaque case de gouffre : posée APRÈS les blocs, donc DEVANT eux (ils passent derrière en tombant)
+	# lèvres de pierre des bords (sud de chaque case ; côtés des dalles rebouchées) : posées APRÈS les blocs, donc DEVANT eux
 	for c in _eaux_a_combler.keys():
-		if not _trou_ou_mur(c.x, c.y + 1):
-			_eaux_a_combler[c]["levre"] = _poser("trou_levre", Vector2(c * TUILE) + Vector2(0, 13))
+		var e: Dictionary = _eaux_a_combler[c]
+		e["levre"] = _poser("trou_levre", Vector2(c * TUILE) + Vector2(0, 13))
+		e["levre_o"] = _poser("trou_levre_o", Vector2(c * TUILE))
+		e["levre_e"] = _poser("trou_levre_e", Vector2(c * TUILE) + Vector2(13, 0))
+	_maj_levres()
 	var haut := Vector2(1e9, 1e9)
 	var bas := Vector2(-1e9, -1e9)
 	for c in _eaux_a_combler.keys():

@@ -70,22 +70,19 @@ func pousser(dir: Vector2i) -> void:
 		salle.bloc_arrive(self)
 
 
-# Le bloc tombe dans le trou et le comble : il s'enfonce d'un coup, la poussière se soulève, puis il reste en place
-# (on voit qu'on marche sur le bloc ; sa face supérieure arrive au niveau du sol).
-func combler() -> void:
+# Le bloc TOMBE dans le trou : il s'enfonce derrière le bord (la lèvre est dessinée devant lui), s'assombrit, soulève de la poussière
+# puis disparaît ; la case devient une dalle de sol (voir Room.bloc_arrive).
+func tomber() -> void:
 	_comble = true
 	z_index = 0
-	modulate = Color(1, 1, 1)
 	_collision.set_deferred("disabled", true)
-	if _texture_enfonce != null:
-		_sprite.texture = _texture_enfonce
-		_sprite.position = Vector2.ZERO     # le bloc comblé est plat (au niveau du sol)
-	var haut := position
 	var tween := create_tween()
 	_tween_chute = tween
-	tween.tween_property(self, "position", haut + Vector2(0, 6), 0.12).set_ease(Tween.EASE_IN)   # il s'enfonce derrière la lèvre du bord
+	tween.tween_property(self, "position", position + Vector2(0, 9), 0.2).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(self, "modulate", Color(0.45, 0.5, 0.68), 0.2)
 	tween.tween_callback(_poussiere)
-	tween.tween_property(self, "position", haut, 0.14).set_ease(Tween.EASE_OUT)                  # et se cale EXACTEMENT au niveau du sol
+	tween.tween_property(self, "modulate:a", 0.0, 0.08)
+	tween.tween_callback(hide)
 
 
 # Petit nuage de poussière à l'impact.
@@ -127,6 +124,7 @@ func reinitialiser() -> void:
 	z_index = 0
 	modulate = Color(1, 1, 1)
 	_comble = false
+	visible = true
 	_sprite.texture = _texture_normale
 	_sprite.position = Vector2(0, TUILE - _texture_normale.get_height())
 	_collision.set_deferred("disabled", false)

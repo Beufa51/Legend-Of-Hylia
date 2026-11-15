@@ -73,4 +73,26 @@ levre = Image.new("RGBA", (16, 3), (0, 0, 0, 0))
 dl = ImageDraw.Draw(levre)
 dl.rectangle((0, 0, 15, 0), fill=CONTOUR + (255,)); dl.rectangle((0, 1, 15, 1), fill=LEVRE_OMBRE + (255,)); dl.rectangle((0, 2, 15, 2), fill=LEVRE + (255,))
 levre.save(os.path.join(SORTIE, "trou_levre.png"))
+# la case COMBLÉE : une dalle de pierre qui affleure le sol (comme un trou rebouché dans un Zelda 2D : on ne garde pas le bloc, la case redevient du sol),
+# avec un biseau clair en haut/à gauche, ombre en bas/à droite, joints, quelques éclats : elle se lit comme du sol rapporté, pas comme une texture plate
+rd = random.Random(99)
+dalle = Image.new("RGBA", (16, 16), (98, 112, 136, 255))
+dd = ImageDraw.Draw(dalle)
+for _ in range(40):
+    dd.point((rd.randrange(16), rd.randrange(16)), fill=rd.choice(((90, 104, 128, 255), (106, 120, 144, 255), (94, 108, 132, 255))))
+dd.rectangle((0, 0, 15, 1), fill=(128, 142, 166, 255)); dd.rectangle((0, 0, 1, 15), fill=(120, 134, 158, 255))      # biseau clair
+dd.rectangle((0, 14, 15, 15), fill=(62, 74, 98, 255)); dd.rectangle((14, 0, 15, 15), fill=(70, 82, 106, 255))      # ombre
+dd.point((15, 0), fill=(100, 114, 138, 255)); dd.point((0, 15), fill=(100, 114, 138, 255))
+for (x, y) in ((4, 5), (5, 5), (5, 6), (6, 6), (10, 10), (11, 10), (11, 11)):                                         # fissures
+    dd.point((x, y), fill=(66, 78, 102, 255))
+for (x, y) in ((8, 3), (3, 11), (12, 6)):                                                                              # éclats clairs
+    dd.point((x, y), fill=(132, 146, 170, 255))
+dalle.save(os.path.join(SORTIE, "trou_comble.png"))
+# lèvres LATÉRALES (3 px) : le bord du sol face à un trou resté ouvert, à gauche (o) ou à droite (e) de la dalle
+for nom, cols in (("o", (CONTOUR, LEVRE_OMBRE, LEVRE)), ("e", (LEVRE, LEVRE_OMBRE, CONTOUR))):
+    lat = Image.new("RGBA", (3, 16), (0, 0, 0, 0))
+    dl2 = ImageDraw.Draw(lat)
+    for i, c in enumerate(cols):
+        dl2.rectangle((i, 0, i, 15), fill=c + (255,))
+    lat.save(os.path.join(SORTIE, "trou_levre_%s.png" % nom))
 print("gouffres à fond fabriqués (16 formes x 3 variantes)")
