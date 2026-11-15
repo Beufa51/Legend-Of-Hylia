@@ -85,6 +85,25 @@ func _tester_scene(chemin: String) -> void:
 			else:
 				print("OK  Plume1 : 3 blocs sur 3 marques = porte ouverte")
 			root.get_node("Etat").drapeaux.erase("p1_plaque")
+	# Plume 3b : le bloc poussé 3 fois vers le haut comble le canal (pont) ; R remet l'eau
+	if chemin.ends_with("world.tscn"):
+		var salle3 = scene.get_node_or_null("Plume3b")
+		if salle3 == null or salle3._blocs.size() != 1 or salle3._eaux_a_combler.size() != 1:
+			_erreurs.append("Plume3b : il faut 1 bloc et 1 case d'eau à combler")
+		else:
+			salle3.reinitialiser()
+			var bloc3 = salle3._blocs[0]
+			for i in 3:
+				await bloc3.pousser(Vector2i.UP)
+			var eau3 = salle3._eaux_a_combler.values()[0]
+			if eau3["pont"] == null:
+				_erreurs.append("Plume3b : le bloc poussé dans le canal ne le comble pas")
+			else:
+				salle3.reinitialiser()
+				if eau3["pont"] != null or bloc3.case != bloc3.depart or not bloc3.visible:
+					_erreurs.append("Plume3b : R doit remettre l'eau et le bloc")
+				else:
+					print("OK  Plume3b : le bloc comble le canal, R remet tout")
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")
