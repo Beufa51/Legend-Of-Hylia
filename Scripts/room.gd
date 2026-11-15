@@ -700,6 +700,8 @@ func bloc_arrive(bloc: Bloc) -> void:
 	for c in trou["corps"].get_children():
 		c.set_deferred("disabled", true)
 	trou["pont"] = bloc
+	if trou.has("levre"):
+		trou["levre"].visible = false          # le bord est comblé : le bloc affleure le sol
 	_jouer_effet("res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact4.wav", -4.0)
 
 
@@ -753,6 +755,8 @@ func reinitialiser() -> void:
 		if eau["pont"] != null:
 			eau["pont"] = null
 			eau["sprite"].visible = true
+			if eau.has("levre"):
+				eau["levre"].visible = true
 			eau["corps"].process_mode = Node.PROCESS_MODE_INHERIT
 			for c in eau["corps"].get_children():
 				c.set_deferred("disabled", false)
@@ -1517,6 +1521,10 @@ func _sprite_dans(parent: Node, nom: String, pos: Vector2) -> Sprite2D:
 func _poser_vie_gouffre() -> void:
 	if _eaux_a_combler.is_empty():
 		return
+	# lèvre de pierre du bord SUD de chaque case de gouffre : posée APRÈS les blocs, donc DEVANT eux (ils passent derrière en tombant)
+	for c in _eaux_a_combler.keys():
+		if not _trou_ou_mur(c.x, c.y + 1):
+			_eaux_a_combler[c]["levre"] = _poser("trou_levre", Vector2(c * TUILE) + Vector2(0, 13))
 	var haut := Vector2(1e9, 1e9)
 	var bas := Vector2(-1e9, -1e9)
 	for c in _eaux_a_combler.keys():

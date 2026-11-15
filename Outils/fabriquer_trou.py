@@ -63,13 +63,14 @@ def trou(bits, variante):
                 base = t.getpixel((x, y))[:3]
                 d.point((x, y), fill=assombrir(base, 0.7) + (255,))
         d.rectangle((15, 0, 15, 15), fill=LEVRE + (255,)); d.rectangle((14, 0, 14, 15), fill=LEVRE_OMBRE + (255,)); d.rectangle((13, 0, 13, 15), fill=CONTOUR + (255,))
-    if not s:
-        d.rectangle((0, 13, 15, 13), fill=CONTOUR + (255,))
-        d.rectangle((0, 14, 15, 14), fill=LEVRE_OMBRE + (255,)); d.rectangle((0, 15, 15, 15), fill=LEVRE + (255,))
-    return t
+    return t         # la lèvre SUD est un sprite séparé (trou_levre.png), posé AU-DESSUS des blocs : un bloc poussé dans le trou passe derrière
 
 
 for b in range(16):
     for v in range(3):
         trou(b, v).save(os.path.join(SORTIE, "trou_%d_%d.png" % (b, v)))
+levre = Image.new("RGBA", (16, 3), (0, 0, 0, 0))
+dl = ImageDraw.Draw(levre)
+dl.rectangle((0, 0, 15, 0), fill=CONTOUR + (255,)); dl.rectangle((0, 1, 15, 1), fill=LEVRE_OMBRE + (255,)); dl.rectangle((0, 2, 15, 2), fill=LEVRE + (255,))
+levre.save(os.path.join(SORTIE, "trou_levre.png"))
 print("gouffres à fond fabriqués (16 formes x 3 variantes)")

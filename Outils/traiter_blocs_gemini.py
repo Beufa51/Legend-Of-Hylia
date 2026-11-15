@@ -64,30 +64,18 @@ def coq_gemini():
 
 
 def symbole_coq(im, nom, couleur, rect, origine):
-    """Efface le coq de Gemini (illisible une fois réduit : on vide le panneau) et pose notre tête de coq : creusée sur le bloc simple, en couleurs sur les blocs actif / enfoncé."""
+    """Vide le panneau de la face supérieure (Gemini y avait gravé un coq / une rune, illisibles à 16 px) : le bloc est SANS SYMBOLE.
+    L'état « posé sur sa marque » se voit au cadre du panneau, qui devient doré (blocs actif et enfoncé)."""
     x0, x1, y0, y1 = rect
-    for y in range(y0, y1 + 1):
-        for x in range(x0, x1 + 1):
+    for y in range(y0 - 1, y1 + 2):            # on vide aussi 1 px autour : restes du dessin de Gemini
+        for x in range(x0 - 1, x1 + 2):
             im.putpixel((x, y), couleur)
-    if UTILISER_COQ_GEMINI and os.path.exists(SRC_COQ):
-        coq = coq_gemini()
-        ox, oy = 4 + (8 - TAILLE_COQ[0]) // 2, 1 + (8 - TAILLE_COQ[1]) // 2
-        for j in range(coq.height):
-            for i in range(coq.width):
-                r, g, b, al = coq.getpixel((i, j))
-                if not al:
-                    continue
-                if nom == "bloc_pierre":     # gravé : même forme, en bleu-gris très discret (la luminosité de l'icône donne le relief)
-                    lum = (r * 3 + g * 6 + b) / 10 / 255.0
-                    im.putpixel((ox + i, oy + j), (int(36 + 40 * lum), int(58 + 52 * lum), int(82 + 50 * lum), 255))
-                else:
-                    im.putpixel((ox + i, oy + j), (r, g, b, 255))
-        return
-    ox, oy = origine
-    for j, ligne in enumerate(COQ):
-        for i, c in enumerate(ligne):
-            if c != ".":
-                im.putpixel((ox + i, oy + j), GRAVURE[c] if nom == "bloc_pierre" else COULEURS[c])
+    if nom != "bloc_pierre":
+        or_vif, or_fonce = (255, 214, 90, 255), (190, 142, 46, 255)
+        for x in range(x0, x1 + 1):
+            im.putpixel((x, y0), or_vif); im.putpixel((x, y1), or_fonce)
+        for y in range(y0, y1 + 1):
+            im.putpixel((x0, y), or_vif); im.putpixel((x1, y), or_fonce)
 
 img = np.array(Image.open(SRC).convert("RGB"))
 m = ~fond(img)
@@ -124,7 +112,7 @@ for nom, im in brut.items():
     if nom == "bloc_pierre_enfonce":
         symbole_coq(im, nom, couleur_enfonce, (3, 12, 1, 10), (4, 2))
     else:
-        symbole_coq(im, nom, couleur_bloc, (3, 12, 1, 9), (4, 2))
+        symbole_coq(im, nom, couleur_bloc, (4, 11, 2, 8), (4, 2))
     im.save(SORTIE + nom + ".png")
 # plaques au sol : planche n°1 (même découpe que la v1 : 5 pièces ; plaques = les 2 dernières)
 img1 = np.array(Image.open(SRC_PLAQUES).convert("RGB"))

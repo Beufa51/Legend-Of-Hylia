@@ -81,9 +81,9 @@ func combler() -> void:
 	var haut := position
 	var tween := create_tween()
 	_tween_chute = tween
-	tween.tween_property(self, "position", haut + Vector2(0, 5), 0.11).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "position", haut + Vector2(0, 6), 0.12).set_ease(Tween.EASE_IN)   # il s'enfonce derrière la lèvre du bord
 	tween.tween_callback(_poussiere)
-	tween.tween_property(self, "position", haut + Vector2(0, 1), 0.16).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(self, "position", haut, 0.14).set_ease(Tween.EASE_OUT)                  # et se cale EXACTEMENT au niveau du sol
 
 
 # Petit nuage de poussière à l'impact.
