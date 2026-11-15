@@ -1528,6 +1528,8 @@ func _poser_frise() -> void:
 		parent.modulate.a = 0.3
 		calque.add_child(parent)
 	for x in range(2, 23):
+		if not fenetres:
+			break   # la frise de runes chargeait trop les salles avec objets : on la garde seulement dans les épines (couloirs presque vides)
 		var ys := _haut_du_sol(x)
 		if ys < 0:
 			continue
