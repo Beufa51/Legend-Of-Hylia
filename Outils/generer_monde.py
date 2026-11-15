@@ -99,17 +99,17 @@ for y in (9, 10, 11): put(p3a, 'T', (11, y), (12, y), (13, y))
 put(p3a, '3', (6, 5)); put(p3a, '2', (18, 5)); put(p3a, '1', (12, 4))
 put(p3a, 'B', (3, 3), (21, 3)); put(p3a, 'V', (2, 11), (3, 11), (22, 11), (21, 11)); put(p3a, 'S', (20, 8))
 
-# 3b (au milieu) : 4 cloches, 4 notes. La cloche 3 est au fond d'un couloir étroit dont le sol est TROUÉ (3 trous) : impossible de l'atteindre.
-#     Il faut pousser 3 blocs dans le couloir : chacun comble un trou et devient un pont. (Plusieurs blocs, plusieurs trous.)
+# 3b (au milieu) : 4 cloches, 4 notes. Un GOUFFRE (3 rangées de large) coupe toute la salle : la cloche 3 et la porte sont de l'autre côté.
+#     Il faut combler 3 cases d'une même colonne avec 3 blocs (chaque bloc poussé dans le gouffre tombe, comble sa case et fait un pont).
 p3b = vide(); plume_bas_haut(p3b)
 put(p3b, 'C', (12, 9))
 for y in (10, 11): put(p3b, 'T', (11, y), (12, y), (13, y))
-put(p3b, '#', (16, 2), (18, 2), (16, 3), (18, 3), (16, 4), (18, 4), (16, 5), (18, 5))   # les murs du couloir (colonne 17)
-put(p3b, '3', (17, 2))                                                      # la cloche 3, tout au fond
-put(p3b, 'q', (17, 3), (17, 4), (17, 5))                                    # les 3 trous
-put(p3b, 'X', (17, 7), (14, 8), (20, 9))                                    # les 3 blocs
-put(p3b, '2', (5, 6)); put(p3b, '1', (5, 9)); put(p3b, '4', (21, 5))
-put(p3b, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (22, 10)); put(p3b, 'O', (3, 2)); put(p3b, 'B', (9, 2))
+for y in (4, 5, 6):
+    for x in range(2, 23): put(p3b, 'q', (x, y))                              # le gouffre
+put(p3b, '3', (17, 2))                                                      # la cloche 3, au nord du gouffre
+put(p3b, 'X', (17, 8), (14, 8), (20, 9))                                    # les 3 blocs (au sud)
+put(p3b, '2', (5, 8)); put(p3b, '1', (4, 10)); put(p3b, '4', (21, 7))
+put(p3b, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (22, 10)); put(p3b, 'O', (3, 2)); put(p3b, 'B', (9, 2), (15, 2))
 
 # 3c (la pointe) : SALLE SOMBRE, 5 cloches, 5 notes : il faut repérer dans le noir les cloches qui s'allument.
 #     La mélodie ouvre l'alcôve où se trouve la plume.

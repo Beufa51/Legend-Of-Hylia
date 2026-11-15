@@ -88,16 +88,18 @@ func _tester_scene(chemin: String) -> void:
 	# Plume 3b : 3 blocs poussés dans le couloir comblent les 3 trous (ponts) ; R rouvre les trous
 	if chemin.ends_with("world.tscn"):
 		var salle3 = scene.get_node_or_null("Plume3b")
-		if salle3 == null or salle3._blocs.size() != 3 or salle3._eaux_a_combler.size() != 3:
-			_erreurs.append("Plume3b : il faut 3 blocs et 3 trous")
+		if salle3 == null or salle3._blocs.size() != 3 or salle3._eaux_a_combler.size() != 63:
+			_erreurs.append("Plume3b : il faut 3 blocs et un gouffre de 3x21 cases")
 		else:
 			salle3.reinitialiser()
-			var b3 = salle3._blocs
-			# A (17,7) monte de 2 ; B (14,8) va en (17,8) puis monte de 4 ; C (20,9) va en (17,9) puis monte de 6
-			for bloc in b3:
-				var pousses := [Vector2i.RIGHT, 3, Vector2i.UP, 4]
-				if bloc.case == Vector2i(17, 7): pousses = [Vector2i.UP, 2]
-				elif bloc.case == Vector2i(20, 9): pousses = [Vector2i.LEFT, 3, Vector2i.UP, 6]
+			# ordre : A (17,8) d'abord, puis B (14,8), puis C (20,9) (sinon B bute contre A)
+			var ordre := {}
+			for bloc in salle3._blocs:
+				ordre[bloc.case] = bloc
+			var plan := [[Vector2i(17, 8), [Vector2i.UP, 2]], [Vector2i(14, 8), [Vector2i.RIGHT, 3, Vector2i.UP, 3]], [Vector2i(20, 9), [Vector2i.LEFT, 3, Vector2i.UP, 5]]]
+			for etape in plan:
+				var bloc = ordre[etape[0]]
+				var pousses: Array = etape[1]
 				for k in range(0, pousses.size(), 2):
 					for i in pousses[k + 1]:
 						await bloc.pousser(pousses[k])
@@ -105,18 +107,23 @@ func _tester_scene(chemin: String) -> void:
 			for trou in salle3._eaux_a_combler.values():
 				if trou["pont"] != null:
 					combles += 1
-			if combles != 3:
-				_erreurs.append("Plume3b : %d trou(s) comblé(s) sur 3" % combles)
+			# la colonne 17 doit être entièrement comblée (rangées 4 à 6) : on peut traverser
+			var colonne_ok := true
+			for ry in [4, 5, 6]:
+				if salle3._eaux_a_combler[Vector2i(17, ry)]["pont"] == null:
+					colonne_ok = false
+			if combles != 3 or not colonne_ok:
+				_erreurs.append("Plume3b : %d case(s) comblée(s), colonne 17 complète : %s" % [combles, colonne_ok])
 			else:
 				salle3.reinitialiser()
 				var ouverts := 0
 				for trou in salle3._eaux_a_combler.values():
 					if trou["pont"] == null:
 						ouverts += 1
-				if ouverts != 3:
-					_erreurs.append("Plume3b : R doit rouvrir les 3 trous")
+				if ouverts != 63:
+					_erreurs.append("Plume3b : R doit rouvrir le gouffre")
 				else:
-					print("OK  Plume3b : 3 blocs comblent les 3 trous, R les rouvre")
+					print("OK  Plume3b : 3 blocs comblent une colonne du gouffre, R le rouvre")
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")
