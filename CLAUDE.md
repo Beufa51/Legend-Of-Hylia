@@ -22,6 +22,7 @@
      - **Opus** : conception (énigmes, architecture des salles), bug coriace, cinématique du blason.
   Toujours mettre à jour ce fichier AVANT de conseiller un `/clear`.
 - Réponses courtes et ciblées, pas de répétition inutile.
+- **IDÉES GEMINI (demande de l'utilisateur, 2026-11-15)** : à CHAQUE réponse où Claude voit une amélioration graphique faisable avec Gemini (image fixe : objet, tuile, décor, planche d'états), le signaler en fin de réponse avec un PROMPT prêt à copier (style 16 px vu de dessus 3/4, fond magenta #FF00FF, une planche avec tous les états, nom de fichier à mettre dans `Assets/Gemini/originaux/`). Seulement si le gain est réel ; rappeler que les détails fins disparaissent à 16 px (gros aplats).
 - **VIE ET DÉTAILS (demande de l'utilisateur, 2026-11-15)** : pour tout ce que Claude crée ou retouche (salles, objets, décors, énigmes), AJOUTER TOUJOURS de la vie et du détail dès que possible : ambiance animée (brume, lueurs qui pulsent, poussière, particules, petites choses qui bougent), micro-détails au sol et aux bords (cailloux, fissures, mousse, éclats), variantes pour qu'aucun motif ne se répète, sons discrets. Ne jamais livrer un décor « plat et uni ». Garder le coût léger (sprites, CPUParticles2D, tweens) et sans collision.
 
 ## GDD (version 2, réécrite le 2026-11-14 : reflète le jeu tel qu'il est)
