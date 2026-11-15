@@ -216,7 +216,7 @@ salles = [
     ('Plume2b', (2, -2), p2b, (1.04, 0.98, 0.9), {'drapeau_cristal': 'p2_cristal', 'drapeau_porte': 'p2_cristal', 'drapeau_gemme': 'plume2'}),
     ('Epine3', (3, 0), e3, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume3'}),
     ('Plume3a', (3, -1), p3a, (1.04, 0.98, 0.9), {'melodie': '132', 'drapeau_melodie': 'p3_chant1', 'drapeau_porte': 'p3_chant1'}),
-    ('Plume3b', (3, -2), p3b, (1.02, 0.96, 0.92), {'melodie': '2413', 'drapeau_melodie': 'p3_chant2', 'drapeau_porte': 'p3_chant2'}),
+    ('Plume3b', (3, -2), p3b, (1.02, 0.96, 0.92), {'melodie': '2413', 'drapeau_melodie': 'p3_chant2', 'drapeau_porte': 'p3_chant2', 'retour': 'Vector2(1400, -254)'}),
     ('Plume3c', (3, -3), p3c, (1.0, 1.0, 1.0), {'sombre': 'true', 'melodie': '31524', 'drapeau_melodie': 'p3_chant3',
         'drapeau_porte': 'p3_chant3', 'drapeau_gemme': 'plume3'}),
     ('Epine4', (4, 0), e4, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume4'}),

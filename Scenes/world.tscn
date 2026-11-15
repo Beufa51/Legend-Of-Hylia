@@ -94,6 +94,7 @@ teinte = Color(1.02, 0.96, 0.92, 1)
 melodie = "2413"
 drapeau_melodie = "p3_chant2"
 drapeau_porte = "p3_chant2"
+retour = Vector2(1400, -254)
 plumes_gravees = 3
 drapeau_plumes_gravees = "plume3"
 layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##.O.....B.....B.3.....##", "##.....................##", "##qqqqqqqqqqqqqqqqqqqqq##", "##qqqqqqqqqqqqqqqqqqqqq##", "##qqqqqqqqqqqqqqqqqqqqq##", "##.....................##", "##............X..X.....##", "##...2......C.......X..##", "##.........TTT........V##", "##VV.1.....TTT......4VV##", "###########...###########", "###########...###########")

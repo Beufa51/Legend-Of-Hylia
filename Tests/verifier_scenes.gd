@@ -114,7 +114,19 @@ func _tester_scene(chemin: String) -> void:
 					colonne_ok = false
 			if combles != 3 or not colonne_ok:
 				_erreurs.append("Plume3b : %d case(s) comblée(s), colonne 17 complète : %s" % [combles, colonne_ok])
+			elif not salle3._pont_fini or not root.get_node("Etat").est("pont_3_-2_17"):
+				_erreurs.append("Plume3b : le pont fini doit être mémorisé (drapeau pont_3_-2_17)")
 			else:
+				salle3.reinitialiser()      # un pont FINI ne se défait plus
+				var restes := 0
+				for trou in salle3._eaux_a_combler.values():
+					if trou["pont"] != null:
+						restes += 1
+				if restes != 3:
+					_erreurs.append("Plume3b : R ne doit pas défaire un pont fini")
+				# test du reset : on « oublie » le pont
+				root.get_node("Etat").drapeaux.erase("pont_3_-2_17")
+				salle3._pont_fini = false
 				salle3.reinitialiser()
 				var ouverts := 0
 				for trou in salle3._eaux_a_combler.values():
