@@ -423,7 +423,7 @@ func _poser_objets() -> void:
 			var pos := Vector2(x * TUILE, y * TUILE)
 			match layout[y][x]:
 				"T":
-					_poser("tapis_milieu", pos)
+					_poser(_nom_tapis(x, y), pos)
 				"S":
 					_poser("statue_chevalier", pos + Vector2(-3, TUILE - 34))
 				"O":
@@ -1663,6 +1663,17 @@ func _sur_drapeau_plumes(nom: String) -> void:
 			plume.texture = _image("plume_pierre_or")
 			plume.modulate = Color(2.2, 2.0, 1.4))
 		tw.tween_property(plume, "modulate", Color.WHITE, 0.6)
+
+
+# Tapis rouge à bordure dorée (planche Gemini, Outils/traiter_tapis.py) : la tuile dépend des tapis voisins (1 N, 2 S, 4 O, 8 E).
+func _nom_tapis(x: int, y: int) -> String:
+	var bits := 0
+	for v in [[0, -1, 1], [0, 1, 2], [-1, 0, 4], [1, 0, 8]]:
+		var yy: int = y + v[1]
+		var xx: int = x + v[0]
+		if yy >= 0 and yy < layout.size() and xx >= 0 and xx < layout[yy].length() and layout[yy][xx] == "T":
+			bits |= v[2]
+	return "tapis_%d" % bits
 
 
 # Rangée du sol le plus haut dans la colonne x, s'il y a au moins 2 rangées de mur au-dessus (la corniche) ; sinon -1.
