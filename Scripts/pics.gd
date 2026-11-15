@@ -14,6 +14,7 @@ var son := false         # cette rangée de pics fait du bruit en sortant (une s
 var _sprite: Sprite2D
 var _images: Array[Texture2D] = []
 var _temps := 0.0
+var fixe := false        # toujours sortis (mur de pics) : seul un bloc poussé dedans les écrase
 var coince := false      # un bloc est entré dans la bande : le mécanisme est bloqué, les pics restent rentrés
 var _poussiere: CPUParticles2D
 
@@ -35,6 +36,10 @@ func _process(delta: float) -> void:
 	if coince:
 		dangereux = false
 		_sprite.texture = _images[0]
+		return
+	if fixe:
+		dangereux = true
+		_sprite.texture = _images[4]
 		return
 	var t := fposmod(_temps / periode - decalage, 1.0)   # 0 -> 1 sur un cycle
 	# image : rentrés, petites pointes (avertissement), sortie, sortis, rentrée

@@ -113,9 +113,10 @@ put(p3b, 'V', (2, 11), (3, 11), (2, 10), (3, 10), (2, 9)); put(p3b, 'O', (3, 2))
 
 # 3c (la pointe) : « LE CHANT ENTRE LES PICS » = combinaison des cloches (3a) et du bloc (3b) + rapidité.
 #     Deux BANDES DE PICS (colonnes 6-8 et 16-18) coupent la salle de haut en bas ; les cloches sont de part et d'autre.
-#     Chaque bande sort et rentre d'un bloc (la gauche et la droite en alternance) : on traverse au bon moment.
-#     Le BLOC du milieu, poussé dans une bande, COINCE son mécanisme : cette bande ne sort plus (au choix du joueur).
-#     Pas frustrant : des pics sortis renvoient juste sur la dernière case sûre ; la mélodie déjà jouée est gardée.
+#     Bande de GAUCHE = pics TOUJOURS sortis (un mur de pics) : le BLOC (9,6), collé contre elle, s'y pousse et l'ÉCRASE.
+#     (Le bloc est dans la colonne 9 : pour le pousser à droite il faudrait se tenir dans les pics -> il ne peut aller que dans la bonne bande.)
+#     Bande de DROITE = pics qui sortent et rentrent : on traverse au bon moment (rapidité).
+#     Pas frustrant : des pics sortis renvoient juste sur la dernière case sûre ; les cloches justes RESTENT allumées.
 #     La mélodie ouvre l'alcôve où se trouve la plume.
 p3c = vide(); sol(p3c, 2, 22, 2, 3); sol(p3c, 2, 22, 5, 11); sol(p3c, 11, 13, 12, 13)
 for x in (11, 12, 13): p3c[4][x] = 'D'
@@ -124,9 +125,9 @@ for y in range(5, 12):
     for x in (6, 7, 8, 16, 17, 18): put(p3c, 'Z', (x, y))                      # les deux bandes de pics
 put(p3c, 'C', (12, 9))
 for y in (10, 11): put(p3c, 'T', (11, y), (12, y), (13, y))
-put(p3c, 'X', (12, 6))                                                         # le bloc qui coince une bande
-put(p3c, '3', (3, 7)); put(p3c, '2', (3, 11)); put(p3c, '1', (10, 11)); put(p3c, '5', (21, 7)); put(p3c, '4', (21, 11))
-put(p3c, 'V', (5, 5), (19, 5)); put(p3c, 'B', (2, 5), (22, 5))
+put(p3c, 'X', (9, 6))                                                          # le bloc, contre le mur de pics
+put(p3c, '3', (3, 6)); put(p3c, '2', (4, 9)); put(p3c, '1', (14, 7)); put(p3c, '5', (21, 6)); put(p3c, '4', (20, 9))   # à mi-hauteur
+put(p3c, 'V', (2, 11), (3, 11), (22, 11), (21, 11))
 
 # --- PLUME 4 : « LES SENTINELLES ». Des statues de garde (^ v < >) surveillent les cases éclairées devant elles.
 #     Le regard s'arrête aux obstacles. Repéré = un garde te ramène à l'entrée de la plume (bas de 4a).
@@ -223,7 +224,7 @@ salles = [
     ('Epine3', (3, 0), e3, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume3'}),
     ('Plume3a', (3, -1), p3a, (1.04, 0.98, 0.9), {'melodie': '132', 'drapeau_melodie': 'p3_chant1', 'drapeau_porte': 'p3_chant1'}),
     ('Plume3b', (3, -2), p3b, (1.02, 0.96, 0.92), {'melodie': '2413', 'drapeau_melodie': 'p3_chant2', 'drapeau_porte': 'p3_chant2', 'retour': 'Vector2(1400, -254)'}),
-    ('Plume3c', (3, -3), p3c, (1.0, 0.97, 0.94), {'pics_doux': 'true', 'periode_pics': '2.8', 'melodie': '31524', 'drapeau_melodie': 'p3_chant3',
+    ('Plume3c', (3, -3), p3c, (1.0, 0.97, 0.94), {'pics_doux': 'true', 'periode_pics': '2.8', 'colonnes_pics_fixes': 'PackedInt32Array(6, 7, 8)', 'melodie': '31524', 'drapeau_melodie': 'p3_chant3',
         'drapeau_porte': 'p3_chant3', 'drapeau_gemme': 'plume3'}),
     ('Epine4', (4, 0), e4, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume4'}),
     ('Plume4a', (4, -1), p4a, (0.94, 0.96, 1.04), {'retour': retour_p4(1), 'drapeau_repos': REPOS_P4}),
@@ -262,7 +263,7 @@ for nom, (gx, gy), g, c, ex in salles:
     for k, v in ex.items():
         # Écrit sans guillemets : booléens, Vector2, tableaux et nombres à virgule (ex. 14.0).
         # ATTENTION : une mélodie comme "132" doit rester un TEXTE (sinon Godot ne la lit pas).
-        brut = v in ('true', 'false') or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
+        brut = v in ('true', 'false') or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(', 'PackedInt32Array(')) or ('.' in v and v.replace('.', '').isdigit())
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v))
     m = re.match(r'PlumeD?(\d)', nom)   # plumes de pierre gravées au mur = numéro de la plume (décor repris de la façade)
     if m:

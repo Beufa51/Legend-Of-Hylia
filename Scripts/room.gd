@@ -98,6 +98,7 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 # PICS « DOUX » (salle 3c) : chaque BANDE de pics (groupe de cases Z voisines) sort d'un bloc, une bande sur deux décalée d'un demi-cycle ;
 # un bloc poussé dans une bande la COINCE (elle ne sort plus) ; des pics sortis renvoient seulement sur la dernière case sûre (rien n'est remis à zéro).
 @export var pics_doux := false
+@export var colonnes_pics_fixes := PackedInt32Array()   # colonnes où les pics restent TOUJOURS sortis (un mur de pics : seul un bloc peut les écraser)
 @export var drapeau_reflet := ""     # levé quand toutes les dalles du reflet `a` sont occupées en même temps
 @export var niches := true           # niches voûtées à barreaux dans le mur du haut (faux = mur nu : évite de confondre avec une herse)
 # CHEMIN DE RUNES (énigme sans texte) : cases "x y" d'une ligne de runes gravées au sol, DANS L'ORDRE (du mécanisme vers la porte).
@@ -498,6 +499,9 @@ func _poser_objets() -> void:
 					if pics_doux:
 						dec = 0.0 if x < TAILLE_SALLE.x / TUILE / 2 else 0.5   # bande de gauche / bande de droite, en alternance
 					pics.initialiser(_images_serie("pics_", 5), periode_pics, dec, y == _premiere_rangee_pics(x))
+					pics.fixe = colonnes_pics_fixes.has(x)
+					if pics_doux:
+						_rainurer_pics(x, y, pos)
 					_pics[Vector2i(x, y)] = pics
 				"~":
 					_poser_canal(x, y, pos, "~")   # eau (bloque), même rendu que les flaques
@@ -847,6 +851,8 @@ func reinitialiser() -> void:
 	_maj_levres()
 	_maj_boutons()
 	_progression = 0
+	for c in _cloches.values():
+		c.eteindre()
 	for sentinelle in _sentinelles:
 		sentinelle.reinitialiser()
 	for miroir in _miroirs.values():
@@ -1044,6 +1050,26 @@ func _surveiller_pics() -> void:
 
 
 # --- Pics doux (salle 3c) -----------------------------------------------------------
+
+# Rainure de pierre sur les bords d'une bande de pics (côtés sans pics) : on lit un mécanisme encastré dans le sol.
+func _rainurer_pics(x: int, y: int, pos: Vector2) -> void:
+	for cote in [-1, 1]:
+		var v := Vector2i(x + cote, y)
+		if v.y < layout.size() and v.x >= 0 and v.x < layout[v.y].length() and layout[v.y][v.x] == "Z":
+			continue
+		var bord := 0.0 if cote < 0 else TUILE - 2.0
+		var sombre_r := ColorRect.new()
+		sombre_r.color = Color(0.06, 0.06, 0.09, 0.75)
+		sombre_r.size = Vector2(1, TUILE)
+		sombre_r.position = pos + Vector2(bord + (1.0 if cote < 0 else 0.0), 0)
+		sombre_r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(sombre_r)
+		var clair := ColorRect.new()
+		clair.color = Color(0.75, 0.78, 0.85, 0.35)
+		clair.size = Vector2(1, TUILE)
+		clair.position = pos + Vector2(bord + (0.0 if cote < 0 else 1.0), 0)
+		clair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(clair)
 var _case_sure := Vector2i(-1, -1)   # dernière case hors des pics où le joueur avait les pieds
 
 # Touché : petit cri, éclair rouge, le joueur est ramené sur sa dernière case sûre. La mélodie et le bloc ne bougent pas.
@@ -1491,6 +1517,8 @@ func jouer_melodie() -> void:
 		return
 	_en_chant = true
 	_progression = 0
+	for c in _cloches.values():
+		c.eteindre()
 	for i in melodie.length():
 		var cloche: Cloche = _cloches.get(int(melodie[i]))
 		if cloche != null:
@@ -1505,15 +1533,19 @@ func cloche_frappee(note: int) -> void:
 		return
 	if str(note) == melodie[_progression]:
 		_progression += 1
+		var juste: Cloche = _cloches.get(note)
+		if juste != null:
+			juste.activer()
 		if _progression == melodie.length():
 			_progression = 0
 			for cloche in _cloches.values():
 				cloche.dorer()
 			Etat.poser(drapeau_melodie)
 		return
-	# Fausse note : toutes les cloches rougissent et on recommence depuis le début
+	# Fausse note : toutes les cloches s'éteignent, rougissent, et on recommence depuis le début
 	_progression = 0
 	for cloche in _cloches.values():
+		cloche.eteindre()
 		cloche.rougir()
 	_jouer_son(SON_ERREUR, -6.0)
 

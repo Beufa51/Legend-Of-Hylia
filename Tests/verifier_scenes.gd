@@ -144,8 +144,9 @@ func _tester_scene(chemin: String) -> void:
 			else:
 				salle3c.reinitialiser()
 				var bloc3c = salle3c._blocs[0]
-				for i in 4:
-					await bloc3c.pousser(Vector2i.LEFT)
+				if not salle3c._pics[Vector2i(7, 8)].fixe or salle3c._pics[Vector2i(17, 8)].fixe:
+					_erreurs.append("Plume3c : la bande de gauche doit être fixe (toujours sortie), pas la droite")
+				await bloc3c.pousser(Vector2i.LEFT)
 				var coinces := 0
 				for c in salle3c._pics:
 					if salle3c._pics[c].coince:
@@ -154,10 +155,17 @@ func _tester_scene(chemin: String) -> void:
 					_erreurs.append("Plume3c : bloc en %s, %d pics coincés (attendu (8,6), 21)" % [bloc3c.case, coinces])
 				else:
 					salle3c.reinitialiser()
-					if salle3c._pics[Vector2i(7, 8)].coince or bloc3c.case != Vector2i(12, 6):
+					if salle3c._pics[Vector2i(7, 8)].coince or bloc3c.case != Vector2i(9, 6):
 						_erreurs.append("Plume3c : R doit remettre le bloc et décoincer les pics")
 					else:
-						print("OK  Plume3c : le bloc coince une bande de pics, R la remet en marche")
+						salle3c.cloche_frappee(3)
+						salle3c.cloche_frappee(1)
+						var allumees: bool = salle3c._cloches[3]._active and salle3c._cloches[1]._active and not salle3c._cloches[5]._active
+						salle3c.cloche_frappee(2)   # fausse note : tout s'éteint
+						if not allumees or salle3c._cloches[3]._active:
+							_erreurs.append("Plume3c : les cloches justes doivent rester allumées, et s'éteindre sur une fausse note")
+						else:
+							print("OK  Plume3c : mur de pics écrasé par le bloc, R le remet ; cloches justes allumées")
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")

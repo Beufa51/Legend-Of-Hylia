@@ -26,6 +26,9 @@ var _plaque: Sprite2D
 var _base_lumiere := 0.0     # lumière au repos (un peu dans le noir, pour la repérer)
 var _dernier_coup := -1000   # en millisecondes : un coup de lance ne compte qu'une fois
 var _tween: Tween
+var _active := false         # bonne note déjà jouée dans la mélodie en cours : la cloche RESTE allumée de sa couleur
+var _base_initiale := 0.0
+var _pulse: Tween
 
 
 func initialiser(une_salle: Node2D, sa_note: int, dans_le_noir: bool, support: Texture2D, image: Texture2D) -> void:
@@ -49,6 +52,7 @@ func initialiser(une_salle: Node2D, sa_note: int, dans_le_noir: bool, support: T
 	_pivot.add_child(_image)
 	# Lumière : éteinte en salle claire, petite lueur en salle sombre
 	_base_lumiere = 0.35 if dans_le_noir else 0.0
+	_base_initiale = _base_lumiere
 	_lumiere = Lumiere.creer(COULEURS[clampi(note - 1, 0, 4)].lerp(Color(1, 0.85, 0.5), 0.5), 0.6, _base_lumiere)
 	_lumiere.position = Vector2(8, 9)
 	add_child(_lumiere)
@@ -116,8 +120,40 @@ func rougir() -> void:
 
 # Énigme résolue : la cloche reste dorée et lumineuse.
 func dorer() -> void:
+	_active = false
+	if _pulse:
+		_pulse.kill()
+		_pulse = null
 	_repos = DOREE
 	_base_lumiere = 0.6
+	_au_repos()
+
+
+# Bonne note : la cloche reste allumée de sa couleur (et sa plaque aussi), avec une douce pulsation : on VOIT où on en est.
+func activer() -> void:
+	_active = true
+	var c: Color = COULEURS[clampi(note - 1, 0, 4)]
+	_repos = c.lerp(Color(1, 1, 1), 0.45) * 1.35
+	_base_lumiere = 0.8
+	if _pulse:
+		_pulse.kill()
+	_pulse = create_tween().set_loops()
+	_pulse.tween_property(_lumiere, "texture_scale", 0.75, 0.6)
+	_pulse.tween_property(_lumiere, "texture_scale", 0.6, 0.6)
+
+
+# Fausse note / mélodie réécoutée / R : la cloche s'éteint (sauf si l'énigme est déjà résolue).
+func eteindre() -> void:
+	if not _active:
+		return
+	_active = false
+	if _pulse:
+		_pulse.kill()
+		_pulse = null
+	_lumiere.texture_scale = 0.6
+	if _repos != DOREE:
+		_repos = NORMALE
+		_base_lumiere = _base_initiale
 	_au_repos()
 
 
@@ -128,7 +164,7 @@ func plaque_eclat(c: Color) -> void:
 
 
 func _au_repos() -> void:
-	plaque_eclat(NORMALE)
+	plaque_eclat(COULEURS[clampi(note - 1, 0, 4)] if _active else NORMALE)
 	_image.modulate = _repos
 	_lumiere.energy = _base_lumiere
 
