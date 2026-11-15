@@ -318,7 +318,7 @@ func _poser_mur(x: int, y: int) -> void:
 	var pos := Vector2(x * TUILE, y * TUILE)
 	if not (_est_mur(x - 1, y) or _est_mur(x + 1, y) or _est_mur(x, y - 1) or _est_mur(x, y + 1)):
 		_poser(_nom_sol(x, y), pos)
-		_poser("pilier", pos - Vector2(0, 8))
+		_poser("pilier", pos - Vector2(0, _image("pilier").get_height() - TUILE))   # pilier Gemini (plus haut qu'une case : il dépasse vers le haut)
 		return
 	var bas := _face_bas(x, y)
 	if bas or (_face_bas(x, y + 1) and _est_mur(x, y - 1)):

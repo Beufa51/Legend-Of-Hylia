@@ -5,13 +5,17 @@ class_name Sentinelle
 # Elle peut tourner la tête d'un quart de tour (sens des aiguilles d'une montre) toutes les `periode` secondes ;
 # la tête tourne en douceur. C'est la salle (room.gd) qui calcule le CÔNE de vision et qui repère le joueur.
 
+const TUILE_S := 16
 const ORDRE := [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]   # rotation horaire
 const PREAVIS := 0.6           # secondes avant de tourner : le cône clignote pour prévenir
 const VITESSE_ROTATION := 7.0  # radians par seconde (un quart de tour ≈ 0,2 s)
 # Le garde : image Idle du pack, 4 cases de 16 px (colonnes : bas, haut, gauche, droite)
 const IMAGE_GARDE := "res://Assets/Ninja_adventure/Actor/Character/GladiatorBlue/SeparateAnim/Idle.png"
 const COLONNE := {Vector2i.DOWN: 0, Vector2i.UP: 1, Vector2i.LEFT: 2, Vector2i.RIGHT: 3}
-const PIERRE := Color(0.78, 0.8, 0.9)      # teinte « statue de pierre » du garde
+const PIERRE := Color(0.78, 0.8, 0.9)      # teinte « statue de pierre » du garde (ancien sprite du pack)
+# Statue de garde Gemini (Outils/traiter_lot_donjon.py) : une image par direction (la gauche = la droite en miroir)
+const IMAGES_STATUE := {Vector2i.DOWN: "res://Assets/Gemini/tuiles/sentinelle_bas.png", Vector2i.UP: "res://Assets/Gemini/tuiles/sentinelle_haut.png",
+	Vector2i.RIGHT: "res://Assets/Gemini/tuiles/sentinelle_droite.png", Vector2i.LEFT: "res://Assets/Gemini/tuiles/sentinelle_droite.png"}
 # Bulles au-dessus de la tête (Ui/Emote du pack) : « ? » = attiré par une flamme, « ! » = joueur repéré
 const BULLE_QUESTION := "res://Assets/Ninja_adventure/Ui/Emote/emote23.png"
 const BULLE_ALERTE := "res://Assets/Ninja_adventure/Ui/Emote/emote22.png"
@@ -27,6 +31,7 @@ var _sprite: Sprite2D
 var _bulle: Sprite2D
 var _lumiere: PointLight2D
 var endormie := false
+var _statue := {}        # direction -> texture (vide = ancien sprite du pack)
 
 
 # `calque` : noeud où poser la bulle (au-dessus de l'obscurité, pour qu'on la voie même dans le noir).
@@ -34,26 +39,26 @@ func initialiser(sa_case: Vector2i, dir: Vector2i, sa_periode: float, dans_le_no
 	case = sa_case
 	_direction_depart = dir
 	periode = sa_periode
-	# Petit socle de pierre sous les pieds : « c'est une statue »
-	var socle := ColorRect.new()
-	socle.color = Color(0.22, 0.22, 0.28)
-	socle.position = Vector2(1, 11)
-	socle.size = Vector2(14, 5)
-	add_child(socle)
-	var haut_socle := ColorRect.new()
-	haut_socle.color = Color(0.45, 0.46, 0.55)
-	haut_socle.position = Vector2(1, 11)
-	haut_socle.size = Vector2(14, 1)
-	add_child(haut_socle)
+	for d in IMAGES_STATUE:
+		var t = load(IMAGES_STATUE[d])
+		if t != null:
+			_statue[d] = t
 	_sprite = Sprite2D.new()
-	_sprite.texture = load(IMAGE_GARDE)
 	_sprite.centered = false
-	_sprite.region_enabled = true
-	_sprite.position = Vector2(0, -4)   # le garde est debout sur son socle
-	_sprite.modulate = PIERRE
+	if _statue.is_empty():
+		# Ancien garde du pack sur un petit socle de pierre
+		var socle := ColorRect.new()
+		socle.color = Color(0.22, 0.22, 0.28)
+		socle.position = Vector2(1, 11)
+		socle.size = Vector2(14, 5)
+		add_child(socle)
+		_sprite.texture = load(IMAGE_GARDE)
+		_sprite.region_enabled = true
+		_sprite.position = Vector2(0, -4)
+		_sprite.modulate = PIERRE
 	add_child(_sprite)
 	_bulle = Sprite2D.new()
-	_bulle.position = position + Vector2(8, -14)
+	_bulle.position = position + Vector2(8, -14 if _statue.is_empty() else -26)
 	_bulle.visible = false
 	calque.add_child(_bulle)
 	_lumiere = Lumiere.creer(Color(1.0, 0.7, 0.35), 0.35, 0.8 if dans_le_noir else 0.0)
@@ -80,7 +85,13 @@ func avancer(delta: float) -> void:
 # Direction choisie par la salle : la direction normale, ou vers une flamme (`attiree` = vrai).
 func regarder(dir: Vector2i, attiree: bool = false) -> void:
 	direction = dir
-	_sprite.region_rect = Rect2(COLONNE[dir] * 16, 0, 16, 16)
+	if _statue.is_empty():
+		_sprite.region_rect = Rect2(COLONNE[dir] * 16, 0, 16, 16)
+	else:
+		var t: Texture2D = _statue[dir]
+		_sprite.texture = t
+		_sprite.flip_h = dir == Vector2i.LEFT
+		_sprite.position = Vector2(8.0 - t.get_width() / 2.0, TUILE_S - t.get_height())   # debout sur sa case
 	_lumiere.position = Vector2(8, 8) + Vector2(dir) * 8.0
 	if attiree:
 		_montrer_bulle(BULLE_QUESTION)
@@ -110,7 +121,7 @@ func _montrer_bulle(chemin: String) -> void:
 # Statue au repos (la plume est obtenue) : elle ne surveille plus.
 func endormir() -> void:
 	endormie = true
-	_sprite.modulate = PIERRE.darkened(0.35)
+	_sprite.modulate = (PIERRE if _statue.is_empty() else Color.WHITE).darkened(0.35)
 	_lumiere.energy = 0.0
 	_bulle.visible = false
 
