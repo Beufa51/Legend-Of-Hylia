@@ -254,6 +254,7 @@ func _creer_decor() -> void:
 	_poser_portes()
 	_poser_details()
 	_poser_vie_gouffre()
+	_poser_vie_salle()
 	if ciel_ouvert:
 		var ciel := CielOuvert.new()
 		ciel.cases_etoiles = _cases_ciel
@@ -1524,6 +1525,15 @@ func _poser_vie_gouffre() -> void:
 	var vie := GouffreVie.new()
 	add_child(vie)
 	vie.initialiser(Rect2(haut * TUILE, (bas - haut) * TUILE), layout)
+
+
+# Vie de la salle (poussière, détails au sol, toiles, gouttes, chauve-souris, rayons) : pas dans les fonds peints ni à ciel ouvert.
+func _poser_vie_salle() -> void:
+	if fond_image != "" or ciel_ouvert or layout.size() < 8:
+		return
+	var vie := VieSalle.new()
+	add_child(vie)
+	vie.initialiser(self)
 
 
 func _mur_haut_libre(x: int) -> bool:
