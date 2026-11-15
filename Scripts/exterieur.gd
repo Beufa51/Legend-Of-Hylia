@@ -53,6 +53,7 @@ const OBJETS_G := {
 	"r": ["v_roche", Vector2i(1, 1), true, 0.0],
 	"j": ["v_banniere", Vector2i(1, 2), true, 0.1],
 	"W": ["v_puits", Vector2i(2, 2), true, 0.0],
+	"E": ["v_etal", Vector2i(3, 2), true, 0.0],   # étal de marché Gemini (table ronde + auvent rayé)
 	"e": ["v_cloture", Vector2i(2, 1), true, 0.0],   # clôture (2 cases de large)
 	"z": ["v_poteau", Vector2i(1, 1), true, 0.0],    # poteau de clôture
 	# Maisons du pack « Village Top Down » : emprise = les murs (le toit dépasse vers le haut) ; la porte est sur la dernière rangée (colonne dans PORTES_MAISONS)

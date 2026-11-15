@@ -282,7 +282,12 @@ func _creer_decor() -> void:
 # Tuile de sol (pack donjon Craftpix) : gris-bleu uni comme dans Zelda SNES, avec de rares dalles gravées. Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
 func _nom_sol(x: int, y: int) -> String:
 	if layout[y][x] == "i":
-		return "glace_1" if (x * 3 + y * 5) % 4 else "glace_2"
+		var v := (x * 3 + y * 5) % 9   # 4 dalles fissurées au hasard, 2 dalles à étincelle plus rares (Outils/traiter_lot3.py)
+		if v == 0:
+			return "glace_5"
+		if v == 4:
+			return "glace_6"
+		return "glace_%d" % (v % 4 + 1)
 	var h := (x * 7 + y * 13 + x * y * 3) % 37
 	var lettre := layout[y][x]
 	if ciel_etoile and lettre == ".":   # cour du château : dalles de pierre claire et chaude, joints décalés (Outils/fabriquer_sol_corps.py)
@@ -1631,7 +1636,9 @@ func _poser_frise() -> void:
 		var ys := _haut_du_sol(x)
 		if ys < 0:
 			continue
-		var rune := _sprite_dans(parent, "frise_runes_%d" % ((x * 5 + x / 3) % 4 + 1), Vector2(x * TUILE, (ys - 2) * TUILE + 3))
+		# bandeau de symboles dorés (plume, coq, losanges, zigzag) coupé en 7 colonnes qui se suivent ; un bandeau différent tous les 7 cases
+		var bandeau := ((x - 2) / 7 + grille.x * 2 + grille.y * 3 + 4000) % 4 + 1
+		var rune := _sprite_dans(parent, "frise_%d_%d" % [bandeau, (x - 2) % 7], Vector2(x * TUILE, (ys - 2) * TUILE + 2))
 		rune.modulate.a = 0.78
 		var tw := create_tween().set_loops()
 		tw.tween_interval(x * 0.12)
