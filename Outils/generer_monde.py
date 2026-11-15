@@ -108,7 +108,7 @@ for y in (4, 5, 6):
     for x in range(2, 23): put(p3b, 'q', (x, y))                              # le gouffre
 put(p3b, '3', (17, 2))                                                      # la cloche 3, au nord du gouffre
 put(p3b, 'X', (17, 8), (14, 8), (20, 9))                                    # les 3 blocs (au sud)
-put(p3b, '2', (5, 8)); put(p3b, '1', (4, 10)); put(p3b, '4', (21, 7))
+put(p3b, '2', (5, 9)); put(p3b, '1', (5, 11)); put(p3b, '4', (20, 11))   # les cloches sont hautes (34 px) : loin du gouffre, sinon elles le chevauchent
 put(p3b, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (22, 10)); put(p3b, 'O', (3, 2)); put(p3b, 'B', (9, 2), (15, 2))
 
 # 3c (la pointe) : SALLE SOMBRE, 5 cloches, 5 notes : il faut repérer dans le noir les cloches qui s'allument.
