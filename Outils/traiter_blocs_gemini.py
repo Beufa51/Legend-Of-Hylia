@@ -157,3 +157,15 @@ for y in range(16):
             vide.putpixel((x, y), (146, 124, 56, 255))
 vide.save(SORTIE + "marque.png")
 print("blocs Gemini découpés :", list(sources))
+
+# La CASE REBOUCHÉE (énigme du gouffre) prend la couleur et le style du BLOC : on reprend sa face supérieure (cadre biseauté + panneau), étirée sur toute la case.
+# A lancer APRÈS fabriquer_trou.py (qui écrit une dalle grise de repli) : ce fichier la remplace.
+bloc = Image.open(SORTIE + "bloc_pierre.png").convert("RGBA")
+dessus = bloc.crop((0, 0, 16, 10)).resize((16, 16), Image.NEAREST)
+# quelques éclats et une fissure (comme le bloc usé) pour ne pas avoir un aplat, et un liseré d'or terni sur le panneau : le chemin est fait des blocs
+for (x, y) in ((4, 5), (5, 5), (5, 6), (10, 9), (11, 9), (11, 10), (7, 12)):
+    r, g, b, a = dessus.getpixel((x, y)); dessus.putpixel((x, y), (int(r * 0.7), int(g * 0.7), int(b * 0.72), a))
+for (x, y) in ((9, 4), (3, 10), (12, 7)):
+    r, g, b, a = dessus.getpixel((x, y)); dessus.putpixel((x, y), (min(255, r + 22), min(255, g + 22), min(255, b + 20), a))
+dessus.save(SORTIE + "trou_comble.png")
+print("trou_comble.png = dessus du bloc")
