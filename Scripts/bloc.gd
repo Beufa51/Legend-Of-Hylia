@@ -67,8 +67,9 @@ func pousser(dir: Vector2i) -> void:
 
 # Le bloc comble un trou : il reste en place, de niveau avec le sol, on peut marcher dessus.
 func combler() -> void:
-	z_index = -1
-	modulate = Color(0.8, 0.86, 1.0)
+	# le bloc garde son aspect (on voit qu'on marche sur le bloc) ; seule sa collision disparaît
+	z_index = 0
+	modulate = Color(1, 1, 1)
 	_collision.set_deferred("disabled", true)
 
 

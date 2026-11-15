@@ -253,6 +253,7 @@ func _creer_decor() -> void:
 	_poser_escaliers()   # (après les tapis : l'escalier se pose par-dessus)
 	_poser_portes()
 	_poser_details()
+	_poser_vie_gouffre()
 	if ciel_ouvert:
 		var ciel := CielOuvert.new()
 		ciel.cases_etoiles = _cases_ciel
@@ -697,7 +698,6 @@ func bloc_arrive(bloc: Bloc) -> void:
 	trou["corps"].process_mode = Node.PROCESS_MODE_DISABLED
 	for c in trou["corps"].get_children():
 		c.set_deferred("disabled", true)
-	trou["sprite"].visible = false
 	trou["pont"] = bloc
 	_jouer_effet("res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact4.wav", -4.0)
 
@@ -1512,6 +1512,20 @@ func _sprite_dans(parent: Node, nom: String, pos: Vector2) -> Sprite2D:
 
 
 # Vrai si la dernière ligne du mur du haut en (x) est un mur avec du sol juste en dessous.
+# Un gouffre (cases « q ») reçoit de la vie : brume, lueurs, poussière, cailloux (voir gouffre_vie.gd).
+func _poser_vie_gouffre() -> void:
+	if _eaux_a_combler.is_empty():
+		return
+	var haut := Vector2(1e9, 1e9)
+	var bas := Vector2(-1e9, -1e9)
+	for c in _eaux_a_combler.keys():
+		haut = Vector2(minf(haut.x, c.x), minf(haut.y, c.y))
+		bas = Vector2(maxf(bas.x, c.x + 1), maxf(bas.y, c.y + 1))
+	var vie := GouffreVie.new()
+	add_child(vie)
+	vie.initialiser(Rect2(haut * TUILE, (bas - haut) * TUILE), layout)
+
+
 func _mur_haut_libre(x: int) -> bool:
 	return _est_mur(x, EPAISSEUR - 1) and _est_sol(x, EPAISSEUR)
 
