@@ -63,6 +63,23 @@ def coq_gemini():
     return p
 
 
+HAUTEUR_BLOC = 21   # hauteur de l'image d'un bloc debout (16 de large) : face supérieure (10 px) + face avant étirée ; le pied du bloc reste sur sa case (Bloc décale l'image vers le haut)
+
+
+def grandir(im):
+    """Étire la FACE AVANT du bloc (rangées 10 à 15) pour lui donner de la hauteur, sans toucher à la face supérieure."""
+    haut = im.crop((0, 0, 16, 10))
+    avant = im.crop((0, 10, 16, 16)).resize((16, HAUTEUR_BLOC - 10), Image.NEAREST)
+    grand = Image.new("RGBA", (16, HAUTEUR_BLOC), (0, 0, 0, 0))
+    grand.paste(haut, (0, 0)); grand.paste(avant, (0, 10))
+    # un trait plus clair au milieu de la face avant (arête d'une dalle), pour ne pas avoir un grand aplat
+    for x in range(1, 15):
+        r, g, b, a = grand.getpixel((x, 15))
+        if a:
+            grand.putpixel((x, 15), (min(255, r + 14), min(255, g + 14), min(255, b + 14), a))
+    return grand
+
+
 def symbole_coq(im, nom, couleur, rect, origine):
     """Vide le panneau de la face supérieure (Gemini y avait gravé un coq / une rune, illisibles à 16 px) : le bloc est SANS SYMBOLE.
     L'état « posé sur sa marque » se voit au cadre du panneau, qui devient doré (blocs actif et enfoncé)."""
@@ -113,6 +130,8 @@ for nom, im in brut.items():
         symbole_coq(im, nom, couleur_enfonce, (3, 12, 1, 10), (4, 2))
     else:
         symbole_coq(im, nom, couleur_bloc, (4, 11, 2, 8), (4, 2))
+    if nom != "bloc_pierre_enfonce":
+        im = grandir(im)          # blocs debout : plus hauts (16x21)
     im.save(SORTIE + nom + ".png")
 # plaques au sol : planche n°1 (même découpe que la v1 : 5 pièces ; plaques = les 2 dernières)
 img1 = np.array(Image.open(SRC_PLAQUES).convert("RGB"))

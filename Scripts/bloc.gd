@@ -29,6 +29,7 @@ func initialiser(une_salle: Node2D, sa_case: Vector2i, texture: Texture2D, textu
 	var sprite := Sprite2D.new()
 	sprite.texture = texture
 	sprite.centered = false
+	sprite.position = Vector2(0, TUILE - texture.get_height())   # un bloc plus haut que large : il dépasse vers le haut, son pied reste sur sa case
 	add_child(sprite)
 	_sprite = sprite
 	_texture_normale = texture
@@ -78,6 +79,7 @@ func combler() -> void:
 	_collision.set_deferred("disabled", true)
 	if _texture_enfonce != null:
 		_sprite.texture = _texture_enfonce
+		_sprite.position = Vector2.ZERO     # le bloc comblé est plat (au niveau du sol)
 	var haut := position
 	var tween := create_tween()
 	_tween_chute = tween
@@ -126,6 +128,7 @@ func reinitialiser() -> void:
 	modulate = Color(1, 1, 1)
 	_comble = false
 	_sprite.texture = _texture_normale
+	_sprite.position = Vector2(0, TUILE - _texture_normale.get_height())
 	_collision.set_deferred("disabled", false)
 	salle.liberer(case)
 	case = depart
