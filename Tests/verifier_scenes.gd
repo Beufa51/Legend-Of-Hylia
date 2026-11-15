@@ -136,6 +136,28 @@ func _tester_scene(chemin: String) -> void:
 					_erreurs.append("Plume3b : R doit rouvrir le gouffre")
 				else:
 					print("OK  Plume3b : 3 blocs comblent une colonne du gouffre, R le rouvre")
+		# Plume 3c : le bloc poussé dans la bande de gauche la coince (21 pics rentrés pour de bon), la droite tourne encore ; R la décoince
+		if chemin.ends_with("world.tscn"):
+			var salle3c = scene.get_node_or_null("Plume3c")
+			if salle3c == null or salle3c._blocs.size() != 1 or salle3c._pics.size() != 42 or not salle3c.pics_doux or salle3c.sombre:
+				_erreurs.append("Plume3c : il faut 1 bloc, 42 pics doux, salle claire")
+			else:
+				salle3c.reinitialiser()
+				var bloc3c = salle3c._blocs[0]
+				for i in 4:
+					await bloc3c.pousser(Vector2i.LEFT)
+				var coinces := 0
+				for c in salle3c._pics:
+					if salle3c._pics[c].coince:
+						coinces += 1
+				if bloc3c.case != Vector2i(8, 6) or coinces != 21 or salle3c._pics[Vector2i(17, 8)].coince:
+					_erreurs.append("Plume3c : bloc en %s, %d pics coincés (attendu (8,6), 21)" % [bloc3c.case, coinces])
+				else:
+					salle3c.reinitialiser()
+					if salle3c._pics[Vector2i(7, 8)].coince or bloc3c.case != Vector2i(12, 6):
+						_erreurs.append("Plume3c : R doit remettre le bloc et décoincer les pics")
+					else:
+						print("OK  Plume3c : le bloc coince une bande de pics, R la remet en marche")
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")

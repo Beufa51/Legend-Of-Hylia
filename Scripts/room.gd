@@ -95,6 +95,9 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 @export var drapeau_cle := ""        # la clé qui ouvre les portes à serrure E de cette salle
 @export var drapeau_serrure := ""    # levé quand une porte E est ouverte (elle s'ouvre avec ce drapeau)
 @export var periode_pics := 2.4      # durée d'un cycle des pics Z (secondes)
+# PICS « DOUX » (salle 3c) : chaque BANDE de pics (groupe de cases Z voisines) sort d'un bloc, une bande sur deux décalée d'un demi-cycle ;
+# un bloc poussé dans une bande la COINCE (elle ne sort plus) ; des pics sortis renvoient seulement sur la dernière case sûre (rien n'est remis à zéro).
+@export var pics_doux := false
 @export var drapeau_reflet := ""     # levé quand toutes les dalles du reflet `a` sont occupées en même temps
 @export var niches := true           # niches voûtées à barreaux dans le mur du haut (faux = mur nu : évite de confondre avec une herse)
 # CHEMIN DE RUNES (énigme sans texte) : cases "x y" d'une ligne de runes gravées au sol, DANS L'ORDRE (du mécanisme vers la porte).
@@ -491,7 +494,10 @@ func _poser_objets() -> void:
 					pics.position = pos
 					add_child(pics)
 					# une colonne sur deux est décalée d'un demi-cycle : on passe entre elles au bon moment
-					pics.initialiser(_images_serie("pics_", 5), periode_pics, fposmod(x * 0.5, 1.0), y == _premiere_rangee_pics(x))
+					var dec := fposmod(x * 0.5, 1.0)
+					if pics_doux:
+						dec = 0.0 if x < TAILLE_SALLE.x / TUILE / 2 else 0.5   # bande de gauche / bande de droite, en alternance
+					pics.initialiser(_images_serie("pics_", 5), periode_pics, dec, y == _premiere_rangee_pics(x))
 					_pics[Vector2i(x, y)] = pics
 				"~":
 					_poser_canal(x, y, pos, "~")   # eau (bloque), même rendu que les flaques
@@ -756,6 +762,9 @@ func _trou_ou_mur(x: int, y: int) -> bool:
 # Un bloc poussé dans un trou « q » TOMBE dedans (derrière le bord, avec de la poussière) et le REBOUCHE : la case devient une dalle de sol, le bloc a disparu.
 func bloc_arrive(bloc: Bloc) -> void:
 	var cellule := bloc.case
+	if pics_doux and _pics.has(cellule) and not _pics[cellule].coince:
+		_coincer_bande(cellule)
+		return
 	if not _eaux_a_combler.has(cellule) or _eaux_a_combler[cellule]["pont"] != null:
 		return
 	var trou: Dictionary = _eaux_a_combler[cellule]
@@ -792,6 +801,8 @@ func case_libre(cellule: Vector2i) -> bool:
 		return false
 	if _eaux_a_combler.has(cellule):
 		return true   # un trou : le bloc y entre et le comble ; une fois comblé, c'est du sol
+	if pics_doux and _pics.has(cellule):
+		return true   # un bloc peut entrer dans les pics : il coince leur mécanisme
 	return ".TPFXVouziar".contains(layout[cellule.y][cellule.x])
 
 
@@ -858,6 +869,8 @@ func reinitialiser() -> void:
 		dalle.remettre()
 	_case_pied = Vector2i(-1, -1)
 	_pique = false
+	for pics in _pics.values():
+		pics.decoincer()
 
 
 # --- Dalles de couleur -----------------------------------------------------------
@@ -1022,7 +1035,52 @@ func _surveiller_pics() -> void:
 	var c := Vector2i(floori(pied.x / TUILE), floori(pied.y / TUILE))
 	if _pics.has(c) and _pics[c].dangereux:
 		_pique = true
-		Etat.pique.emit(retour)
+		if pics_doux:
+			_piquer_doucement(joueur)
+		else:
+			Etat.pique.emit(retour)
+	elif pics_doux and not _pics.has(c):
+		_case_sure = c
+
+
+# --- Pics doux (salle 3c) -----------------------------------------------------------
+var _case_sure := Vector2i(-1, -1)   # dernière case hors des pics où le joueur avait les pieds
+
+# Touché : petit cri, éclair rouge, le joueur est ramené sur sa dernière case sûre. La mélodie et le bloc ne bougent pas.
+func _piquer_doucement(joueur: Node2D) -> void:
+	_jouer_effet("res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Hit1.wav", -2.0)
+	joueur.set_physics_process(false)
+	joueur.velocity = Vector2.ZERO
+	var sprite: Node2D = joueur.get("sprite")
+	if sprite != null:
+		sprite.modulate = Color(1.0, 0.35, 0.35)
+	var cible := joueur.global_position
+	if _case_sure.x >= 0:
+		cible = to_global(Vector2(_case_sure) * TUILE + Vector2(TUILE / 2.0, TUILE / 2.0 - 5.0))
+	var tw := create_tween()
+	tw.tween_interval(0.15)
+	tw.tween_property(joueur, "global_position", cible, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if sprite != null:
+		tw.tween_property(sprite, "modulate", Color.WHITE, 0.25)
+	tw.tween_callback(func() -> void:
+		joueur.set_physics_process(true)
+		_pique = false)
+
+
+# Le bloc est entré dans une bande de pics : toute la bande (cases Z voisines) se bloque, rentrée, pour de bon (jusqu'à R).
+func _coincer_bande(depart: Vector2i) -> void:
+	var a_voir := [depart]
+	var vus := {depart: true}
+	while not a_voir.is_empty():
+		var c: Vector2i = a_voir.pop_back()
+		_pics[c].coincer(c == depart)
+		for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var v: Vector2i = c + d
+			if _pics.has(v) and not vus.has(v):
+				vus[v] = true
+				a_voir.append(v)
+	_jouer_effet("res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact5.wav", -3.0)
+	Etat.secousse.emit()
 
 
 # La rangée la plus haute d'une colonne de pics (c'est elle qui fait le bruit).

@@ -101,15 +101,16 @@ layout = PackedStringArray("###########DDD###########", "###########DDD#########
 
 [node name="Plume3c" parent="." instance=ExtResource("2")]
 grille = Vector2i(3, -3)
-teinte = Color(1.0, 1.0, 1.0, 1)
-sombre = true
+teinte = Color(1.0, 0.97, 0.94, 1)
+pics_doux = true
+periode_pics = 2.8
 melodie = "31524"
 drapeau_melodie = "p3_chant3"
 drapeau_porte = "p3_chant3"
 drapeau_gemme = "plume3"
 plumes_gravees = 3
 drapeau_plumes_gravees = "plume3"
-layout = PackedStringArray("#########################", "#########################", "##VV.................VV##", "##V.........G.........V##", "##........TTTTT........##", "###########DDD###########", "##..............4......##", "##..3...............2..##", "##.....................##", "##..........C..........##", "##......1.......5......##", "##VV.................VV##", "###########...###########", "###########...###########")
+layout = PackedStringArray("#########################", "#########################", "##VV........G........VV##", "##V...................V##", "###########DDD###########", "##B..VZZZ.......ZZZV..B##", "##....ZZZ...X...ZZZ....##", "##.3..ZZZ.......ZZZ..5.##", "##....ZZZ.......ZZZ....##", "##....ZZZ...C...ZZZ....##", "##....ZZZ..TTT..ZZZ....##", "##.2..ZZZ.1TTT..ZZZ..4.##", "###########...###########", "###########...###########")
 
 [node name="Epine4" parent="." instance=ExtResource("2")]
 grille = Vector2i(4, 0)

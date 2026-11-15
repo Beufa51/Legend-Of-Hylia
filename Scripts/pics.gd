@@ -14,6 +14,8 @@ var son := false         # cette rangée de pics fait du bruit en sortant (une s
 var _sprite: Sprite2D
 var _images: Array[Texture2D] = []
 var _temps := 0.0
+var coince := false      # un bloc est entré dans la bande : le mécanisme est bloqué, les pics restent rentrés
+var _poussiere: CPUParticles2D
 
 
 func initialiser(images: Array[Texture2D], une_periode: float, un_decalage: float, avec_son: bool) -> void:
@@ -30,6 +32,10 @@ func initialiser(images: Array[Texture2D], une_periode: float, un_decalage: floa
 
 func _process(delta: float) -> void:
 	_temps += delta
+	if coince:
+		dangereux = false
+		_sprite.texture = _images[0]
+		return
 	var t := fposmod(_temps / periode - decalage, 1.0)   # 0 -> 1 sur un cycle
 	# image : rentrés, petites pointes (avertissement), sortie, sortis, rentrée
 	var image := 0
@@ -57,3 +63,42 @@ func _process(delta: float) -> void:
 			lecteur.play()
 			lecteur.finished.connect(lecteur.queue_free)
 	_sprite.texture = _images[image]
+
+
+# Un bloc a coincé la bande : les pics rentrent d'un coup en grinçant (petit tremblement), un peu de poussière, et ne ressortent plus.
+func coincer(sous_le_bloc: bool) -> void:
+	coince = true
+	dangereux = false
+	_sprite.texture = _images[0]
+	_sprite.modulate = Color(0.78, 0.74, 0.7)   # mécanisme grippé : métal terni
+	var tw := create_tween()
+	for i in 4:
+		tw.tween_property(_sprite, "position:x", 1.0 if i % 2 == 0 else -1.0, 0.04)
+	tw.tween_property(_sprite, "position:x", 0.0, 0.04)
+	if sous_le_bloc:
+		return
+	_poussiere = CPUParticles2D.new()
+	_poussiere.position = Vector2(8, 10)
+	_poussiere.amount = 6
+	_poussiere.one_shot = true
+	_poussiere.explosiveness = 0.9
+	_poussiere.lifetime = 0.6
+	_poussiere.direction = Vector2(0, -1)
+	_poussiere.spread = 70.0
+	_poussiere.initial_velocity_min = 8.0
+	_poussiere.initial_velocity_max = 18.0
+	_poussiere.gravity = Vector2(0, 20)
+	_poussiere.scale_amount_min = 1.0
+	_poussiere.scale_amount_max = 2.0
+	_poussiere.color = Color(0.7, 0.66, 0.6, 0.7)
+	add_child(_poussiere)
+	_poussiere.emitting = true
+
+
+# R : la bande se remet en marche.
+func decoincer() -> void:
+	coince = false
+	_sprite.modulate = Color.WHITE
+	if _poussiere != null:
+		_poussiere.queue_free()
+		_poussiere = null
