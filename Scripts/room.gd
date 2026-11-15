@@ -135,6 +135,8 @@ var _points_rayon := PackedVector2Array()   # le trajet du rayon (centres des ca
 var _calque_rayon: Node2D
 var _lumieres_rayon: Array[PointLight2D] = []
 var _statue_au_soleil := false
+var _pont_fini := false     # une colonne du gouffre est entièrement rebouchée : le pont est acquis (sauvegardé, plus remis à zéro)
+var _etait_visitee := false # la caméra était dans cette salle à l'image précédente
 var _eaux_a_combler := {}   # { case : {corps, pont} } eau « q » qu'un bloc comble
 var _cloches := {}         # { note (int) : Cloche }
 var _progression := 0      # combien de notes de la mélodie ont déjà été rejouées
@@ -186,6 +188,10 @@ func _ready() -> void:
 # Anime torches et braseros en alternant leurs images.
 func _process(delta: float) -> void:
 	_temps += delta
+	var courante := grille == Etat.salle_courante
+	if courante and not _etait_visitee and not _eaux_a_combler.is_empty() and not _pont_fini:
+		reinitialiser()      # comme dans les Zelda 2D : un puzzle de blocs non résolu se remet à zéro quand on quitte la salle puis qu'on y revient (évite les blocages)
+	_etait_visitee = courante
 	for a in _animes:
 		var images: Array = a["images"]
 		a["sprite"].texture = images[int(_temps * 6.0 + a["decalage"]) % images.size()]
@@ -684,6 +690,40 @@ func _poser_canal(x: int, y: int, pos: Vector2, lettres: String) -> void:
 	_poser_anime([f1, f1, f1, f1, f2, f2, f2, f2], pos, x + y)
 
 
+# Vrai si les trois cases de la colonne x du gouffre sont rebouchées (on peut traverser).
+func _colonne_rebouchee(x: int) -> bool:
+	var vu := 0
+	for c in _eaux_a_combler.keys():
+		if c.x == x and _eaux_a_combler[c]["pont"] != null:
+			vu += 1
+	return vu >= 3
+
+
+# Au chargement d'une partie : si le pont a déjà été fait, on le remet instantanément (sinon le joueur resterait coincé de l'autre côté du gouffre).
+func _restaurer_pont() -> void:
+	var prefixe := "pont_%d_%d_" % [grille.x, grille.y]
+	for nom in Etat.drapeaux.keys():
+		if not String(nom).begins_with(prefixe):
+			continue
+		var x := int(String(nom).substr(prefixe.length()))
+		for c in _eaux_a_combler.keys():
+			if c.x == x:
+				var trou: Dictionary = _eaux_a_combler[c]
+				trou["pont"] = true
+				trou["corps"].process_mode = Node.PROCESS_MODE_DISABLED
+				for k in trou["corps"].get_children():
+					k.set_deferred("disabled", true)
+				trou["sprite"].visible = false
+				trou["dalle"].visible = true
+		for bloc in _blocs:
+			liberer(bloc.case)
+			bloc.hide()
+			bloc._collision.set_deferred("disabled", true)
+			bloc._comble = true
+		_pont_fini = true
+	_maj_levres()
+
+
 # Un trou encore OUVERT (pas rebouché).
 func _trou_vide(c: Vector2i) -> bool:
 	return _eaux_a_combler.has(c) and _eaux_a_combler[c]["pont"] == null
@@ -727,6 +767,9 @@ func bloc_arrive(bloc: Bloc) -> void:
 	trou["pont"] = bloc
 	_maj_levres()
 	get_tree().create_timer(0.26).timeout.connect(_afficher_dalle.bind(cellule))
+	if _colonne_rebouchee(cellule.x):
+		_pont_fini = true
+		Etat.noter("pont_%d_%d_%d" % [grille.x, grille.y, cellule.x])     # sauvegardé : au rechargement, le pont est déjà là
 	_jouer_effet("res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact4.wav", -4.0)
 
 
@@ -776,18 +819,20 @@ func _maj_boutons() -> void:
 
 # Touche R : les blocs reviennent à leur place de départ.
 func reinitialiser() -> void:
-	for eau in _eaux_a_combler.values():   # les trous se rouvrent (les blocs sont remis à leur place plus bas)
-		if eau["pont"] != null:
-			eau["pont"] = null
-			eau["sprite"].visible = true
-			eau["dalle"].visible = false
-			eau["corps"].process_mode = Node.PROCESS_MODE_INHERIT
-			for c in eau["corps"].get_children():
-				c.set_deferred("disabled", false)
+	if not _pont_fini:
+		for eau in _eaux_a_combler.values():   # les trous se rouvrent (les blocs sont remis à leur place plus bas)
+			if eau["pont"] != null:
+				eau["pont"] = null
+				eau["sprite"].visible = true
+				eau["dalle"].visible = false
+				eau["corps"].process_mode = Node.PROCESS_MODE_INHERIT
+				for c in eau["corps"].get_children():
+					c.set_deferred("disabled", false)
 	if _reflet != null and is_instance_valid(_reflet):
 		_reflet.reinitialiser()
 	for bloc in _blocs:
-		bloc.reinitialiser()
+		if not _pont_fini:     # le pont est fait : les blocs ont servi, on ne les remet pas
+			bloc.reinitialiser()
 	_maj_levres()
 	_maj_boutons()
 	_progression = 0
@@ -858,7 +903,7 @@ func a_de_la_glace() -> bool:
 
 # Salle où la touche R ramène le joueur au début (on peut s'y coincer : glace, reflet décalé).
 func recommence_au_debut() -> bool:
-	return _a_glace or (_case_reflet.x >= 0 and not Etat.est(drapeau_reflet))
+	return _a_glace or (_case_reflet.x >= 0 and not Etat.est(drapeau_reflet)) or (not _eaux_a_combler.is_empty() and not _pont_fini)
 
 
 # --- Reflet ----------------------------------------------------------------------
@@ -1553,6 +1598,7 @@ func _poser_vie_gouffre() -> void:
 		e["levre_o"] = _poser("trou_levre_o", Vector2(c * TUILE))
 		e["levre_e"] = _poser("trou_levre_e", Vector2(c * TUILE) + Vector2(13, 0))
 	_maj_levres()
+	_restaurer_pont()
 	var haut := Vector2(1e9, 1e9)
 	var bas := Vector2(-1e9, -1e9)
 	for c in _eaux_a_combler.keys():

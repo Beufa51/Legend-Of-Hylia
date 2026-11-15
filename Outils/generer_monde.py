@@ -109,7 +109,7 @@ for y in (4, 5, 6):
 put(p3b, '3', (17, 2))                                                      # la cloche 3, au nord du gouffre
 put(p3b, 'X', (17, 8), (14, 8), (20, 9))                                    # les 3 blocs (au sud)
 put(p3b, '2', (5, 9)); put(p3b, '1', (5, 11)); put(p3b, '4', (20, 11))   # les cloches sont hautes (34 px) : loin du gouffre, sinon elles le chevauchent
-put(p3b, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (22, 10)); put(p3b, 'O', (3, 2)); put(p3b, 'B', (9, 2), (15, 2))
+put(p3b, 'V', (2, 11), (3, 11), (2, 10), (3, 10), (2, 9)); put(p3b, 'O', (3, 2)); put(p3b, 'B', (9, 2), (15, 2))   # pots regroupés à l'ouest, loin des blocs (pas de coin mort à l'est)
 
 # 3c (la pointe) : SALLE SOMBRE, 5 cloches, 5 notes : il faut repérer dans le noir les cloches qui s'allument.
 #     La mélodie ouvre l'alcôve où se trouve la plume.
@@ -216,7 +216,7 @@ salles = [
     ('Plume2b', (2, -2), p2b, (1.04, 0.98, 0.9), {'drapeau_cristal': 'p2_cristal', 'drapeau_porte': 'p2_cristal', 'drapeau_gemme': 'plume2'}),
     ('Epine3', (3, 0), e3, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume3'}),
     ('Plume3a', (3, -1), p3a, (1.04, 0.98, 0.9), {'melodie': '132', 'drapeau_melodie': 'p3_chant1', 'drapeau_porte': 'p3_chant1'}),
-    ('Plume3b', (3, -2), p3b, (1.02, 0.96, 0.92), {'melodie': '2413', 'drapeau_melodie': 'p3_chant2', 'drapeau_porte': 'p3_chant2'}),
+    ('Plume3b', (3, -2), p3b, (1.02, 0.96, 0.92), {'melodie': '2413', 'drapeau_melodie': 'p3_chant2', 'drapeau_porte': 'p3_chant2', 'retour': 'Vector2(1400, -254)'}),
     ('Plume3c', (3, -3), p3c, (1.0, 1.0, 1.0), {'sombre': 'true', 'melodie': '31524', 'drapeau_melodie': 'p3_chant3',
         'drapeau_porte': 'p3_chant3', 'drapeau_gemme': 'plume3'}),
     ('Epine4', (4, 0), e4, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume4'}),
