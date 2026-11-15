@@ -74,7 +74,7 @@ func _creer_lueurs() -> void:
 		s.position = Vector2(_rnd.randf_range(zone.position.x + 10, zone.end.x - 10), _rnd.randf_range(zone.position.y + 12, zone.end.y - 12))
 		s.scale = Vector2.ONE * _rnd.randf_range(0.7, 1.3)
 		add_child(s)
-		_lueurs.append({"sprite": s, "phase": _rnd.randf() * TAU, "base": _rnd.randf_range(0.18, 0.34)})
+		_lueurs.append({"sprite": s, "phase": _rnd.randf() * TAU, "base": _rnd.randf_range(0.12, 0.24)})
 
 
 func _creer_brume() -> void:
@@ -94,7 +94,7 @@ func _creer_brume() -> void:
 func _creer_poussiere() -> void:
 	var p := CPUParticles2D.new()
 	p.position = zone.get_center()
-	p.amount = int(zone.size.x / 6.0)
+	p.amount = int(zone.size.x / 14.0)
 	p.lifetime = 4.0
 	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 	p.emission_rect_extents = zone.size / 2.0
@@ -107,7 +107,7 @@ func _creer_poussiere() -> void:
 	p.scale_amount_max = 1.5
 	var degrade := Gradient.new()
 	degrade.set_color(0, Color(0.6, 0.8, 1.0, 0.0))
-	degrade.add_point(0.3, Color(0.6, 0.85, 1.0, 0.7))
+	degrade.add_point(0.3, Color(0.6, 0.85, 1.0, 0.4))
 	degrade.set_color(1, Color(0.6, 0.8, 1.0, 0.0))
 	p.color_ramp = degrade
 	add_child(p)

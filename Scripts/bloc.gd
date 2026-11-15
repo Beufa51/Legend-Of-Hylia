@@ -12,6 +12,7 @@ var case: Vector2i      # case actuelle (colonne, ligne) dans la salle
 var depart: Vector2i    # case de départ (pour recommencer la salle)
 var en_mouvement := false
 var _collision: CollisionShape2D
+var _tween_chute: Tween
 var _sprite: Sprite2D
 var _texture_normale: Texture2D
 var _texture_active: Texture2D   # rune dorée : le bloc est posé sur une marque
@@ -65,12 +66,42 @@ func pousser(dir: Vector2i) -> void:
 		salle.bloc_arrive(self)
 
 
-# Le bloc comble un trou : il reste en place, de niveau avec le sol, on peut marcher dessus.
+# Le bloc tombe dans le trou et le comble : il s'enfonce d'un coup, la poussière se soulève, puis il reste en place
+# (on voit qu'on marche sur le bloc ; sa face supérieure arrive au niveau du sol).
 func combler() -> void:
-	# le bloc garde son aspect (on voit qu'on marche sur le bloc) ; seule sa collision disparaît
 	z_index = 0
 	modulate = Color(1, 1, 1)
 	_collision.set_deferred("disabled", true)
+	var haut := position
+	var tween := create_tween()
+	_tween_chute = tween
+	tween.tween_property(self, "position", haut + Vector2(0, 5), 0.11).set_ease(Tween.EASE_IN)
+	tween.tween_callback(_poussiere)
+	tween.tween_property(self, "position", haut + Vector2(0, 1), 0.16).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+
+# Petit nuage de poussière à l'impact.
+func _poussiere() -> void:
+	var p := CPUParticles2D.new()
+	p.position = Vector2(TUILE / 2.0, TUILE - 3)
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 14
+	p.lifetime = 0.7
+	p.direction = Vector2(0, -1)
+	p.spread = 80.0
+	p.gravity = Vector2(0, 14)
+	p.initial_velocity_min = 8.0
+	p.initial_velocity_max = 24.0
+	p.scale_amount_min = 1.0
+	p.scale_amount_max = 2.0
+	var degrade := Gradient.new()
+	degrade.set_color(0, Color(0.75, 0.8, 0.9, 0.8))
+	degrade.set_color(1, Color(0.75, 0.8, 0.9, 0.0))
+	p.color_ramp = degrade
+	add_child(p)
+	p.emitting = true
+	get_tree().create_timer(1.0).timeout.connect(p.queue_free)
 
 
 # Allume (ou éteint) la rune du bloc.
@@ -81,6 +112,8 @@ func briller(actif: bool) -> void:
 
 # Remet le bloc à sa case de départ (touche R).
 func reinitialiser() -> void:
+	if _tween_chute != null and _tween_chute.is_valid():
+		_tween_chute.kill()
 	z_index = 0
 	modulate = Color(1, 1, 1)
 	_collision.set_deferred("disabled", false)

@@ -497,7 +497,7 @@ func _poser_objets() -> void:
 					if _trou_ou_mur(x, y + 1): bits_trou |= 2
 					if _trou_ou_mur(x - 1, y): bits_trou |= 4
 					if _trou_ou_mur(x + 1, y): bits_trou |= 8
-					var sprite_trou := _poser("trou_%d" % bits_trou, pos)
+					var sprite_trou := _poser("trou_%d_%d" % [bits_trou, (x * 5 + y * 3) % 3], pos)
 					var corps := StaticBody2D.new()
 					corps.position = pos
 					var forme := RectangleShape2D.new()
