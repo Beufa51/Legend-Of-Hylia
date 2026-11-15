@@ -28,6 +28,15 @@ func _lancer() -> void:
 		if ecran == null:
 			print("écran introuvable : ", nom)
 			continue
+		if OS.get_environment("PONT") != "" and nom == "Plume3b":
+			# variable PONT=1 : pousse les 3 blocs pour montrer le pont fini
+			var plan := [[Vector2i(17, 8), [Vector2i.UP, 2]], [Vector2i(14, 8), [Vector2i.RIGHT, 3, Vector2i.UP, 3]], [Vector2i(20, 9), [Vector2i.LEFT, 3, Vector2i.UP, 5]]]
+			for etape in plan:
+				for bloc in ecran._blocs:
+					if bloc.case == etape[0]:
+						for k in range(0, etape[1].size(), 2):
+							for i in etape[1][k + 1]:
+								await bloc.pousser(etape[1][k])
 		monde._teleporter(ecran)
 		monde._menu_dev = null
 		for i in 8:

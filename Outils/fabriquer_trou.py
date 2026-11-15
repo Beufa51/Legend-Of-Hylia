@@ -12,9 +12,17 @@ def trou(bits):
     t = Image.new("RGBA", (16, 16), VIDE + (255,))
     d = ImageDraw.Draw(t)
     rnd = random.Random(bits * 7 + 1)
-    for _ in range(14):                         # un peu de matière au fond (roches, strates)
+    for _ in range(34):                         # de la matière au fond : roches, strates, éboulis
         x, y = rnd.randrange(16), rnd.randrange(16)
-        d.point((x, y), fill=rnd.choice((VIDE2, VIDE3)) + (255,))
+        d.point((x, y), fill=rnd.choice((VIDE2, VIDE3, VIDE3)) + (255,))
+    for _ in range(2):                          # quelques blocs de roche au fond (2x2 avec un reflet)
+        x, y = rnd.randrange(3, 12), rnd.randrange(4, 12)
+        d.rectangle((x, y, x + 2, y + 1), fill=(30, 35, 56, 255))
+        d.point((x, y), fill=(48, 56, 86, 255))
+    for _ in range(2):                          # une veine luminescente (cristaux bleutés)
+        x, y = rnd.randrange(3, 13), rnd.randrange(4, 13)
+        d.point((x, y), fill=(60, 96, 168, 255))
+        if rnd.random() < 0.5: d.point((x + 1, y), fill=(36, 62, 120, 255))
     if not n: d.rectangle((0, 2, 15, 4), fill=OMBRE + (255,))      # l'ombre du bord nord : on devine la profondeur
     if not o: d.rectangle((2, 0, 3, 15), fill=OMBRE + (255,))
     # lèvres de pierre (2 px) + contour sombre vers le vide, sur les côtés sans voisin
