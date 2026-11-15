@@ -26,35 +26,36 @@ def reduire(img, m, x0, x1, y0, y1):
     return p
 
 
-# SYMBOLE du bloc : la PLUME dorée (même icône que la plume qu'on ramasse en fin de plume : le motif de la Forteresse), pas une lettre.
-PLUME = Image.open(SORTIE + "plume_doree.png").convert("RGBA")
-GRAVE, GRAVE_CLAIR = (36, 58, 82, 255), (88, 120, 146, 255)
+# SYMBOLE du bloc : la TÊTE DE COQ de profil (l'emblème du jeu : village du Coq Chantant, Forteresse en forme de coq, girouette, stèles), pas une lettre.
+# 8x7 pixels : c = crête, 1 = tête dorée, 2 = ombre, b = bec, e = oeil.
+COQ = ["c.c.....",
+       "ccccc...",
+       ".c1111..",
+       ".11e11bb",
+       ".1122bb.",
+       "..1cc...",
+       "..122..."]
+COULEURS = {"c": (222, 58, 46, 255), "1": (255, 214, 90, 255), "2": (206, 154, 48, 255), "b": (236, 150, 40, 255), "e": (52, 28, 10, 255)}
+GRAVURE = {"c": (74, 104, 128, 255), "1": (40, 64, 90, 255), "2": (32, 52, 76, 255), "b": (62, 92, 116, 255), "e": (20, 34, 54, 255)}   # coq creusé (bloc simple)
 
 
-def symbole_plume(im, nom):
-    """Efface la rune « R » de Gemini (taches dorées) et pose une plume : creusée sur le bloc simple, dorée (l'icône de la plume) sur les blocs actifs / enfoncés."""
+def symbole_coq(im, nom):
+    """Efface la rune « R » de Gemini (taches dorées) et pose une tête de coq : creusée sur le bloc simple, en couleurs (crête rouge, tête or, bec orange) sur les blocs actifs / enfoncés."""
     fond = im.getpixel((4, 5))                         # couleur du panneau de la face supérieure
     for y in range(16):
         for x in range(16):
             r, g, b, a = im.getpixel((x, y))
             if a and r > 170 and b < 140:
                 im.putpixel((x, y), fond)
-    petite = PLUME.resize((7, 7), Image.LANCZOS)
     x0, y0 = 4, 2
-    for j in range(7):
-        for i in range(7):
-            r, g, b, a = petite.getpixel((i, j))
-            if a < 110:
+    for j, ligne in enumerate(COQ):
+        for i, c in enumerate(ligne):
+            if c == ".":
                 continue
             if nom == "bloc_pierre":
-                im.putpixel((x0 + i, y0 + j), GRAVE_CLAIR)           # le reflet (décalé)
-    for j in range(7):
-        for i in range(7):
-            r, g, b, a = petite.getpixel((i, j))
-            if a < 110:
-                continue
-            im.putpixel((x0 + i, y0 + j), GRAVE if nom == "bloc_pierre" else (r, g, b, 255))
-    # un liseré clair décalé sous la plume gravée (effet creusé)
+                im.putpixel((x0 + i, y0 + j), GRAVURE[c])
+            else:
+                im.putpixel((x0 + i, y0 + j), COULEURS[c])
 
 
 img = np.array(Image.open(SRC).convert("RGB"))
@@ -73,7 +74,7 @@ noms = ["bloc_pierre", "bloc_pierre_actif", "bloc_pierre_enfonce", "marque", "ma
 for nom, (x0, x1, y0, y1) in zip(noms, pieces):
     im = reduire(img, m, x0, x1, y0, y1)
     if nom.startswith("bloc_pierre"):
-        symbole_plume(im, nom)
+        symbole_coq(im, nom)
     im.save(SORTIE + nom + ".png")
 # la marque VIDE doit attirer l'oeil (règle : une marque dorée au sol = « il y a quelque chose à poser ici ») :
 # on reprend la forme de la marque ACTIVE avec son or éteint (terni)
