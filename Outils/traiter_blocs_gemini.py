@@ -26,6 +26,37 @@ def reduire(img, m, x0, x1, y0, y1):
     return p
 
 
+# SYMBOLE du bloc : la PLUME dorée (même icône que la plume qu'on ramasse en fin de plume : le motif de la Forteresse), pas une lettre.
+PLUME = Image.open(SORTIE + "plume_doree.png").convert("RGBA")
+GRAVE, GRAVE_CLAIR = (36, 58, 82, 255), (88, 120, 146, 255)
+
+
+def symbole_plume(im, nom):
+    """Efface la rune « R » de Gemini (taches dorées) et pose une plume : creusée sur le bloc simple, dorée (l'icône de la plume) sur les blocs actifs / enfoncés."""
+    fond = im.getpixel((4, 5))                         # couleur du panneau de la face supérieure
+    for y in range(16):
+        for x in range(16):
+            r, g, b, a = im.getpixel((x, y))
+            if a and r > 170 and b < 140:
+                im.putpixel((x, y), fond)
+    petite = PLUME.resize((7, 7), Image.LANCZOS)
+    x0, y0 = 4, 2
+    for j in range(7):
+        for i in range(7):
+            r, g, b, a = petite.getpixel((i, j))
+            if a < 110:
+                continue
+            if nom == "bloc_pierre":
+                im.putpixel((x0 + i, y0 + j), GRAVE_CLAIR)           # le reflet (décalé)
+    for j in range(7):
+        for i in range(7):
+            r, g, b, a = petite.getpixel((i, j))
+            if a < 110:
+                continue
+            im.putpixel((x0 + i, y0 + j), GRAVE if nom == "bloc_pierre" else (r, g, b, 255))
+    # un liseré clair décalé sous la plume gravée (effet creusé)
+
+
 img = np.array(Image.open(SRC).convert("RGB"))
 m = ~fond(img)
 lab, n = ndimage.label(m)
@@ -41,6 +72,8 @@ assert len(pieces) == 5, pieces
 noms = ["bloc_pierre", "bloc_pierre_actif", "bloc_pierre_enfonce", "marque", "marque_active"]
 for nom, (x0, x1, y0, y1) in zip(noms, pieces):
     im = reduire(img, m, x0, x1, y0, y1)
+    if nom.startswith("bloc_pierre"):
+        symbole_plume(im, nom)
     im.save(SORTIE + nom + ".png")
 # la marque VIDE doit attirer l'oeil (règle : une marque dorée au sol = « il y a quelque chose à poser ici ») :
 # on reprend la forme de la marque ACTIVE avec son or éteint (terni)
