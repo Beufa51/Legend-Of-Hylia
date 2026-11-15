@@ -489,9 +489,13 @@ func _poser_objets() -> void:
 					_poser_canal(x, y, pos, "~")   # eau (bloque), même rendu que les flaques
 				"q":
 					# TROU (bloque) : un bloc poussé dedans le COMBLE et devient un pont (on peut alors marcher dessus)
-					var haut := y > 0 and layout[y - 1][x] == "q"
-					var bas := y < layout.size() - 1 and layout[y + 1][x] == "q"
-					var sprite_trou := _poser("trou_%d" % ((1 if haut else 0) | (2 if bas else 0)), pos)
+					# bits comme les canaux : 1 nord, 2 sud, 4 ouest, 8 est ; un voisin « gouffre » OU un mur prolonge le gouffre (pas de lèvre)
+					var bits_trou := 0
+					if _trou_ou_mur(x, y - 1): bits_trou |= 1
+					if _trou_ou_mur(x, y + 1): bits_trou |= 2
+					if _trou_ou_mur(x - 1, y): bits_trou |= 4
+					if _trou_ou_mur(x + 1, y): bits_trou |= 8
+					var sprite_trou := _poser("trou_%d" % bits_trou, pos)
 					var corps := StaticBody2D.new()
 					corps.position = pos
 					var forme := RectangleShape2D.new()
@@ -674,6 +678,12 @@ func _poser_canal(x: int, y: int, pos: Vector2, lettres: String) -> void:
 	var f1 := "flaque_%d_%d_1" % [bits, v]
 	var f2 := "flaque_%d_%d_2" % [bits, v]
 	_poser_anime([f1, f1, f1, f1, f2, f2, f2, f2], pos, x + y)
+
+
+func _trou_ou_mur(x: int, y: int) -> bool:
+	if y < 0 or y >= layout.size() or x < 0 or x >= layout[y].length():
+		return true
+	return layout[y][x] == "q" or layout[y][x] == "#"
 
 
 # Un bloc poussé dans un trou « q » le comble : le bloc reste en place, de niveau avec le sol (pont marchable).
