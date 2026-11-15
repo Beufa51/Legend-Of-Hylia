@@ -24,13 +24,14 @@ func _lancer() -> void:
 	var a := OS.get_cmdline_user_args()
 	var scenario := "gouffre" if a.is_empty() else a[0]
 	Etat.sauvegarde_active = false
-	Etat.arrivee_ecran = "Plume3b"
-	Etat.arrivee_case = Vector2i(12, 12)
+	var ecran := "Plume3b" if a.size() < 2 else a[1]
+	Etat.arrivee_ecran = ecran
+	Etat.arrivee_case = Vector2i(12, 12) if a.size() < 4 else Vector2i(int(a[2]), int(a[3]))
 	monde = load("res://Scenes/world.tscn").instantiate()
 	add_child(monde)
 	await get_tree().create_timer(2.0).timeout
 	for e in monde.get_children():
-		if e is Ecran and e.name == "Plume3b":
+		if e is Ecran and e.name == ecran:
 			salle = e
 	print("salle : ", salle.name, " joueur ", monde.joueur.position)
 	await call("_scenario_" + scenario)
@@ -108,3 +109,31 @@ func _scenario_gouffre() -> void:
 	print("arrivée au nord : joueur ", monde.joueur.position, " (visé ", _pos(Vector2i(17, 3)), ")")
 	if absf(monde.joueur.position.y - _pos(Vector2i(17, 3)).y) > 6.0:
 		_echec = true
+
+
+## Scénario « heros » : le héros marche dans les 4 directions puis donne un coup de lance dans chacune ; photos dans user://bot/heros_*.png
+func _scenario_heros() -> void:
+	DirAccess.make_dir_recursive_absolute("user://bot")
+	var touches := {"bas": "move_down", "haut": "move_up", "gauche": "move_left", "droite": "move_right"}
+	var n := 0
+	for d in ["bas", "haut", "gauche", "droite"]:
+		Input.action_press(touches[d])
+		await get_tree().create_timer(0.35).timeout
+		_photo("heros_%02d_marche_%s" % [n, d])
+		Input.action_release(touches[d])
+		await get_tree().create_timer(0.2).timeout
+		_photo("heros_%02d_repos_%s" % [n + 1, d])
+		Input.action_press("attack")
+		await get_tree().process_frame
+		Input.action_release("attack")
+		await get_tree().create_timer(0.11).timeout
+		_photo("heros_%02d_estoc_%s" % [n + 2, d])
+		await get_tree().create_timer(0.5).timeout
+		n += 3
+
+
+func _photo(nom: String) -> void:
+	var image := get_tree().root.get_texture().get_image()
+	var ecran: Vector2 = monde.joueur.global_position - (monde.camera.position - Vector2(200, 112))   # position du héros à l'écran (400x224)
+	var zone := Rect2i(int(ecran.x) - 40, int(ecran.y) - 44, 80, 60).intersection(Rect2i(0, 0, image.get_width(), image.get_height()))
+	image.get_region(zone).save_png("user://bot/%s.png" % nom)

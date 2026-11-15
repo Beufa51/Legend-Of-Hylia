@@ -111,6 +111,12 @@ func va_tourner() -> bool:
 # Le joueur est repéré : « ! » au-dessus de la tête.
 func alerter() -> void:
 	_montrer_bulle(BULLE_ALERTE)
+	# pose « alerte » : yeux rouges, hallebarde baissée (Outils/traiter_lot2.py)
+	var pose = load("res://Assets/Gemini/tuiles/sentinelle_alerte.png")
+	if pose != null and not _statue.is_empty():
+		_sprite.texture = pose
+		_sprite.flip_h = false
+		_sprite.position = Vector2(8.0 - pose.get_width() / 2.0, TUILE_S - pose.get_height())
 
 
 func _montrer_bulle(chemin: String) -> void:

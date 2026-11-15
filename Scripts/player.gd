@@ -6,6 +6,9 @@ extends CharacterBody2D
 const VITESSE := 70.0  # pixels par seconde
 const FACTEUR_COURSE := 1.7  # vitesse multipliée quand on court (touche Maj ou K)
 const HEROS := "res://Assets/Heros/"   # planches du héros (voir Outils/preparer_heros.py)
+# Héros Gemini (Outils/traiter_heros_gemini.py) : cases de 48x32 ; s'il est présent, il remplace l'ancien héros LPC
+const HEROS_G := "res://Assets/Heros/heros_g.png"
+const CASE_G := Vector2i(48, 32)
 # Ordre des colonnes dans les planches : bas, haut, gauche, droite
 const DIRECTIONS := ["bas", "haut", "gauche", "droite"]
 const VECTEURS := {"bas": Vector2.DOWN, "haut": Vector2.UP, "gauche": Vector2.LEFT, "droite": Vector2.RIGHT}
@@ -52,8 +55,12 @@ var _invulnerable := 0.0      # temps restant pendant lequel on ne peut plus êt
 
 func _ready() -> void:
 	add_to_group("joueur")
-	sprite.sprite_frames = _creer_animations()
-	sprite.offset = Vector2(0, -5)   # cases de 32 px : on remonte l'image pour que les pieds soient sur la collision (en bas)
+	if ResourceLoader.exists(HEROS_G):
+		sprite.sprite_frames = _creer_animations_g()
+		sprite.offset = Vector2(0, -9)   # les pieds du héros Gemini sont à la ligne 29 d'une case de 32 : on les pose sur la collision
+	else:
+		sprite.sprite_frames = _creer_animations()
+		sprite.offset = Vector2(0, -5)   # cases de 32 px : on remonte l'image pour que les pieds soient sur la collision (en bas)
 	sprite.play("repos_bas")
 	_creer_lance()
 	lumiere = Lumiere.creer(Color(0.85, 0.92, 1.0), 0.6, 0.7)
@@ -364,6 +371,7 @@ func _creer_lance() -> void:
 	add_child(lance)
 	var image := Sprite2D.new()
 	image.texture = load(LANCE_IMAGE)
+	image.visible = not ResourceLoader.exists(HEROS_G)   # le héros Gemini tient sa lance dans ses images : on ne dessine pas la lance du pack en plus
 	lance.add_child(image)
 	zone = Area2D.new()
 	zone.collision_layer = 0   # la zone ne bloque personne
@@ -441,6 +449,36 @@ func _creer_animations() -> SpriteFrames:
 		for col in 8:
 			frames.add_frame("attaque_" + d, _decoupe(coup, col, ligne))
 	return frames
+
+
+# Animations du héros Gemini : planche de cases 48x32 (lignes : marche bas/haut/gauche/droite, repos, estoc bas/haut/gauche/droite, dégâts).
+func _creer_animations_g() -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	frames.remove_animation("default")
+	var planche: Texture2D = load(HEROS_G)
+	for k in DIRECTIONS.size():
+		var d: String = DIRECTIONS[k]
+		frames.add_animation("marche_" + d)
+		frames.set_animation_speed("marche_" + d, 9.0)
+		frames.set_animation_loop("marche_" + d, true)
+		for col in 5:
+			frames.add_frame("marche_" + d, _decoupe_g(planche, col, k))
+		frames.add_animation("repos_" + d)
+		frames.set_animation_loop("repos_" + d, true)
+		frames.add_frame("repos_" + d, _decoupe_g(planche, k, 4))
+		frames.add_animation("attaque_" + d)
+		frames.set_animation_speed("attaque_" + d, 12.0)   # 3 images en ~0,25 s : la durée du coup de lance
+		frames.set_animation_loop("attaque_" + d, false)
+		for col in 3:
+			frames.add_frame("attaque_" + d, _decoupe_g(planche, col, 5 + k))
+	return frames
+
+
+func _decoupe_g(texture: Texture2D, col: int, ligne: int) -> AtlasTexture:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = texture
+	atlas.region = Rect2(col * CASE_G.x, ligne * CASE_G.y, CASE_G.x, CASE_G.y)
+	return atlas
 
 
 # Renvoie l'image (colonne, ligne) d'une planche de cases 32x32.

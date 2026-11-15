@@ -48,7 +48,7 @@ const SON_ERREUR := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Cancel.wav"
 const PORTEE_REGARD := 7
 const DEMI_ANGLE := 0.4538   # 26 degrés (en radians)
 const RAYONS_CONE := 24   # nombre de rayons lancés pour dessiner le cône (plus = plus lisse)
-const COULEUR_REGARD := Color(1.0, 0.85, 0.3, 0.42)   # près de l'œil (le bout du cône est plus transparent)
+const COULEUR_REGARD := Color(1.0, 0.9, 0.45, 0.42)   # près de l'œil (le bout du cône est plus transparent)
 const COULEUR_REPERE := Color(1.0, 0.2, 0.15, 0.55)
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
 const COLONNES_TORCHES := [4, 20]
@@ -1425,26 +1425,40 @@ func _opaque(c: Vector2i) -> bool:
 	return not (occupant is Porte and occupant.ouverte)
 
 
-# Dessine les cônes : un éventail de triangles, opaque près de l'œil, transparent au bout (façon jeu d'infiltration).
-# Le cône clignote juste avant que la sentinelle tourne, et devient rouge quand le joueur est repéré.
+# Dessine les cônes : un FAISCEAU DE LUMIÈRE en 3 bandes plates (chaque bande plus pâle que la précédente, comme un projecteur),
+# sans contour fil de fer ; seul le bord extérieur est souligné d'un trait léger. Une petite lueur marque l'œil.
+# Le faisceau clignote juste avant que la sentinelle tourne, et devient rouge quand le joueur est repéré.
 func _dessiner_regards() -> void:
+	var portee := float(PORTEE_REGARD * TUILE)
+	var respiration := 0.92 + 0.08 * sin(_temps * 2.4)   # le faisceau « respire » doucement
 	for n in _cones.size():
 		var points := _cones[n]
+		var oeil := points[0]
 		var couleur := COULEUR_REPERE if _repere else COULEUR_REGARD
 		if not _repere and _cones_clignotent[n] and int(_temps * 8.0) % 2 == 0:
 			couleur.a *= 0.4
-		var bout := couleur
-		bout.a *= 0.3
-		var couleurs := PackedColorArray([couleur, bout, bout])
+		couleur.a *= respiration
+		# 3 bandes emboîtées : la plus lointaine d'abord (la plus pâle), les autres par-dessus s'additionnent
+		for bande: int in [3, 2, 1]:
+			var limite: float = portee * float(bande) / 3.0
+			var teinte := couleur
+			teinte.a = couleur.a * 0.5 * (1.0 if bande == 1 else 0.7 if bande == 2 else 0.5)
+			var couleurs := PackedColorArray([teinte, teinte, teinte])
+			for i in range(1, points.size() - 1):
+				var p1 := oeil + (points[i] - oeil).limit_length(limite)
+				var p2 := oeil + (points[i + 1] - oeil).limit_length(limite)
+				_calque_regards.draw_primitive(PackedVector2Array([oeil, p1, p2]), couleurs, PackedVector2Array())
+		# Trait léger sur le bord de la bande la plus lointaine, qui s'estompe vers le bout
+		var bord := couleur
+		bord.a = minf(1.0, couleur.a * 0.9)
 		for i in range(1, points.size() - 1):
-			# draw_primitive accepte les triangles « plats » (sans erreur), contrairement à draw_colored_polygon
-			_calque_regards.draw_primitive(PackedVector2Array([points[0], points[i], points[i + 1]]), couleurs, PackedVector2Array())
-		# Contour du cône : on voit bien où il s'arrête
-		var contour := points.duplicate()
-		contour.append(points[0])
-		var couleur_bord := couleur
-		couleur_bord.a = minf(1.0, couleur.a * 1.6)
-		_calque_regards.draw_polyline(contour, couleur_bord, 1.0)
+			var p1 := oeil + (points[i] - oeil).limit_length(portee)
+			var p2 := oeil + (points[i + 1] - oeil).limit_length(portee)
+			if (p1 - oeil).length() >= portee - 1.0 or i == 1 or i == points.size() - 2:
+				_calque_regards.draw_line(p1, p2, bord, 1.0)
+		_calque_regards.draw_line(oeil, oeil + (points[1] - oeil).limit_length(portee), bord, 1.0)
+		_calque_regards.draw_line(oeil, oeil + (points[points.size() - 1] - oeil).limit_length(portee), bord, 1.0)
+		_calque_regards.draw_circle(oeil, 2.5, Color(1.0, 1.0, 0.9, 0.5 * respiration))
 
 
 # --- Rayon de lumière --------------------------------------------------------------
@@ -1639,6 +1653,13 @@ func _poser_frise() -> void:
 		# bandeau de symboles dorés (plume, coq, losanges, zigzag) coupé en 7 colonnes qui se suivent ; un bandeau différent tous les 7 cases
 		var bandeau := ((x - 2) / 7 + grille.x * 2 + grille.y * 3 + 4000) % 4 + 1
 		var rune := _sprite_dans(parent, "frise_%d_%d" % [bandeau, (x - 2) % 7], Vector2(x * TUILE, (ys - 2) * TUILE + 2))
+		# aux bords d'une ouverture, le mur se termine par un liseré : on rogne 3 px de frise de ce côté pour qu'elle ne dépasse pas
+		var rogne_g := 3 if _haut_du_sol(x - 1) != ys else 0
+		var rogne_d := 3 if _haut_du_sol(x + 1) != ys else 0
+		if rogne_g > 0 or rogne_d > 0:
+			rune.region_enabled = true
+			rune.region_rect = Rect2(rogne_g, 0, 16 - rogne_g - rogne_d, rune.texture.get_height())
+			rune.position.x += rogne_g
 		rune.modulate.a = 0.78
 		var tw := create_tween().set_loops()
 		tw.tween_interval(x * 0.12)
