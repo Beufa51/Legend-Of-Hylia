@@ -432,7 +432,11 @@ func _poser_objets() -> void:
 					var pot := Pot.new()
 					pot.position = pos
 					add_child(pot)
-					pot.initialiser(_image("vase_1" if (x + y) % 3 else "vase_2"))   # vases bleus et quelques bruns
+					# pots Gemini (Outils/traiter_pots.py) : couleur et forme variées, aucun motif qui se répète
+					var h := (x * 73 + y * 151 + grille.x * 31 + grille.y * 17) % 10
+					var teinte_pot := 1 if h < 5 else (0 if h < 8 else 2)        # 0 ocre, 1 bleu, 2 vert (surtout bleus)
+					var haut_pot := (x * 5 + y * 3) % 3 == 0                       # un tiers de pots hauts et étroits
+					pot.initialiser(_image("pot_%d" % (teinte_pot + 1 + (3 if haut_pot else 0))), Pot.COULEURS[teinte_pot])
 					_suivre(pot, Vector2i(x, y))
 				"B":
 					_poser_anime(BRASERO, pos + DECALAGE_BRASERO, x + y)
