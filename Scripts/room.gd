@@ -530,7 +530,7 @@ func _poser_objets() -> void:
 				"X":
 					var bloc := Bloc.new()
 					add_child(bloc)
-					bloc.initialiser(self, Vector2i(x, y), _image("bloc_pierre"), _image("bloc_pierre_actif"))
+					bloc.initialiser(self, Vector2i(x, y), _image("bloc_pierre"), _image("bloc_pierre_actif"), _image("bloc_pierre_enfonce"))
 					_occupe[Vector2i(x, y)] = bloc
 					_blocs.append(bloc)
 				"D":

@@ -13,12 +13,14 @@ var depart: Vector2i    # case de départ (pour recommencer la salle)
 var en_mouvement := false
 var _collision: CollisionShape2D
 var _tween_chute: Tween
+var _comble := false   # le bloc remplit un trou : son aspect ne change plus
 var _sprite: Sprite2D
 var _texture_normale: Texture2D
+var _texture_enfonce: Texture2D   # le bloc qui comble un trou (face supérieure au niveau du sol, bord sombre)
 var _texture_active: Texture2D   # rune dorée : le bloc est posé sur une marque
 
 
-func initialiser(une_salle: Node2D, sa_case: Vector2i, texture: Texture2D, texture_active: Texture2D = null) -> void:
+func initialiser(une_salle: Node2D, sa_case: Vector2i, texture: Texture2D, texture_active: Texture2D = null, texture_enfonce: Texture2D = null) -> void:
 	salle = une_salle
 	case = sa_case
 	depart = sa_case
@@ -31,6 +33,7 @@ func initialiser(une_salle: Node2D, sa_case: Vector2i, texture: Texture2D, textu
 	_sprite = sprite
 	_texture_normale = texture
 	_texture_active = texture_active
+	_texture_enfonce = texture_enfonce
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(TUILE, TUILE)
 	var collision := CollisionShape2D.new()
@@ -69,9 +72,12 @@ func pousser(dir: Vector2i) -> void:
 # Le bloc tombe dans le trou et le comble : il s'enfonce d'un coup, la poussière se soulève, puis il reste en place
 # (on voit qu'on marche sur le bloc ; sa face supérieure arrive au niveau du sol).
 func combler() -> void:
+	_comble = true
 	z_index = 0
 	modulate = Color(1, 1, 1)
 	_collision.set_deferred("disabled", true)
+	if _texture_enfonce != null:
+		_sprite.texture = _texture_enfonce
 	var haut := position
 	var tween := create_tween()
 	_tween_chute = tween
@@ -106,6 +112,8 @@ func _poussiere() -> void:
 
 # Allume (ou éteint) la rune du bloc.
 func briller(actif: bool) -> void:
+	if _comble:
+		return
 	if _texture_active != null:
 		_sprite.texture = _texture_active if actif else _texture_normale
 
@@ -116,6 +124,8 @@ func reinitialiser() -> void:
 		_tween_chute.kill()
 	z_index = 0
 	modulate = Color(1, 1, 1)
+	_comble = false
+	_sprite.texture = _texture_normale
 	_collision.set_deferred("disabled", false)
 	salle.liberer(case)
 	case = depart
