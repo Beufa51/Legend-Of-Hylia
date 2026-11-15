@@ -18,9 +18,16 @@ HAUTEUR_HEROS = 25     # un héros debout (casque aux bottes) fait 25 px de haut
 a = np.array(Image.open(SRC).convert("RGB")).astype(int)
 
 
-def detourer(boite):
+def detourer(boite, efface=None):
+    """efface = ("g", x) ou ("d", x) : efface la lance tenue en main (tout ce qui est à gauche / à droite de la colonne x, sauf la main) pour la redessiner en code."""
     x0, y0, x1, y1 = boite
     c = a[y0:y1, x0:x1].copy()
+    if efface:
+        r_, g_, b_ = c[..., 0], c[..., 1], c[..., 2]
+        peau = (r_ > 200) & (g_ > 120) & (g_ < 205) & (b_ > 80) & (b_ < 175)
+        colonnes = np.arange(c.shape[1])[None, :]
+        zone = (colonnes < efface[1]) if efface[0] == "g" else (colonnes >= efface[1])
+        c[zone & ~peau] = (255, 0, 255)
     r, g, b = c[..., 0], c[..., 1], c[..., 2]
     fond = (r > 150) & (b > 150) & (g < 120)
     lab, n = ndimage.label(~fond)
@@ -95,13 +102,44 @@ repos = {"bas": cases_marche["bas"][0], "haut": cases_marche["haut"][0], "droite
 for col, d in enumerate(("bas", "haut", "gauche", "droite")):
     p, cx = repos["droite" if d == "gauche" else d]
     poser(feuille, p, cx, col, 4, miroir=(d == "gauche"))
-# estoc
+# estoc : gauche / droite = poses de profil de la planche ; bas / haut = le héros de face / de dos SANS lance dans la main
+# (la planche Gemini ne dessine la lance que de profil) ; player.gd redessine alors la lance (lance_g.png) qui avance vers le bas / le haut.
+def sans_lance(boite, efface, penche):
+    im, cx = detourer(boite, efface)
+    p = reduire(im, E)
+    return [(p, cx * E), (p, cx * E), (p, cx * E)], penche
+
+
 for k, d in enumerate(("bas", "haut", "gauche", "droite")):
-    src = [case(b) for b in boites_poses["attaque_" + ("droite" if d == "gauche" else d)]]
+    if d == "bas":
+        src, _ = sans_lance(boites_marche["bas"][0], ("g", 23), 1)
+    elif d == "haut":
+        src, _ = sans_lance(boites_marche["haut"][0], ("d", 98), -1)
+    else:
+        src = [case(b) for b in boites_poses["attaque_" + ("droite" if d == "gauche" else d)]]
     for col, (p, cx) in enumerate(src):
         poser(feuille, p, cx, col, 5 + k, miroir=(d == "gauche"))
+        if d in ("bas", "haut") and col > 0:   # corps qui se penche d'un pixel vers l'avant pendant l'estoc
+            pass
 for col, b in enumerate(boites_poses["degats"]):
     p, cx = case(b)
     poser(feuille, p, cx, col, 9)
 feuille.save(SORTIE)
-print("héros Gemini :", feuille.size, "échelle", round(E, 3))
+
+# La lance redessinée EN PIXELS (le fer de la planche Gemini devient illisible à cette taille) : pointe d'acier + manche brun, pointe vers le BAS.
+# La main tient la lance à ~38 % de sa longueur depuis la pointe (voir player.gd::MAIN_LANCE).
+LONG, LARG = 26, 5
+D, L, M, B1, B2 = (36, 36, 52, 255), (214, 222, 234, 255), (150, 166, 188, 255), (40, 24, 18, 255), (122, 78, 42, 255)
+fer = ["..d..", ".dld.", ".dld.", "dlmld", "dlmld", ".dmd.", "..d.."]
+lance = Image.new("RGBA", (LARG, LONG), (0, 0, 0, 0))
+code = {"d": D, "l": L, "m": M}
+for y, ligne in enumerate(fer):
+    for x, ch in enumerate(ligne):
+        if ch in code:
+            lance.putpixel((x, y), code[ch])
+for y in range(len(fer), LONG):
+    lance.putpixel((1, y), B1)
+    lance.putpixel((2, y), B2)
+    lance.putpixel((3, y), B1)
+lance.transpose(Image.FLIP_TOP_BOTTOM).save("Assets/Heros/lance_g.png")   # pointe vers le bas
+print("lance_g.png", lance.size)

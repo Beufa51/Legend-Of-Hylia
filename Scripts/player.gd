@@ -9,6 +9,11 @@ const HEROS := "res://Assets/Heros/"   # planches du héros (voir Outils/prepare
 # Héros Gemini (Outils/traiter_heros_gemini.py) : cases de 48x32 ; s'il est présent, il remplace l'ancien héros LPC
 const HEROS_G := "res://Assets/Heros/heros_g.png"
 const CASE_G := Vector2i(48, 32)
+# Le héros Gemini n'a pas de pose d'estoc de face / de dos (la planche ne dessine la lance que de profil) :
+# vers le bas et le haut il lâche sa lance (images sans lance) et on dessine la lance ici (Outils/traiter_heros_gemini.py -> lance_g.png, pointe vers le BAS)
+const LANCE_G := "res://Assets/Heros/lance_g.png"
+const MAIN_G := {"bas": Vector2(-8, -6), "haut": Vector2(6, -6)}   # où la main tient la lance, par rapport aux pieds du héros
+const AVANCE_G := 7.0   # de combien la lance avance pendant l'estoc
 # Ordre des colonnes dans les planches : bas, haut, gauche, droite
 const DIRECTIONS := ["bas", "haut", "gauche", "droite"]
 const VECTEURS := {"bas": Vector2.DOWN, "haut": Vector2.UP, "gauche": Vector2.LEFT, "droite": Vector2.RIGHT}
@@ -23,6 +28,7 @@ const PORTEE_SORTIE := 13.0   # distance de la lance quand elle est tendue
 var direction := "bas"  # dernière direction regardée
 var attaque := false    # vrai pendant un coup de lance (le joueur ne bouge pas)
 var lance: Node2D       # la lance (image + zone de touche), créée dans _ready
+var _lance_g: Sprite2D  # lance dessinée de face / de dos pour le héros Gemini
 var zone: Area2D        # zone de touche de la lance
 var lumiere: PointLight2D  # petite lumière autour du joueur (allumée seulement dans les salles sombres)
 var _recul := Vector2.ZERO  # poussée subie (coup de bec d'une poule...), s'éteint toute seule
@@ -373,6 +379,14 @@ func _creer_lance() -> void:
 	image.texture = load(LANCE_IMAGE)
 	image.visible = not ResourceLoader.exists(HEROS_G)   # le héros Gemini tient sa lance dans ses images : on ne dessine pas la lance du pack en plus
 	lance.add_child(image)
+	if ResourceLoader.exists(HEROS_G) and ResourceLoader.exists(LANCE_G):
+		_lance_g = Sprite2D.new()
+		_lance_g.texture = load(LANCE_G)
+		_lance_g.centered = false
+		_lance_g.offset = Vector2(-2.5, -10.0)   # la main tient la lance à 10 px de son extrémité haute (pointe en bas)
+		_lance_g.z_index = 1
+		_lance_g.visible = false
+		add_child(_lance_g)
 	zone = Area2D.new()
 	zone.collision_layer = 0   # la zone ne bloque personne
 	zone.collision_mask = 1    # elle détecte les murs, pots, etc. (couche 1)
@@ -400,9 +414,21 @@ func _attaquer() -> void:
 	tween.tween_property(lance, "position", Vector2(0, 2) + vecteur * PORTEE_SORTIE, 0.09)
 	tween.tween_interval(0.08)
 	tween.tween_property(lance, "position", Vector2(0, 2) + vecteur * PORTEE_RENTREE, 0.09)
+	if _lance_g != null and MAIN_G.has(direction):   # héros Gemini de face / de dos : la lance dessinée avance depuis la main
+		var main: Vector2 = MAIN_G[direction]
+		_lance_g.rotation = 0.0 if direction == "bas" else PI
+		_lance_g.position = main
+		_lance_g.modulate = lance.modulate
+		_lance_g.visible = true
+		var avance := create_tween()
+		avance.tween_property(_lance_g, "position", main + vecteur * AVANCE_G, 0.09)
+		avance.tween_interval(0.08)
+		avance.tween_property(_lance_g, "position", main, 0.09)
 	await tween.finished
 	zone.monitoring = false
 	lance.visible = false
+	if _lance_g != null:
+		_lance_g.visible = false
 	attaque = false
 
 
