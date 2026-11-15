@@ -32,8 +32,19 @@ func initialiser(nom_drapeau: String, message: String, texture: Texture2D = null
 	lueur.position = Vector2(8, 8)
 	add_child(lueur)
 	var pulse := create_tween().set_loops()
-	pulse.tween_property(image, "modulate", Color(1.35, 1.3, 1.1), 0.6)
-	pulse.tween_property(image, "modulate", Color(1, 1, 1), 0.6)
+	# La plume alterne avec sa version brillante (planche Gemini plume_doree_eclat.png) ; sinon simple pulsation
+	var eclat: Texture2D = null
+	if texture == null:
+		eclat = load("res://Assets/Gemini/tuiles/plume_doree_eclat.png")
+	if eclat != null:
+		var normale := image.texture
+		pulse.tween_callback(func() -> void: image.texture = eclat)
+		pulse.tween_property(image, "modulate", Color(1.2, 1.15, 1.05), 0.6)
+		pulse.tween_callback(func() -> void: image.texture = normale)
+		pulse.tween_property(image, "modulate", Color(1, 1, 1), 0.6)
+	else:
+		pulse.tween_property(image, "modulate", Color(1.35, 1.3, 1.1), 0.6)
+		pulse.tween_property(image, "modulate", Color(1, 1, 1), 0.6)
 	body_entered.connect(_sur_contact)
 	var flotte := create_tween().set_loops()
 	flotte.tween_property(self, "position:y", position.y - 2.0, 0.7)

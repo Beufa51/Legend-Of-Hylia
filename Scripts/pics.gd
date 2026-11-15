@@ -15,6 +15,8 @@ var _sprite: Sprite2D
 var _images: Array[Texture2D] = []
 var _temps := 0.0
 var fixe := false        # toujours sortis (mur de pics) : seul un bloc poussé dedans les écrase
+var image_ecrase: Texture2D   # dalle écrasée par un bloc (planche Gemini pics_ecrase.png)
+var _ecrase := false
 var coince := false      # un bloc est entré dans la bande : le mécanisme est bloqué, les pics restent rentrés
 var _poussiere: CPUParticles2D
 
@@ -35,7 +37,7 @@ func _process(delta: float) -> void:
 	_temps += delta
 	if coince:
 		dangereux = false
-		_sprite.texture = _images[0]
+		_sprite.texture = image_ecrase if _ecrase and image_ecrase != null else _images[0]
 		return
 	if fixe:
 		dangereux = true
@@ -81,6 +83,7 @@ func coincer(sous_le_bloc: bool) -> void:
 		tw.tween_property(_sprite, "position:x", 1.0 if i % 2 == 0 else -1.0, 0.04)
 	tw.tween_property(_sprite, "position:x", 0.0, 0.04)
 	if sous_le_bloc:
+		ecraser()
 		return
 	_poussiere = CPUParticles2D.new()
 	_poussiere.position = Vector2(8, 10)
@@ -100,9 +103,16 @@ func coincer(sous_le_bloc: bool) -> void:
 	_poussiere.emitting = true
 
 
+# Le bloc est passé sur cette dalle : pointes tordues, pierre fendue (reste visible si le bloc continue plus loin).
+func ecraser() -> void:
+	_ecrase = true
+	_sprite.modulate = Color.WHITE
+
+
 # R : la bande se remet en marche.
 func decoincer() -> void:
 	coince = false
+	_ecrase = false
 	_sprite.modulate = Color.WHITE
 	if _poussiere != null:
 		_poussiere.queue_free()

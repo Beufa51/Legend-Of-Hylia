@@ -500,6 +500,7 @@ func _poser_objets() -> void:
 						dec = 0.0 if x < TAILLE_SALLE.x / TUILE / 2 else 0.5   # bande de gauche / bande de droite, en alternance
 					pics.initialiser(_images_serie("pics_", 5), periode_pics, dec, y == _premiere_rangee_pics(x))
 					pics.fixe = colonnes_pics_fixes.has(x)
+					pics.image_ecrase = _image("pics_ecrase")
 					if pics_doux:
 						_rainurer_pics(x, y, pos)
 					_pics[Vector2i(x, y)] = pics
@@ -766,8 +767,11 @@ func _trou_ou_mur(x: int, y: int) -> bool:
 # Un bloc poussé dans un trou « q » TOMBE dedans (derrière le bord, avec de la poussière) et le REBOUCHE : la case devient une dalle de sol, le bloc a disparu.
 func bloc_arrive(bloc: Bloc) -> void:
 	var cellule := bloc.case
-	if pics_doux and _pics.has(cellule) and not _pics[cellule].coince:
-		_coincer_bande(cellule)
+	if pics_doux and _pics.has(cellule):
+		if _pics[cellule].coince:
+			_pics[cellule].ecraser()   # le bloc avance dans une bande déjà coincée : il écrase aussi cette dalle
+		else:
+			_coincer_bande(cellule)
 		return
 	if not _eaux_a_combler.has(cellule) or _eaux_a_combler[cellule]["pont"] != null:
 		return
