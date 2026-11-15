@@ -85,25 +85,38 @@ func _tester_scene(chemin: String) -> void:
 			else:
 				print("OK  Plume1 : 3 blocs sur 3 marques = porte ouverte")
 			root.get_node("Etat").drapeaux.erase("p1_plaque")
-	# Plume 3b : le bloc poussé 3 fois vers le haut comble le canal (pont) ; R remet l'eau
+	# Plume 3b : 3 blocs poussés dans le couloir comblent les 3 trous (ponts) ; R rouvre les trous
 	if chemin.ends_with("world.tscn"):
 		var salle3 = scene.get_node_or_null("Plume3b")
-		if salle3 == null or salle3._blocs.size() != 1 or salle3._eaux_a_combler.size() != 1:
-			_erreurs.append("Plume3b : il faut 1 bloc et 1 case d'eau à combler")
+		if salle3 == null or salle3._blocs.size() != 3 or salle3._eaux_a_combler.size() != 3:
+			_erreurs.append("Plume3b : il faut 3 blocs et 3 trous")
 		else:
 			salle3.reinitialiser()
-			var bloc3 = salle3._blocs[0]
-			for i in 3:
-				await bloc3.pousser(Vector2i.UP)
-			var eau3 = salle3._eaux_a_combler.values()[0]
-			if eau3["pont"] == null:
-				_erreurs.append("Plume3b : le bloc poussé dans le canal ne le comble pas")
+			var b3 = salle3._blocs
+			# A (17,7) monte de 2 ; B (14,8) va en (17,8) puis monte de 4 ; C (20,9) va en (17,9) puis monte de 6
+			for bloc in b3:
+				var pousses := [Vector2i.RIGHT, 3, Vector2i.UP, 4]
+				if bloc.case == Vector2i(17, 7): pousses = [Vector2i.UP, 2]
+				elif bloc.case == Vector2i(20, 9): pousses = [Vector2i.LEFT, 3, Vector2i.UP, 6]
+				for k in range(0, pousses.size(), 2):
+					for i in pousses[k + 1]:
+						await bloc.pousser(pousses[k])
+			var combles := 0
+			for trou in salle3._eaux_a_combler.values():
+				if trou["pont"] != null:
+					combles += 1
+			if combles != 3:
+				_erreurs.append("Plume3b : %d trou(s) comblé(s) sur 3" % combles)
 			else:
 				salle3.reinitialiser()
-				if eau3["pont"] != null or bloc3.case != bloc3.depart or not bloc3.visible:
-					_erreurs.append("Plume3b : R doit remettre l'eau et le bloc")
+				var ouverts := 0
+				for trou in salle3._eaux_a_combler.values():
+					if trou["pont"] == null:
+						ouverts += 1
+				if ouverts != 3:
+					_erreurs.append("Plume3b : R doit rouvrir les 3 trous")
 				else:
-					print("OK  Plume3b : le bloc comble le canal, R remet tout")
+					print("OK  Plume3b : 3 blocs comblent les 3 trous, R les rouvre")
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")

@@ -99,16 +99,16 @@ for y in (9, 10, 11): put(p3a, 'T', (11, y), (12, y), (13, y))
 put(p3a, '3', (6, 5)); put(p3a, '2', (18, 5)); put(p3a, '1', (12, 4))
 put(p3a, 'B', (3, 3), (21, 3)); put(p3a, 'V', (2, 11), (3, 11), (22, 11), (21, 11)); put(p3a, 'S', (20, 8))
 
-# 3b (au milieu) : 4 cloches, 4 notes. Un CANAL d'eau coupe la salle en deux : la cloche 3 et la sortie sont de l'autre côté.
-#     Le bloc (au sud) se pousse vers le haut jusqu'au canal : il le COMBLE (pont de pierre), seul passage vers la cloche 3 et la porte.
+# 3b (au milieu) : 4 cloches, 4 notes. La cloche 3 est au fond d'un couloir étroit dont le sol est TROUÉ (3 trous) : impossible de l'atteindre.
+#     Il faut pousser 3 blocs dans le couloir : chacun comble un trou et devient un pont. (Plusieurs blocs, plusieurs trous.)
 p3b = vide(); plume_bas_haut(p3b)
 put(p3b, 'C', (12, 9))
 for y in (10, 11): put(p3b, 'T', (11, y), (12, y), (13, y))
-for x in range(2, 23): put(p3b, '~', (x, 4))
-put(p3b, 'q', (17, 4))                                                      # la case d'eau que le bloc comble
-put(p3b, '#', (16, 2), (18, 2)); put(p3b, '3', (17, 2))                     # la cloche 3, dans une niche, de l'autre côté du canal
-put(p3b, 'X', (17, 7))                                                      # le bloc, 3 poussées vers le haut
-put(p3b, '2', (5, 6)); put(p3b, '1', (5, 9)); put(p3b, '4', (19, 9))
+put(p3b, '#', (16, 2), (18, 2), (16, 3), (18, 3), (16, 4), (18, 4), (16, 5), (18, 5))   # les murs du couloir (colonne 17)
+put(p3b, '3', (17, 2))                                                      # la cloche 3, tout au fond
+put(p3b, 'q', (17, 3), (17, 4), (17, 5))                                    # les 3 trous
+put(p3b, 'X', (17, 7), (14, 8), (20, 9))                                    # les 3 blocs
+put(p3b, '2', (5, 6)); put(p3b, '1', (5, 9)); put(p3b, '4', (21, 5))
 put(p3b, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (22, 10)); put(p3b, 'O', (3, 2)); put(p3b, 'B', (9, 2))
 
 # 3c (la pointe) : SALLE SOMBRE, 5 cloches, 5 notes : il faut repérer dans le noir les cloches qui s'allument.

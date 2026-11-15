@@ -65,9 +65,10 @@ func pousser(dir: Vector2i) -> void:
 		salle.bloc_arrive(self)
 
 
-# Le bloc tombe dans l'eau : il disparaît (la case devient un pont).
-func couler() -> void:
-	visible = false
+# Le bloc comble un trou : il reste en place, de niveau avec le sol, on peut marcher dessus.
+func combler() -> void:
+	z_index = -1
+	modulate = Color(0.8, 0.86, 1.0)
 	_collision.set_deferred("disabled", true)
 
 
@@ -79,7 +80,8 @@ func briller(actif: bool) -> void:
 
 # Remet le bloc à sa case de départ (touche R).
 func reinitialiser() -> void:
-	visible = true
+	z_index = 0
+	modulate = Color(1, 1, 1)
 	_collision.set_deferred("disabled", false)
 	salle.liberer(case)
 	case = depart

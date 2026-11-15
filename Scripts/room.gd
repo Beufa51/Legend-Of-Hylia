@@ -485,20 +485,23 @@ func _poser_objets() -> void:
 					# une colonne sur deux est décalée d'un demi-cycle : on passe entre elles au bon moment
 					pics.initialiser(_images_serie("pics_", 5), periode_pics, fposmod(x * 0.5, 1.0), y == _premiere_rangee_pics(x))
 					_pics[Vector2i(x, y)] = pics
-				"~", "q":
-					# eau (bloque) : même rendu que les flaques ; "q" = eau qu'un bloc poussé dedans COMBLE (pont)
-					_poser_canal(x, y, pos, "~q")
-					if layout[y][x] == "q":
-						var corps := StaticBody2D.new()
-						corps.position = pos
-						var forme := RectangleShape2D.new()
-						forme.size = Vector2(TUILE, TUILE)
-						var coll := CollisionShape2D.new()
-						coll.shape = forme
-						coll.position = Vector2(TUILE / 2.0, TUILE / 2.0)
-						corps.add_child(coll)
-						add_child(corps)
-						_eaux_a_combler[Vector2i(x, y)] = {"corps": corps, "pont": null}
+				"~":
+					_poser_canal(x, y, pos, "~")   # eau (bloque), même rendu que les flaques
+				"q":
+					# TROU (bloque) : un bloc poussé dedans le COMBLE et devient un pont (on peut alors marcher dessus)
+					var haut := y > 0 and layout[y - 1][x] == "q"
+					var bas := y < layout.size() - 1 and layout[y + 1][x] == "q"
+					var sprite_trou := _poser("trou_%d" % ((1 if haut else 0) | (2 if bas else 0)), pos)
+					var corps := StaticBody2D.new()
+					corps.position = pos
+					var forme := RectangleShape2D.new()
+					forme.size = Vector2(TUILE, TUILE)
+					var coll := CollisionShape2D.new()
+					coll.shape = forme
+					coll.position = Vector2(TUILE / 2.0, TUILE / 2.0)
+					corps.add_child(coll)
+					add_child(corps)
+					_eaux_a_combler[Vector2i(x, y)] = {"corps": corps, "pont": null, "sprite": sprite_trou}
 				"r":
 					_case_reflet = Vector2i(x, y)
 				"a":
@@ -673,25 +676,19 @@ func _poser_canal(x: int, y: int, pos: Vector2, lettres: String) -> void:
 	_poser_anime([f1, f1, f1, f1, f2, f2, f2, f2], pos, x + y)
 
 
-# Un bloc poussé dans une case d'eau « q » la comble : il coule, la case devient un pont de pierre (marchable).
+# Un bloc poussé dans un trou « q » le comble : le bloc reste en place, de niveau avec le sol (pont marchable).
 func bloc_arrive(bloc: Bloc) -> void:
 	var cellule := bloc.case
 	if not _eaux_a_combler.has(cellule) or _eaux_a_combler[cellule]["pont"] != null:
 		return
-	var eau: Dictionary = _eaux_a_combler[cellule]
+	var trou: Dictionary = _eaux_a_combler[cellule]
 	liberer(cellule)
-	bloc.couler()
-	eau["corps"].process_mode = Node.PROCESS_MODE_DISABLED
-	for c in eau["corps"].get_children():
+	bloc.combler()
+	trou["corps"].process_mode = Node.PROCESS_MODE_DISABLED
+	for c in trou["corps"].get_children():
 		c.set_deferred("disabled", true)
-	var pont := Sprite2D.new()
-	pont.texture = _image("bloc_pierre")
-	pont.centered = false
-	pont.position = Vector2(cellule * TUILE) + Vector2(0, 2)
-	pont.modulate = Color(0.78, 0.86, 1.0)
-	pont.z_index = -1
-	add_child(pont)
-	eau["pont"] = pont
+	trou["sprite"].visible = false
+	trou["pont"] = bloc
 	_jouer_effet("res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact4.wav", -4.0)
 
 
@@ -713,7 +710,7 @@ func case_libre(cellule: Vector2i) -> bool:
 	if _occupe.has(cellule):
 		return false
 	if _eaux_a_combler.has(cellule):
-		return _eaux_a_combler[cellule]["pont"] == null   # de l'eau à combler : un bloc peut y entrer (une seule fois)
+		return true   # un trou : le bloc y entre et le comble ; une fois comblé, c'est du sol
 	return ".TPFXVouziar".contains(layout[cellule.y][cellule.x])
 
 
@@ -741,10 +738,10 @@ func _maj_boutons() -> void:
 
 # Touche R : les blocs reviennent à leur place de départ.
 func reinitialiser() -> void:
-	for eau in _eaux_a_combler.values():   # l'eau revient, les ponts disparaissent (les blocs sont remis à leur place plus bas)
+	for eau in _eaux_a_combler.values():   # les trous se rouvrent (les blocs sont remis à leur place plus bas)
 		if eau["pont"] != null:
-			eau["pont"].queue_free()
 			eau["pont"] = null
+			eau["sprite"].visible = true
 			eau["corps"].process_mode = Node.PROCESS_MODE_INHERIT
 			for c in eau["corps"].get_children():
 				c.set_deferred("disabled", false)
