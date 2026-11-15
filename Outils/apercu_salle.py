@@ -66,15 +66,13 @@ def room(lay, out):
             elif ch == "G": P("plume_doree", x, y, 2, 2)
             elif ch == "J": P("levier_1", x, y, 0, -12)
             elif ch == "Z": P("pics_5" if x % 2 == 0 else "pics_1", x, y, 0, -8)
-            elif ch == "~": P("eau_1", x, y)
+            elif ch in "~q": P("flaque_%d_%d_1" % ((1 if y>0 and lay[y-1][x] in "~q" else 0)|(2 if y<H-1 and lay[y+1][x] in "~q" else 0)|(4 if x>0 and lay[y][x-1] in "~q" else 0)|(8 if x<W-1 and lay[y][x+1] in "~q" else 0), (x*3+y*5)%4), x, y)
             elif ch in "DE" and y == 0 and x + 2 < W and lay[y][x + 2] == ch and (x == 0 or lay[y][x - 1] != ch):
                 P("arche_bois_1" if ch == "E" else "arche_herse_1", x, y)
             elif ch == "D" and 0 < y < H - 1 and lay[y - 1][x] != "D" and lay[y + 1][x] != "D" and x + 2 < W and lay[y][x + 2] == "D" and lay[y][x - 1] != "D":
                 P("arche_basse_1", x, y)
     for x in (7, 17):
         if mur(x, E - 1) and sol(x, E): P("banniere", x, 0, 0, E * T - 26)
-    for x in (9, 14):   # niches voûtées à barreaux (room.gd::COLONNES_NICHES)
-        if mur(x, E - 1) and sol(x, E) and mur(x + 1, E - 1) and sol(x + 1, E): P("meurtriere", x, 0, 4, E * T - 15)
     for x in (4, 20):
         if mur(x, E - 1) and sol(x, E): P("torche_1", x, 0, 2, E * T - 24)
     kn = Image.open(os.path.join(RACINE, "Assets/Ninja_adventure/Actor/Character/Knight/SeparateAnim/Idle.png")).convert("RGBA").crop((0, 0, 16, 16))

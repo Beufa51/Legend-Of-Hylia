@@ -9,7 +9,7 @@ SORTIE = os.path.join(os.path.dirname(__file__), "..", "Assets", "Gemini", "tuil
 S = 8   # sur-échantillonnage pour des bords propres
 # Palette tirée de la planche Gemini `eau.jpg` (rebord clair, eau vert sombre). Canal creusé dans la dalle : lèvre de pierre claire, ombre sous la lèvre, eau sombre vert-bleu (peu saturée, accordée à la pierre)
 RIVE = (18, 34, 44, 255)        # contour sombre
-BORD = (170, 192, 180, 255)     # lèvre de pierre éclairée
+BORD = (108, 120, 144, 255)     # lèvre de pierre éclairée
 OMBRE = (8, 52, 52, 255)       # ombre portée du rebord nord
 EAU = (22, 96, 84, 255)
 EAU_CLAIRE = (34, 124, 102, 255)

@@ -135,6 +135,7 @@ var _points_rayon := PackedVector2Array()   # le trajet du rayon (centres des ca
 var _calque_rayon: Node2D
 var _lumieres_rayon: Array[PointLight2D] = []
 var _statue_au_soleil := false
+var _eaux_a_combler := {}   # { case : {corps, pont} } eau « q » qu'un bloc comble
 var _cloches := {}         # { note (int) : Cloche }
 var _progression := 0      # combien de notes de la mélodie ont déjà été rejouées
 var _en_chant := false     # vrai pendant que la statue chante
@@ -451,16 +452,7 @@ func _poser_objets() -> void:
 					_occupe[Vector2i(x, y)] = foyer
 				"w":
 					_flaques[Vector2i(x, y)] = true
-					# la flaque se raccorde à ses voisines (bits : 1 nord, 2 sud, 4 ouest, 8 est) ; rives arrondies là où il n'y a pas d'eau
-					var bits := 0
-					if y > 0 and layout[y - 1][x] == "w": bits |= 1
-					if y < layout.size() - 1 and layout[y + 1][x] == "w": bits |= 2
-					if x > 0 and layout[y][x - 1] == "w": bits |= 4
-					if x < layout[y].length() - 1 and layout[y][x + 1] == "w": bits |= 8
-					var v := (x * 3 + y * 5) % 4   # 4 variantes pour que l'eau ne se répète pas
-					var f1 := "flaque_%d_%d_1" % [bits, v]
-					var f2 := "flaque_%d_%d_2" % [bits, v]
-					_poser_anime([f1, f1, f1, f1, f2, f2, f2, f2], pos, x + y)
+					_poser_canal(x, y, pos, "w")
 					if sombre:   # on doit voir les flaques dans le noir : une faible lueur bleue
 						var l := Lumiere.creer(Color(0.4, 0.65, 1.0), 0.5, 0.6)
 						l.position = pos + Vector2(8, 8)
@@ -493,12 +485,20 @@ func _poser_objets() -> void:
 					# une colonne sur deux est décalée d'un demi-cycle : on passe entre elles au bon moment
 					pics.initialiser(_images_serie("pics_", 5), periode_pics, fposmod(x * 0.5, 1.0), y == _premiere_rangee_pics(x))
 					_pics[Vector2i(x, y)] = pics
-				"~":
-					_poser_anime(["eau_1", "eau_1", "eau_1", "eau_1", "eau_1", "eau_1", "eau_2", "eau_2", "eau_2", "eau_2", "eau_2", "eau_2"], pos, x + y)
-					if y > 0 and layout[y - 1][x] != "~" and not _est_mur(x, y - 1):
-						# bord de l'eau : une marche sombre et un reflet clair
-						_poser_rect(pos, Vector2(TUILE, 2), Color(0.1, 0.12, 0.2))
-						_poser_rect(pos + Vector2(0, 2), Vector2(TUILE, 1), Color(0.55, 0.85, 0.95, 0.8))
+				"~", "q":
+					# eau (bloque) : même rendu que les flaques ; "q" = eau qu'un bloc poussé dedans COMBLE (pont)
+					_poser_canal(x, y, pos, "~q")
+					if layout[y][x] == "q":
+						var corps := StaticBody2D.new()
+						corps.position = pos
+						var forme := RectangleShape2D.new()
+						forme.size = Vector2(TUILE, TUILE)
+						var coll := CollisionShape2D.new()
+						coll.shape = forme
+						coll.position = Vector2(TUILE / 2.0, TUILE / 2.0)
+						corps.add_child(coll)
+						add_child(corps)
+						_eaux_a_combler[Vector2i(x, y)] = {"corps": corps, "pont": null}
 				"r":
 					_case_reflet = Vector2i(x, y)
 				"a":
@@ -660,10 +660,61 @@ func liberer(cellule: Vector2i) -> void:
 
 
 # Une case est libre pour un bloc si c'est du sol (pas un mur ni une statue) et que rien ne l'occupe.
+# Pose une case d'eau qui se raccorde à ses voisines (bits : 1 nord, 2 sud, 4 ouest, 8 est) ; `lettres` = lettres du plan comptées comme eau.
+func _poser_canal(x: int, y: int, pos: Vector2, lettres: String) -> void:
+	var bits := 0
+	if y > 0 and lettres.contains(layout[y - 1][x]): bits |= 1
+	if y < layout.size() - 1 and lettres.contains(layout[y + 1][x]): bits |= 2
+	if x > 0 and lettres.contains(layout[y][x - 1]): bits |= 4
+	if x < layout[y].length() - 1 and lettres.contains(layout[y][x + 1]): bits |= 8
+	var v := (x * 3 + y * 5) % 4   # 4 variantes pour que l'eau ne se répète pas
+	var f1 := "flaque_%d_%d_1" % [bits, v]
+	var f2 := "flaque_%d_%d_2" % [bits, v]
+	_poser_anime([f1, f1, f1, f1, f2, f2, f2, f2], pos, x + y)
+
+
+# Un bloc poussé dans une case d'eau « q » la comble : il coule, la case devient un pont de pierre (marchable).
+func bloc_arrive(bloc: Bloc) -> void:
+	var cellule := bloc.case
+	if not _eaux_a_combler.has(cellule) or _eaux_a_combler[cellule]["pont"] != null:
+		return
+	var eau: Dictionary = _eaux_a_combler[cellule]
+	liberer(cellule)
+	bloc.couler()
+	eau["corps"].process_mode = Node.PROCESS_MODE_DISABLED
+	for c in eau["corps"].get_children():
+		c.set_deferred("disabled", true)
+	var pont := Sprite2D.new()
+	pont.texture = _image("bloc_pierre")
+	pont.centered = false
+	pont.position = Vector2(cellule * TUILE) + Vector2(0, 2)
+	pont.modulate = Color(0.78, 0.86, 1.0)
+	pont.z_index = -1
+	add_child(pont)
+	eau["pont"] = pont
+	_jouer_effet("res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact4.wav", -4.0)
+
+
+func _jouer_effet(chemin: String, volume: float) -> void:
+	var flux = load(chemin)
+	if flux == null:
+		return
+	var lecteur := AudioStreamPlayer.new()
+	lecteur.stream = flux
+	lecteur.volume_db = volume
+	add_child(lecteur)
+	lecteur.play()
+	lecteur.finished.connect(lecteur.queue_free)
+
+
 func case_libre(cellule: Vector2i) -> bool:
 	if cellule.y < 0 or cellule.y >= layout.size() or cellule.x < 0 or cellule.x >= layout[cellule.y].length():
 		return false
-	return ".TPFXVouziar".contains(layout[cellule.y][cellule.x]) and not _occupe.has(cellule)
+	if _occupe.has(cellule):
+		return false
+	if _eaux_a_combler.has(cellule):
+		return _eaux_a_combler[cellule]["pont"] == null   # de l'eau à combler : un bloc peut y entrer (une seule fois)
+	return ".TPFXVouziar".contains(layout[cellule.y][cellule.x])
 
 
 # Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
@@ -690,6 +741,13 @@ func _maj_boutons() -> void:
 
 # Touche R : les blocs reviennent à leur place de départ.
 func reinitialiser() -> void:
+	for eau in _eaux_a_combler.values():   # l'eau revient, les ponts disparaissent (les blocs sont remis à leur place plus bas)
+		if eau["pont"] != null:
+			eau["pont"].queue_free()
+			eau["pont"] = null
+			eau["corps"].process_mode = Node.PROCESS_MODE_INHERIT
+			for c in eau["corps"].get_children():
+				c.set_deferred("disabled", false)
 	if _reflet != null and is_instance_valid(_reflet):
 		_reflet.reinitialiser()
 	for bloc in _blocs:
@@ -1363,7 +1421,7 @@ func _poser_details() -> void:
 	else:
 		for x in (COLONNES_NICHES if niches else []):
 			if _mur_haut_libre(x) and _mur_haut_libre(x + 1):
-				_poser("meurtriere", Vector2(x * TUILE + 4, EPAISSEUR * TUILE - 15))   # fente étroite (les niches à barreaux faisaient « portes »)
+				pass   # plus de niche ni de meurtrière : elles ne s'intégraient pas au mur
 	for x in COLONNES_TORCHES:
 		if _mur_haut_libre(x):
 			_poser_anime(TORCHE, Vector2(x * TUILE + 2, EPAISSEUR * TUILE - 24), x)

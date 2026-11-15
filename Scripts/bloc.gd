@@ -11,6 +11,7 @@ var salle: Node2D       # la salle (Room) qui contient ce bloc
 var case: Vector2i      # case actuelle (colonne, ligne) dans la salle
 var depart: Vector2i    # case de départ (pour recommencer la salle)
 var en_mouvement := false
+var _collision: CollisionShape2D
 var _sprite: Sprite2D
 var _texture_normale: Texture2D
 var _texture_active: Texture2D   # rune dorée : le bloc est posé sur une marque
@@ -35,6 +36,7 @@ func initialiser(une_salle: Node2D, sa_case: Vector2i, texture: Texture2D, textu
 	collision.shape = forme
 	collision.position = Vector2(TUILE / 2.0, TUILE / 2.0)
 	add_child(collision)
+	_collision = collision
 
 
 # Pousse le bloc d'une case dans la direction `dir` (ex. Vector2i.LEFT), si la place est libre.
@@ -59,6 +61,14 @@ func pousser(dir: Vector2i) -> void:
 	await tween.finished
 	en_mouvement = false
 	salle.verifier_plaques()
+	if salle.has_method("bloc_arrive"):
+		salle.bloc_arrive(self)
+
+
+# Le bloc tombe dans l'eau : il disparaît (la case devient un pont).
+func couler() -> void:
+	visible = false
+	_collision.set_deferred("disabled", true)
 
 
 # Allume (ou éteint) la rune du bloc.
@@ -69,6 +79,8 @@ func briller(actif: bool) -> void:
 
 # Remet le bloc à sa case de départ (touche R).
 func reinitialiser() -> void:
+	visible = true
+	_collision.set_deferred("disabled", false)
 	salle.liberer(case)
 	case = depart
 	salle.occuper(case, self)
