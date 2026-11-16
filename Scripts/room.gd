@@ -63,6 +63,7 @@ const COLONNES_NICHES := [9, 14]   # niches voûtées à barreaux (2 colonnes de
 const BRASERO := ["brasero_1", "brasero_2", "brasero_3", "brasero_4", "brasero_5", "brasero_6"]
 const TORCHE := ["torche_1", "torche_2", "torche_3", "torche_4", "torche_5", "torche_6"]
 const DECALAGE_BRASERO := Vector2(-2, -10)
+const HAUTEUR_RAYON := -4.0   # le rayon est dessiné 4 px au-dessus du centre des cases (= centre du verre des miroirs, voir miroir.gd)
 
 # Énigmes : noms de drapeaux (voir etat.gd). Vide = rien.
 @export var fond_image := ""      # salle dont le sol et les murs sont UNE image peinte (Assets/Gemini/tuiles/<nom>.png, 400x224) : formes non carrées (éventail du vestibule du donjon final) ; le plan sert aux collisions
@@ -1636,9 +1637,11 @@ func _eclairer_rayon(cases: Array[Vector2i]) -> void:
 # Le rayon : un trait doré épais et transparent (halo) + un trait fin presque blanc (cœur), qui scintille.
 func _dessiner_rayon() -> void:
 	var scintille := 0.85 + 0.15 * sin(_temps * 12.0)
+	# Le rayon passe par le CENTRE DU VERRE des miroirs (qui est plus haut que le centre de leur case : le miroir est monté sur une colonne).
+	var h := Vector2(0, HAUTEUR_RAYON)
 	for i in range(_points_rayon.size() - 1):
-		_calque_rayon.draw_line(_points_rayon[i], _points_rayon[i + 1], Color(1.0, 0.7, 0.2, 0.35 * scintille), 6.0)
-		_calque_rayon.draw_line(_points_rayon[i], _points_rayon[i + 1], Color(1.0, 0.95, 0.7, 0.9 * scintille), 2.0)
+		_calque_rayon.draw_line(_points_rayon[i] + h, _points_rayon[i + 1] + h, Color(1.0, 0.7, 0.2, 0.35 * scintille), 6.0)
+		_calque_rayon.draw_line(_points_rayon[i] + h, _points_rayon[i + 1] + h, Color(1.0, 0.95, 0.7, 0.9 * scintille), 2.0)
 
 
 # La statue du coq a été frappée : elle chante... sauf si elle attend le soleil.
