@@ -145,6 +145,52 @@ func _scenario_bruit() -> void:
 		_echec = true
 
 
+## Scénario « flamme » (Plume 4d, `-- flamme Plume4d 12 11`) : on allume le brasero de gauche (fixe la sentinelle de gauche), on longe le bas jusqu'au pot sonore
+## de droite, on le brise (la sentinelle de droite se retourne 3,6 s), on COURT au passage : jamais repéré.
+func _scenario_flamme() -> void:
+	var gche = salle._sentinelles[0]
+	var drte = salle._sentinelles[1]
+	Input.action_press("run")
+	await marcher(Vector2i(3, 11), true, 0.0)
+	Input.action_release("run")
+	Input.action_press("move_up")   # on regarde le brasero (il bloque : on reste en place)
+	await get_tree().create_timer(0.3).timeout
+	Input.action_release("move_up")
+	Input.action_press("attack")
+	await get_tree().create_timer(0.1).timeout
+	Input.action_release("attack")
+	await get_tree().create_timer(0.4).timeout
+	print("brasero allumé : ", salle._braseros[0].allume, " ; gauche regarde ", gche.direction, " ; droite regarde ", drte.direction, " (image ", _image, ")")
+	if not salle._braseros[0].allume or gche.direction != Vector2i.LEFT or drte.direction != Vector2i.LEFT:
+		_echec = true
+	Input.action_press("run")
+	await marcher(Vector2i(20, 11), true, 0.0)
+	await marcher(Vector2i(20, 10), false, 0.0)
+	Input.action_release("run")
+	Input.action_press("move_right")   # on regarde le pot sonore
+	await get_tree().create_timer(0.3).timeout
+	Input.action_release("move_right")
+	Input.action_press("attack")
+	await get_tree().create_timer(0.1).timeout
+	Input.action_release("attack")
+	await get_tree().create_timer(0.35).timeout
+	print("pot brisé : bruit restant ", snappedf(salle._bruit_reste, 0.1), " s ; gauche ", gche.direction, " ; droite ", drte.direction, " (image ", _image, ")")
+	if drte.direction != Vector2i.RIGHT or gche.direction != Vector2i.LEFT:
+		_echec = true
+	var t0 := Time.get_ticks_msec()
+	Input.action_press("run")
+	await marcher(Vector2i(12, 10), true, 0.0)
+	await marcher(Vector2i(12, 4), false, 0.0)
+	Input.action_release("run")
+	print("au passage après %d ms ; repéré : %s ; joueur %s" % [Time.get_ticks_msec() - t0, salle._repere, monde.joueur.position])
+	if salle._repere:
+		_echec = true
+	await get_tree().create_timer(4.0).timeout   # la sentinelle de droite revient : on est déjà derrière le passage
+	print("après le retour du regard : repéré ", salle._repere, " ; droite regarde ", drte.direction)
+	if salle._repere:
+		_echec = true
+
+
 ## Scénario « heros » : le héros marche dans les 4 directions puis donne un coup de lance dans chacune ; photos dans user://bot/heros_*.png
 func _scenario_heros() -> void:
 	DirAccess.make_dir_recursive_absolute("user://bot")

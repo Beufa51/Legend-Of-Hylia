@@ -160,12 +160,13 @@ put(p4c, 'U', (19, 9), (5, 9))
 put(p4c, 'B', (3, 2), (21, 2)); put(p4c, 'S', (7, 7), (17, 7))
 put(p4c, 'O', (3, 11), (21, 11))   # pas d'autres pots dans cette salle : les seuls pots sont les pots sonores dorés (aucune confusion possible)
 
-# 4d (la pointe) : SALLE SOMBRE. Deux sentinelles se font face et gardent le passage vers la plume.
-#     Une flamme attire leur regard : le brasero de gauche fait tourner la tête de la sentinelle de gauche,
-#     celui de droite la sentinelle de droite. Les deux allumés -> le passage du milieu n'est plus surveillé.
-#     La rangée du bas (11) n'est jamais vue : on peut aller allumer les braseros sans risque.
+# 4d (la pointe) : SALLE SOMBRE = COMBINAISON de tout. Deux sentinelles se font face et gardent le passage vers la plume (le goulet du milieu).
+#     La flamme du brasero de gauche (14 s) fixe la sentinelle de GAUCHE (la seule assez proche pour la voir) ; le pot sonore de droite,
+#     une fois brisé, fait tourner la tête de la sentinelle de DROITE pendant 3 s (la seule assez proche pour l'entendre).
+#     Il faut donc : allumer à gauche, longer le bas (jamais vu) jusqu'au pot, le briser, puis COURIR au passage avant que la droite se retourne.
+#     Un seul des deux ne suffit pas : l'autre sentinelle garde le milieu.
 p4d = vide(); sol(p4d, 2, 22, 6, 11); sol(p4d, 11, 13, 12, 13); sol(p4d, 2, 22, 2, 4); sol(p4d, 12, 12, 5, 5)
-put(p4d, '>', (7, 7)); put(p4d, '<', (17, 7)); put(p4d, 'L', (3, 10), (21, 10)); put(p4d, 'G', (12, 3))
+put(p4d, '>', (7, 7)); put(p4d, '<', (17, 7)); put(p4d, 'L', (3, 10)); put(p4d, 'U', (21, 10)); put(p4d, 'G', (12, 3))
 put(p4d, 'V', (3, 2), (21, 2), (2, 6), (22, 6))
 for x in range(10, 15): put(p4d, 'T', (x, 4))
 def retour_p4(n):   # repéré = retour au bas de l'écran où l'on est (case (12,12) de l'écran 4a, 4b, 4c ou 4d)
@@ -238,7 +239,7 @@ salles = [
         'periodes_sentinelles': 'PackedFloat32Array(2, 3)'}),
     ('Plume4c', (4, -3), p4c, (0.98, 0.94, 1.0), {'retour': retour_p4(3), 'drapeau_repos': REPOS_P4, 'duree_bruit': '3.0'}),
     ('Plume4d', (4, -4), p4d, (1.0, 1.0, 1.0), {'sombre': 'true', 'retour': retour_p4(4), 'drapeau_repos': REPOS_P4,
-        'drapeau_gemme': 'plume4', 'duree_braseros': '14.0'}),
+        'drapeau_gemme': 'plume4', 'duree_braseros': '14.0', 'duree_bruit': '3.6'}),
     ('Epine5', (5, 0), e5, (0.86, 0.90, 0.96), {}),
     ('Plume5a', (5, -1), p5a, (1.05, 1.0, 0.9), {'drapeau_rayon': 'p5_rayon1', 'drapeau_porte': 'p5_rayon1'}),
     ('Plume5b', (5, -2), p5b, (1.04, 0.99, 0.92), {'drapeau_rayon': 'p5_rayon2', 'drapeau_porte': 'p5_rayon2'}),

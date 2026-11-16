@@ -50,6 +50,8 @@ const DEMI_ANGLE := 0.4538   # 26 degrés (en radians)
 const RAYONS_CONE := 24   # nombre de rayons lancés pour dessiner le cône (plus = plus lisse)
 const COULEUR_REGARD := Color(1.0, 0.9, 0.45, 0.42)   # près de l'œil (le bout du cône est plus transparent)
 const COULEUR_REPERE := Color(1.0, 0.2, 0.15, 0.55)
+const PORTEE_FLAMME := 9.0    # une flamme n'attire que les sentinelles à moins de 9 cases (elles la voient)
+const PORTEE_BRUIT := 11.0    # un bruit n'est entendu que par les sentinelles à moins de 11 cases
 const PREAVIS_BRUIT := 0.9   # le cône clignote pendant les dernières secondes du bruit : les gardes vont se retourner
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
 const COLONNES_TORCHES := [4, 20]
@@ -1344,7 +1346,8 @@ func _surveiller(delta: float) -> void:
 		if au_repos:
 			sentinelle.endormir()
 			continue
-		var flamme := _direction_vers_bruit(sentinelle) if _bruit_reste > 0.0 else _direction_attiree(sentinelle)
+		var entend := _bruit_reste > 0.0 and Vector2(sentinelle.case).distance_to(Vector2(_bruit_case)) <= PORTEE_BRUIT
+		var flamme := _direction_vers_bruit(sentinelle) if entend else _direction_attiree(sentinelle)
 		var attiree := flamme != Vector2i.ZERO
 		sentinelle.regarder(flamme if attiree else sentinelle.direction_normale(), attiree)
 		sentinelle.avancer(delta)
@@ -1352,7 +1355,7 @@ func _surveiller(delta: float) -> void:
 			_flamme_vue = true
 			pass   # (aucun texte : la bulle « ? » au-dessus de la sentinelle suffit)
 		_cones.append(_cone(sentinelle))
-		_cones_clignotent.append(sentinelle.va_tourner() or (_bruit_reste > 0.0 and _bruit_reste < PREAVIS_BRUIT))
+		_cones_clignotent.append(sentinelle.va_tourner() or (entend and _bruit_reste < PREAVIS_BRUIT))
 	if _bruit_reste > 0.0:
 		_bruit_reste = maxf(0.0, _bruit_reste - delta)
 	_calque_regards.queue_redraw()
@@ -1376,7 +1379,7 @@ func _direction_attiree(sentinelle: Sentinelle) -> Vector2i:
 	var meilleure_distance := INF
 	for brasero in _braseros:
 		var d := Vector2(sentinelle.case).distance_squared_to(brasero.position / TUILE)
-		if brasero.allume and d < meilleure_distance:
+		if brasero.allume and d <= PORTEE_FLAMME * PORTEE_FLAMME and d < meilleure_distance:
 			meilleur = brasero
 			meilleure_distance = d
 	if meilleur == null:
@@ -1396,6 +1399,8 @@ func _creer_pot_sonore(c: Vector2i) -> void:
 	pot.initialiser(image_pot if image_pot != null else _image("pot_4"), PotSonore.OR)
 	pot.decorer(_image("sonore_anneaux"), _image("pot_sonore_brise"), image_pot != null)
 	pot.add_to_group("frappable")   # l'anneau d'aide (après 50 s d'inactivité) le montre
+	if sombre:
+		_poser_lumiere(Vector2(c * TUILE) + Vector2(8, 8), 26.0)   # le pot doré luit dans le noir (il faut pouvoir le repérer)
 	pot.bruit_fait.connect(_sur_bruit.bind(c))
 	_suivre(pot, c)
 

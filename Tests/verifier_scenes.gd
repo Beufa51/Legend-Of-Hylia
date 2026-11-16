@@ -194,6 +194,32 @@ func _tester_scene(chemin: String) -> void:
 					_erreurs.append("Plume4c : bruit à l'est -> regard %s (attendu droite), puis %s (attendu bas), pot remis : %s" % [pendant, apres, revenu is PotSonore])
 				else:
 					print("OK  Plume4c : le pot sonore détourne la sentinelle %.1f s puis elle se retourne ; R remet le pot" % s4c.duree_bruit)
+	# Plume 4d (combinaison) : la flamme de gauche fixe SEULEMENT la sentinelle de gauche, le pot de droite SEULEMENT celle de droite (3,6 s)
+	if chemin.ends_with("world.tscn"):
+		var s4d = scene.get_node_or_null("Plume4d")
+		if s4d == null or s4d._sentinelles.size() != 2 or s4d._braseros.size() != 1 or s4d._pots_sonores.size() != 1 or not s4d.sombre:
+			_erreurs.append("Plume4d : il faut 2 sentinelles, 1 brasero, 1 pot sonore, salle sombre")
+		else:
+			s4d.reinitialiser()
+			await process_frame
+			var gche = s4d._sentinelles[0]
+			var drte = s4d._sentinelles[1]
+			s4d._surveiller(0.05)
+			var etat0: bool = gche.direction == Vector2i.RIGHT and drte.direction == Vector2i.LEFT
+			s4d._braseros[0].frapper()
+			s4d._surveiller(0.05)
+			var etat1: bool = gche.direction == Vector2i.LEFT and drte.direction == Vector2i.LEFT
+			s4d._occupe.get(Vector2i(21, 10)).frapper()
+			s4d._surveiller(0.05)
+			var etat2: bool = gche.direction == Vector2i.LEFT and drte.direction == Vector2i.RIGHT
+			s4d._surveiller(s4d.duree_bruit)
+			s4d._surveiller(0.05)
+			var etat3: bool = gche.direction == Vector2i.LEFT and drte.direction == Vector2i.LEFT
+			s4d.reinitialiser()
+			if not (etat0 and etat1 and etat2 and etat3):
+				_erreurs.append("Plume4d : départ %s, flamme %s, flamme+bruit %s, après le bruit %s (attendu : vrai partout)" % [etat0, etat1, etat2, etat3])
+			else:
+				print("OK  Plume4d : la flamme fixe la sentinelle proche, le bruit fixe l'autre, puis elle se retourne")
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")
