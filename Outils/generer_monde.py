@@ -220,9 +220,15 @@ for x in range(2, 23): p5e[5][x] = '#'
 for x in (11, 12, 13): p5e[5][x] = 'D'
 put(p5e, 'W', (12, 3)); put(p5e, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p5e, 'T', (x, 4))
-put(p5e, 'R', (1, 10)); put(p5e, 'X', (5, 10)); put(p5e, 'N', (9, 10), (9, 7)); put(p5e, 'C', (16, 7))
-put(p5e, '1', (4, 7)); put(p5e, '2', (20, 10)); put(p5e, '3', (14, 10)); put(p5e, '4', (20, 7))
+# Le rayon : bloc à dégager (comme en 5c), puis 6 miroirs. Au départ, le rayon fait déjà le circuit... à l'envers et rate le coq.
+# Solution UNIQUE (Outils/verifier_miroirs.py) : dégager le bloc, retourner (14,10), (18,10) et (18,8) ;
+# « retourner le dernier miroir touché » tourne en rond. La stèle (12,9) porte l'énigme du coq.
+put(p5e, 'R', (1, 10)); put(p5e, 'X', (3, 10))
+put(p5e, 'M', (7, 10), (7, 7), (14, 10), (18, 8)); put(p5e, 'N', (14, 7), (18, 10)); put(p5e, 'C', (15, 8))
+put(p5e, '1', (4, 7)); put(p5e, '2', (21, 7)); put(p5e, '3', (10, 11)); put(p5e, '4', (21, 11))
+put(p5e, 'I', (12, 9))
 put(p5e, 'V', (21, 6), (3, 6))
+ENIGME_5E = "12 10 ! « Je dors dans la pierre jusqu'à l'aube. Qu'un rayon de soleil touche mon cœur, et je chanterai pour toi. »"
 
 salles = [
     ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'escaliers_descente': 'PackedStringArray("11 9")', 'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal', 'drapeau_porte2': 'fragment_gauche',
@@ -252,7 +258,7 @@ salles = [
         'drapeau_rayon': 'p5_rayon3', 'drapeau_porte': 'p5_rayon3'}),
     ('Plume5d', (5, -4), p5d, (1.0, 1.0, 1.0), {'sombre': 'true', 'drapeau_rayon': 'p5_rayon4', 'drapeau_porte': 'p5_rayon4'}),
     ('Plume5e', (5, -5), p5e, (1.08, 1.0, 0.88), {'chanteur_au_soleil': 'true', 'melodie': '3142', 'drapeau_melodie': 'p5_chant',
-        'drapeau_porte': 'p5_chant', 'drapeau_gemme': 'fragment_gauche'}),
+        'drapeau_porte': 'p5_chant', 'drapeau_gemme': 'fragment_gauche', 'passages': 'PackedStringArray("%s")' % ENIGME_5E}),
 ]
 depart = (200, 224 + 180)   # le joueur commence dans le vestibule (0,1)
 

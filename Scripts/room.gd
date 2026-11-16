@@ -39,7 +39,7 @@ class_name Room
 
 
 # Caractères qui bloquent le joueur (en plus des murs)
-const SOLIDES := "#SOBR~"
+const SOLIDES := "#SOBR~I"
 # Épaisseur des murs du bord (en tuiles)
 const EPAISSEUR := 2
 # Son d'une fausse note (pack Ninja Adventure)
@@ -144,6 +144,7 @@ var _points_rayon := PackedVector2Array()   # le trajet du rayon (centres des ca
 var _calque_rayon: Node2D
 var _lumieres_rayon: Array[PointLight2D] = []
 var _statue_au_soleil := false
+var _chanteur: Chanteur
 var _pont_fini := false     # une colonne du gouffre est entièrement rebouchée : le pont est acquis (sauvegardé, plus remis à zéro)
 var _etait_visitee := false # la caméra était dans cette salle à l'image précédente
 var _eaux_a_combler := {}   # { case : {corps, pont} } eau « q » qu'un bloc comble
@@ -441,6 +442,8 @@ func _poser_objets() -> void:
 					_poser("statue_chevalier", pos + Vector2(-3, TUILE - 34))
 				"O":
 					_poser("statue_oiseau", pos + Vector2(-3, TUILE - 34))
+				"I":
+					_poser("stele_inscription", pos + Vector2(0, TUILE - 24))   # stèle à inscription : le texte se lit en marchant devant (passage « ! »)
 				"V":
 					var pot := Pot.new()
 					pot.position = pos
@@ -633,6 +636,9 @@ func _poser_objets() -> void:
 					chanteur.position = pos
 					add_child(chanteur)
 					chanteur.initialiser(self, _image("statue_oiseau"), sombre)
+					if chanteur_au_soleil:
+						chanteur.attendre_soleil()   # un halo solaire éteint derrière sa tête : il attend la lumière
+					_chanteur = chanteur
 					_occupe[Vector2i(x, y)] = chanteur
 
 
@@ -1567,6 +1573,8 @@ func _tracer_rayon() -> void:
 	# Le coq chante quand le soleil se lève sur lui !
 	if sur_statue and not _statue_au_soleil:
 		jouer_melodie()
+	if sur_statue != _statue_au_soleil and _chanteur != null:
+		_chanteur.soleil(sur_statue)
 	_statue_au_soleil = sur_statue
 	_calque_rayon.queue_redraw()
 	if sombre:
@@ -1604,6 +1612,8 @@ func _dessiner_rayon() -> void:
 func statue_frappee() -> void:
 	if chanteur_au_soleil and not _statue_au_soleil:
 		_jouer_son("res://Assets/Ninja_adventure/Audio/Sounds/Menu/Cancel.wav", -8.0)   # la statue reste muette : un son sourd, sans texte
+		if _chanteur != null:
+			_chanteur.reclamer_soleil()   # son disque solaire vacille : « il me manque la lumière »
 		return
 	jouer_melodie()
 

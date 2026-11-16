@@ -7,7 +7,7 @@
 import itertools, re, os
 
 ICI = os.path.dirname(os.path.abspath(__file__))
-OPAQUES = set("#SOBVXDHCRWLKQJE^v<>123456")
+OPAQUES = set("#SOBVXDHCRWLKQJEI^v<>123456")
 
 
 def salles():

@@ -7,6 +7,9 @@ var salle: Node2D
 var _sprite: Sprite2D
 var _lumiere: PointLight2D
 var _dernier_coup := -1000
+var _disque: Node2D            # disque solaire derrière la tête (seulement si la statue attend le soleil)
+var _temps := 0.0
+var _au_soleil := false
 
 
 func initialiser(une_salle: Node2D, texture: Texture2D, dans_le_noir: bool) -> void:
@@ -40,3 +43,68 @@ func frapper() -> void:
 	tween.tween_property(_sprite, "position:y", 16 - 34 - 3, 0.08)
 	tween.tween_property(_sprite, "position:y", 16 - 34, 0.1)
 	salle.statue_frappee()
+
+
+# La statue ne chante qu'au soleil (salle 5e) : un HALO SOLAIRE éteint (bronze terne) entoure sa tête,
+# comme les réceptacles des autres salles : le joueur comprend que le rayon doit venir ici.
+func attendre_soleil(_eteinte: Texture2D = null, _allumee: Texture2D = null) -> void:
+	_disque = Node2D.new()
+	_disque.position = Vector2(8, -12)
+	_disque.draw.connect(_dessiner_halo)
+	add_child(_disque)
+	move_child(_disque, 0)   # derrière la statue
+
+
+func _dessiner_halo() -> void:
+	var centre := Vector2.ZERO
+	if _au_soleil:
+		for i in 12:   # rayons dorés
+			var a := TAU * i / 12.0 + _temps * 0.6
+			_disque.draw_line(centre + Vector2.from_angle(a) * 9.0, centre + Vector2.from_angle(a) * (13.0 if i % 2 == 0 else 11.0), Color(1.0, 0.85, 0.35, 0.9), 1.5)
+		_disque.draw_circle(centre, 9.0, Color(1.0, 0.78, 0.25))
+		_disque.draw_circle(centre, 6.5, Color(1.0, 0.93, 0.6))
+	else:
+		for i in 8:    # rayons éteints, courts
+			var a := TAU * i / 8.0
+			_disque.draw_line(centre + Vector2.from_angle(a) * 9.0, centre + Vector2.from_angle(a) * 11.0, Color(0.55, 0.42, 0.22, 0.8), 1.0)
+		_disque.draw_circle(centre, 9.0, Color(0.22, 0.18, 0.14))
+		_disque.draw_circle(centre, 8.0, Color(0.5, 0.38, 0.18))
+		_disque.draw_circle(centre, 6.0, Color(0.36, 0.27, 0.13))
+
+
+# Le rayon arrive (ou repart) : le halo s'allume, la statue se dresse un instant.
+func soleil(allume: bool) -> void:
+	_au_soleil = allume
+	if _disque == null:
+		return
+	_disque.modulate = Color.WHITE
+	_disque.queue_redraw()
+	_lumiere.energy = 0.9 if allume else 0.0
+	if allume:
+		var tween := create_tween()
+		_disque.scale = Vector2.ONE * 1.5
+		tween.tween_property(_disque, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK)
+		tween.parallel().tween_property(_sprite, "position:y", 16 - 34 - 4, 0.12)
+		tween.tween_property(_sprite, "position:y", 16 - 34, 0.2)
+
+
+# Frappée sans soleil : le halo vacille, comme une braise qui cherche la lumière.
+func reclamer_soleil() -> void:
+	if _disque == null:
+		return
+	var tween := create_tween()
+	for i in 3:
+		tween.tween_property(_disque, "modulate", Color(2.0, 1.6, 0.8), 0.07)
+		tween.tween_property(_disque, "modulate", Color.WHITE, 0.1)
+
+
+# Éteint : le halo respire doucement ; allumé : ses rayons tournent lentement.
+func _process(delta: float) -> void:
+	if _disque == null:
+		return
+	_temps += delta
+	if _au_soleil:
+		_disque.queue_redraw()
+	else:
+		var p := 0.5 + 0.5 * sin(_temps * 3.0)
+		_disque.self_modulate = Color(1.0 + 0.6 * p, 1.0 + 0.45 * p, 1.0 + 0.1 * p)
