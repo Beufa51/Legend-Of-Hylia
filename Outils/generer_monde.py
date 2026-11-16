@@ -195,7 +195,7 @@ put(p5b, 'R', (1, 6)); put(p5b, 'Y', (21, 4)); put(p5b, '#', (8, 3))
 # 4 miroirs bien ESPACÉS (le chemin de la lumière dessine un grand « S ») + 1 leurre à l'écart. Solution : A (8,6) et B (8,10) en « \\ », C (15,10) et D (15,4) en « / ».
 # Au départ A est en « / » : le rayon monte et s'écrase sur le pilier (8,3). Retourner A, B et D (3 coups) ; « retourner le dernier miroir touché » échoue.
 put(p5b, 'M', (8, 6), (8, 10), (15, 10), (4, 4)); put(p5b, 'N', (15, 4))
-put(p5b, 'V', (2, 2), (3, 2), (21, 2), (3, 11), (2, 11)); put(p5b, 'O', (16, 10)); put(p5b, 'B', (6, 2), (18, 2))
+put(p5b, 'V', (2, 2), (3, 2), (21, 2), (3, 11), (2, 11)); put(p5b, 'O', (20, 8))   # statue loin des miroirs (elle collait le miroir (15,10)); put(p5b, 'B', (6, 2), (18, 2))
 
 # 5c : le bloc COUPE le rayon. Au départ, le miroir est MAL RÉGLÉ : le rayon remonte et s'écrase contre le mur du haut.
 #      Un coup de lance le fait descendre... et on le voit s'arrêter net sur le bloc (la leçon : un bloc arrête la lumière).
