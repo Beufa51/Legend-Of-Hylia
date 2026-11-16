@@ -625,8 +625,8 @@ func _poser_objets() -> void:
 					for d in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
 						if not _est_mur(x + d.x, y + d.y):
 							_dir_source = d
-					_poser("source_soleil", pos)
-					_poser_halo_soleil(pos + Vector2(8, 8))
+					_poser("source_soleil", pos + Vector2(0, HAUTEUR_RAYON))   # le soleil est à la hauteur du rayon : le laser part de son centre
+					_poser_halo_soleil(pos + Vector2(8, 8 + HAUTEUR_RAYON))
 				"M", "N":
 					var miroir := Miroir.new()
 					miroir.position = pos
