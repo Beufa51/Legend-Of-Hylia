@@ -13,6 +13,7 @@ const SON_REFUS := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Cancel.wav"
 const CADENAS := "res://Assets/Gemini/tuiles/cadenas.png"   # Outils/fabriquer_runes_sol.py
 const DUREE_ANIMATION := 0.6
 
+const MARGE_ARCHE := 12.0   # largeur de maçonnerie à gauche et à droite de l'ouverture d'une arche de 48 px
 var _collision: CollisionShape2D
 var _sprite: Sprite2D
 var _taille := Vector2.ZERO
@@ -40,6 +41,16 @@ func initialiser(taille: Vector2, texture: Texture2D, images: Array[Texture2D] =
 	_collision.shape = forme
 	_collision.position = taille / 2.0
 	add_child(_collision)
+	# Une arche de 48 px : l'ouverture ne fait que ~24 px, le reste est la MAÇONNERIE de chaque côté.
+	# Ces deux piliers restent solides même porte ouverte (sinon on marchait dans le mur de l'arche).
+	if not images.is_empty() and taille.x >= 48.0:
+		for cote in [0, 1]:
+			var pilier := RectangleShape2D.new()
+			pilier.size = Vector2(MARGE_ARCHE, taille.y)
+			var c := CollisionShape2D.new()
+			c.shape = pilier
+			c.position = Vector2(MARGE_ARCHE / 2.0 if cote == 0 else taille.x - MARGE_ARCHE / 2.0, taille.y / 2.0)
+			add_child(c)
 
 
 # Porte à serrure : quand le joueur la touche, si le drapeau `cle` est levé (il a la clé), le drapeau
