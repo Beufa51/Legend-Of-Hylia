@@ -230,16 +230,16 @@ func _tester_scene(chemin: String) -> void:
 			_erreurs.append("Plume5b : il faut 5 miroirs et un réceptacle")
 		else:
 			s5b._tracer_rayon()
-			var avant: bool = s5b._cible.allumee or s5b._pilier_brule != Vector2i(17, 5)
-			for c in [Vector2i(10, 6), Vector2i(10, 8)]:
+			var avant: bool = s5b._cible.allumee or s5b._pilier_brule != Vector2i(8, 3)
+			for c in [Vector2i(8, 6), Vector2i(8, 10), Vector2i(15, 4)]:
 				s5b._miroirs[c].frapper()
 			s5b._tracer_rayon()
-			var apres: bool = s5b._cible.allumee and s5b._pilier_brule != Vector2i(17, 5)
+			var apres: bool = s5b._cible.allumee and s5b._pilier_brule != Vector2i(8, 3)
 			s5b.reinitialiser()
 			if avant or not apres:
-				_erreurs.append("Plume5b : réceptacle allumé au départ %s, après les 2 miroirs %s (attendu faux puis vrai)" % [avant, apres])
+				_erreurs.append("Plume5b : réceptacle allumé au départ %s, après les 3 miroirs %s (attendu faux puis vrai)" % [avant, apres])
 			else:
-				print("OK  Plume5b : le faux chemin bute sur le pilier (brûlure dorée) ; 2 miroirs retournés -> réceptacle allumé")
+				print("OK  Plume5b : le faux chemin bute sur le pilier (brûlure dorée) ; 3 miroirs retournés -> réceptacle allumé")
 	# Plume 5c : miroir mal réglé au départ (le rayon monte) ; retourné, il s'arrête sur le bloc ; bloc sur le bouton -> réceptacle
 	if chemin.ends_with("world.tscn"):
 		var s5c = scene.get_node_or_null("Plume5c")
@@ -289,8 +289,8 @@ func _tester_scene(chemin: String) -> void:
 	# Plume 5e (pointe) : bloc dans le rayon ; dégagé + 3 miroirs retournés -> le soleil touche le coq (disque allumé)
 	if chemin.ends_with("world.tscn"):
 		var s5e = scene.get_node_or_null("Plume5e")
-		if s5e == null or s5e._miroirs.size() != 6 or s5e._chanteur == null or s5e._blocs.size() != 1:
-			_erreurs.append("Plume5e : il faut 6 miroirs, la statue du coq et 1 bloc")
+		if s5e == null or s5e._miroirs.size() != 5 or s5e._chanteur == null or s5e._blocs.size() != 1:
+			_erreurs.append("Plume5e : il faut 5 miroirs, la statue du coq et 1 bloc")
 		else:
 			s5e._tracer_rayon()
 			var avant: bool = s5e._statue_au_soleil
@@ -299,7 +299,7 @@ func _tester_scene(chemin: String) -> void:
 			bloc.case = Vector2i(3, 9)
 			bloc.position = Vector2(bloc.case * 16)
 			s5e.occuper(bloc.case, bloc)
-			for c in [Vector2i(14, 10), Vector2i(18, 10), Vector2i(18, 8)]:
+			for c in [Vector2i(7, 7), Vector2i(21, 7)]:
 				s5e._miroirs[c].frapper()
 			s5e._tracer_rayon()
 			var apres: bool = s5e._statue_au_soleil
@@ -309,7 +309,7 @@ func _tester_scene(chemin: String) -> void:
 			if avant or not apres or not disque_ok or s5e._statue_au_soleil:
 				_erreurs.append("Plume5e : soleil sur le coq au départ %s, après solution %s, disque %s, après R %s" % [avant, apres, disque_ok, s5e._statue_au_soleil])
 			else:
-				print("OK  Plume5e : bloc dégagé + 3 miroirs -> le soleil touche le coq, son disque s'allume ; R remet tout")
+				print("OK  Plume5e : bloc dégagé + 2 miroirs -> le soleil touche le coq, son disque s'allume ; R remet tout")
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")

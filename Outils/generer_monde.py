@@ -191,8 +191,10 @@ put(p5a, 'V', (3, 11), (21, 11), (21, 2)); put(p5a, 'S', (6, 8)); put(p5a, 'B', 
 #      à droite. Solution (vérifiée par Outils/verifier_miroirs.py, plan trouvé par recherche automatique) :
 #      retourner (10,6) et (10,8). Les miroirs (10,5) et (11,6) sont des leurres.
 p5b = vide(); plume_grille(p5b)
-put(p5b, 'R', (1, 6)); put(p5b, 'M', (10, 6), (10, 8), (19, 8), (11, 6), (10, 5)); put(p5b, 'Y', (19, 5))
-put(p5b, '#', (17, 5))
+put(p5b, 'R', (1, 6)); put(p5b, 'Y', (21, 4)); put(p5b, '#', (8, 3))
+# 4 miroirs bien ESPACÉS (le chemin de la lumière dessine un grand « S ») + 1 leurre à l'écart. Solution : A (8,6) et B (8,10) en « \\ », C (15,10) et D (15,4) en « / ».
+# Au départ A est en « / » : le rayon monte et s'écrase sur le pilier (8,3). Retourner A, B et D (3 coups) ; « retourner le dernier miroir touché » échoue.
+put(p5b, 'M', (8, 6), (8, 10), (15, 10), (4, 4)); put(p5b, 'N', (15, 4))
 put(p5b, 'V', (2, 2), (3, 2), (21, 2), (3, 11), (2, 11)); put(p5b, 'O', (16, 10)); put(p5b, 'B', (6, 2), (18, 2))
 
 # 5c : le bloc COUPE le rayon. Au départ, le miroir est MAL RÉGLÉ : le rayon remonte et s'écrase contre le mur du haut.
@@ -228,8 +230,10 @@ for x in range(10, 15): put(p5e, 'T', (x, 4))
 # Solution UNIQUE (Outils/verifier_miroirs.py) : dégager le bloc, retourner (14,10), (18,10) et (18,8) ;
 # « retourner le dernier miroir touché » tourne en rond. La stèle (12,9) porte l'énigme du coq.
 put(p5e, 'R', (1, 10)); put(p5e, 'X', (3, 10))
-put(p5e, 'M', (7, 10), (7, 7), (14, 10), (18, 8)); put(p5e, 'N', (14, 7), (18, 10)); put(p5e, 'C', (15, 8))
-put(p5e, '1', (5, 7)); put(p5e, '2', (20, 7)); put(p5e, '3', (10, 8)); put(p5e, '4', (20, 9))
+# 4 miroirs aux 4 coins d'un grand rectangle (rayon : rangée 10 -> colonne 7 -> rangée 7 -> colonne 21 -> rangée 10 -> statue) + 1 leurre.
+# Solution (Outils/verifier_miroirs.py) : dégager le bloc, A (7,10) et B (7,7) en « / », C (21,7) en « \\ », D (21,10) en « / ». Départ : B et C faux (2 coups).
+put(p5e, 'M', (7, 10), (21, 7), (21, 10), (4, 7)); put(p5e, 'N', (7, 7)); put(p5e, 'C', (15, 10))
+put(p5e, '1', (4, 9)); put(p5e, '2', (11, 8)); put(p5e, '3', (16, 8)); put(p5e, '4', (19, 9))
 put(p5e, 'I', (12, 9))
 put(p5e, 'V', (21, 6), (3, 6))
 ENIGME_5E = "12 10 ! « Je dors dans la pierre jusqu'à l'aube. Qu'un rayon de soleil touche mon cœur, et je chanterai pour toi. »"
