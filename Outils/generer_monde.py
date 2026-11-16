@@ -158,7 +158,7 @@ p4c = vide(); plume_ouverte(p4c); sol(p4c, 2, 22, 2, 4); sol(p4c, 11, 13, 5, 6);
 put(p4c, 'v', (12, 3))
 put(p4c, 'U', (19, 9), (5, 9))
 put(p4c, 'B', (3, 2), (21, 2)); put(p4c, 'S', (7, 7), (17, 7))
-put(p4c, 'V', (3, 11), (22, 11), (2, 4), (22, 4), (3, 7), (21, 7), (22, 10))   # (rangée 11 libre : c'est le chemin sûr vers les pots sonores)
+put(p4c, 'O', (3, 11), (21, 11))   # pas d'autres pots dans cette salle : les seuls pots sont les pots sonores dorés (aucune confusion possible)
 
 # 4d (la pointe) : SALLE SOMBRE. Deux sentinelles se font face et gardent le passage vers la plume.
 #     Une flamme attire leur regard : le brasero de gauche fait tourner la tête de la sentinelle de gauche,
