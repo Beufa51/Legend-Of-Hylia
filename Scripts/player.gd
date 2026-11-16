@@ -13,6 +13,14 @@ const CASE_G := Vector2i(48, 32)
 # Prioritaire sur le héros Gemini s'il existe ; supprimer ou renommer heros_pc.png pour revenir au héros Gemini.
 const HEROS_PC := "res://Assets/Heros/heros_pc.png"
 const ECHELLE_PC := 0.8   # taille du héros Pixel Crawler (1.0 = taille d'origine, 31 px)
+# Recrue à l'épée (pack Fantasy Tileset) : héros de toute l'épreuve ; la lance ne lui est remise qu'à l'adoubement (drapeau "lance_recue").
+const RECRUE_REPOS := "res://Assets/Heros/recrue_Idle.png"
+const RECRUE_MARCHE := "res://Assets/Heros/recrue_Walk.png"
+const RECRUE_COUP := "res://Assets/Heros/recrue_Slash.png"
+const CASE_RECRUE := Vector2i(40, 48)
+const ECHELLE_RECRUE := 0.75   # le héros du pack fait ~34 px de haut : on le réduit (~25 px)
+const LIGNE_RECRUE := {"gauche": 0, "droite": 1, "haut": 2, "bas": 3}   # ordre des rangées dans les planches
+var _recrue := false   # vrai = on joue la recrue à l'épée
 const CASE_PC := Vector2i(62, 53)
 const LIGNE_PC := {"bas": 0, "haut": 1, "droite": 2, "gauche": 3}   # ordre des directions dans chaque bloc de 4 lignes
 # Le héros Gemini n'a pas de pose d'estoc de face / de dos (la planche ne dessine la lance que de profil) :
@@ -67,7 +75,12 @@ var _invulnerable := 0.0      # temps restant pendant lequel on ne peut plus êt
 
 func _ready() -> void:
 	add_to_group("joueur")
-	if ResourceLoader.exists(HEROS_PC):
+	_recrue = ResourceLoader.exists(RECRUE_MARCHE) and ResourceLoader.exists(RECRUE_COUP) and ResourceLoader.exists(RECRUE_REPOS) and not Etat.est("lance_recue")
+	if _recrue:
+		sprite.sprite_frames = _creer_animations_recrue()
+		sprite.scale = Vector2.ONE * ECHELLE_RECRUE
+		sprite.offset = Vector2(0, -12)   # pieds à la ligne 40 d'une case de 48 : on les pose sur la collision
+	elif ResourceLoader.exists(HEROS_PC):
 		sprite.sprite_frames = _creer_animations_pc()
 		sprite.scale = Vector2.ONE * ECHELLE_PC   # le héros du pack faisait 31 px de haut : on le réduit (~25 px)
 		sprite.offset = Vector2(0, -7)   # les pieds du héros sont à la ligne 39 d'une case de 53 : on les pose sur la collision
@@ -387,7 +400,7 @@ func _creer_lance() -> void:
 	add_child(lance)
 	var image := Sprite2D.new()
 	image.texture = load(LANCE_IMAGE)
-	image.visible = not (ResourceLoader.exists(HEROS_G) or ResourceLoader.exists(HEROS_PC))   # les héros Gemini / Pixel Crawler tiennent leur lance dans leurs images : on ne dessine pas la lance du pack en plus
+	image.visible = not (_recrue or ResourceLoader.exists(HEROS_G) or ResourceLoader.exists(HEROS_PC))   # les héros Gemini / Pixel Crawler tiennent leur lance dans leurs images : on ne dessine pas la lance du pack en plus
 	lance.add_child(image)
 	if ResourceLoader.exists(HEROS_G) and ResourceLoader.exists(LANCE_G) and not ResourceLoader.exists(HEROS_PC):
 		_lance_g = Sprite2D.new()
@@ -485,6 +498,40 @@ func _creer_animations() -> SpriteFrames:
 		for col in 8:
 			frames.add_frame("attaque_" + d, _decoupe(coup, col, ligne))
 	return frames
+
+
+# Animations de la recrue à l'épée : marche 4 images, repos 4, coup d'épée 6 (l'arc de l'épée est dans les images).
+func _creer_animations_recrue() -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	frames.remove_animation("default")
+	var marche: Texture2D = load(RECRUE_MARCHE)
+	var repos: Texture2D = load(RECRUE_REPOS)
+	var coup: Texture2D = load(RECRUE_COUP)
+	for d in DIRECTIONS:
+		var k: int = LIGNE_RECRUE[d]
+		frames.add_animation("marche_" + d)
+		frames.set_animation_speed("marche_" + d, 8.0)
+		frames.set_animation_loop("marche_" + d, true)
+		for col in 4:
+			frames.add_frame("marche_" + d, _decoupe_recrue(marche, col, k))
+		frames.add_animation("repos_" + d)
+		frames.set_animation_speed("repos_" + d, 4.0)
+		frames.set_animation_loop("repos_" + d, true)
+		for col in 4:
+			frames.add_frame("repos_" + d, _decoupe_recrue(repos, col, k))
+		frames.add_animation("attaque_" + d)
+		frames.set_animation_speed("attaque_" + d, 22.0)   # 6 images en ~0,27 s : la durée du coup
+		frames.set_animation_loop("attaque_" + d, false)
+		for col in 6:
+			frames.add_frame("attaque_" + d, _decoupe_recrue(coup, col, k))
+	return frames
+
+
+func _decoupe_recrue(texture: Texture2D, col: int, ligne: int) -> AtlasTexture:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = texture
+	atlas.region = Rect2(col * CASE_RECRUE.x, ligne * CASE_RECRUE.y, CASE_RECRUE.x, CASE_RECRUE.y)
+	return atlas
 
 
 # Animations du héros Pixel Crawler : marche 6 images, repos 4, estoc 8 (la lance est dans les images), touché 4.
