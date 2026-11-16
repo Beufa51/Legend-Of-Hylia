@@ -49,7 +49,7 @@ func frapper() -> void:
 # comme les réceptacles des autres salles : le joueur comprend que le rayon doit venir ici.
 func attendre_soleil(_eteinte: Texture2D = null, _allumee: Texture2D = null) -> void:
 	_disque = Node2D.new()
-	_disque.position = Vector2(8, -12)
+	_disque.position = Vector2(8, -27)   # au-dessus de la tête : le disque dépasse de la statue (avant il était caché derrière)
 	_disque.draw.connect(_dessiner_halo)
 	add_child(_disque)
 	move_child(_disque, 0)   # derrière la statue
