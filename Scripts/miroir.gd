@@ -18,7 +18,7 @@ func initialiser(est_oblique: bool, image_m: Texture2D, image_n: Texture2D) -> v
 	add_to_group("frappable")
 	_sprite = Sprite2D.new()
 	# centré, pour pouvoir le faire tourner sur lui-même ; l'image (18x26, sur son socle) a son pied au bas de la case
-	_sprite.position = Vector2(8, 16 - image_m.get_height() / 2.0)
+	_sprite.position = Vector2(8, 16 - image_m.get_height() / 2.0 + 6.0)   # +6 : le verre tombe à ~4 px sous le centre de la case, sur la ligne du rayon (room.gd::HAUTEUR_RAYON)
 	add_child(_sprite)
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(14, 14)
