@@ -166,6 +166,34 @@ func _tester_scene(chemin: String) -> void:
 							_erreurs.append("Plume3c : les cloches justes doivent rester allumées, et s'éteindre sur une fausse note")
 						else:
 							print("OK  Plume3c : mur de pics écrasé par le bloc, R le remet ; cloches justes allumées")
+	# Plume 4c (le bruit) : 2 pots sonores ; en briser un fait fixer la sentinelle vers lui pendant duree_bruit, puis elle se retourne ; R remet le pot
+	if chemin.ends_with("world.tscn"):
+		var s4c = scene.get_node_or_null("Plume4c")
+		if s4c == null or s4c._pots_sonores.size() != 2 or s4c._sentinelles.size() != 1:
+			_erreurs.append("Plume4c : il faut 2 pots sonores et 1 sentinelle")
+		else:
+			s4c.reinitialiser()
+			await process_frame
+			var garde = s4c._sentinelles[0]
+			s4c._surveiller(0.05)
+			var avant: Vector2i = garde.direction
+			var pot_est = s4c._occupe.get(Vector2i(19, 9))
+			if not (pot_est is PotSonore) or avant != Vector2i.DOWN:
+				_erreurs.append("Plume4c : pot sonore en (19,9) et sentinelle tournée vers le bas au départ")
+			else:
+				pot_est.frapper()
+				s4c._surveiller(0.05)
+				var pendant: Vector2i = garde.direction
+				s4c._surveiller(s4c.duree_bruit)
+				s4c._surveiller(0.05)
+				var apres: Vector2i = garde.direction
+				await process_frame
+				s4c.reinitialiser()
+				var revenu = s4c._occupe.get(Vector2i(19, 9))
+				if pendant != Vector2i.RIGHT or apres != Vector2i.DOWN or not (revenu is PotSonore):
+					_erreurs.append("Plume4c : bruit à l'est -> regard %s (attendu droite), puis %s (attendu bas), pot remis : %s" % [pendant, apres, revenu is PotSonore])
+				else:
+					print("OK  Plume4c : le pot sonore détourne la sentinelle %.1f s puis elle se retourne ; R remet le pot" % s4c.duree_bruit)
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")

@@ -44,7 +44,7 @@ func _pos(case: Vector2i) -> Vector2:
 
 
 ## Marche (touches réellement enfoncées) jusqu'à la case, d'abord en x puis en y (ou l'inverse).
-func marcher(case: Vector2i, x_d_abord := true) -> void:
+func marcher(case: Vector2i, x_d_abord := true, pause := 0.15) -> void:
 	var cible := _pos(case)
 	var axes := [0, 1] if x_d_abord else [1, 0]
 	for axe in axes:
@@ -65,7 +65,8 @@ func marcher(case: Vector2i, x_d_abord := true) -> void:
 		if t >= 9.0:
 			print("!! bloqué en marchant vers ", case, " : joueur ", monde.joueur.position)
 			_echec = true
-		await get_tree().create_timer(0.15).timeout
+		if pause > 0.0:
+			await get_tree().create_timer(pause).timeout
 
 
 func comblees() -> int:
@@ -108,6 +109,39 @@ func _scenario_gouffre() -> void:
 	await marcher(Vector2i(17, 3), false)
 	print("arrivée au nord : joueur ", monde.joueur.position, " (visé ", _pos(Vector2i(17, 3)), ")")
 	if absf(monde.joueur.position.y - _pos(Vector2i(17, 3)).y) > 6.0:
+		_echec = true
+
+
+## Scénario « bruit » (Plume 4c, `-- bruit Plume4c 12 11`) : sans bruit le passage est surveillé ; on longe la rangée du bas (hors du regard),
+## on brise le pot sonore de l'est, on COURT jusqu'au passage puis on contourne la sentinelle par le côté : jamais repéré.
+func _scenario_bruit() -> void:
+	await marcher(Vector2i(18, 11), true)
+	await marcher(Vector2i(18, 9), false)
+	print("avant le bruit : repéré ", salle._repere, " ; pots sonores ", salle._pots_sonores.size())
+	Input.action_press("move_right")   # on regarde le pot (il bloque : on reste en place)
+	await get_tree().create_timer(0.3).timeout
+	Input.action_release("move_right")
+	Input.action_press("attack")
+	await get_tree().create_timer(0.1).timeout
+	Input.action_release("attack")
+	await get_tree().create_timer(0.35).timeout
+	print("pot brisé : bruit restant ", snappedf(salle._bruit_reste, 0.1), " s ; la sentinelle regarde ", salle._sentinelles[0].direction, " (image ", _image, ")")
+	if salle._sentinelles[0].direction != Vector2i.RIGHT:
+		_echec = true
+	var t0 := Time.get_ticks_msec()
+	Input.action_press("run")
+	await marcher(Vector2i(18, 8), false, 0.0)
+	await marcher(Vector2i(12, 8), true, 0.0)
+	await marcher(Vector2i(12, 4), false, 0.0)
+	await marcher(Vector2i(11, 4), true, 0.0)
+	await marcher(Vector2i(11, 2), false, 0.0)
+	Input.action_release("run")
+	print("hors du passage après %d ms ; repéré : %s ; joueur %s" % [Time.get_ticks_msec() - t0, salle._repere, monde.joueur.position])
+	if salle._repere:
+		_echec = true
+	await get_tree().create_timer(3.0).timeout   # la sentinelle se retourne : on est à côté d'elle, elle ne nous voit pas
+	print("après le retour du regard : repéré ", salle._repere, " ; regarde ", salle._sentinelles[0].direction)
+	if salle._repere:
 		_echec = true
 
 
