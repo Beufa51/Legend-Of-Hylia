@@ -145,8 +145,11 @@ def image_profil(boite):
 
 haut_im, haut_cx, haut_hanche = image_profil(BOITES_PROFIL[HAUT_DU_CORPS])
 haut_im = haut_im.crop((0, 0, haut_im.width, haut_hanche + 1))
+# Les images 4 et 8 de la rangée du haut font SAUTER tout le corps de 15 px (pieds en l'air) : on avait l'impression d'enjamber un obstacle à chaque pas.
+# On garde les 6 images où les pieds restent au sol : contact, milieu, passage, contact (autre jambe), milieu, passage.
+IMAGES_PROFIL = [0, 1, 2, 4, 5, 6]
 profil = []
-for boite in BOITES_PROFIL:
+for boite in [BOITES_PROFIL[i] for i in IMAGES_PROFIL]:
     jambes_im, jambes_cx, jambes_hanche = image_profil(boite)
     jambes = jambes_im.crop((0, jambes_hanche + 1, jambes_im.width, jambes_im.height))
     toile = Image.new("RGBA", (700, 380), (0, 0, 0, 0))
@@ -158,10 +161,10 @@ for boite in BOITES_PROFIL:
     profil.append((reduire(rogne, E_PROFIL), (350 - bb[0]) * E_PROFIL))
 
 bases = {"bas": cases_marche["bas"][0], "haut": cases_marche["haut"][0]}
-BALANCEMENT_PROFIL = [0, 1, 0, -1, 0, 1, 0, -1]
+BALANCEMENT_PROFIL = [0, 1, 0, 0, 1, 0]
 for ligne, d in enumerate(("bas", "haut", "gauche", "droite")):
     if d in ("gauche", "droite"):
-        for col in range(8):
+        for col in range(len(profil)):
             p, cx = profil[col]
             poser(feuille, p, cx, col, ligne, miroir=(d == "gauche"), dy=BALANCEMENT_PROFIL[col])
         continue
