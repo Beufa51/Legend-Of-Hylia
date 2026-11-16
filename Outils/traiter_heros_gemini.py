@@ -77,28 +77,100 @@ def case(boite):
     return p, cx * E
 
 
-def poser(feuille, p, cx, col, ligne, miroir=False):
+def poser(feuille, p, cx, col, ligne, miroir=False, dy=0):
     if miroir:
         p = ImageOps.mirror(p)
         cx = p.width - cx
     x = col * CW + round(CW / 2 - cx)
-    y = ligne * CH + PIEDS + 1 - p.height
+    y = ligne * CH + PIEDS + 1 - p.height + dy
     feuille.alpha_composite(p, (max(col * CW, x) if x < col * CW else x, y))
 
 
 lignes = 4 + 1 + 4 + 1
-colonnes = 5
+colonnes = 8
 feuille = Image.new("RGBA", (colonnes * CW, lignes * CH), (0, 0, 0, 0))
 cases_marche = {n: [case(b) for b in bs] for n, bs in boites_marche.items()}
-# marche vers la droite : les images 2, 3, 5, 3 (lance calée sous le bras) ; l'image 1 n'a pas de lance visible, la 4 la tient droite
-droite = [cases_marche["droite"][i] for i in (1, 2, 4, 2, 1)]
-ordre = {"bas": cases_marche["bas"], "haut": cases_marche["haut"], "droite": droite}
+# MARCHE : les 5 images de marche de la planche Gemini sont presque identiques (on ne voyait pas les pas) : on fabrique un vrai cycle
+# de 8 images à partir d'UNE image de base : un pied se lève (jusqu'à 2 px, les bottes montent), puis l'autre, et le corps monte d'1 px
+# quand un pied est au plus haut (balancement). Les images de base : face = 1re de la ligne du haut, dos = 1re, profil = 2e (lance calée sous le bras).
+ZONE_PIEDS = 7                       # les 6 dernières lignes (bottes + bas du pantalon) bougent
+LEVEE_G = [0, 2, 3, 2, 0, 0, 0, 0]   # hauteur du pied gauche (de l'image) à chaque image du cycle
+LEVEE_D = [0, 0, 0, 0, 0, 2, 3, 2]   # hauteur du pied droit
+BALANCEMENT = [0, 0, -1, 0, 0, 0, -1, 0]
+
+
+def pas(p, cx, levee_g, levee_d):
+    h = p.height
+    res = p.copy()
+    coupe = max(1, min(p.width - 1, round(cx)))
+    for (x0, x1, levee) in ((0, coupe, levee_g), (coupe, p.width, levee_d)):
+        if levee == 0:
+            continue
+        boite = (x0, h - ZONE_PIEDS, x1, h)
+        zone = p.crop(boite)
+        res.paste(Image.new("RGBA", zone.size, (0, 0, 0, 0)), boite)
+        res.alpha_composite(zone, (x0, h - ZONE_PIEDS - levee))
+    return res
+
+
+# PROFIL (originaux/heros_profil.jpg, 2e planche Gemini : 8 vraies images de marche de profil, jambes bien différentes d'une image à l'autre,
+# MAIS la lance change de place à chaque image). On garde donc les JAMBES de chaque image et on les place sous UN SEUL haut du corps
+# (image 8 de la rangée du haut : lance portée à l'horizontale) : la lance reste fixe, les pas sont ceux de Gemini.
+PROFIL = np.array(Image.open("Assets/Gemini/originaux/heros_profil.jpg").convert("RGB")).astype(int)
+BOITES_PROFIL = [(4, 13, 242, 323), (254, 24, 411, 318), (427, 12, 581, 323), (587, 2, 802, 308),
+                 (786, 13, 1002, 323), (1004, 24, 1161, 318), (1182, 14, 1324, 323), (1331, 6, 1584, 308)]
+HAUT_DU_CORPS = 7                    # image qui donne le haut du corps (et la lance)
+E_PROFIL = E * 50 / 84               # le casque de profil fait 84 px ici contre 50 px sur la planche d'origine : même taille de casque
+
+
+def image_profil(boite):
+    """Image RGBA (taille de la boîte) d'une image de profil, centre du casque (x) et dernière ligne de la tunique bleue (la hanche)."""
+    x0, y0, x1, y1 = boite
+    c = PROFIL[y0:y1, x0:x1].copy()
+    r, g, b = c[..., 0], c[..., 1], c[..., 2]
+    fond = (r > 150) & (b > 150) & (g < 120)
+    lab, n = ndimage.label(~fond)
+    tailles = ndimage.sum(np.ones_like(lab), lab, range(1, n + 1))
+    m = np.isin(lab, [i + 1 for i, t in enumerate(tailles) if t > tailles.max() * 0.03])
+    m &= ~ndimage.binary_dilation(fond, iterations=2) | ndimage.binary_erosion(m, iterations=3)
+    gris = m & (np.abs(r - g) < 30) & (np.abs(g - b) < 40) & (r > 85) & (r < 155) & (b > 95)
+    cx = float(np.median(np.nonzero(gris)[1]))
+    bleu = m & (b > 140) & (r < 90) & (g < 130)
+    lignes = np.nonzero(bleu.sum(axis=1) >= 3)[0]
+    hanche = int(lignes.max())
+    c[~m] = (16, 16, 22)
+    al = (m * 255).astype(np.uint8)
+    return Image.merge("RGBA", (*Image.fromarray(c.astype(np.uint8)).split(), Image.fromarray(al))), cx, hanche
+
+
+haut_im, haut_cx, haut_hanche = image_profil(BOITES_PROFIL[HAUT_DU_CORPS])
+haut_im = haut_im.crop((0, 0, haut_im.width, haut_hanche + 1))
+profil = []
+for boite in BOITES_PROFIL:
+    jambes_im, jambes_cx, jambes_hanche = image_profil(boite)
+    jambes = jambes_im.crop((0, jambes_hanche + 1, jambes_im.width, jambes_im.height))
+    toile = Image.new("RGBA", (700, 380), (0, 0, 0, 0))
+    ox = 350 - round(haut_cx)
+    toile.alpha_composite(haut_im, (ox, 0))
+    toile.alpha_composite(jambes, (350 - round(jambes_cx), haut_hanche + 1))
+    bb = toile.getbbox()
+    rogne = toile.crop(bb)
+    profil.append((reduire(rogne, E_PROFIL), (350 - bb[0]) * E_PROFIL))
+
+bases = {"bas": cases_marche["bas"][0], "haut": cases_marche["haut"][0]}
+BALANCEMENT_PROFIL = [0, 1, 0, -1, 0, 1, 0, -1]
 for ligne, d in enumerate(("bas", "haut", "gauche", "droite")):
-    src = ordre["droite" if d == "gauche" else d]
-    for col, (p, cx) in enumerate(src):
-        poser(feuille, p, cx, col, ligne, miroir=(d == "gauche"))
+    if d in ("gauche", "droite"):
+        for col in range(8):
+            p, cx = profil[col]
+            poser(feuille, p, cx, col, ligne, miroir=(d == "gauche"), dy=BALANCEMENT_PROFIL[col])
+        continue
+    p, cx = bases[d]
+    for col in range(8):
+        image = pas(p, cx, LEVEE_G[col], LEVEE_D[col])
+        poser(feuille, image, cx, col, ligne, miroir=False, dy=BALANCEMENT[col])
 # repos : une image par direction
-repos = {"bas": cases_marche["bas"][0], "haut": cases_marche["haut"][0], "droite": cases_marche["droite"][1]}
+repos = {"bas": cases_marche["bas"][0], "haut": cases_marche["haut"][0], "droite": profil[1]}
 for col, d in enumerate(("bas", "haut", "gauche", "droite")):
     p, cx = repos["droite" if d == "gauche" else d]
     poser(feuille, p, cx, col, 4, miroir=(d == "gauche"))

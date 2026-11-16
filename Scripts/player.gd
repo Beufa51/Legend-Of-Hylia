@@ -485,9 +485,9 @@ func _creer_animations_g() -> SpriteFrames:
 	for k in DIRECTIONS.size():
 		var d: String = DIRECTIONS[k]
 		frames.add_animation("marche_" + d)
-		frames.set_animation_speed("marche_" + d, 9.0)
+		frames.set_animation_speed("marche_" + d, 12.0)   # cycle de 8 images : un pied se lève, puis l'autre (Outils/traiter_heros_gemini.py)
 		frames.set_animation_loop("marche_" + d, true)
-		for col in 5:
+		for col in 8:
 			frames.add_frame("marche_" + d, _decoupe_g(planche, col, k))
 		frames.add_animation("repos_" + d)
 		frames.set_animation_loop("repos_" + d, true)
