@@ -137,3 +137,17 @@ func _photo(nom: String) -> void:
 	var ecran: Vector2 = monde.joueur.global_position - (monde.camera.position - Vector2(200, 112))   # position du héros à l'écran (400x224)
 	var zone := Rect2i(int(ecran.x) - 40, int(ecran.y) - 44, 80, 60).intersection(Rect2i(0, 0, image.get_width(), image.get_height()))
 	image.get_region(zone).save_png("user://bot/%s.png" % nom)
+
+
+## Scénario « profil » : marche vers la droite puis la gauche, une photo tous les 0,07 s (pour juger les pas)
+func _scenario_profil() -> void:
+	DirAccess.make_dir_recursive_absolute("user://bot")
+	for d in ["droite", "gauche"]:
+		var touche := "move_right" if d == "droite" else "move_left"
+		Input.action_press(touche)
+		await get_tree().create_timer(0.3).timeout
+		for i in 8:
+			_photo("profil_%s_%02d" % [d, i])
+			await get_tree().create_timer(0.07).timeout
+		Input.action_release(touche)
+		await get_tree().create_timer(0.3).timeout
