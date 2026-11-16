@@ -32,6 +32,9 @@ var en_transition := false
 
 
 func _ready() -> void:
+	var chrono_debut := Time.get_ticks_msec()
+	if OS.is_debug_build():
+		print("[chrono] %s : la scène est chargée à %d ms" % [scene_file_path.get_file(), chrono_debut])
 	get_tree().root.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT   # (sécurité : l'écran redevient 400x224 mis à l'échelle, même si une cinématique HD a été interrompue)
 	if Etat.position_sauvee != Vector2.ZERO and Etat.scene_sauvee == scene_file_path:
 		joueur.position = _position_reprise()   # partie sauvegardée : on reprend là où on était
@@ -68,6 +71,9 @@ func _ready() -> void:
 		_ambiance = ambiance
 		_regler_obscurite(salle_actuelle)   # (si on reprend la partie dans une maison)
 	Etat.memoriser_position(joueur.position)   # la sauvegarde retient la scène où l'on est
+	if OS.is_debug_build():
+		print("[chrono] _ready du monde : %d ms ; premier affichage attendu à %d ms" % [Time.get_ticks_msec() - chrono_debut, Time.get_ticks_msec()])
+		get_tree().process_frame.connect(func(): print("[chrono] 1re image dessinée à %d ms" % Time.get_ticks_msec()), CONNECT_ONE_SHOT)
 	if Etat.arrivee_ecran != "":   # fondu d'arrivée + message
 		if Etat.arrivee_direction != "":
 			joueur.direction = Etat.arrivee_direction
