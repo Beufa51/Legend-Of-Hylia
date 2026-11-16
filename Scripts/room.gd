@@ -1634,14 +1634,78 @@ func _eclairer_rayon(cases: Array[Vector2i]) -> void:
 		_lumieres_rayon[j].enabled = false
 
 
-# Le rayon : un trait doré épais et transparent (halo) + un trait fin presque blanc (cœur), qui scintille.
+# Le rayon : faisceau Gemini (Outils/traiter_rayon.py) répété bout à bout, étincelles qui défilent, éclats aux coudes et à l'arrivée.
+# (Des Sprite2D, pas de draw_texture : le dessin direct de textures affichait du blanc sur certains PC.) Repli : traits dorés.
+var _sprites_rayon: Array[Sprite2D] = []
+
+
+func _sprite_rayon(i: int) -> Sprite2D:
+	while _sprites_rayon.size() <= i:
+		var sp := Sprite2D.new()
+		sp.use_parent_material = true   # même matériau additif que le calque
+		sp.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+		_calque_rayon.add_child(sp)
+		_sprites_rayon.append(sp)
+	return _sprites_rayon[i]
+
+
 func _dessiner_rayon() -> void:
 	var scintille := 0.85 + 0.15 * sin(_temps * 12.0)
 	# Le rayon passe par le CENTRE DU VERRE des miroirs (qui est plus haut que le centre de leur case : le miroir est monté sur une colonne).
 	var h := Vector2(0, HAUTEUR_RAYON)
+	var tex_seg := _image("rayon_segment")
+	var tex_etin := _image("rayon_etincelles")
+	var tex_imp := _image("rayon_impact")
+	if tex_seg == null:   # images absentes : anciens traits
+		for i in range(_points_rayon.size() - 1):
+			_calque_rayon.draw_line(_points_rayon[i] + h, _points_rayon[i + 1] + h, Color(1.0, 0.7, 0.2, 0.35 * scintille), 6.0)
+			_calque_rayon.draw_line(_points_rayon[i] + h, _points_rayon[i + 1] + h, Color(1.0, 0.95, 0.7, 0.9 * scintille), 2.0)
+		return
+	for i in range(_points_rayon.size() - 1):   # halo doux sous le faisceau
+		_calque_rayon.draw_line(_points_rayon[i] + h, _points_rayon[i + 1] + h, Color(1.0, 0.7, 0.2, 0.16 * scintille), 9.0)
+	var n := 0
 	for i in range(_points_rayon.size() - 1):
-		_calque_rayon.draw_line(_points_rayon[i] + h, _points_rayon[i + 1] + h, Color(1.0, 0.7, 0.2, 0.35 * scintille), 6.0)
-		_calque_rayon.draw_line(_points_rayon[i] + h, _points_rayon[i + 1] + h, Color(1.0, 0.95, 0.7, 0.9 * scintille), 2.0)
+		var a := _points_rayon[i] + h
+		var b := _points_rayon[i + 1] + h
+		var longueur := a.distance_to(b)
+		if longueur < 1.0:
+			continue
+		var rot := 0.0 if absf(b.x - a.x) >= absf(b.y - a.y) else PI / 2.0
+		var seg := _sprite_rayon(n)
+		n += 1
+		seg.texture = tex_seg
+		seg.region_enabled = true
+		seg.region_rect = Rect2(0, 0, longueur, tex_seg.get_height())
+		seg.position = (a + b) / 2.0
+		seg.rotation = rot
+		seg.scale = Vector2.ONE
+		seg.modulate = Color(1, 1, 1, scintille)
+		seg.visible = true
+		if tex_etin != null:   # étincelles qui défilent le long du faisceau
+			var et := _sprite_rayon(n)
+			n += 1
+			et.texture = tex_etin
+			et.region_enabled = true
+			et.region_rect = Rect2(fposmod(_temps * 40.0, 48.0), 0, longueur, tex_etin.get_height())
+			et.position = seg.position
+			et.rotation = rot
+			et.scale = Vector2.ONE
+			et.modulate = Color(1, 1, 1, 0.9)
+			et.visible = true
+	if tex_imp != null and _points_rayon.size() >= 2:   # éclats : petits aux coudes (miroirs), grand à l'arrivée
+		for i in range(1, _points_rayon.size()):
+			var imp := _sprite_rayon(n)
+			n += 1
+			imp.texture = tex_imp
+			imp.region_enabled = false
+			imp.position = _points_rayon[i] + h
+			imp.rotation = _temps * 0.8
+			var fin := i == _points_rayon.size() - 1
+			imp.scale = Vector2.ONE * ((0.9 + 0.15 * sin(_temps * 9.0)) if fin else 0.5)
+			imp.modulate = Color(1, 1, 1, 0.9 * scintille)
+			imp.visible = true
+	for j in range(n, _sprites_rayon.size()):
+		_sprites_rayon[j].visible = false
 
 
 # La statue du coq a été frappée : elle chante... sauf si elle attend le soleil.
