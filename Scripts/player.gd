@@ -12,6 +12,7 @@ const CASE_G := Vector2i(48, 32)
 # Héros PIXEL CRAWLER habillé (Outils/habiller_heros.py) : cases 62x53, 16 lignes (marche / repos / estoc / touché x bas, haut, DROITE, GAUCHE... voir LIGNES_PC)
 # Prioritaire sur le héros Gemini s'il existe ; supprimer ou renommer heros_pc.png pour revenir au héros Gemini.
 const HEROS_PC := "res://Assets/Heros/heros_pc.png"
+const ECHELLE_PC := 0.8   # taille du héros Pixel Crawler (1.0 = taille d'origine, 31 px)
 const CASE_PC := Vector2i(62, 53)
 const LIGNE_PC := {"bas": 0, "haut": 1, "droite": 2, "gauche": 3}   # ordre des directions dans chaque bloc de 4 lignes
 # Le héros Gemini n'a pas de pose d'estoc de face / de dos (la planche ne dessine la lance que de profil) :
@@ -68,7 +69,8 @@ func _ready() -> void:
 	add_to_group("joueur")
 	if ResourceLoader.exists(HEROS_PC):
 		sprite.sprite_frames = _creer_animations_pc()
-		sprite.offset = Vector2(0, -8)   # les pieds du héros sont à la ligne 39 d'une case de 53 : on les pose sur la collision
+		sprite.scale = Vector2.ONE * ECHELLE_PC   # le héros du pack faisait 31 px de haut : on le réduit (~25 px)
+		sprite.offset = Vector2(0, -7)   # les pieds du héros sont à la ligne 39 d'une case de 53 : on les pose sur la collision
 	elif ResourceLoader.exists(HEROS_G):
 		sprite.sprite_frames = _creer_animations_g()
 		sprite.offset = Vector2(0, -9)   # les pieds du héros Gemini sont à la ligne 29 d'une case de 32 : on les pose sur la collision

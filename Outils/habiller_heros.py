@@ -262,9 +262,9 @@ def remplacer_tete(img, vue, cx_tete, y0):
 def ajouter_lance_portee(img, vue, y0_ref, bob):
     """Lance portée au côté (marche, repos, touché) : verticale à gauche de face, verticale à droite de dos, horizontale devant le ventre de profil."""
     if vue == "bas":
-        lance(img, (22, y0_ref + 2 + bob), (0, -1), 28)
+        lance(img, (25, y0_ref + 2 + bob), (0, -1), 26)
     elif vue == "haut":
-        lance(img, (42, y0_ref + 2 + bob), (0, -1), 28)
+        lance(img, (37, y0_ref + 2 + bob), (0, -1), 26)
     else:
         lance(img, (46, y0_ref + 19 + bob), (1, 0), 30)
     return img
