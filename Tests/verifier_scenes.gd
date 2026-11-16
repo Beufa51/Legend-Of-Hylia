@@ -238,8 +238,12 @@ func _tester_scene(chemin: String) -> void:
 				_erreurs.append("Plume5d : réceptacle allumé au départ %s, après les 3 miroirs %s (attendu faux puis vrai)" % [avant, s5d._cible.allumee])
 			else:
 				print("OK  Plume5d : la boucle tourne à l'envers au départ ; 3 miroirs retournés -> réceptacle allumé")
-			for m in s5d._miroirs.values():
-				m.reinitialiser()
+			s5d.reinitialiser()
+			s5d._tracer_rayon()
+			if s5d._cible.allumee:
+				_erreurs.append("Plume5d : après R, le réceptacle devrait être éteint (énigme rejouable)")
+			else:
+				print("OK  Plume5d : R remet les miroirs et éteint le réceptacle, même résolue")
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")

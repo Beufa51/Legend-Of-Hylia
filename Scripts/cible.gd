@@ -8,12 +8,14 @@ class_name Cible
 var allumee := false
 var _sprite: Sprite2D
 var _image_allumee: Texture2D
+var _image_eteinte: Texture2D
 var _lumiere: PointLight2D
 var _temps := 0.0
 
 
 func initialiser(eteinte: Texture2D, allumee_tex: Texture2D) -> void:
 	_image_allumee = allumee_tex
+	_image_eteinte = eteinte
 	_sprite = Sprite2D.new()
 	_sprite.texture = eteinte
 	_sprite.centered = false
@@ -36,6 +38,12 @@ func allumer() -> void:
 	_sprite.modulate = Color.WHITE
 	_sprite.texture = _image_allumee
 	_lumiere.energy = 1.0
+
+
+# Touche R : le réceptacle s'éteint pour qu'on puisse rejouer l'énigme (le drapeau, lui, reste levé).
+func eteindre() -> void:
+	allumee = false
+	_sprite.texture = _image_eteinte
 
 
 # Éteint : une faible pulsation dorée attire l'œil (et luit faiblement dans le noir).

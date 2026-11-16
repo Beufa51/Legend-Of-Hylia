@@ -37,6 +37,11 @@ func _lancer() -> void:
 						for k in range(0, etape[1].size(), 2):
 							for i in etape[1][k + 1]:
 								await bloc.pousser(etape[1][k])
+		if OS.get_environment("BOUTON") != "" and nom == "Plume5c":
+			# variable BOUTON=1 : pousse le bloc de la 5c sur son bouton (3 cases vers la droite)
+			for bloc in ecran._blocs:
+				for i in 3:
+					await bloc.pousser(Vector2i.RIGHT)
 		monde._teleporter(ecran)
 		monde._menu_dev = null
 		for i in 8:

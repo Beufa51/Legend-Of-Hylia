@@ -850,6 +850,7 @@ func _maj_boutons() -> void:
 	for cellule in _boutons:
 		var appuye: bool = _occupe.get(cellule) is Bloc or _reflet_sur(cellule)
 		_boutons[cellule].texture = _image("marque_active" if appuye else "marque")
+		_boutons[cellule].visible = not (_occupe.get(cellule) is Bloc)   # un bloc posé cache la marque (sinon elle se dessinait PAR-DESSUS le bloc)
 		_marques_vides[cellule] = not appuye
 	# un bloc posé sur une marque s'illumine (rune dorée) : on voit que c'est bon sans aucun texte
 	for bloc in _blocs:
@@ -885,6 +886,8 @@ func reinitialiser() -> void:
 		sentinelle.reinitialiser()
 	for miroir in _miroirs.values():
 		miroir.reinitialiser()
+	if _cible != null:
+		_cible.eteindre()   # même résolue, la salle des miroirs se rejoue (la porte reste ouverte)
 	for brasero in _braseros:
 		if brasero.allume and not brasero.verrouille:
 			brasero.eteindre()
