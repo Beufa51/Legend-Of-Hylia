@@ -1046,3 +1046,5 @@
   solution = retourner (10,6) et (10,8) (rayon par la rangée 8, remonte à droite) ; « retourner le dernier miroir touché » échoue. Plan trouvé par recherche automatique.
   5c : le miroir (18,4) est MAL RÉGLÉ au départ (`M` : le rayon monte dans le mur) ; retourné, on voit le rayon s'arrêter sur le bloc, puis bloc sur le bouton = rayon + grille. Tests auto Plume5b / Plume5c ajoutés.
 
+- 2026-11-16 : planche Gemini `originaux/pilier_rayon.jpg` (piliers intacts/brûlés, grands/courts, débris). `Outils/traiter_pilier_rayon.py` (APRÈS traiter_lot_donjon.py) -> `pilier.png` (petit pilier COURT 16x20, remplace l'ancien 16x29 PARTOUT) + `pilier_brule.png` (tache dorée).
+  `room.gd::_bruler_pilier` : le pilier où s'arrête le rayon de soleil montre sa brûlure (5b : le pilier (17,5) devant le réceptacle), la perd quand le rayon part. Non utilisés : grands piliers, débris (piste : pilier qui se brise). Test auto + capture OK, pas joué.

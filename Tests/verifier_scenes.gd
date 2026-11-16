@@ -230,16 +230,16 @@ func _tester_scene(chemin: String) -> void:
 			_erreurs.append("Plume5b : il faut 5 miroirs et un réceptacle")
 		else:
 			s5b._tracer_rayon()
-			var avant: bool = s5b._cible.allumee
+			var avant: bool = s5b._cible.allumee or s5b._pilier_brule != Vector2i(17, 5)
 			for c in [Vector2i(10, 6), Vector2i(10, 8)]:
 				s5b._miroirs[c].frapper()
 			s5b._tracer_rayon()
-			var apres: bool = s5b._cible.allumee
+			var apres: bool = s5b._cible.allumee and s5b._pilier_brule != Vector2i(17, 5)
 			s5b.reinitialiser()
 			if avant or not apres:
 				_erreurs.append("Plume5b : réceptacle allumé au départ %s, après les 2 miroirs %s (attendu faux puis vrai)" % [avant, apres])
 			else:
-				print("OK  Plume5b : le faux chemin bute sur le pilier ; 2 miroirs retournés -> réceptacle allumé")
+				print("OK  Plume5b : le faux chemin bute sur le pilier (brûlure dorée) ; 2 miroirs retournés -> réceptacle allumé")
 	# Plume 5c : miroir mal réglé au départ (le rayon monte) ; retourné, il s'arrête sur le bloc ; bloc sur le bouton -> réceptacle
 	if chemin.ends_with("world.tscn"):
 		var s5c = scene.get_node_or_null("Plume5c")

@@ -317,6 +317,8 @@ func _nom_sol(x: int, y: int) -> String:
 # - les autres murs sont vus DE DESSUS : sombres, avec un rebord de briques du côté du sol ;
 # - un mur isolé d'une seule case est un petit pilier (`pilier`, 8 px plus haut que sa case).
 # Images : Outils/traiter_pack_donjon.py.
+var _piliers := {}                     # case -> Sprite2D des petits piliers (le rayon de soleil y laisse une brûlure dorée)
+var _pilier_brule := Vector2i(-99, -99)  # le pilier sur lequel le rayon s'arrête en ce moment
 var _cases_ciel: Array[Vector2] = []   # cases de ciel étoilé (étoiles qui scintillent : ciel_ouvert.gd)
 
 
@@ -332,7 +334,7 @@ func _poser_mur(x: int, y: int) -> void:
 	var pos := Vector2(x * TUILE, y * TUILE)
 	if not (_est_mur(x - 1, y) or _est_mur(x + 1, y) or _est_mur(x, y - 1) or _est_mur(x, y + 1)):
 		_poser(_nom_sol(x, y), pos)
-		_poser("pilier", pos - Vector2(0, _image("pilier").get_height() - TUILE))   # pilier Gemini (plus haut qu'une case : il dépasse vers le haut)
+		_piliers[Vector2i(x, y)] = _poser("pilier", pos - Vector2(0, _image("pilier").get_height() - TUILE))   # pilier Gemini (dépasse vers le haut)
 		return
 	var bas := _face_bas(x, y)
 	if bas or (_face_bas(x, y + 1) and _est_mur(x, y - 1)):
@@ -1548,6 +1550,7 @@ func _tracer_rayon() -> void:
 	_points_rayon = PackedVector2Array([_centre(c)])
 	var cases: Array[Vector2i] = []
 	var sur_statue := false
+	var bute := Vector2i(-99, -99)
 	for _i in 300:   # sécurité : jamais plus de 300 cases (le rayon pourrait tourner en rond entre miroirs)
 		var suivante := c + dir
 		if _miroirs.has(suivante):
@@ -1567,9 +1570,11 @@ func _tracer_rayon() -> void:
 			break
 		if _opaque(suivante):
 			_points_rayon.append(_centre(c) + Vector2(dir) * 8.0)
+			bute = suivante
 			break
 		c = suivante
 		cases.append(c)
+	_bruler_pilier(bute)
 	# Le coq chante quand le soleil se lève sur lui !
 	if sur_statue and not _statue_au_soleil:
 		jouer_melodie()
@@ -1586,6 +1591,17 @@ func _centre(c: Vector2i) -> Vector2:
 
 
 # Dans une salle sombre, le rayon éclaire son chemin : une lumière toutes les 2 cases.
+# Le pilier qui arrête le rayon montre une brûlure dorée (on comprend pourquoi la lumière s'arrête là).
+func _bruler_pilier(c: Vector2i) -> void:
+	if c == _pilier_brule:
+		return
+	if _piliers.has(_pilier_brule):
+		_piliers[_pilier_brule].texture = _image("pilier")
+	_pilier_brule = c
+	if _piliers.has(c):
+		_piliers[c].texture = _image("pilier_brule")
+
+
 func _eclairer_rayon(cases: Array[Vector2i]) -> void:
 	var n := 0
 	for i in range(0, cases.size(), 2):
