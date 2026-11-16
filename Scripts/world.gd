@@ -679,12 +679,31 @@ func _sur_drapeau(nom: String) -> void:
 		return
 	if nom == "fragment_" + cote:
 		await get_tree().create_timer(1.8).timeout   # laisser le temps au jingle et au message
-		_ramener("Entree", Vector2i(12, 9), "Une force t'a ramené à l'entrée. La grande porte du vestibule est ouverte : sors de la Forteresse !")
+		await _ramener("Entree", Vector2i(12, 9), "Une force t'a ramené à l'entrée. La grande porte du vestibule est ouverte : sors de la Forteresse !")
+		await _montrer_ouverture(Vector2i(0, 1))   # la caméra descend vers le vestibule : la grande porte du sud est ouverte
 		return
 	for n in range(1, 5):
 		if nom == _plume(n):
 			await get_tree().create_timer(1.8).timeout
-			_ramener("Epine%d" % n, Vector2i(12, 6), "Une force t'a ramené dans l'épine de l'aile. La porte de " + ("l'est" if cote == "gauche" else "l'ouest") + " est ouverte !")
+			await _ramener("Epine%d" % n, Vector2i(12, 6), "Une force t'a ramené dans l'épine de l'aile. La porte de " + ("l'est" if cote == "gauche" else "l'ouest") + " est ouverte !")
+			await _montrer_ouverture(Vector2i(1, 0) if cote == "gauche" else Vector2i(-1, 0))   # on voit la suite du couloir qui vient de s'ouvrir
+
+
+# Après une plume ou le fragment : la caméra glisse vers la zone qui vient de s'ouvrir, s'y arrête un instant, puis revient.
+# Sans cela on croit que le couloir est simplement fini : là, on VOIT que quelque chose s'est ouvert plus loin.
+func _montrer_ouverture(decalage: Vector2i) -> void:
+	var cible := salle_actuelle + decalage
+	if en_transition or not _ecran_existe_en(cible):
+		return
+	en_transition = true
+	joueur.set_physics_process(false)
+	var t := create_tween()
+	t.tween_property(camera, "position", _centre_salle(cible), 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t.tween_interval(1.3)
+	t.tween_property(camera, "position", _centre_salle(salle_actuelle), 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await t.finished
+	joueur.set_physics_process(true)
+	en_transition = false
 
 
 # Nom du drapeau de la plume n de CETTE aile : "plume1" (aile gauche), "plumeD1" (aile droite).
@@ -852,7 +871,7 @@ func _maj_hud() -> void:
 	# plume 5 = le fragment (la plume 5 n'a pas de plume dorée : sa récompense est le fragment)
 	if Etat.est("fragment_" + cote):
 		_icones_plumes[4].modulate = Color.WHITE
-	_icone_fragment.visible = Etat.est("fragment_" + cote)
+	_icone_fragment.visible = false   # (l'icône d'aile à droite des plumes a été retirée : la 5e plume s'allume avec le fragment)
 	# Clé en poche : une salle de cette aile a sa clé (drapeau_cle) mais sa porte à serrure n'est pas encore ouverte
 	var cle := false
 	for e in get_children():
