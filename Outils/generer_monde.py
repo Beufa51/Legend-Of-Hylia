@@ -222,10 +222,10 @@ put(p5d, 'S', (20, 6)); put(p5d, 'O', (18, 11))
 # 5e (POINTE DE L'AILE) : le coq ne chante qu'au soleil. Dégager le bloc du rayon, régler 2 miroirs pour éclairer
 #      la statue : elle chante. Rejouer la mélodie sur les cloches : l'alcôve s'ouvre -> FRAGMENT de l'aile gauche (W).
 p5e = vide(); sol(p5e, 2, 22, 2, 11); sol(p5e, 11, 13, 12, 13)
-for x in range(2, 23): p5e[5][x] = '#'
-for x in (11, 12, 13): p5e[5][x] = 'D'
-put(p5e, 'W', (12, 3)); put(p5e, 'B', (9, 3), (15, 3))
-for x in range(10, 15): put(p5e, 'T', (x, 4))
+for x in range(2, 23): p5e[4][x] = '#'   # mur du fond remonté d'une rangée (4 au lieu de 5) : 7 rangées de jeu au lieu de 6, la salle respire
+for x in (11, 12, 13): p5e[4][x] = 'D'
+put(p5e, 'W', (12, 2)); put(p5e, 'B', (9, 2), (15, 2))
+for x in range(10, 15): put(p5e, 'T', (x, 3))
 # Le rayon : bloc à dégager (comme en 5c), puis 6 miroirs. Au départ, le rayon fait déjà le circuit... à l'envers et rate le coq.
 # Solution UNIQUE (Outils/verifier_miroirs.py) : dégager le bloc, retourner (14,10), (18,10) et (18,8) ;
 # « retourner le dernier miroir touché » tourne en rond. La stèle (12,9) porte l'énigme du coq.
