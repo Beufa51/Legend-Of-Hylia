@@ -289,8 +289,8 @@ func _tester_scene(chemin: String) -> void:
 	# Plume 5e (pointe) : bloc dans le rayon ; dégagé + 3 miroirs retournés -> le soleil touche le coq (disque allumé)
 	if chemin.ends_with("world.tscn"):
 		var s5e = scene.get_node_or_null("Plume5e")
-		if s5e == null or s5e._miroirs.size() != 5 or s5e._chanteur == null or s5e._blocs.size() != 1:
-			_erreurs.append("Plume5e : il faut 5 miroirs, la statue du coq et 1 bloc")
+		if s5e == null or s5e._miroirs.size() != 4 or s5e._chanteur == null or s5e._blocs.size() != 1:
+			_erreurs.append("Plume5e : il faut 4 miroirs, la statue du coq et 1 bloc")
 		else:
 			s5e._tracer_rayon()
 			var avant: bool = s5e._statue_au_soleil
