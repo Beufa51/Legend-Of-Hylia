@@ -656,7 +656,7 @@ func _poser_objets() -> void:
 					add_child(chanteur)
 					chanteur.initialiser(self, _image("statue_oiseau"), sombre)
 					if chanteur_au_soleil:
-						chanteur.attendre_soleil()   # un halo solaire éteint derrière sa tête : il attend la lumière
+						chanteur.attendre_soleil(_image("disque_solaire_eteint"), _image("disque_solaire"))   # un halo solaire éteint derrière sa tête : il attend la lumière
 					_chanteur = chanteur
 					_occupe[Vector2i(x, y)] = chanteur
 

@@ -10,6 +10,9 @@ var _dernier_coup := -1000
 var _disque: Node2D            # disque solaire derrière la tête (seulement si la statue attend le soleil)
 var _temps := 0.0
 var _au_soleil := false
+var _img_disque: Sprite2D      # disque Gemini (Outils/traiter_disque.py) ; sans images, repli : disque dessiné en code
+var _tex_eteint: Texture2D
+var _tex_allume: Texture2D
 
 
 func initialiser(une_salle: Node2D, texture: Texture2D, dans_le_noir: bool) -> void:
@@ -47,15 +50,23 @@ func frapper() -> void:
 
 # La statue ne chante qu'au soleil (salle 5e) : un HALO SOLAIRE éteint (bronze terne) entoure sa tête,
 # comme les réceptacles des autres salles : le joueur comprend que le rayon doit venir ici.
-func attendre_soleil(_eteinte: Texture2D = null, _allumee: Texture2D = null) -> void:
+func attendre_soleil(eteinte: Texture2D = null, allumee: Texture2D = null) -> void:
+	_tex_eteint = eteinte
+	_tex_allume = allumee
 	_disque = Node2D.new()
 	_disque.position = Vector2(8, -27)   # au-dessus de la tête : le disque dépasse de la statue (avant il était caché derrière)
 	_disque.draw.connect(_dessiner_halo)
 	add_child(_disque)
 	move_child(_disque, 0)   # derrière la statue
+	if _tex_eteint != null and _tex_allume != null:
+		_img_disque = Sprite2D.new()
+		_img_disque.texture = _tex_eteint
+		_disque.add_child(_img_disque)
 
 
 func _dessiner_halo() -> void:
+	if _img_disque != null:
+		return
 	var centre := Vector2.ZERO
 	if _au_soleil:
 		for i in 12:   # rayons dorés
@@ -78,6 +89,8 @@ func soleil(allume: bool) -> void:
 	if _disque == null:
 		return
 	_disque.modulate = Color.WHITE
+	if _img_disque != null:
+		_img_disque.texture = _tex_allume if allume else _tex_eteint
 	_disque.queue_redraw()
 	_lumiere.energy = 0.9 if allume else 0.0
 	if allume:
@@ -104,6 +117,8 @@ func _process(delta: float) -> void:
 		return
 	_temps += delta
 	if _au_soleil:
+		if _img_disque != null:
+			_img_disque.rotation = _temps * 0.35   # les rayons d'or tournent lentement
 		_disque.queue_redraw()
 	else:
 		var p := 0.5 + 0.5 * sin(_temps * 3.0)
