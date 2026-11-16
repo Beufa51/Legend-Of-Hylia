@@ -17,7 +17,8 @@ func initialiser(est_oblique: bool, image_m: Texture2D, image_n: Texture2D) -> v
 	_images = [image_m, image_n]
 	add_to_group("frappable")
 	_sprite = Sprite2D.new()
-	_sprite.position = Vector2(8, 8)   # centré, pour pouvoir le faire tourner sur lui-même
+	# centré, pour pouvoir le faire tourner sur lui-même ; l'image (18x26, sur son socle) a son pied au bas de la case
+	_sprite.position = Vector2(8, 16 - image_m.get_height() / 2.0)
 	add_child(_sprite)
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(14, 14)

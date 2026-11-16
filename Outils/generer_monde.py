@@ -31,7 +31,7 @@ put(vest, 'V', (2, 11), (3, 11), (2, 10), (4, 11), (22, 2), (21, 2), (22, 3))
 ent = vide(); sol(ent, 2, 22, 2, 11); sol(ent, 23, 24, 5, 8); sol(ent, 11, 13, 12, 13)
 put(ent, 'B', (3, 3), (21, 3), (3, 10), (21, 10)); put(ent, 'S', (5, 4)); put(ent, 'O', (19, 4))
 put(ent, 'V', (2, 11), (3, 11), (22, 11), (21, 11), (2, 6), (2, 7))
-for x in range(6, 19): put(ent, 'T', (x, 6), (x, 7))
+for x in range(6, 19): put(ent, 'T', (x, 5), (x, 6), (x, 7))   # 3 rangées : l'emblème du coq (3x3) au centre
 
 
 # --- Épine : couloir horizontal (rangées 5-8) + tige vers le haut (colonnes 11-13)
@@ -237,7 +237,7 @@ ENIGME_5E = "12 10 ! « Je dors dans la pierre jusqu'à l'aube. Qu'un rayon de s
 salles = [
     ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'escaliers_descente': 'PackedStringArray("11 9")', 'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal', 'drapeau_porte2': 'fragment_gauche',
         'niches': 'false', 'chemin_runes': 'PackedStringArray(%s)' % ', '.join('"%s"' % r for r in RUNES_VEST), 'drapeau_runes': 'vestibule_cristal'}),
-    ('Entree', (0, 0), ent, (1.0, 0.96, 0.88), {}),
+    ('Entree', (0, 0), ent, (1.0, 0.96, 0.88), {'emblemes_tapis': 'PackedStringArray("11 5")'}),
     ('Epine1', (1, 0), e1, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume1'}),
     ('Plume1', (1, -1), p1, (0.90, 0.96, 1.08), {'drapeau_plaque': 'p1_plaque', 'drapeau_porte': 'p1_plaque', 'drapeau_gemme': 'plume1'}),
     ('Epine2', (2, 0), e2, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume2'}),
@@ -291,6 +291,7 @@ for nom, (gx, gy), g, c, ex in salles:
     if m:
         n = int(m.group(1))
         out += 'plumes_gravees = %d\n' % n
+        if not nom.startswith('PlumeD'): out += 'sol_style = "%s"\n' % {1: 'claire', 2: 'suie', 3: 'notes', 4: 'nuit', 5: 'gris'}[n]   # sol propre à chaque plume (Outils/traiter_lot4.py)
         # les plumes gravées deviennent dorées quand la plume de la colonne est ramassée (la 5e = le fragment)
         out += 'drapeau_plumes_gravees = "%s"\n' % (('%s%d' % (PREFIXE, n)) if n < 5 else FRAGMENT)
     if nom.startswith('Epine'): out += 'fenetres = true\n'   # épine = le rempart de la façade : fenêtres en arche

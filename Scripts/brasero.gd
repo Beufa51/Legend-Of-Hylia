@@ -20,6 +20,7 @@ var _sprite: Sprite2D
 var _images_flamme: Array[Texture2D] = []
 var _image_eteint: Texture2D
 var _lumiere: PointLight2D
+var decalage := Room.DECALAGE_BRASERO   # position de l'image par rapport à la case (le foyer, plus grand, le change)
 
 
 func initialiser(une_salle: Node2D, secondes: float, eteint: Texture2D, flammes: Array[Texture2D]) -> void:
@@ -31,7 +32,7 @@ func initialiser(une_salle: Node2D, secondes: float, eteint: Texture2D, flammes:
 	_sprite = Sprite2D.new()
 	_sprite.texture = eteint
 	_sprite.centered = false
-	_sprite.position = Room.DECALAGE_BRASERO   # image 20x26, la case est en bas au centre
+	_sprite.position = decalage   # braseros : image 20x26, la case est en bas au centre
 	add_child(_sprite)
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(12, 12)

@@ -105,6 +105,8 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 @export var pics_doux := false
 @export var colonnes_pics_fixes := PackedInt32Array()   # colonnes où les pics restent TOUJOURS sortis (un mur de pics : seul un bloc peut les écraser)
 @export var drapeau_reflet := ""     # levé quand toutes les dalles du reflet `a` sont occupées en même temps
+@export var sol_style := ""           # sol propre à la salle : claire, suie, notes, nuit, gris, doree (images sol_<style>*, Outils/traiter_lot4.py) ; vide = sol gris-bleu commun
+@export var emblemes_tapis := PackedStringArray()   # "x y" = coin haut-gauche d'un emblème de coq 3x3 posé sur un tapis
 @export var niches := true           # niches voûtées à barreaux dans le mur du haut (faux = mur nu : évite de confondre avec une herse)
 # CHEMIN DE RUNES (énigme sans texte) : cases "x y" d'une ligne de runes gravées au sol, DANS L'ORDRE (du mécanisme vers la porte).
 # Quand `drapeau_runes` est levé, l'énergie court d'une rune à l'autre (elles se remplissent d'or), PUIS les portes s'ouvrent.
@@ -269,6 +271,9 @@ func _creer_decor() -> void:
 						_poser("v_roche", Vector2(x * TUILE, y * TUILE) + Vector2(0, 1))
 	_poser_runes()
 	_poser_objets()
+	for e in emblemes_tapis:   # emblème du coq doré au centre d'un tapis
+		var xy := e.split(" ")
+		_poser("tapis_embleme_48", Vector2(int(xy[0]) * TUILE, int(xy[1]) * TUILE))
 	_poser_escaliers()   # (après les tapis : l'escalier se pose par-dessus)
 	_poser_portes()
 	_poser_details()
@@ -304,6 +309,13 @@ func _nom_sol(x: int, y: int) -> String:
 	if lettre == "," or lettre == ";":   # donjon final : terre battue de la queue, herbe de la cour (Outils/fabriquer_sol_corps.py)
 		var base := "sol_terre" if lettre == "," else "sol_herbe"
 		return base + ("" if h % 3 else ("_b" if h % 2 else "_c"))
+	if sol_style != "" and lettre != "i":   # sol de plume : dalle de base (retournée une case sur deux) + 2 variantes rares
+		var base_style := "sol_" + sol_style
+		if h == 0 or h == 18:
+			return base_style + "_c"
+		if h == 9 or h == 27:
+			return base_style + "_d"
+		return base_style + ("_b" if (x + y) % 2 == 0 else "")
 	if h == 0:
 		return "sol_plat_c"
 	if h == 18:
@@ -445,7 +457,7 @@ func _poser_objets() -> void:
 				"O":
 					_poser("statue_oiseau", pos + Vector2(-3, TUILE - 34))
 				"I":
-					_poser("stele_inscription", pos + Vector2(0, TUILE - 24))   # stèle à inscription : le texte se lit en marchant devant (passage « ! »)
+					_poser("stele_inscription", pos + Vector2(-1, TUILE - _image("stele_inscription").get_height()))   # stèle à inscription : le texte se lit en marchant devant (passage « ! »)
 				"V":
 					var pot := Pot.new()
 					pot.position = pos
@@ -484,7 +496,11 @@ func _poser_objets() -> void:
 					var flammes_foyer: Array[Texture2D] = []
 					for nom in BRASERO:
 						flammes_foyer.append(_image(nom))
-					foyer.initialiser(self, duree_braseros, _image("brasero_eteint"), flammes_foyer)
+					flammes_foyer.clear()
+					for nom in ["foyer_2", "foyer_3", "foyer_4", "foyer_3"]:   # grande vasque de pierre (Outils/traiter_lot4.py)
+						flammes_foyer.append(_image(nom))
+					foyer.decalage = Vector2(-3, TUILE - 40)
+					foyer.initialiser(self, duree_braseros, _image("foyer_1"), flammes_foyer)
 					foyer.allumer_foyer()   # pas dans `_braseros` : il est déjà allumé, il ne compte pas dans l'énigme
 					_occupe[Vector2i(x, y)] = foyer
 				"w":
