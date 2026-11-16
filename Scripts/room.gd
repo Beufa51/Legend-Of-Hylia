@@ -609,6 +609,7 @@ func _poser_objets() -> void:
 						if not _est_mur(x + d.x, y + d.y):
 							_dir_source = d
 					_poser("source_soleil", pos)
+					_poser_halo_soleil(pos + Vector2(8, 8))
 				"M", "N":
 					var miroir := Miroir.new()
 					miroir.position = pos
@@ -1922,3 +1923,29 @@ func _creer_collisions() -> void:
 				collision.shape = forme
 				collision.position = Vector2(x * TUILE + TUILE / 2.0, y * TUILE + TUILE / 2.0)
 				corps.add_child(collision)
+
+
+# Halo doré qui respire autour du soleil du mur : on le repère tout de suite, même dans l'ombre du rempart.
+func _poser_halo_soleil(centre: Vector2) -> void:
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 0.85, 0.4, 0.9))
+	g.set_color(1, Color(1, 0.7, 0.2, 0.0))
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.width = 64
+	tex.height = 64
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	var halo := Sprite2D.new()
+	halo.texture = tex
+	halo.position = centre
+	halo.z_index = 2
+	halo.scale = Vector2.ONE * 0.9
+	var additif := CanvasItemMaterial.new()
+	additif.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	halo.material = additif
+	add_child(halo)
+	var tw := halo.create_tween().set_loops()
+	tw.tween_property(halo, "scale", Vector2.ONE * 1.25, 1.1).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(halo, "scale", Vector2.ONE * 0.9, 1.1).set_trans(Tween.TRANS_SINE)

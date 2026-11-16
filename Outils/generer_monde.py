@@ -229,7 +229,7 @@ for x in range(10, 15): put(p5e, 'T', (x, 4))
 # « retourner le dernier miroir touché » tourne en rond. La stèle (12,9) porte l'énigme du coq.
 put(p5e, 'R', (1, 10)); put(p5e, 'X', (3, 10))
 put(p5e, 'M', (7, 10), (7, 7), (14, 10), (18, 8)); put(p5e, 'N', (14, 7), (18, 10)); put(p5e, 'C', (15, 8))
-put(p5e, '1', (4, 7)); put(p5e, '2', (21, 7)); put(p5e, '3', (10, 11)); put(p5e, '4', (21, 11))
+put(p5e, '1', (5, 7)); put(p5e, '2', (20, 7)); put(p5e, '3', (10, 8)); put(p5e, '4', (20, 9))
 put(p5e, 'I', (12, 9))
 put(p5e, 'V', (21, 6), (3, 6))
 ENIGME_5E = "12 10 ! « Je dors dans la pierre jusqu'à l'aube. Qu'un rayon de soleil touche mon cœur, et je chanterai pour toi. »"
