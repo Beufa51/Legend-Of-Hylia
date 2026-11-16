@@ -1392,8 +1392,9 @@ func _creer_pot_sonore(c: Vector2i) -> void:
 	var pot := PotSonore.new()
 	pot.position = Vector2(c * TUILE)
 	add_child(pot)
-	pot.initialiser(_image("pot_4"), PotSonore.OR)
-	pot.decorer()
+	var image_pot := _image("pot_sonore")   # pot doré Gemini (Outils/traiter_pots_sonores.py) ; repli : un pot ocre teinté
+	pot.initialiser(image_pot if image_pot != null else _image("pot_4"), PotSonore.OR)
+	pot.decorer(_image("sonore_anneaux"), _image("pot_sonore_brise"), image_pot != null)
 	pot.add_to_group("frappable")   # l'anneau d'aide (après 50 s d'inactivité) le montre
 	pot.bruit_fait.connect(_sur_bruit.bind(c))
 	_suivre(pot, c)
