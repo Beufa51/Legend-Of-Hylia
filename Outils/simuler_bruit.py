@@ -14,7 +14,7 @@ sim.OPAQUE += "U"
 VITESSE_MARCHE = 70.0 / 16        # cases par seconde (player.gd : 70 px/s)
 VITESSE_COURSE = VITESSE_MARCHE * 1.7
 ROTATION = (math.pi / 2) / sim.VITESSE    # un quart de tour = 0,22 s
-DUREE = 3.0                       # = generer_monde.py 'duree_bruit'
+DUREE = 3.0                       # = generer_monde.py duree_bruit de Plume4c
 
 
 def dangereuses(g, s, angle):

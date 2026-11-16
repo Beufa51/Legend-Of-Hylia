@@ -115,12 +115,12 @@ func _scenario_gouffre() -> void:
 ## Scénario « bruit » (Plume 4c, `-- bruit Plume4c 12 11`) : sans bruit le passage est surveillé ; on longe la rangée du bas (hors du regard),
 ## on brise le pot sonore de l'est, on COURT jusqu'au passage puis on contourne la sentinelle par le côté : jamais repéré.
 func _scenario_bruit() -> void:
-	await marcher(Vector2i(18, 11), true)
-	await marcher(Vector2i(18, 9), false)
+	await marcher(Vector2i(17, 11), true)
+	await marcher(Vector2i(17, 8), false)
 	print("avant le bruit : repéré ", salle._repere, " ; pots sonores ", salle._pots_sonores.size())
-	Input.action_press("move_right")   # on regarde le pot (il bloque : on reste en place)
+	Input.action_press("move_up")   # on regarde le pot (il bloque : on reste en place)
 	await get_tree().create_timer(0.3).timeout
-	Input.action_release("move_right")
+	Input.action_release("move_up")
 	Input.action_press("attack")
 	await get_tree().create_timer(0.1).timeout
 	Input.action_release("attack")
@@ -130,9 +130,8 @@ func _scenario_bruit() -> void:
 		_echec = true
 	var t0 := Time.get_ticks_msec()
 	Input.action_press("run")
-	await marcher(Vector2i(18, 8), false, 0.0)
-	await marcher(Vector2i(12, 8), true, 0.0)
-	await marcher(Vector2i(12, 4), false, 0.0)
+	await marcher(Vector2i(13, 8), true, 0.0)
+	await marcher(Vector2i(13, 4), false, 0.0)
 	await marcher(Vector2i(11, 4), true, 0.0)
 	await marcher(Vector2i(11, 2), false, 0.0)
 	Input.action_release("run")
@@ -140,8 +139,8 @@ func _scenario_bruit() -> void:
 	if salle._repere:
 		_echec = true
 	await get_tree().create_timer(3.0).timeout   # la sentinelle se retourne : on est à côté d'elle, elle ne nous voit pas
-	print("après le retour du regard : repéré ", salle._repere, " ; regarde ", salle._sentinelles[0].direction)
-	if salle._repere:
+	print("après le retour du regard : repéré ", salle._repere, " ; regarde ", salle._sentinelles[0].direction, " ; le pot s'est reformé : ", salle._occupe.get(Vector2i(17, 7)) is PotSonore)
+	if salle._repere or not (salle._occupe.get(Vector2i(17, 7)) is PotSonore):
 		_echec = true
 
 

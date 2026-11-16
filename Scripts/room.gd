@@ -52,6 +52,7 @@ const COULEUR_REGARD := Color(1.0, 0.9, 0.45, 0.42)   # près de l'œil (le bout
 const COULEUR_REPERE := Color(1.0, 0.2, 0.15, 0.55)
 const PORTEE_FLAMME := 9.0    # une flamme n'attire que les sentinelles à moins de 9 cases (elles la voient)
 const PORTEE_BRUIT := 11.0    # un bruit n'est entendu que par les sentinelles à moins de 11 cases
+const DELAI_REFORME := 1.5   # secondes après la fin du bruit avant qu'un pot sonore brisé se reforme
 const PREAVIS_BRUIT := 0.9   # le cône clignote pendant les dernières secondes du bruit : les gardes vont se retourner
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
 const COLONNES_TORCHES := [4, 20]
@@ -1391,7 +1392,7 @@ func _direction_attiree(sentinelle: Sentinelle) -> Vector2i:
 
 
 # Pot sonore : un pot doré dont l'éclat et les ondes disent « je fais du bruit » (Scripts/pot_sonore.gd).
-func _creer_pot_sonore(c: Vector2i) -> void:
+func _creer_pot_sonore(c: Vector2i, avec_effet := false) -> void:
 	var pot := PotSonore.new()
 	pot.position = Vector2(c * TUILE)
 	add_child(pot)
@@ -1403,6 +1404,10 @@ func _creer_pot_sonore(c: Vector2i) -> void:
 		_poser_lumiere(Vector2(c * TUILE) + Vector2(8, 8), 26.0)   # le pot doré luit dans le noir (il faut pouvoir le repérer)
 	pot.bruit_fait.connect(_sur_bruit.bind(c))
 	_suivre(pot, c)
+	if avec_effet:   # le pot se reforme : il apparaît en fondu, avec une petite onde dorée
+		pot.modulate.a = 0.0
+		pot.create_tween().tween_property(pot, "modulate:a", 1.0, 0.8)
+		OndeSonore.jouer(self, Vector2(c * TUILE) + Vector2(8, 8), 0.3)
 
 
 # Le pot sonore éclate : l'onde de bruit part du pot, toutes les sentinelles de la salle tournent la tête vers lui un moment.
@@ -1410,6 +1415,23 @@ func _sur_bruit(c: Vector2i) -> void:
 	_bruit_case = c
 	_bruit_reste = duree_bruit
 	OndeSonore.jouer(self, Vector2(c * TUILE) + Vector2(8, 8))
+	_reformer_apres(c, duree_bruit + DELAI_REFORME)
+
+
+# Un pot sonore brisé SE REFORME un peu après la fin du bruit : on ne reste jamais coincé sans pot (ex. pot cassé avant d'avoir allumé le brasero).
+func _reformer_apres(c: Vector2i, delai: float) -> void:
+	await get_tree().create_timer(delai).timeout
+	_reformer_pot(c)
+
+
+func _reformer_pot(c: Vector2i) -> void:
+	if not is_inside_tree() or _occupe.has(c):
+		return   # déjà revenu (la salle a recommencé entre-temps)
+	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
+	if joueur != null and Rect2(Vector2(c * TUILE), Vector2(TUILE, TUILE)).has_point(to_local(joueur.global_position) + Vector2(0, 5)):
+		_reformer_apres(c, 0.5)   # le joueur se tient sur la case : on réessaie dans un instant
+		return
+	_creer_pot_sonore(c, true)
 
 
 # Vers où regarder pour fixer le bruit : l'axe (haut, bas, gauche, droite) le plus proche de la direction du pot.

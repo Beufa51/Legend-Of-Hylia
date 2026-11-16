@@ -8,10 +8,12 @@ const RAYON_MAX := 120.0   # pixels (environ 7 cases = la portée du regard)
 const DUREE := 1.0
 
 var _progression := 0.0
+var _echelle := 1.0   # 1 = grande onde de bruit, plus petit = simple éclat
 
 
-static func jouer(parent: Node, centre: Vector2) -> void:
+static func jouer(parent: Node, centre: Vector2, echelle := 1.0) -> void:
 	var onde := OndeSonore.new()
+	onde._echelle = echelle
 	onde.position = centre
 	onde.z_index = 5
 	parent.add_child(onde)
@@ -31,4 +33,4 @@ func _draw() -> void:
 			continue
 		var couleur := OR
 		couleur.a = 0.8 * (1.0 - p)
-		draw_arc(Vector2.ZERO, 4.0 + p * RAYON_MAX, 0.0, TAU, 48, couleur, 2.0 if i == 0 else 1.0)
+		draw_arc(Vector2.ZERO, 4.0 + p * RAYON_MAX * _echelle, 0.0, TAU, 48, couleur, 2.0 if i == 0 else 1.0)

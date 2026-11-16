@@ -177,9 +177,9 @@ func _tester_scene(chemin: String) -> void:
 			var garde = s4c._sentinelles[0]
 			s4c._surveiller(0.05)
 			var avant: Vector2i = garde.direction
-			var pot_est = s4c._occupe.get(Vector2i(19, 9))
+			var pot_est = s4c._occupe.get(Vector2i(17, 7))
 			if not (pot_est is PotSonore) or avant != Vector2i.DOWN:
-				_erreurs.append("Plume4c : pot sonore en (19,9) et sentinelle tournée vers le bas au départ")
+				_erreurs.append("Plume4c : pot sonore en (17,7) et sentinelle tournée vers le bas au départ")
 			else:
 				pot_est.frapper()
 				s4c._surveiller(0.05)
@@ -188,8 +188,11 @@ func _tester_scene(chemin: String) -> void:
 				s4c._surveiller(0.05)
 				var apres: Vector2i = garde.direction
 				await process_frame
+				s4c._reformer_pot(Vector2i(17, 7))   # (normalement après duree_bruit + 1,5 s : le pot se reforme tout seul)
+				if not (s4c._occupe.get(Vector2i(17, 7)) is PotSonore):
+					_erreurs.append("Plume4c : un pot sonore brisé doit se reformer (sinon on peut rester coincé)")
 				s4c.reinitialiser()
-				var revenu = s4c._occupe.get(Vector2i(19, 9))
+				var revenu = s4c._occupe.get(Vector2i(17, 7))
 				if pendant != Vector2i.RIGHT or apres != Vector2i.DOWN or not (revenu is PotSonore):
 					_erreurs.append("Plume4c : bruit à l'est -> regard %s (attendu droite), puis %s (attendu bas), pot remis : %s" % [pendant, apres, revenu is PotSonore])
 				else:

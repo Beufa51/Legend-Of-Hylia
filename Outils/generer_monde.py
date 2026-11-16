@@ -156,8 +156,8 @@ put(p4b, 'V', (3, 11), (21, 11), (2, 10), (22, 10)); put(p4b, 'B', (9, 11), (15,
 #      (Un pot brisé revient quand la salle recommence : repéré = retour en bas de la salle.)
 p4c = vide(); plume_ouverte(p4c); sol(p4c, 2, 22, 2, 4); sol(p4c, 11, 13, 5, 6); sol(p4c, 2, 22, 7, 11)
 put(p4c, 'v', (12, 3))
-put(p4c, 'U', (19, 9), (5, 9))
-put(p4c, 'B', (3, 2), (21, 2)); put(p4c, 'S', (7, 7), (17, 7))
+put(p4c, 'U', (7, 7), (17, 7))     # les pots sont CONTRE le mur du garde (rangée 7, juste sous la cloison) : on comprend qu'il les entend
+put(p4c, 'B', (3, 2), (21, 2)); put(p4c, 'S', (3, 8), (21, 8))
 put(p4c, 'O', (3, 11), (21, 11))   # pas d'autres pots dans cette salle : les seuls pots sont les pots sonores dorés (aucune confusion possible)
 
 # 4d (la pointe) : SALLE SOMBRE = COMBINAISON de tout. Deux sentinelles se font face et gardent le passage vers la plume (le goulet du milieu).
