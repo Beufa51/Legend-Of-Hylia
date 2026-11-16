@@ -233,7 +233,7 @@ put(p5e, 'R', (1, 10)); put(p5e, 'X', (3, 10))
 # 4 miroirs aux 4 coins d'un grand rectangle (rayon : rangée 10 -> colonne 7 -> rangée 7 -> colonne 21 -> rangée 10 -> statue) (salle épurée : ni leurre ni pots).
 # Solution (Outils/verifier_miroirs.py) : dégager le bloc, A (7,10) et B (7,7) en « / », C (21,7) en « \\ », D (21,10) en « / ». Départ : B et C faux (2 coups).
 put(p5e, 'M', (7, 10), (21, 7), (21, 10)); put(p5e, 'N', (7, 7)); put(p5e, 'C', (15, 10))
-put(p5e, '1', (4, 8)); put(p5e, '2', (10, 9)); put(p5e, '3', (17, 8)); put(p5e, '4', (19, 9))
+put(p5e, '1', (5, 6)); put(p5e, '2', (16, 6)); put(p5e, '3', (4, 9)); put(p5e, '4', (9, 8))   # cloches réparties dans les 7 rangées, hors du chemin du rayon (rangées 7 et 10, colonnes 7 et 21)
 put(p5e, 'I', (12, 9))
 ENIGME_5E = "12 10 ! « Je dors dans la pierre jusqu'à l'aube. Qu'un rayon de soleil touche mon cœur, et je chanterai pour toi. »"
 
