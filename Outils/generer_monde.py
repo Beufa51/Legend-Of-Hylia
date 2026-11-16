@@ -148,11 +148,17 @@ for x in (7, 17): p4b[9][x] = '.'
 put(p4b, '^', (12, 6)); put(p4b, 'v', (12, 3))
 put(p4b, 'V', (3, 11), (21, 11), (2, 10), (22, 10)); put(p4b, 'B', (9, 11), (15, 11))
 
-# 4c : un long couloir surveillé : pousser le bloc devant soi pour rester caché derrière lui.
-p4c = vide(); plume_ouverte(p4c); sol(p4c, 2, 22, 8, 11); sol(p4c, 2, 22, 2, 2)
-sol(p4c, 12, 12, 6, 7); sol(p4c, 6, 12, 5, 5); sol(p4c, 7, 7, 3, 4)
-put(p4c, '>', (5, 5)); put(p4c, 'X', (11, 5))
-put(p4c, 'V', (3, 11), (21, 11), (3, 8), (21, 8)); put(p4c, 'S', (8, 8), (16, 8)); put(p4c, 'B', (3, 2), (21, 2))
+# 4c : « LE BRUIT ». Une sentinelle (12,3) garde la PORTE du haut et son regard tombe tout droit sur le passage (le goulet des rangées 5-6) :
+#      impossible de passer en douceur. De part et d'autre de la grande salle, un POT SONORE doré (lettre U : ondes dorées qui pulsent).
+#      Le briser à la lance fait un grand bruit : une onde dorée traverse la salle, la sentinelle tourne la tête vers le pot (bulle « ? »)
+#      pendant `duree_bruit` secondes ; le cône clignote juste avant qu'elle se retourne. Pendant ce temps le passage est libre : il faut
+#      y courir, puis contourner la sentinelle par le côté (elle ne voit jamais derrière ni à côté d'elle quand elle regarde le passage).
+#      (Un pot brisé revient quand la salle recommence : repéré = retour en bas de la salle.)
+p4c = vide(); plume_ouverte(p4c); sol(p4c, 2, 22, 2, 4); sol(p4c, 11, 13, 5, 6); sol(p4c, 2, 22, 7, 11)
+put(p4c, 'v', (12, 3))
+put(p4c, 'U', (19, 9), (5, 9))
+put(p4c, 'B', (3, 2), (21, 2)); put(p4c, 'S', (7, 7), (17, 7))
+put(p4c, 'V', (3, 11), (22, 11), (2, 4), (22, 4), (3, 7), (21, 7), (22, 10))   # (rangée 11 libre : c'est le chemin sûr vers les pots sonores)
 
 # 4d (la pointe) : SALLE SOMBRE. Deux sentinelles se font face et gardent le passage vers la plume.
 #     Une flamme attire leur regard : le brasero de gauche fait tourner la tête de la sentinelle de gauche,
@@ -230,7 +236,7 @@ salles = [
     ('Plume4a', (4, -1), p4a, (0.94, 0.96, 1.04), {'retour': retour_p4(1), 'drapeau_repos': REPOS_P4}),
     ('Plume4b', (4, -2), p4b, (0.96, 0.95, 1.02), {'retour': retour_p4(2), 'drapeau_repos': REPOS_P4,
         'periodes_sentinelles': 'PackedFloat32Array(2, 3)'}),
-    ('Plume4c', (4, -3), p4c, (0.98, 0.94, 1.0), {'retour': retour_p4(3), 'drapeau_repos': REPOS_P4}),
+    ('Plume4c', (4, -3), p4c, (0.98, 0.94, 1.0), {'retour': retour_p4(3), 'drapeau_repos': REPOS_P4, 'duree_bruit': '3.0'}),
     ('Plume4d', (4, -4), p4d, (1.0, 1.0, 1.0), {'sombre': 'true', 'retour': retour_p4(4), 'drapeau_repos': REPOS_P4,
         'drapeau_gemme': 'plume4', 'duree_braseros': '14.0'}),
     ('Epine5', (5, 0), e5, (0.86, 0.90, 0.96), {}),

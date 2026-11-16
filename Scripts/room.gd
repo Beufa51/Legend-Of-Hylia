@@ -50,6 +50,7 @@ const DEMI_ANGLE := 0.4538   # 26 degrés (en radians)
 const RAYONS_CONE := 24   # nombre de rayons lancés pour dessiner le cône (plus = plus lisse)
 const COULEUR_REGARD := Color(1.0, 0.9, 0.45, 0.42)   # près de l'œil (le bout du cône est plus transparent)
 const COULEUR_REPERE := Color(1.0, 0.2, 0.15, 0.55)
+const PREAVIS_BRUIT := 0.9   # le cône clignote pendant les dernières secondes du bruit : les gardes vont se retourner
 # Colonnes (en tuiles) des torches et des bannières sur le mur du haut
 const COLONNES_TORCHES := [4, 20]
 const COLONNES_BANNIERES := [7, 17]
@@ -83,6 +84,7 @@ const DECALAGE_BRASERO := Vector2(-2, -10)
 @export var periodes_sentinelles: PackedFloat32Array
 @export var retour := Vector2.ZERO   # où un garde ramène le joueur repéré (position dans le monde)
 @export var drapeau_repos := ""      # quand ce drapeau est levé, les sentinelles ne surveillent plus
+@export var duree_bruit := 3.0       # secondes pendant lesquelles les sentinelles fixent un pot sonore brisé (lettre `U`)
 @export var drapeau_porte2 := ""     # les portes H de cette salle s'ouvrent quand ce drapeau est levé
 @export var drapeau_rayon := ""      # levé quand le rayon de lumière touche le réceptacle Y
 @export var chanteur_au_soleil := false   # la statue du coq ne chante que si le rayon l'éclaire
@@ -149,6 +151,9 @@ var _sentinelles: Array[Sentinelle] = []
 var _cones: Array[PackedVector2Array] = []   # un cône par sentinelle : [œil, puis les bouts des rayons]
 var _cones_clignotent: Array[bool] = []      # vrai si la sentinelle va bientôt tourner
 var _calque_regards: Node2D   # dessine les cônes AU-DESSUS de l'obscurité (dans un CanvasLayer)
+var _pots_sonores: Array[Vector2i] = []   # cases des pots sonores (pour les remettre en place quand la salle recommence)
+var _bruit_reste := 0.0                   # secondes restantes pendant lesquelles les sentinelles regardent vers le bruit
+var _bruit_case := Vector2i.ZERO          # où le bruit a été fait
 var _flamme_vue := false      # le message « la flamme attire le regard » n'est montré qu'une fois
 var _repere := false       # le joueur vient d'être repéré (on attend que le garde le ramène)
 var _plots: Array[Plot] = []
@@ -443,6 +448,9 @@ func _poser_objets() -> void:
 					var haut_pot := (x * 5 + y * 3) % 3 == 0                       # un tiers de pots hauts et étroits
 					pot.initialiser(_image("pot_%d" % (teinte_pot + 1 + (3 if haut_pot else 0))), Pot.COULEURS[teinte_pot])
 					_suivre(pot, Vector2i(x, y))
+				"U":
+					_pots_sonores.append(Vector2i(x, y))
+					_creer_pot_sonore(Vector2i(x, y))
 				"B":
 					_poser_anime(BRASERO, pos + DECALAGE_BRASERO, x + y)
 					_poser_lumiere(pos + Vector2(8, 6), 44.0)
@@ -866,6 +874,10 @@ func reinitialiser() -> void:
 	_progression = 0
 	for c in _cloches.values():
 		c.eteindre()
+	_bruit_reste = 0.0
+	for c in _pots_sonores:
+		if not _occupe.has(c):   # un pot sonore brisé revient quand la salle recommence
+			_creer_pot_sonore(c)
 	for sentinelle in _sentinelles:
 		sentinelle.reinitialiser()
 	for miroir in _miroirs.values():
@@ -1332,7 +1344,7 @@ func _surveiller(delta: float) -> void:
 		if au_repos:
 			sentinelle.endormir()
 			continue
-		var flamme := _direction_attiree(sentinelle)
+		var flamme := _direction_vers_bruit(sentinelle) if _bruit_reste > 0.0 else _direction_attiree(sentinelle)
 		var attiree := flamme != Vector2i.ZERO
 		sentinelle.regarder(flamme if attiree else sentinelle.direction_normale(), attiree)
 		sentinelle.avancer(delta)
@@ -1340,7 +1352,9 @@ func _surveiller(delta: float) -> void:
 			_flamme_vue = true
 			pass   # (aucun texte : la bulle « ? » au-dessus de la sentinelle suffit)
 		_cones.append(_cone(sentinelle))
-		_cones_clignotent.append(sentinelle.va_tourner())
+		_cones_clignotent.append(sentinelle.va_tourner() or (_bruit_reste > 0.0 and _bruit_reste < PREAVIS_BRUIT))
+	if _bruit_reste > 0.0:
+		_bruit_reste = maxf(0.0, _bruit_reste - delta)
 	_calque_regards.queue_redraw()
 	if au_repos or _repere:
 		return
@@ -1368,6 +1382,34 @@ func _direction_attiree(sentinelle: Sentinelle) -> Vector2i:
 	if meilleur == null:
 		return Vector2i.ZERO
 	var vers := meilleur.position / TUILE - Vector2(sentinelle.case)
+	if absf(vers.x) >= absf(vers.y):
+		return Vector2i(signi(roundi(vers.x)), 0)
+	return Vector2i(0, signi(roundi(vers.y)))
+
+
+# Pot sonore : un pot doré dont l'éclat et les ondes disent « je fais du bruit » (Scripts/pot_sonore.gd).
+func _creer_pot_sonore(c: Vector2i) -> void:
+	var pot := PotSonore.new()
+	pot.position = Vector2(c * TUILE)
+	add_child(pot)
+	var image_pot := _image("pot_sonore")   # pot doré Gemini (Outils/traiter_pots_sonores.py) ; repli : un pot ocre teinté
+	pot.initialiser(image_pot if image_pot != null else _image("pot_4"), PotSonore.OR)
+	pot.decorer(_image("sonore_anneaux"), _image("pot_sonore_brise"), image_pot != null)
+	pot.add_to_group("frappable")   # l'anneau d'aide (après 50 s d'inactivité) le montre
+	pot.bruit_fait.connect(_sur_bruit.bind(c))
+	_suivre(pot, c)
+
+
+# Le pot sonore éclate : l'onde de bruit part du pot, toutes les sentinelles de la salle tournent la tête vers lui un moment.
+func _sur_bruit(c: Vector2i) -> void:
+	_bruit_case = c
+	_bruit_reste = duree_bruit
+	OndeSonore.jouer(self, Vector2(c * TUILE) + Vector2(8, 8))
+
+
+# Vers où regarder pour fixer le bruit : l'axe (haut, bas, gauche, droite) le plus proche de la direction du pot.
+func _direction_vers_bruit(sentinelle: Sentinelle) -> Vector2i:
+	var vers := Vector2(_bruit_case - sentinelle.case)
 	if absf(vers.x) >= absf(vers.y):
 		return Vector2i(signi(roundi(vers.x)), 0)
 	return Vector2i(0, signi(roundi(vers.y)))
