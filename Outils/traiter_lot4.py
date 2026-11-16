@@ -111,3 +111,11 @@ for nom, (box, base, rares) in BANDES.items():
         c, d = e(c), e(d)
     sauver(c, "sol_%s_c" % nom)
     sauver(d, "sol_%s_d" % nom)
+
+# sol « sable » (plume 1) : les dalles dorées ternies et désaturées (la bleutée faisait penser à de la glace)
+from PIL import ImageEnhance
+for suf in ("", "_b", "_c", "_d"):
+    t = Image.open(D + "tuiles/sol_doree%s.png" % suf).convert("RGB")
+    t = ImageEnhance.Color(t).enhance(0.55)
+    t = ImageEnhance.Brightness(t).enhance(0.82)
+    t.save(D + "tuiles/sol_sable%s.png" % suf)

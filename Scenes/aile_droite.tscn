@@ -181,7 +181,6 @@ drapeau_coffre = "d5_cle"
 drapeau_cle = "d5_cle"
 drapeau_serrure = "d5_porte"
 plumes_gravees = 5
-sol_style = "rouille2"
 drapeau_plumes_gravees = "fragment_droite"
 layout = PackedStringArray("###########EEE###########", "###########EEE###########", "##.....#.V.....Z..Z..J.##", "##..Q..#.......Z..Z....##", "##.....#.......Z..Z....##", "###DDD##.......Z..Z....##", "##.............Z..Z....##", "##.............Z..Z...V##", "##.............Z..Z....##", "##.............Z..Z....##", "##.............Z..Z..B.##", "##V............Z..Z....##", "###########...###########", "###########...###########")
 
@@ -192,7 +191,6 @@ retour = Vector2(-1800, -269)
 drapeau_reflet = "d5_reflet"
 drapeau_porte = "d5_reflet"
 plumes_gravees = 5
-sol_style = "rouille2"
 drapeau_plumes_gravees = "fragment_droite"
 layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##......ro.............##", "##.......o.............##", "##......ao.............##", "##.......o.............##", "##########.............##", "##.....................##", "##.........uuuuuuuuuuuu##", "##........K.......a....##", "##.....................##", "##.....................##", "###########...###########", "###########...###########")
 
@@ -203,7 +201,6 @@ retour = Vector2(-1800, -493)
 drapeau_plaque = "d5_bouton"
 drapeau_porte2 = "d5_bouton"
 plumes_gravees = 5
-sol_style = "rouille2"
 drapeau_plumes_gravees = "fragment_droite"
 layout = PackedStringArray("###########HHH###########", "###########HHH###########", "###########...###########", "##iiiiiiiiiiiiiiiiii#ii##", "##ii#iiiiiiiiiiii##iiii##", "##iiiiPiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##i#iiiiiiiiiiiiiiiiiii##", "##iiiiii#iiiiiiiiXiiiii##", "##iiiiiiiiiiii#iiii#iii##", "##iiiiiiiiiiiiiiiiiiiii##", "##V...................V##", "###########...###########", "###########...###########")
 
@@ -214,7 +211,6 @@ retour = Vector2(-1800, -717)
 drapeau_fragile = "d5_dalles"
 drapeau_porte2 = "d5_dalles"
 plumes_gravees = 5
-sol_style = "rouille2"
 drapeau_plumes_gravees = "fragment_droite"
 layout = PackedStringArray("###########...###########", "###########...###########", "###########...###########", "###########...###########", "###########HHH###########", "##########zzuoz##########", "##########zzzKz##########", "##########zzzzo##########", "############.############", "##.V...S.........O...V.##", "##.....................##", "##V...................V##", "###########...###########", "###########...###########")
 
@@ -227,7 +223,6 @@ drapeau_cle = "d5_cle2"
 drapeau_serrure = "d5_alcove"
 drapeau_gemme = "fragment_droite"
 plumes_gravees = 5
-sol_style = "rouille2"
 drapeau_plumes_gravees = "fragment_droite"
 layout = PackedStringArray("#########################", "#########################", "#########B.....B#########", "#########...W...#########", "#########.......#########", "###########EEE###########", "###iiiiiiiiiiiiiiiiiiii##", "##iiiii#iiiiuiiiiiiii#o##", "##iiiiiiiiiiiiiii##iKii##", "###iiiiiiiioi#iiiiii#ii##", "##iiiiiiiuii#iiiiQ#iiii##", "##.....................##", "###########...###########", "###########...###########")
 
