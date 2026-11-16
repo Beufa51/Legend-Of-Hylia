@@ -7,7 +7,7 @@ Usage : python3 Outils/habiller_heros.py [apercu.png]      (indépendant des aut
 import os
 import sys
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 from scipy import ndimage
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -128,7 +128,7 @@ def categorie_peau(c):
     return {PEAU_CLAIRE: "claire", PEAU_OMBRE: "ombre", PEAU_SOMBRE: "sombre", PEAU_LUMIERE: "lumiere"}.get(c)
 
 
-def habiller_image(case, vue):
+def habiller_image(case, vue, tete_gemini_activee=True):
     """Repeint un corps nu de 31 lignes : tête 14 lignes (casque en haut, cheveux sur les côtés, visage nu), torse 8 lignes (tunique, ceinture, mains nues),
     jambes 9 lignes (pantalon puis bottes). Les contours noirs, les yeux et les orteils ne bougent pas."""
     a = np.array(case).copy()
@@ -190,15 +190,81 @@ def habiller_image(case, vue):
         bx, by = int(round(cx)), y0 + 19
         if px[bx, by][3] > 0:
             px[bx, by] = OR + (255,)
+    if tete_gemini_activee:
+        img = remplacer_tete(img, vue, cx, y0)
+    return img
+
+
+# --- La TÊTE du héros Gemini (casque, cheveux, visage) posée sur le corps animé du pack ---------------------------------------
+LARGEUR_TETE = {"bas": 18, "haut": 18, "cote": 15}   # largeur (px) de la tête Gemini selon la vue : de face / de dos, tête large de chibi comme le héros Gemini ; de profil 15
+_TETES = {}
+
+
+def _detourer(arr, boite):
+    x0, y0, x1, y1 = boite
+    c = arr[y0:y1, x0:x1].copy()
+    r, g, b = c[..., 0], c[..., 1], c[..., 2]
+    fond = (r > 150) & (b > 150) & (g < 120)
+    lab, n = ndimage.label(~fond)
+    tailles = ndimage.sum(np.ones_like(lab), lab, range(1, n + 1))
+    m = np.isin(lab, [i + 1 for i, t in enumerate(tailles) if t > tailles.max() * 0.03])
+    m &= ~ndimage.binary_dilation(fond, iterations=2) | ndimage.binary_erosion(m, iterations=3)
+    gris = m & (np.abs(r - g) < 30) & (np.abs(g - b) < 40) & (r > 85) & (r < 155) & (b > 95)
+    cx = float(np.median(np.nonzero(gris)[1])) if gris.any() else c.shape[1] / 2
+    c[~m] = (16, 16, 22)
+    al = (m * 255).astype(np.uint8)
+    return Image.merge("RGBA", (*Image.fromarray(c.astype(np.uint8)).split(), Image.fromarray(al))), c, m, cx
+
+
+def tete_gemini(vue):
+    """Tête du héros Gemini réduite à LARGEUR_TETE px : (image RGBA, x du centre du casque dans l'image)."""
+    if vue in _TETES:
+        return _TETES[vue]
+    base = os.path.join(RACINE, "Assets", "Gemini", "originaux")
+    if vue == "cote":
+        arr = np.array(Image.open(os.path.join(base, "heros_profil.jpg")).convert("RGB")).astype(int)
+        boite, depart = (254, 24, 411, 318), "tunique"
+    else:
+        arr = np.array(Image.open(os.path.join(base, "heros.jpg")).convert("RGB")).astype(int)
+        boite, depart = ((5, 0, 145, 190), "tunique") if vue == "bas" else ((5, 190, 145, 385), "cape")
+    im, c, m, cx = _detourer(arr, boite)
+    r, g, b = c[..., 0], c[..., 1], c[..., 2]
+    vetement = m & (b > 140) & (r < 90) & (g < 130) if depart == "tunique" else m & (r > 100) & (r < 190) & (g > 55) & (g < 110) & (b < 70)
+    cou = int(np.nonzero(vetement.sum(axis=1) >= (8 if vue != "cote" else 6))[0].min())
+    tete = im.crop((0, 0, im.width, cou))
+    tete = tete.crop(tete.getchannel("A").getbbox()) if tete.getchannel("A").getbbox() else tete
+    x_casque = cx - im.getchannel("A").getbbox()[0] if False else cx
+    # recadrage : on garde la position du centre du casque après le recadrage
+    bb0 = im.crop((0, 0, im.width, cou)).getchannel("A").getbbox()
+    cx_local = cx - bb0[0]
+    echelle = LARGEUR_TETE[vue] / tete.width
+    w, h = LARGEUR_TETE[vue], max(1, round(tete.height * echelle))
+    rgb = Image.merge("RGB", tete.split()[:3]).filter(ImageFilter.GaussianBlur(0.5)).resize((w, h), Image.LANCZOS)
+    rgb = rgb.filter(ImageFilter.UnsharpMask(radius=0.8, percent=110, threshold=2))
+    al = tete.getchannel("A").resize((w, h), Image.LANCZOS).point(lambda v: 255 if v > 110 else 0)
+    petite = Image.merge("RGBA", (*rgb.split(), al))
+    _TETES[vue] = (petite, cx_local * echelle)
+    return _TETES[vue]
+
+
+def remplacer_tete(img, vue, cx_tete, y0):
+    """Efface la tête du pack (lignes 0 à 13 du corps) et pose la tête Gemini, son bas sur la ligne du menton."""
+    a = np.array(img).copy()
+    a[y0:y0 + 14, :, 3] = 0
+    img = Image.fromarray(a, "RGBA")
+    tete, cx_local = tete_gemini(vue)
+    x = int(round(cx_tete - cx_local))
+    y = y0 + 14 - tete.height
+    img.alpha_composite(tete, (x, y))
     return img
 
 
 def ajouter_lance_portee(img, vue, y0_ref, bob):
     """Lance portée au côté (marche, repos, touché) : verticale à gauche de face, verticale à droite de dos, horizontale devant le ventre de profil."""
     if vue == "bas":
-        lance(img, (24, y0_ref + 2 + bob), (0, -1), 28)
+        lance(img, (22, y0_ref + 2 + bob), (0, -1), 28)
     elif vue == "haut":
-        lance(img, (40, y0_ref + 2 + bob), (0, -1), 28)
+        lance(img, (42, y0_ref + 2 + bob), (0, -1), 28)
     else:
         lance(img, (46, y0_ref + 19 + bob), (1, 0), 30)
     return img
