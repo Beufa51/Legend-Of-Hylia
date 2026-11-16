@@ -7,8 +7,6 @@ const NOUVELLE_PARTIE := "res://Scenes/village.tscn"
 
 
 func _ready() -> void:
-	if OS.is_debug_build():
-		print("[chrono] démarrage.gd prêt à %d ms (moteur + autoloads + chargement du projet)" % Time.get_ticks_msec())
 	var cible := NOUVELLE_PARTIE
 	if Etat.scene_sauvee != "" and ResourceLoader.exists(Etat.scene_sauvee):
 		cible = Etat.scene_sauvee
