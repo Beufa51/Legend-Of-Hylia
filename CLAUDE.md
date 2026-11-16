@@ -1041,3 +1041,8 @@
   (2) HALO SOLAIRE derrière la tête du coq (`chanteur.gd::attendre_soleil / soleil / reclamer_soleil`, dessiné en code) : bronze éteint qui respire ; doré à rayons tournants quand le rayon touche la statue ; frappée sans soleil = le halo vacille.
   (3) NOUVEAU PLAN (recherche automatique, `verifier_miroirs.py`) : soleil (1,10), bloc (3,10) dans le rayon, 6 miroirs (7,10) (7,7) (14,7) (14,10) (18,10) (18,8), statue (15,8) ; au départ le circuit tourne à l'envers ; solution UNIQUE : dégager le bloc + retourner (14,10), (18,10), (18,8) ; la stratégie « dernier miroir touché » échoue. Cloches 1 (4,7), 2 (21,7), 3 (10,11), 4 (21,11), mélodie « 3142 ». Test auto Plume5e.
   Lettre `I` réutilisable pour d'autres inscriptions poétiques (passage "x y ! texte" sur la case devant).
+- 2026-11-16 : 5b et 5c validées par l'utilisateur (« ok pour 5b et 5c »). **FAIT (tests headless TOUT BON + captures réelles, pas joué)** :
+  5b = « LE FAUX CHEMIN » : soleil (1,6), 5 miroirs `M` (10,6) (10,8) (19,8) + leurres (11,6) (10,5), réceptacle (19,5), pilier (17,5) : au départ le rayon file tout droit vers le réceptacle et s'écrase sur le pilier 2 cases avant ;
+  solution = retourner (10,6) et (10,8) (rayon par la rangée 8, remonte à droite) ; « retourner le dernier miroir touché » échoue. Plan trouvé par recherche automatique.
+  5c : le miroir (18,4) est MAL RÉGLÉ au départ (`M` : le rayon monte dans le mur) ; retourné, on voit le rayon s'arrêter sur le bloc, puis bloc sur le bouton = rayon + grille. Tests auto Plume5b / Plume5c ajoutés.
+

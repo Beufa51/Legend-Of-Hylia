@@ -185,17 +185,21 @@ p5a = vide(); plume_grille(p5a)
 put(p5a, 'R', (1, 4)); put(p5a, 'M', (17, 4)); put(p5a, 'Y', (17, 9))
 put(p5a, 'V', (3, 11), (21, 11), (21, 2)); put(p5a, 'S', (6, 8)); put(p5a, 'B', (3, 2))
 
-# 5b : 3 miroirs et un faux chemin : le rayon monte tout droit vers le haut... mais un pilier l'arrête.
-#      Il faut le faire descendre, longer le bas de la salle et remonter à droite.
+# 5b : « LE FAUX CHEMIN ». Au départ, le rayon file tout droit vers le réceptacle (rangée 5)... et s'écrase sur un
+#      pilier deux cases avant lui : très tentant, mais sans issue (retourner le dernier miroir touché renvoie le
+#      rayon dans le mur). Il faut repartir du PREMIER miroir : le faire descendre, longer la rangée 8 et remonter
+#      à droite. Solution (vérifiée par Outils/verifier_miroirs.py, plan trouvé par recherche automatique) :
+#      retourner (10,6) et (10,8). Les miroirs (10,5) et (11,6) sont des leurres.
 p5b = vide(); plume_grille(p5b)
-put(p5b, 'R', (1, 9)); put(p5b, 'M', (11, 9), (11, 11)); put(p5b, 'N', (20, 11)); put(p5b, 'Y', (20, 4))
-put(p5b, '#', (11, 5), (10, 5), (12, 5))
-put(p5b, 'V', (2, 2), (2, 3), (21, 2), (3, 11)); put(p5b, 'O', (16, 7)); put(p5b, 'B', (6, 3))
+put(p5b, 'R', (1, 6)); put(p5b, 'M', (10, 6), (10, 8), (19, 8), (11, 6), (10, 5)); put(p5b, 'Y', (19, 5))
+put(p5b, '#', (17, 5))
+put(p5b, 'V', (2, 2), (3, 2), (21, 2), (3, 11), (2, 11)); put(p5b, 'O', (16, 10)); put(p5b, 'B', (6, 2), (18, 2))
 
-# 5c : le bloc COUPE le rayon. Au départ, le bloc est posé en plein dans le rayon (on voit le rayon s'arrêter dessus).
-#      Le pousser jusqu'au bouton (à droite) fait d'une pierre deux coups : le rayon passe ET la grille H s'ouvre.
+# 5c : le bloc COUPE le rayon. Au départ, le miroir est MAL RÉGLÉ : le rayon remonte et s'écrase contre le mur du haut.
+#      Un coup de lance le fait descendre... et on le voit s'arrêter net sur le bloc (la leçon : un bloc arrête la lumière).
+#      Pousser le bloc jusqu'au bouton (à droite) fait d'une pierre deux coups : le rayon passe ET la grille H s'ouvre.
 p5c = vide(); plume_grille(p5c)
-put(p5c, 'R', (1, 4)); put(p5c, 'N', (18, 4)); put(p5c, 'X', (18, 6)); put(p5c, 'P', (21, 6))
+put(p5c, 'R', (1, 4)); put(p5c, 'M', (18, 4)); put(p5c, 'X', (18, 6)); put(p5c, 'P', (21, 6))
 for x in range(15, 23): p5c[9][x] = '#'
 for y in (10, 11): p5c[y][15] = '#'
 for x in (17, 18, 19): p5c[9][x] = 'H'

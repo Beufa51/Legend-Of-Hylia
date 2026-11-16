@@ -223,6 +223,48 @@ func _tester_scene(chemin: String) -> void:
 				_erreurs.append("Plume4d : départ %s, flamme %s, flamme+bruit %s, après le bruit %s (attendu : vrai partout)" % [etat0, etat1, etat2, etat3])
 			else:
 				print("OK  Plume4d : la flamme fixe la sentinelle proche, le bruit fixe l'autre, puis elle se retourne")
+	# Plume 5b (le faux chemin) : au départ le rayon bute sur le pilier devant le réceptacle ; (10,6) + (10,8) l'allument
+	if chemin.ends_with("world.tscn"):
+		var s5b = scene.get_node_or_null("Plume5b")
+		if s5b == null or s5b._miroirs.size() != 5 or s5b._cible == null:
+			_erreurs.append("Plume5b : il faut 5 miroirs et un réceptacle")
+		else:
+			s5b._tracer_rayon()
+			var avant: bool = s5b._cible.allumee
+			for c in [Vector2i(10, 6), Vector2i(10, 8)]:
+				s5b._miroirs[c].frapper()
+			s5b._tracer_rayon()
+			var apres: bool = s5b._cible.allumee
+			s5b.reinitialiser()
+			if avant or not apres:
+				_erreurs.append("Plume5b : réceptacle allumé au départ %s, après les 2 miroirs %s (attendu faux puis vrai)" % [avant, apres])
+			else:
+				print("OK  Plume5b : le faux chemin bute sur le pilier ; 2 miroirs retournés -> réceptacle allumé")
+	# Plume 5c : miroir mal réglé au départ (le rayon monte) ; retourné, il s'arrête sur le bloc ; bloc sur le bouton -> réceptacle
+	if chemin.ends_with("world.tscn"):
+		var s5c = scene.get_node_or_null("Plume5c")
+		if s5c == null or s5c._miroirs.size() != 1 or s5c._cible == null or s5c._blocs.size() != 1:
+			_erreurs.append("Plume5c : il faut 1 miroir, un réceptacle et 1 bloc")
+		else:
+			s5c._tracer_rayon()
+			var monte: bool = s5c._points_rayon.size() > 1 and s5c._points_rayon[s5c._points_rayon.size() - 1].y < 4 * 16
+			s5c._miroirs[Vector2i(18, 4)].frapper()
+			s5c._tracer_rayon()
+			var bloque: bool = not s5c._cible.allumee
+			var bloc = s5c._blocs[0]
+			s5c.liberer(bloc.case)
+			bloc.case = Vector2i(21, 6)
+			bloc.position = Vector2(bloc.case * 16)
+			s5c.occuper(bloc.case, bloc)
+			s5c.verifier_plaques()
+			await process_frame
+			s5c._tracer_rayon()
+			var apres: bool = s5c._cible.allumee
+			s5c.reinitialiser()
+			if not monte or not bloque or not apres:
+				_erreurs.append("Plume5c : rayon qui monte au départ %s, arrêté par le bloc %s, réceptacle après le bouton %s" % [monte, bloque, apres])
+			else:
+				print("OK  Plume5c : miroir mal réglé au départ ; retourné, le bloc arrête le rayon ; bloc sur le bouton -> réceptacle")
 	# Plume 5d (la boucle) : au départ le rayon ne touche pas le réceptacle ; retourner (10,9), (16,9), (7,9) l'allume
 	if chemin.ends_with("world.tscn"):
 		var s5d = scene.get_node_or_null("Plume5d")
