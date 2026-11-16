@@ -9,6 +9,11 @@ const HEROS := "res://Assets/Heros/"   # planches du héros (voir Outils/prepare
 # Héros Gemini (Outils/traiter_heros_gemini.py) : cases de 48x32 ; s'il est présent, il remplace l'ancien héros LPC
 const HEROS_G := "res://Assets/Heros/heros_g.png"
 const CASE_G := Vector2i(48, 32)
+# Héros PIXEL CRAWLER habillé (Outils/habiller_heros.py) : cases 62x53, 16 lignes (marche / repos / estoc / touché x bas, haut, DROITE, GAUCHE... voir LIGNES_PC)
+# Prioritaire sur le héros Gemini s'il existe ; supprimer ou renommer heros_pc.png pour revenir au héros Gemini.
+const HEROS_PC := "res://Assets/Heros/heros_pc.png"
+const CASE_PC := Vector2i(62, 53)
+const LIGNE_PC := {"bas": 0, "haut": 1, "droite": 2, "gauche": 3}   # ordre des directions dans chaque bloc de 4 lignes
 # Le héros Gemini n'a pas de pose d'estoc de face / de dos (la planche ne dessine la lance que de profil) :
 # vers le bas et le haut il lâche sa lance (images sans lance) et on dessine la lance ici (Outils/traiter_heros_gemini.py -> lance_g.png, pointe vers le BAS)
 const LANCE_G := "res://Assets/Heros/lance_g.png"
@@ -61,7 +66,10 @@ var _invulnerable := 0.0      # temps restant pendant lequel on ne peut plus êt
 
 func _ready() -> void:
 	add_to_group("joueur")
-	if ResourceLoader.exists(HEROS_G):
+	if ResourceLoader.exists(HEROS_PC):
+		sprite.sprite_frames = _creer_animations_pc()
+		sprite.offset = Vector2(0, -8)   # les pieds du héros sont à la ligne 39 d'une case de 53 : on les pose sur la collision
+	elif ResourceLoader.exists(HEROS_G):
 		sprite.sprite_frames = _creer_animations_g()
 		sprite.offset = Vector2(0, -9)   # les pieds du héros Gemini sont à la ligne 29 d'une case de 32 : on les pose sur la collision
 	else:
@@ -377,9 +385,9 @@ func _creer_lance() -> void:
 	add_child(lance)
 	var image := Sprite2D.new()
 	image.texture = load(LANCE_IMAGE)
-	image.visible = not ResourceLoader.exists(HEROS_G)   # le héros Gemini tient sa lance dans ses images : on ne dessine pas la lance du pack en plus
+	image.visible = not (ResourceLoader.exists(HEROS_G) or ResourceLoader.exists(HEROS_PC))   # les héros Gemini / Pixel Crawler tiennent leur lance dans leurs images : on ne dessine pas la lance du pack en plus
 	lance.add_child(image)
-	if ResourceLoader.exists(HEROS_G) and ResourceLoader.exists(LANCE_G):
+	if ResourceLoader.exists(HEROS_G) and ResourceLoader.exists(LANCE_G) and not ResourceLoader.exists(HEROS_PC):
 		_lance_g = Sprite2D.new()
 		_lance_g.texture = load(LANCE_G)
 		_lance_g.centered = false
@@ -475,6 +483,38 @@ func _creer_animations() -> SpriteFrames:
 		for col in 8:
 			frames.add_frame("attaque_" + d, _decoupe(coup, col, ligne))
 	return frames
+
+
+# Animations du héros Pixel Crawler : marche 6 images, repos 4, estoc 8 (la lance est dans les images), touché 4.
+func _creer_animations_pc() -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	frames.remove_animation("default")
+	var planche: Texture2D = load(HEROS_PC)
+	for d in DIRECTIONS:
+		var k: int = LIGNE_PC[d]
+		frames.add_animation("marche_" + d)
+		frames.set_animation_speed("marche_" + d, 10.0)
+		frames.set_animation_loop("marche_" + d, true)
+		for col in 6:
+			frames.add_frame("marche_" + d, _decoupe_pc(planche, col, k))
+		frames.add_animation("repos_" + d)
+		frames.set_animation_speed("repos_" + d, 4.0)
+		frames.set_animation_loop("repos_" + d, true)
+		for col in 4:
+			frames.add_frame("repos_" + d, _decoupe_pc(planche, col, 4 + k))
+		frames.add_animation("attaque_" + d)
+		frames.set_animation_speed("attaque_" + d, 30.0)   # 8 images en ~0,27 s : la durée du coup de lance
+		frames.set_animation_loop("attaque_" + d, false)
+		for col in 8:
+			frames.add_frame("attaque_" + d, _decoupe_pc(planche, col, 8 + k))
+	return frames
+
+
+func _decoupe_pc(texture: Texture2D, col: int, ligne: int) -> AtlasTexture:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = texture
+	atlas.region = Rect2(col * CASE_PC.x, ligne * CASE_PC.y, CASE_PC.x, CASE_PC.y)
+	return atlas
 
 
 # Animations du héros Gemini : planche de cases 48x32 (lignes : marche bas/haut/gauche/droite, repos, estoc bas/haut/gauche/droite, dégâts).
