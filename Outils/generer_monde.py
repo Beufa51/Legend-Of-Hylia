@@ -202,11 +202,16 @@ for x in (17, 18, 19): p5c[9][x] = 'H'
 put(p5c, 'Y', (18, 11))
 put(p5c, 'V', (3, 11), (3, 2), (21, 2), (16, 11)); put(p5c, 'S', (8, 8)); put(p5c, 'B', (6, 10))
 
-# 5d : SALLE SOMBRE, 3 miroirs (+ 2 leurres). Le rayon est la seule vraie lumière : il éclaire le chemin qu'on lui fait prendre.
+# 5d : SALLE SOMBRE, « LA BOUCLE ». Au départ, le rayon passe déjà par les 6 miroirs... mais il fait le tour
+#      dans le MAUVAIS SENS et s'écrase sur le mur de droite. Le réceptacle (Y) attend dans le noir, au bout de la
+#      rangée du bas, à côté du soleil : il faut faire tourner la boucle dans l'autre sens (3 miroirs à retourner,
+#      pas ceux où le rayon meurt). Solution unique (vérifiée par Outils/verifier_miroirs.py) :
+#      retourner (10,9), (16,9) et (7,9). Retourner « le dernier miroir touché » tourne en rond.
 p5d = vide(); plume_grille(p5d)
-put(p5d, 'R', (1, 10)); put(p5d, 'N', (6, 10), (6, 3)); put(p5d, 'M', (17, 3), (12, 7)); put(p5d, 'N', (20, 10)); put(p5d, 'Y', (17, 8))
-put(p5d, '#', (9, 6), (9, 7), (14, 5), (14, 6), (20, 5))
-put(p5d, 'V', (2, 2), (3, 2), (22, 2), (21, 2))
+put(p5d, 'R', (1, 6)); put(p5d, 'Y', (3, 9))
+put(p5d, 'N', (10, 6), (16, 9), (16, 3), (7, 9)); put(p5d, 'M', (10, 9), (7, 3))
+put(p5d, 'V', (2, 2), (3, 2), (22, 2), (21, 2), (22, 11), (21, 11))
+put(p5d, 'S', (20, 6)); put(p5d, 'O', (18, 11))
 
 # 5e (POINTE DE L'AILE) : le coq ne chante qu'au soleil. Dégager le bloc du rayon, régler 2 miroirs pour éclairer
 #      la statue : elle chante. Rejouer la mélodie sur les cloches : l'alcôve s'ouvre -> FRAGMENT de l'aile gauche (W).

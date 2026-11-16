@@ -38,10 +38,12 @@ func allumer() -> void:
 	_lumiere.energy = 1.0
 
 
-# Éteint : une faible pulsation dorée attire l'œil.
+# Éteint : une faible pulsation dorée attire l'œil (et luit faiblement dans le noir).
 func _process(delta: float) -> void:
 	if allumee:
 		return
 	_temps += delta
 	var p := 0.5 + 0.5 * sin(_temps * 3.0)
 	_sprite.modulate = Color(1.0 + 0.5 * p, 1.0 + 0.35 * p, 1.0)
+	# Dans une salle sombre, une petite lueur qui respire : on devine le réceptacle au loin
+	_lumiere.energy = 0.18 + 0.22 * p

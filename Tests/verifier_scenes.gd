@@ -223,6 +223,23 @@ func _tester_scene(chemin: String) -> void:
 				_erreurs.append("Plume4d : départ %s, flamme %s, flamme+bruit %s, après le bruit %s (attendu : vrai partout)" % [etat0, etat1, etat2, etat3])
 			else:
 				print("OK  Plume4d : la flamme fixe la sentinelle proche, le bruit fixe l'autre, puis elle se retourne")
+	# Plume 5d (la boucle) : au départ le rayon ne touche pas le réceptacle ; retourner (10,9), (16,9), (7,9) l'allume
+	if chemin.ends_with("world.tscn"):
+		var s5d = scene.get_node_or_null("Plume5d")
+		if s5d == null or s5d._miroirs.size() != 6 or s5d._cible == null or not s5d.sombre:
+			_erreurs.append("Plume5d : il faut 6 miroirs, un réceptacle, salle sombre")
+		else:
+			s5d._tracer_rayon()
+			var avant: bool = s5d._cible.allumee
+			for c in [Vector2i(10, 9), Vector2i(16, 9), Vector2i(7, 9)]:
+				s5d._miroirs[c].frapper()
+			s5d._tracer_rayon()
+			if avant or not s5d._cible.allumee:
+				_erreurs.append("Plume5d : réceptacle allumé au départ %s, après les 3 miroirs %s (attendu faux puis vrai)" % [avant, s5d._cible.allumee])
+			else:
+				print("OK  Plume5d : la boucle tourne à l'envers au départ ; 3 miroirs retournés -> réceptacle allumé")
+			for m in s5d._miroirs.values():
+				m.reinitialiser()
 	# Plume 2a (lance enflammée) : sans feu un brasero ne s'allume pas ; avec le feu, oui ; l'eau éteint la lance
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")
