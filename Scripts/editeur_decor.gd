@@ -119,12 +119,13 @@ func _input(event: InputEvent) -> void:
 	for zone in [_haut, _palette]:
 		if zone and zone.get_global_rect().has_point(event.position):
 			return
+	var vue := get_viewport()   # avant le clic : poser un objet recharge la scène et retire ce nœud de l'arbre
 	if event.button_index == MOUSE_BUTTON_LEFT:
+		vue.set_input_as_handled()
 		_clic(_case_souris())
-		get_viewport().set_input_as_handled()
 	elif event.button_index == MOUSE_BUTTON_RIGHT:
+		vue.set_input_as_handled()
 		_annuler_prise()
-		get_viewport().set_input_as_handled()
 
 
 func _activer() -> void:

@@ -14,11 +14,11 @@ const CASE_G := Vector2i(48, 32)
 const HEROS_PC := "res://Assets/Heros/heros_pc.png"
 const ECHELLE_PC := 0.8   # taille du héros Pixel Crawler (1.0 = taille d'origine, 31 px)
 # Recrue à l'épée (pack Fantasy Tileset) : héros de toute l'épreuve ; la lance ne lui est remise qu'à l'adoubement (drapeau "lance_recue").
-const RECRUE_REPOS := "res://Assets/Heros/recrue_Idle.png"
-const RECRUE_MARCHE := "res://Assets/Heros/recrue_Walk.png"
-const RECRUE_COUP := "res://Assets/Heros/recrue_Slash.png"
-const CASE_RECRUE := Vector2i(40, 48)
-const ECHELLE_RECRUE := 0.75   # le héros du pack fait ~34 px de haut : on le réduit (~25 px)
+const RECRUE_REPOS := "res://Assets/Heros/recrue_Idle_p.png"
+const RECRUE_MARCHE := "res://Assets/Heros/recrue_Walk_p.png"
+const RECRUE_COUP := "res://Assets/Heros/recrue_Slash_p.png"
+const CASE_RECRUE := Vector2i(30, 36)   # planches réduites à 75 % par Outils/reduire_recrue.py (pas de mise à l'échelle dans Godot : elle faisait perdre des pixels)
+const ECHELLE_RECRUE := 1.0
 const LIGNE_RECRUE := {"gauche": 0, "droite": 1, "haut": 2, "bas": 3}   # ordre des rangées dans les planches
 var _recrue := false   # vrai = on joue la recrue à l'épée
 const CASE_PC := Vector2i(62, 53)
@@ -79,7 +79,7 @@ func _ready() -> void:
 	if _recrue:
 		sprite.sprite_frames = _creer_animations_recrue()
 		sprite.scale = Vector2.ONE * ECHELLE_RECRUE
-		sprite.offset = Vector2(0, -12)   # pieds à la ligne 40 d'une case de 48 : on les pose sur la collision
+		sprite.offset = Vector2(0, -9)   # pieds à la ligne 30 d'une case de 36 : on les pose sur la collision
 	elif ResourceLoader.exists(HEROS_PC):
 		sprite.sprite_frames = _creer_animations_pc()
 		sprite.scale = Vector2.ONE * ECHELLE_PC   # le héros du pack faisait 31 px de haut : on le réduit (~25 px)
