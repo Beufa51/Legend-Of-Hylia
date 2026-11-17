@@ -61,8 +61,8 @@ for x in (11, 12, 13): p1[5][x] = 'D'
 put(p1, 'G', (12, 3)); put(p1, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p1, 'T', (x, 4))
 # Énigme VISUELLE (sans texte) : 3 marques dorées au sol forment un TRIANGLE dont la pointe vise la porte du fond ; 3 blocs alignés en bas
-# (une ligne), chacun pile sous sa marque : on comprend qu'il faut les pousser vers le haut pour former le triangle (2, 2 et 4 poussées).
-put(p1, 'P', (12, 6), (9, 8), (15, 8)); put(p1, 'X', (9, 10), (12, 10), (15, 10))
+# (une ligne), chacun pile sous sa marque : on comprend qu'il faut les pousser vers le haut pour former le triangle (1, 3 et 1 poussées ; le sommet reste à 2 cases de la porte pour ne jamais la boucher).
+put(p1, 'P', (12, 7), (9, 9), (15, 9)); put(p1, 'X', (9, 10), (12, 10), (15, 10))
 put(p1, 'V', (2, 11), (3, 11), (2, 10), (22, 11), (21, 11)); put(p1, 'S', (21, 6)); put(p1, 'O', (3, 7))
 
 # --- Plume 2, écran du bas : SALLE SOMBRE, « LA LANCE ENFLAMMÉE ». Un foyer (l) brûle près de l'entrée : le frapper enflamme la lance quelques

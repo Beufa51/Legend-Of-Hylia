@@ -139,7 +139,7 @@ func _tester_scene(chemin: String) -> void:
 			salle.reinitialiser()
 			# les 3 blocs sont en bas (rangée 10) : on les pousse vers le haut sur les marques du triangle
 			for bloc in salle._blocs:
-				var poussees := 4 if bloc.case.x == 12 else 2
+				var poussees := 3 if bloc.case.x == 12 else 1
 				for i in poussees:
 					await bloc.pousser(Vector2i.UP)
 			if not root.get_node("Etat").est("p1_plaque"):
