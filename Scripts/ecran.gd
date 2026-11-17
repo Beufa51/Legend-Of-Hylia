@@ -40,6 +40,11 @@ var interieur := false             # vrai dans une maison (pas de vent ni de feu
 static var _cache := {}
 
 
+# Éditeur de décor (F2) : si le développeur a déplacé des objets dans cet écran, on prend son plan (ajustements_decor.json).
+func _enter_tree() -> void:
+	EditeurDecor.surcharger(self)
+
+
 # Si le drapeau de révélation est levé, on prend le plan « révélé » (à appeler AVANT de construire l'écran).
 func _appliquer_revelation() -> void:
 	if drapeau_revele != "" and Etat.est(drapeau_revele) and not layout_revele.is_empty():

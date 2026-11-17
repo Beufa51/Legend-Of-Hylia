@@ -59,6 +59,8 @@ func _ready() -> void:
 	Etat.drapeau_change.connect(_sur_drapeau)
 	Etat.drapeau_change.connect(func(_nom): _inactif = 0.0)
 	_creer_hud()
+	if OS.is_debug_build():
+		add_child(EditeurDecor.creer(self))   # éditeur de décor (F2) : déplacer les objets à la souris
 	add_child(Dialogue.new())   # boîte de dialogue des habitants
 	add_child(Tactile.new())    # joystick + boutons (visibles seulement sur écran tactile)
 	if not donjon:
@@ -516,17 +518,25 @@ func _creer_menu_dev() -> void:
 	var calque := CanvasLayer.new()
 	calque.layer = 10
 	add_child(calque)
+	# Le menu est plus grand que l'écran (400x224) : on le met dans une zone DÉFILANTE (molette de la souris) pour qu'il soit toujours lisible en entier.
+	var defil := ScrollContainer.new()
+	defil.position = Vector2(4, 4)
+	defil.custom_minimum_size = Vector2(392, 216)
+	defil.size = Vector2(392, 216)
+	calque.add_child(defil)
 	var panneau := PanelContainer.new()
-	panneau.position = Vector2(8, 8)
-	calque.add_child(panneau)
+	panneau.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	defil.add_child(panneau)
 	var boite := VBoxContainer.new()
 	panneau.add_child(boite)
 	var titre := Label.new()
-	titre.text = "MODE DÉVELOPPEUR (F1 pour fermer) : aller dans la salle..."
+	titre.text = "MODE DÉVELOPPEUR (F1 fermer, molette = défiler) | F2 = éditeur de décor : déplacer les objets à la souris"
 	titre.add_theme_font_size_override("font_size", 8)
+	titre.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	titre.custom_minimum_size = Vector2(370, 0)
 	boite.add_child(titre)
 	var grille := GridContainer.new()
-	grille.columns = 4
+	grille.columns = 6
 	boite.add_child(grille)
 	var bouton_cine := Button.new()
 	bouton_cine.text = "Vue aérienne aile " + cote
@@ -578,7 +588,8 @@ func _creer_menu_dev() -> void:
 			bouton.focus_mode = Control.FOCUS_NONE
 			bouton.pressed.connect(_teleporter.bind(enfant))
 			grille.add_child(bouton)
-	_menu_dev = panneau
+	_menu_dev = defil
+	_menu_dev.visible = false   # (le menu est créé fermé : _basculer_menu_dev l'ouvre ; avant, la 1re pression de F1 le fermait aussitôt)
 
 
 # Passe du village au donjon (ou l'inverse). `cible` = "@donjon:Ecran" ou "@village:Ecran" ; le joueur arrive dans cet écran, à cette case.

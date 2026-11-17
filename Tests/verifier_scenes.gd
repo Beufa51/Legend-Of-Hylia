@@ -31,7 +31,69 @@ func _initialize() -> void:
 	await _tester_donjon_final()
 	await _tester_tactile()
 	await _tester_audio_et_sans_texte()
+	await _tester_editeur()
 	_conclure()
+
+
+## Éditeur de décor (F2) : un plan ajusté est repris au chargement ; l'éditeur s'ouvre, prend et rend un objet.
+func _tester_editeur() -> void:
+	var avant := ""
+	if FileAccess.file_exists(EditeurDecor.FICHIER):
+		avant = FileAccess.get_file_as_string(EditeurDecor.FICHIER)
+	var scene := (load("res://Scenes/world.tscn") as PackedScene).instantiate()
+	root.add_child(scene)
+	await process_frame
+	var salle = scene.get_node("Entree")
+	var plan: Array = Array(salle.layout)
+	var depart := Vector2i(-1, -1)
+	var arrivee := Vector2i(-1, -1)
+	for y in plan.size():
+		for x in plan[y].length():
+			if plan[y][x] == "V" and depart.x < 0:
+				depart = Vector2i(x, y)
+			if plan[y][x] == "." and arrivee.x < 0 and y > 4:
+				arrivee = Vector2i(x, y)
+	if depart.x < 0 or arrivee.x < 0:
+		_erreurs.append("Éditeur : pas de pot ou de case libre dans l'Entrée pour le test")
+	else:
+		var editeur: EditeurDecor = scene.get_children().filter(func(n): return n is EditeurDecor)[0]
+		scene._teleporter(salle)
+		editeur._activer()
+		if not editeur.actif:
+			_erreurs.append("Éditeur : ne s'active pas")
+		else:
+			editeur._clic(depart)
+			if editeur._main != "V" or editeur._lettre(depart) != ".":
+				_erreurs.append("Éditeur : le clic doit prendre le pot")
+			editeur._annuler_prise()
+			if editeur._lettre(depart) != "V":
+				_erreurs.append("Éditeur : annuler doit remettre le pot")
+			editeur._desactiver()
+		# plan ajusté écrit dans le fichier -> repris au chargement
+		var nouveau := plan.duplicate()
+		var ligne: String = nouveau[depart.y]
+		nouveau[depart.y] = ligne.substr(0, depart.x) + "." + ligne.substr(depart.x + 1)
+		ligne = nouveau[arrivee.y]
+		nouveau[arrivee.y] = ligne.substr(0, arrivee.x) + "V" + ligne.substr(arrivee.x + 1)
+		EditeurDecor._ecrire({"world.tscn": {"Entree": nouveau}})
+		var scene2 := (load("res://Scenes/world.tscn") as PackedScene).instantiate()
+		root.add_child(scene2)
+		await process_frame
+		if scene2.get_node("Entree").layout[arrivee.y][arrivee.x] != "V" or scene2.get_node("Entree").layout[depart.y][depart.x] != ".":
+			_erreurs.append("Éditeur : le plan ajusté n'est pas repris au chargement")
+		else:
+			print("OK  éditeur de décor : prendre / annuler, plan ajusté repris")
+		scene2.queue_free()
+	scene.queue_free()
+	if avant == "":
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(EditeurDecor.FICHIER))
+		EditeurDecor._cache = null
+	else:
+		var f := FileAccess.open(EditeurDecor.FICHIER, FileAccess.WRITE)
+		f.store_string(avant)
+		f.close()
+		EditeurDecor._cache = null
+	await process_frame
 
 
 func _tester_scene(chemin: String) -> void:
