@@ -40,6 +40,7 @@ var _cadre: ColorRect
 var _ui: CanvasLayer
 var _info: Label
 var _palette: Control
+var _haut: Control   # barre du haut (boutons) : un clic dessus ne doit pas toucher le décor
 
 
 static func creer(le_monde: Node2D) -> EditeurDecor:
@@ -108,13 +109,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		if actif and event.keycode == KEY_DELETE and _main == "":
 			_supprimer(_case_souris())
 			return
-	if not actif:
+
+
+# Les clics sont lus ici (avant l'interface) : un autre élément plein écran du jeu pouvait avaler le clic
+# avant `_unhandled_input`. On ignore seulement les clics sur la barre du haut et la liste de droite.
+func _input(event: InputEvent) -> void:
+	if not actif or not (event is InputEventMouseButton and event.pressed):
 		return
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			_clic(_case_souris())
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			_annuler_prise()
+	for zone in [_haut, _palette]:
+		if zone and zone.get_global_rect().has_point(event.position):
+			return
+	if event.button_index == MOUSE_BUTTON_LEFT:
+		_clic(_case_souris())
+		get_viewport().set_input_as_handled()
+	elif event.button_index == MOUSE_BUTTON_RIGHT:
+		_annuler_prise()
+		get_viewport().set_input_as_handled()
 
 
 func _activer() -> void:
@@ -167,6 +177,7 @@ func _creer_interface() -> void:
 	monde.add_child(_ui)
 	var haut := PanelContainer.new()
 	haut.position = Vector2(2, 1)
+	_haut = haut
 	_ui.add_child(haut)
 	var ligne := HBoxContainer.new()
 	haut.add_child(ligne)
