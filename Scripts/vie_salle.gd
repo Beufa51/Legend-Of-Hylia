@@ -216,8 +216,8 @@ func _goutte_arrivee(g: ColorRect, point: Vector2) -> void:
 	if _son_goutte != null:
 		var lecteur := AudioStreamPlayer.new()
 		lecteur.stream = _son_goutte
-		lecteur.volume_db = -22.0
-		lecteur.pitch_scale = randf_range(0.85, 1.35)
+		lecteur.volume_db = -24.0
+		lecteur.pitch_scale = randf_range(0.9, 1.1)   # (plus de hauteurs aiguës : la goutte ressemblait à un oiseau)
 		add_child(lecteur)
 		lecteur.play()
 		lecteur.finished.connect(lecteur.queue_free)

@@ -27,13 +27,23 @@ def toile(gauche):
 
 
 def goutte():
+    """Un « ploc » d'eau GRAVE et mat (et pas un « plic » aigu : à 1 500 Hz, 0,16 s, on aurait dit un piaillement d'oiseau).
+    Bulle qui monte de 330 à 560 Hz, très amortie, petit clic d'impact adouci, puis 3 échos de pierre."""
     fs = 44100
-    t = np.arange(int(fs * 0.16)) / fs
-    f = 1500 - 4200 * t                                  # "plic" : la hauteur chute vite
+    t = np.arange(int(fs * 0.6)) / fs
+    f = 330 + 230 * (1 - np.exp(-t / 0.025))            # une goutte qui tombe dans l'eau monte un peu en hauteur
     phase = np.cumsum(2 * np.pi * f / fs)
-    s = np.sin(phase) * np.exp(-t / 0.035) * np.clip(t / 0.002, 0, 1)
-    s += 0.25 * np.sin(2 * phase) * np.exp(-t / 0.02)
-    s = s / np.max(np.abs(s)) * 0.5
+    bulle = np.sin(phase) * np.exp(-t / 0.045) * np.clip(t / 0.003, 0, 1)
+    rng = np.random.default_rng(7)
+    clic = rng.normal(0, 1, len(t)) * np.exp(-t / 0.002) * 0.35
+    s = bulle + clic
+    noyau = np.ones(9) / 9.0                                # filtre passe-bas simple : plus de piqué aigu
+    s = np.convolve(s, noyau, mode="same")
+    for retard, gain in ((0.09, 0.35), (0.19, 0.18), (0.31, 0.08)):   # écho de la salle de pierre
+        k = int(fs * retard)
+        s[k:] += s[:-k] * gain
+    s *= np.clip((0.6 - t) / 0.1, 0, 1)                     # fin propre
+    s = s / np.max(np.abs(s)) * 0.4
     os.makedirs(SONS, exist_ok=True)
     with wave.open(os.path.join(SONS, "goutte.wav"), "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(fs)

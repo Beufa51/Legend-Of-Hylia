@@ -885,6 +885,21 @@ func _maj_boutons() -> void:
 
 
 # Touche R : les blocs reviennent à leur place de départ.
+# Drapeaux d'énigme de CETTE salle déjà levés (pour la touche R dans une salle réussie, voir world.gd::_rejouer_salle).
+# Jamais les drapeaux de progression (plumes, fragments) : ce qui est ramassé reste ramassé.
+func drapeaux_a_rejouer() -> Array:
+	var liste := []
+	for nom in [drapeau_plaque, drapeau_porte, drapeau_cristal, drapeau_braseros, drapeau_melodie, drapeau_porte2, drapeau_rayon,
+			drapeau_fragile, drapeau_coffre, drapeau_levier, drapeau_cle, drapeau_serrure, drapeau_reflet, drapeau_runes]:
+		if nom != "" and Etat.est(nom) and not nom.begins_with("plume") and not nom.begins_with("fragment") and not liste.has(nom):
+			liste.append(nom)
+	var prefixe := "pont_%d_%d_" % [grille.x, grille.y]   # gouffre rebouché (plume 3b)
+	for nom in Etat.drapeaux.keys():
+		if String(nom).begins_with(prefixe) and Etat.est(nom):
+			liste.append(nom)
+	return liste
+
+
 func reinitialiser() -> void:
 	if not _pont_fini:
 		for eau in _eaux_a_combler.values():   # les trous se rouvrent (les blocs sont remis à leur place plus bas)

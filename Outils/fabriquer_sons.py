@@ -98,11 +98,12 @@ def ambiance_donjon():
     sortie = grondement * 0.55 + souffle * 5.0
     for debut in (3.1, 7.8, 12.4):                                       # trois gouttes qui tombent dans une salle de pierre
         d = t - debut
-        goutte = np.where(d > 0, np.sin(2 * np.pi * (900 + 200 * np.exp(-d * 30)) * d) * np.exp(-d * 45), 0)
+        # « ploc » grave (330 -> 560 Hz) : plus de « plic » aigu à 900-1 100 Hz qui ressemblait à un oiseau
+        goutte = np.where(d > 0, np.sin(2 * np.pi * (560 - 230 * np.exp(-d * 40)) * d) * np.exp(-d * 22), 0)
         for retard, gain in ((0.18, 0.4), (0.37, 0.2), (0.61, 0.1)):
             k = int(FS * retard)
             goutte[k:] += goutte[:-k] * gain
-        sortie += goutte * 0.5
+        sortie += goutte * 0.3
     ecrire("ambiance_donjon.wav", sortie)
 
 

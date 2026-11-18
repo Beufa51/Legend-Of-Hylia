@@ -313,10 +313,34 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("reset") and not en_transition and not Etat.en_dialogue:
 		for enfant in get_children():
 			if enfant is Ecran and enfant.grille == salle_actuelle:
-				if enfant is Room and enfant.recommence_au_debut() and enfant.retour != Vector2.ZERO:
+				if enfant is Room and not enfant.drapeaux_a_rejouer().is_empty():
+					_rejouer_salle(enfant)   # salle déjà RÉUSSIE : on la remet comme neuve pour la refaire
+				elif enfant is Room and enfant.recommence_au_debut() and enfant.retour != Vector2.ZERO:
 					_raccompagner(enfant.retour, "recommencer")   # glace, reflet : on peut être coincé -> retour au début
 				else:
 					enfant.reinitialiser()
+
+
+# R dans une salle déjà réussie : on efface SES drapeaux d'énigme (jamais les plumes ni les fragments ramassés),
+# puis on recharge la scène, le héros posé au début de la salle : tout redevient comme à la 1re visite
+# (blocs, miroirs, plots, cloches, portes de la salle refermées). Les autres salles ne bougent pas.
+func _rejouer_salle(salle: Room) -> void:
+	en_transition = true
+	joueur.set_physics_process(false)
+	joueur.velocity = Vector2.ZERO
+	var tween := create_tween()
+	tween.tween_property(_fondu, "modulate:a", 1.0, 0.35)
+	await tween.finished
+	for nom in salle.drapeaux_a_rejouer():
+		Etat.drapeaux.erase(nom)
+	Etat.sauver()
+	var depart: Vector2 = salle.retour if salle.retour != Vector2.ZERO else salle.point_arrivee()
+	Etat.arrivee_ecran = salle.name
+	Etat.arrivee_case = Vector2i(((depart - salle.position - Vector2(8, 3)) / Ecran.TUILE).round())
+	Etat.arrivee_direction = "haut"
+	Etat.arrivee_texte = ""
+	Etat.position_sauvee = Vector2.ZERO
+	get_tree().reload_current_scene()
 
 
 # Petit texte en bas de l'écran pour les messages (Etat.annoncer).
