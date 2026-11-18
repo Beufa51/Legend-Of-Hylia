@@ -25,6 +25,8 @@ layout = PackedStringArray("###########EEE###########", "###########EEE#########
 teinte = Color(1.0, 0.94, 0.92, 1)
 drapeau_levier = "d_levier_entree"
 drapeau_porte = "d_levier_entree"
+chemin_runes = PackedStringArray("12 3", "12 4", "12 5", "11 5", "10 5", "9 5", "8 5", "7 5", "6 5", "5 5", "4 5", "3 5", "2 5")
+drapeau_runes = "d_levier_entree"
 layout = PackedStringArray("#########################", "#########################", "##..........J..........##", "##.B.................B.##", "##...O.............S...##", ".D.....................##", ".D....TTTTTTTTTTTTT...V##", ".D....TTTTTTTTTTTTT...V##", ".D.....................##", "##.....................##", "##.B.................B.##", "##VV.................VV##", "###########...###########", "###########...###########")
 
 [node name="Epine1" parent="." instance=ExtResource("2")]

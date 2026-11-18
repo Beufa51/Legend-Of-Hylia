@@ -247,10 +247,14 @@ put(p5e, '#', (12, 10), (13, 9), (18, 10), (7, 7), (18, 8), (20, 9), (2, 9), (2,
 put(p5e, 'o', (22, 7), (11, 9)); put(p5e, 'u', (9, 10), (12, 7)); put(p5e, 'K', (20, 8)); put(p5e, 'Q', (17, 10))
 put(p5e, 'B', (9, 2), (15, 2))
 
+# Chemin de runes de l'Entrée : du levier (12,2) vers la grille ouest (colonne 1), par le sol de la rangée 5.
+RUNES_ENT = ['12 3', '12 4'] + ['%d 5' % x for x in range(12, 1, -1)]
+RUNES_ENT_P = 'PackedStringArray(%s)' % ', '.join('"%s"' % r for r in RUNES_ENT)
+
 salles = [
     ('Vestibule', (0, 1), vest, (0.98, 0.95, 1.06), {'drapeau_porte2': 'fragment_droite', 'niches': 'false',
         'drapeau_coffre': 'd_cle_vestibule', 'drapeau_cle': 'd_cle_vestibule', 'drapeau_serrure': 'd_porte_vestibule'}),
-    ('Entree', (0, 0), ent, (1.0, 0.94, 0.92), {'drapeau_levier': 'd_levier_entree', 'drapeau_porte': 'd_levier_entree'}),
+    ('Entree', (0, 0), ent, (1.0, 0.94, 0.92), {'drapeau_levier': 'd_levier_entree', 'drapeau_porte': 'd_levier_entree', 'chemin_runes': RUNES_ENT_P, 'drapeau_runes': 'd_levier_entree'}),
     ('Epine1', (-1, 0), e1, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD1'}),
     ('PlumeD1', (-1, -1), p1, (0.98, 0.94, 1.06), {'drapeau_gemme': 'plumeD1'}),
     ('Epine2', (-2, 0), e2, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD2', 'retour': RETOUR_E2}),
