@@ -13,6 +13,7 @@ var depart: Vector2i    # case de départ (pour recommencer la salle)
 var en_mouvement := false
 var _collision: CollisionShape2D
 var _tween_chute: Tween
+var _tween_pousse: Tween
 var _comble := false   # le bloc remplit un trou : son aspect ne change plus
 var _sprite: Sprite2D
 var _texture_normale: Texture2D
@@ -62,6 +63,7 @@ func pousser(dir: Vector2i) -> void:
 	en_mouvement = true
 	_jouer_son()
 	var tween := create_tween()
+	_tween_pousse = tween
 	tween.tween_property(self, "position", Vector2(case * TUILE), DUREE * (1.0 if cases == 1 else 0.6 * cases))
 	await tween.finished
 	en_mouvement = false
@@ -133,6 +135,25 @@ func reinitialiser() -> void:
 	salle.occuper(case, self)
 	position = Vector2(case * TUILE)
 	en_mouvement = false
+
+
+# Le SABLIER remonte le temps : le bloc réapparaît à la case `cible` (sorti du trou s'il y était tombé), dans un éclat violet.
+# La salle s'occupe des cases (occuper / libérer) et du trou qui se rouvre.
+func revenir(cible: Vector2i) -> void:
+	for t in [_tween_chute, _tween_pousse]:
+		if t != null and t.is_valid():
+			t.kill()
+	en_mouvement = false
+	_comble = false
+	visible = true
+	z_index = 0
+	_sprite.texture = _texture_normale
+	_sprite.position = Vector2(0, TUILE - _texture_normale.get_height())
+	_collision.set_deferred("disabled", false)
+	case = cible
+	position = Vector2(case * TUILE)
+	modulate = Color(1.8, 1.1, 2.3, 0.2)
+	create_tween().tween_property(self, "modulate", Color(1, 1, 1, 1), 0.5)
 
 
 func _jouer_son() -> void:

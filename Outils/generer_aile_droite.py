@@ -5,7 +5,7 @@ Lettres des plans : voir l'en-tête de Scripts/room.gd. Une salle = 25 x 14 case
 L'aile droite est le MIROIR de l'aile gauche (voir generer_monde.py) :
   vestibule (0,1) -> entrée (0,0) -> épine qui part vers l'OUEST (-1..-5, 0) avec 5 plumes qui montent,
   de plus en plus longues de DROITE à GAUCHE. Drapeaux : plumeD1..plumeD4, fragment_droite.
-Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur, 3 glace, 4 reflet, 5 combinaison -> fragment (faites). AILE DROITE COMPLÈTE.
+Mécaniques (1 nouvelle par plume) : 1 plots orange/bleus, 2 dalles de couleur, 3 glace, 4 sablier, 5 combinaison -> fragment (faites). AILE DROITE COMPLÈTE.
 """
 import os, re
 PREFIXE, FRAGMENT = 'plumeD', 'fragment_droite'
@@ -169,61 +169,59 @@ put(p3c, 'o', (4, 7), (20, 7), (10, 6), (14, 6)); put(p3c, 'c', (8, 6), (16, 6),
 put(p3c, 'G', (12, 1)); put(p3c, 'B', (10, 1), (14, 1))
 for x in (11, 12, 13): put(p3c, 'T', (x, 2))
 
-# --- PLUME D4 : « LE REFLET ». Un double fantôme (part de la case r) fait les mêmes gestes que le joueur, gauche et droite
-#     INVERSÉES. Bloqué par un mur pendant que le joueur avance, il se décale. Dalles du reflet (a) : toutes occupées en même
-#     temps (joueur + reflet) = drapeau ; le reflet enfonce aussi les boutons (P). R = retour au début (reflet compris).
-#     Vérifié par un solveur (modèle par cases) : 4a = 8 coups, 4b = 11, 4c = 19, 4d = 19.
+# --- PLUME D4 : « LE SABLIER » (remplace l'écho, 2026-11-18). Le sablier (h) : un coup de lance RETIENT L'INSTANT (copies violettes
+#     des blocs, plots cerclés de violet) ; quand le sable est écoulé (ou au 2e coup), les blocs, les plots et les trous REVIENNENT
+#     à cet instant... mais pas toi. Dans ces salles, un bouton P retient les plots (orange baissés) TANT QU'UN BLOC est dessus.
+#     Réussie (rangée `rangee_sortie` atteinte) : le sablier s'éteint, les plots restent baissés, un pont rebouche le gouffre.
+#     Vérifié par le bot en vraie physique (Tests/bot_jeu.gd, scénario « sablier »).
 def retour_d4(n):   # bas de l'écran n de la plume D4 (case (12,11)), en position dans le monde
     return 'Vector2(%d, %d)' % (-4 * 400 + 12 * 16 + 8, -224 * n + 11 * 16 + 3)
 
+def depuis(lignes): return [list(l) for l in lignes]
+
 def salle_reflet(sortie):
-    """Salle ouverte en bas ; en haut (rangées 0-1, colonnes 11-13) une porte de la lettre `sortie`."""
+    """Salle ouverte en bas ; en haut (rangées 0-1, colonnes 11-13) une porte de la lettre `sortie` (plume D5b, le reflet)."""
     g = vide(); sol(g, 2, 22, 2, 11); sol(g, 11, 13, 12, 13); sol(g, 11, 13, 0, 1)
     for x in (11, 12, 13): g[0][x] = sortie; g[1][x] = sortie
     return g
 
-# PLUME D4 = « L'ÉCHO » (remplace le reflet, 2026-11-18) : une ombre violette refait TES gestes 2 s plus tard (Scripts/echo.gd).
-#   e = départ de l'écho (là où tu entres) ; P = bouton : TANT QUE toi ou l'écho êtes dessus, les plots orange (o) se baissent
-#   et les bleus (u) se lèvent ; a = dalle : toutes occupées en même temps (toi + l'écho) = drapeau -> la porte s'ouvre.
-#   Réussie, la salle garde ses plots baissés. Vérifié par le bot en vraie physique (Tests/bot_jeu.gd, scénario « reflet »).
-def depuis(lignes): return [list(l) for l in lignes]
+# D4a « le couloir » (leçon : les objets reviennent, pas toi) : un bloc bouche le couloir étroit. Pousse-le jusqu'au bout :
+#     il se coince en haut et toi derrière lui. Si tu as frappé le sablier AVANT, le bloc redescend à sa place, DERRIÈRE toi : le passage est libre.
+p4a = depuis(['###########...###########', '###########...###########',
+    '######........###########', '######.##################', '######.##################', '######.##################',
+    '######.##################', '######X##################', '##.....................##', '##.....................##',
+    '##.....................##', '##.....................##', '###########...###########', '###########...###########'])
+put(p4a, 'h', (10, 9)); put(p4a, 'B', (3, 8), (21, 8)); put(p4a, 'S', (16, 9)); put(p4a, 'O', (19, 9))
+put(p4a, 'V', (2, 11), (3, 11), (22, 11), (22, 10), (21, 11)); put(p4a, 'B', (13, 2))
 
-# L'ÉCHO (plume D4) : E = poser une balise et enregistrer tes pas ; rappuyer sur E = ton écho apparaît sur la balise et REFAIT TES PAS EN BOUCLE.
-#     Un nouvel enregistrement remplace l'ancien écho. Si tu t'arrêtes là où tu as commencé, l'écho reste en place (un « poids » sur un bouton).
-#     Bouton P = les plots ORANGE tombent et les BLEUS se lèvent tant que quelqu'un (toi ou l'écho) est dessus. Dalles a = il faut les occuper toutes en même temps.
-# D4a (leçon) : pose ton écho sur le bouton (E, attends une seconde, E) : la barrière orange reste ouverte, passe, rejoins la dalle.
-p4a = depuis(['###########DDD###########', '###########DDD###########',
-    '##.....................##', '##..........a..........##', '##.....................##', '##ooooooooooooooooooooo##',
-    '##.....................##', '##.....................##', '##..........P..........##', '##.....................##',
-    '##.....................##', '##..........e..........##', '###########...###########', '###########...###########'])
-put(p4a, 'B', (4, 3), (20, 3)); put(p4a, 'V', (2, 11), (3, 11), (22, 11))
-
-# D4b (relais) : barrière orange ; il faut une dalle occupée par TOI et l'autre par ton écho. Écho 1 sur le bouton -> tu passes ;
-#     puis tu enregistres un 2e écho sur la dalle A (il remplace le 1er, la barrière se referme derrière toi) et tu vas sur la dalle B.
-p4b = depuis(['###########DDD###########', '###########DDD###########',
-    '##.....................##', '##.....................##', '##.....................##', '##.....................##',
+# D4b « les deux barrières » : le cristal baisse l'orange mais lève le bleu ; on reste coincé entre les deux.
+#     Frappe le sablier AVANT le cristal, passe l'orange, attends : les plots reviennent (orange levé derrière toi, bleu baissé devant).
+p4b = depuis(['###########...###########', '###########...###########',
+    '##.....................##', '##.....................##', '##uuuuuuuuuuuuuuuuuuuuu##', '##.....................##',
     '##.....................##', '##ooooooooooooooooooooo##', '##.....................##', '##.....................##',
-    '##.....................##', '##..........e..........##', '###########...###########', '###########...###########'])
-put(p4b, 'P', (6, 9)); put(p4b, 'a', (6, 4), (18, 4)); put(p4b, 'B', (5, 2), (19, 2)); put(p4b, 'V', (21, 11), (22, 11), (22, 10))
+    '##.....................##', '##.....................##', '###########...###########', '###########...###########'])
+put(p4b, 'K', (15, 10)); put(p4b, 'h', (9, 10)); put(p4b, 'B', (5, 2), (19, 2)); put(p4b, 'S', (4, 5)); put(p4b, 'O', (20, 5))
+put(p4b, 'V', (2, 11), (3, 11), (22, 11), (22, 10), (2, 2), (22, 2))
 
-# D4c (le trajet) : la barrière orange sépare le bouton P (au centre) de la dalle B (au nord) ; la dalle A est au sud, loin du bouton.
-#     Il faut ton écho sur A ET toi sur B : enregistre « bouton (reste dessus un moment) puis dalle A » ; pendant que ton écho tient le bouton, passe et file sur B.
-p4c = depuis(['###########DDD###########', '###########DDD###########',
-    '##.....................##', '##.....................##', '##.....................##', '##.....................##',
-    '##ooooooooooooooooooooo##', '##.....................##', '##.....................##', '##.....................##',
-    '##.....................##', '##..........e..........##', '###########...###########', '###########...###########'])
-put(p4c, 'P', (12, 9)); put(p4c, 'a', (5, 10), (19, 3)); put(p4c, 'B', (4, 2), (20, 2)); put(p4c, 'V', (2, 11), (22, 11))
+# D4c « le pont et le poids » : un seul bloc pour deux rôles. Sur le bouton (12,8), il retient la barrière orange ; dans le gouffre, il fait un pont.
+#     Pousse-le sur le bouton, frappe le sablier, pousse-le dans le gouffre, traverse : le bloc remonte du trou et revient sur le bouton.
+p4c = depuis(['###########...###########', '###########...###########',
+    '##.....................##', '##ooooooooooooooooooooo##', '##.....................##', '##.....................##',
+    '##qqqqqqqqqqqqqqqqqqqqq##', '##.....................##', '##..........P..........##', '##.....................##',
+    '##..........X..........##', '##.....................##', '###########...###########', '###########...###########'])
+put(p4c, 'h', (8, 9)); put(p4c, 'B', (5, 2), (19, 2)); put(p4c, 'S', (4, 9)); put(p4c, 'O', (20, 9))
+put(p4c, 'V', (2, 11), (3, 11), (22, 11), (22, 10), (2, 4), (22, 4))
 
-# D4d (combinaison) : S -> (orange) -> salle de gauche avec la dalle A -> (mur BLEU) -> salle de droite avec la dalle B.
-#     Écho 1 sur le bouton : orange ouvert, bleu fermé. Passe à gauche, pose l'écho 2 sur A : il remplace le 1er, le bouton se libère,
-#     l'orange se referme et le BLEU s'ouvre : passe à droite, rejoins B. La grille de l'alcôve s'ouvre.
+# D4d (combinaison) « retenir l'avenir » : il faut l'orange BAISSÉ une fois de l'autre côté du gouffre, mais le bloc ne passe la ligne bleue
+#     que quand l'orange est LEVÉ. Cristal (orange baissé), sablier (on retient CET instant), cristal (bleu baissé), le bloc dans le gouffre,
+#     traverse : les plots reviennent à l'instant retenu, l'orange de l'alcôve tombe -> la plume.
 p4d = depuis(['#########################', '#########################',
-    '#########.......#########', '#########.......#########', '#########.......#########', '###########DDD###########',
-    '##.....................##', '##.....................##', '##.....................##', '##ooooooooooooooooooooo##',
-    '##.....................##', '##..........e..........##', '###########...###########', '###########...###########'])
-put(p4d, 'G', (12, 3)); put(p4d, 'B', (9, 2), (15, 2))
-for x in range(10, 15): put(p4d, 'T', (x, 4))
-put(p4d, 'P', (6, 10)); put(p4d, 'a', (6, 7), (18, 7)); put(p4d, 'u', (12, 6), (12, 7), (12, 8)); put(p4d, 'V', (2, 11), (3, 11), (22, 11), (22, 10))
+    '#########.......#########', '#########.......#########', '###########ooo###########', '##.....................##',
+    '##qqqqqqqqqqqqqqqqqqqqq##', '##.....................##', '##uuuuuuuuuuuuuuuuuuuuu##', '##.....................##',
+    '##..........X..........##', '##.....................##', '###########...###########', '###########...###########'])
+put(p4d, 'G', (12, 2)); put(p4d, 'B', (9, 2), (15, 2))
+for x in range(10, 15): put(p4d, 'T', (x, 3))
+put(p4d, 'K', (15, 10)); put(p4d, 'h', (9, 10)); put(p4d, 'S', (4, 9)); put(p4d, 'O', (20, 9)); put(p4d, 'V', (2, 11), (3, 11), (22, 11), (22, 10))
 
 # --- PLUME D5 : LA POINTE DE L'AILE (5 écrans, colonne x=-5) : chaque écran COMBINE des mécaniques de l'aile droite.
 #     Vérifié par Outils/resoudre_d5.py (sauf 5a : le rythme des pics n'est pas simulé).
@@ -301,10 +299,10 @@ salles = [
     ('PlumeD3b', (-3, -2), p3b, (0.9, 0.97, 1.1), {'retour': retour_d3(2), 'drapeau_plaque': 'd3_marque', 'drapeau_porte': 'd3_marque'}),
     ('PlumeD3c', (-3, -3), p3c, (0.94, 0.96, 1.1), {'retour': retour_d3(3), 'drapeau_gemme': 'plumeD3', 'drapeau_plaque': 'd3_marque_gelee', 'drapeau_porte': 'd3_marque_gelee'}),
     ('Epine4', (-4, 0), e4, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD4'}),
-    ('PlumeD4a', (-4, -1), p4a, (0.96, 0.94, 1.08), {'retour': retour_d4(1), 'drapeau_reflet': 'd4_echo1', 'drapeau_porte': 'd4_echo1'}),
-    ('PlumeD4b', (-4, -2), p4b, (0.95, 0.93, 1.06), {'retour': retour_d4(2), 'drapeau_reflet': 'd4_echo2', 'drapeau_porte': 'd4_echo2'}),
-    ('PlumeD4c', (-4, -3), p4c, (0.94, 0.95, 1.08), {'retour': retour_d4(3), 'drapeau_reflet': 'd4_echo3', 'drapeau_porte': 'd4_echo3'}),
-    ('PlumeD4d', (-4, -4), p4d, (0.96, 0.94, 1.06), {'retour': retour_d4(4), 'drapeau_reflet': 'd4_echo4', 'drapeau_porte': 'd4_echo4', 'drapeau_gemme': 'plumeD4'}),
+    ('PlumeD4a', (-4, -1), p4a, (0.96, 0.94, 1.08), {'retour': retour_d4(1), 'drapeau_sortie': 'd4_temps1', 'rangee_sortie': '1', 'duree_sablier': '8.0'}),
+    ('PlumeD4b', (-4, -2), p4b, (0.95, 0.93, 1.06), {'retour': retour_d4(2), 'drapeau_sortie': 'd4_temps2', 'rangee_sortie': '3', 'duree_sablier': '6.0'}),
+    ('PlumeD4c', (-4, -3), p4c, (0.94, 0.95, 1.08), {'retour': retour_d4(3), 'drapeau_sortie': 'd4_temps3', 'rangee_sortie': '2', 'duree_sablier': '8.0', 'colonne_pont': '12'}),
+    ('PlumeD4d', (-4, -4), p4d, (0.96, 0.94, 1.06), {'retour': retour_d4(4), 'drapeau_sortie': 'd4_temps4', 'rangee_sortie': '3', 'duree_sablier': '12.0', 'colonne_pont': '12', 'drapeau_gemme': 'plumeD4'}),
     ('Epine5', (-5, 0), e5, (0.90, 0.88, 0.98), {}),
     ('PlumeD5a', (-5, -1), p5a, (1.0, 0.95, 0.92), {'retour': retour_d5(1), 'drapeau_levier': 'd5_levier', 'drapeau_porte': 'd5_levier',
         'drapeau_coffre': 'd5_cle', 'drapeau_cle': 'd5_cle', 'drapeau_serrure': 'd5_porte'}),
@@ -335,7 +333,7 @@ for nom, (gx, gy), g, c, ex in salles:
     out += 'teinte = Color(%s, %s, %s, 1)\n' % c
     for k, v in ex.items():
         # Même règle que generer_monde.py : les mélodies ("132") restent des TEXTES.
-        brut = v in ('true', 'false') or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit())
+        brut = v in ('true', 'false') or v.startswith(('Vector2(', 'PackedFloat32Array(', 'PackedStringArray(')) or ('.' in v and v.replace('.', '').isdigit()) or k in ('rangee_sortie', 'colonne_pont')
         out += ('%s = %s\n' % (k, v)) if brut else ('%s = "%s"\n' % (k, v.replace('"', '\\"')))
     m = re.match(r'PlumeD?(\d)', nom)   # plumes de pierre gravées au mur = numéro de la plume (décor repris de la façade)
     if m:

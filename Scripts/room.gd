@@ -36,6 +36,9 @@ class_name Room
 #        (un plot baissé n'est pas de la glace : on s'arrête dessus). R = retour au début de la salle.
 #   r  = départ du REFLET (double fantôme aux gestes inversés gauche/droite, voir reflet.gd) ; il appuie aussi sur les boutons P
 #   a  = dalle du reflet : quand TOUTES sont occupées en même temps (par le joueur ou le reflet) -> `drapeau_reflet`
+#   h  = SABLIER (plume D4, voir sablier.gd) : un coup de lance retient l'instant ; quand le sable est écoulé (ou au 2e coup),
+#        les blocs, les plots et les trous REVIENNENT à cet instant, mais pas le joueur. Dans une salle à sablier, les boutons P
+#        retiennent les plots (orange baissés, bleus levés) TANT QU'UN BLOC est dessus. Réussie = `drapeau_sortie`.
 # Portes : un groupe 3x2 sur le mur du HAUT = arche animée (herse, ou bois pour E) ; 3x1 dans un mur intérieur
 # = herse basse ; les autres (bas, côtés) gardent l'ancienne grille.
 # Une ouverture dans le mur du bord = une porte vers la salle voisine.
@@ -92,7 +95,10 @@ const HAUTEUR_RAYON := -4.0   # le rayon est dessiné 4 px au-dessus du centre d
 @export var periodes_sentinelles: PackedFloat32Array
 @export var retour := Vector2.ZERO   # où un garde ramène le joueur repéré (position dans le monde)
 @export var drapeau_repos := ""      # quand ce drapeau est levé, les sentinelles ne surveillent plus
-@export var maintien_echo := 0.0     # salle de l'écho : secondes pendant lesquelles les plots restent baissés après avoir lâché le bouton
+@export var duree_sablier := 8.0     # secondes de sable : après ce temps, tout revient à l'instant retenu (lettre `h`)
+@export var drapeau_sortie := ""     # levé quand le joueur atteint la rangée `rangee_sortie` (ou plus haut) : la salle est réussie
+@export var rangee_sortie := -1
+@export var colonne_pont := -1       # salle à sablier réussie : un pont de pierre rebouche le gouffre dans cette colonne (on peut revenir)
 @export var duree_bruit := 3.0      # secondes pendant lesquelles les sentinelles fixent un pot sonore brisé (lettre `U`)
 @export var drapeau_porte2 := ""     # les portes H de cette salle s'ouvrent quand ce drapeau est levé
 @export var drapeau_rayon := ""      # levé quand le rayon de lumière touche le réceptacle Y
@@ -180,11 +186,14 @@ var _chargement := true    # vrai pendant _ready : les portes déjà ouvertes s'
 var _a_glace := false      # la salle contient de la glace (lettre i)
 var _case_reflet := Vector2i(-1, -1)   # départ du reflet (lettre r) ; -1 = pas de reflet
 var _reflet: Reflet
-var _echo := false          # vrai = salle de l'ÉCHO (lettre e) : les boutons P baissent les plots orange TANT QU'ON APPUIE
-var _plots_baisses := false  # salle de l'écho réussie : tous les plots baissés pour de bon
-var _echo_lache := -1.0     # instant où le bouton de l'écho a été lâché (voir maintien_echo)
-var _echo_appuye := false  # un bouton est-il tenu (par le joueur ou l'écho) en ce moment ?
+var _plots_baisses := false  # salle du SABLIER réussie : tous les plots baissés pour de bon
 var _dalles_reflet := {}   # { case : Sprite2D }
+var _sablier: Sablier      # le sablier de la salle (lettre h), s'il y en a un
+var _instant := {}         # l'instant retenu par le sablier : {"orange": bool, "blocs": [{bloc, case, tombe}]}
+var _fantomes: Array[Sprite2D] = []   # copies violettes des blocs, là où ils reviendront
+var _calque_temps: Node2D  # cercles violets sur les plots qui vont changer
+var _temps_resolu := false # salle du sablier réussie
+var _retours_en_attente := []   # blocs qui n'ont pas pu revenir (le joueur était sur leur case) : ils reviennent dès qu'il s'en va
 var _etait_courante := false
 
 
@@ -206,6 +215,10 @@ func _ready() -> void:
 		for cloche in _cloches.values():
 			cloche.dorer()
 	_preparer_motif()
+	if _sablier != null:
+		_maj_poids()     # au chargement (sans onde) : un bloc posé d'emblée sur un bouton baisse les plots
+		if Etat.est(drapeau_sortie):
+			_resoudre_temps(true)
 	if Etat.est(drapeau_fragile):
 		for dalle in _dalles.values():
 			dalle.valider(false)
@@ -236,7 +249,7 @@ func _preparer_motif() -> void:
 func _process(delta: float) -> void:
 	_temps += delta
 	var courante := grille == Etat.salle_courante
-	if courante and not _etait_visitee and not _eaux_a_combler.is_empty() and not _pont_fini:
+	if courante and not _etait_visitee and (not _eaux_a_combler.is_empty() or _sablier != null) and not _pont_fini and not _temps_resolu:
 		reinitialiser()      # comme dans les Zelda 2D : un puzzle de blocs non résolu se remet à zéro quand on quitte la salle puis qu'on y revient (évite les blocages)
 	_etait_visitee = courante
 	for a in _animes:
@@ -268,6 +281,8 @@ func _process(delta: float) -> void:
 		_annoncer_glace()
 	if _case_reflet.x >= 0:
 		_gerer_reflet()
+	if _sablier != null:
+		_gerer_sablier()
 
 
 # --- Chargement ---------------------------------------------------------------
@@ -600,9 +615,12 @@ func _poser_objets() -> void:
 					_eaux_a_combler[Vector2i(x, y)] = {"corps": corps, "pont": null, "sprite": sprite_trou, "dalle": sprite_dalle}
 				"r":
 					_case_reflet = Vector2i(x, y)
-				"e":   # départ de l'ÉCHO (l'ombre qui refait tes gestes 2 s plus tard, voir echo.gd)
-					_case_reflet = Vector2i(x, y)
-					_echo = true
+				"h":
+					_sablier = Sablier.new()
+					_sablier.position = pos
+					add_child(_sablier)
+					_sablier.initialiser(self, _images_serie("sablier_", 5), duree_sablier)
+					_occupe[Vector2i(x, y)] = _sablier
 				"a":
 					_dalles_reflet[Vector2i(x, y)] = _poser("dalle_reflet", pos)
 					if sombre:   # on doit les voir dans le noir
@@ -899,6 +917,7 @@ func case_libre(cellule: Vector2i) -> bool:
 # Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
 func verifier_plaques() -> void:
 	_maj_boutons()
+	_maj_poids()
 	if drapeau_plaque == "" or _plaques.is_empty():
 		return
 	for plaque in _plaques:
@@ -912,7 +931,7 @@ func verifier_plaques() -> void:
 func _nom_bouton(appuye: bool) -> String:
 	var reflet := false
 	for ligne in layout:
-		if ligne.contains("r") or ligne.contains("e"):
+		if ligne.contains("r"):
 			reflet = true
 	if reflet:
 		return "bouton_reflet_on" if appuye else "bouton_reflet"
@@ -922,7 +941,7 @@ func _nom_bouton(appuye: bool) -> String:
 # Chaque bouton s'enfonce quand un bloc est dessus, et remonte sinon.
 func _maj_boutons() -> void:
 	for cellule in _boutons:
-		var appuye: bool = _occupe.get(cellule) is Bloc or _reflet_sur(cellule) or (_echo and _joueur_sur(cellule))
+		var appuye: bool = _occupe.get(cellule) is Bloc or _reflet_sur(cellule)
 		_boutons[cellule].texture = _image(_nom_bouton(appuye))
 		_boutons[cellule].visible = not (_occupe.get(cellule) is Bloc)   # un bloc posé cache la marque (sinon elle se dessinait PAR-DESSUS le bloc)
 		_marques_vides[cellule] = not appuye
@@ -936,7 +955,7 @@ func _maj_boutons() -> void:
 # Jamais les drapeaux de progression (plumes, fragments) : ce qui est ramassé reste ramassé.
 func drapeaux_a_rejouer() -> Array:
 	var liste := []
-	for nom in [drapeau_plaque, drapeau_porte, drapeau_cristal, drapeau_braseros, drapeau_melodie, drapeau_porte2, drapeau_rayon,
+	for nom in [drapeau_sortie, drapeau_plaque, drapeau_porte, drapeau_cristal, drapeau_braseros, drapeau_melodie, drapeau_porte2, drapeau_rayon,
 			drapeau_fragile, drapeau_coffre, drapeau_levier, drapeau_cle, drapeau_serrure, drapeau_reflet, drapeau_runes]:
 		if nom != "" and Etat.est(nom) and not nom.begins_with("plume") and not nom.begins_with("fragment") and not liste.has(nom):
 			liste.append(nom)
@@ -948,6 +967,12 @@ func drapeaux_a_rejouer() -> Array:
 
 
 func reinitialiser() -> void:
+	if _sablier != null:
+		if _temps_resolu:
+			return   # salle réussie : rien ne bouge plus (pont posé, plots baissés)
+		_sablier.annuler()
+		_oublier_instant()
+		_retours_en_attente.clear()
 	if not _pont_fini:
 		for eau in _eaux_a_combler.values():   # les trous se rouvrent (les blocs sont remis à leur place plus bas)
 			if eau["pont"] != null:
@@ -989,8 +1014,6 @@ func reinitialiser() -> void:
 	if _calque_chemin != null and not _braseros.is_empty() and not _braseros[0].verrouille:
 		_rearmer_chemin()
 	_repere = false
-	_echo_appuye = false
-	_echo_lache = -1.0
 	if not _plots.is_empty() and not _orange_leves:
 		basculer_plots()   # les plots reprennent leur place de départ (orange levés)
 	for dalle in _dalles.values():
@@ -1001,6 +1024,7 @@ func reinitialiser() -> void:
 	_pique = false
 	for pics in _pics.values():
 		pics.decoincer()
+	_maj_poids()
 
 
 # --- Dalles de couleur -----------------------------------------------------------
@@ -1072,7 +1096,280 @@ func a_de_la_glace() -> bool:
 
 # Salle où la touche R ramène le joueur au début (on peut s'y coincer : glace, reflet décalé).
 func recommence_au_debut() -> bool:
+	if _sablier != null and not _temps_resolu:
+		return true   # on a pu se coincer (bloc dans le couloir, entre deux barrières) : R ramène au début
 	return _a_glace or (_case_reflet.x >= 0 and not Etat.est(drapeau_reflet)) or (not _eaux_a_combler.is_empty() and not _pont_fini)
+
+
+# --- Sablier (plume D4) ----------------------------------------------------------
+# Le sablier RETIENT un instant (marquer_temps) ; quand le sable est écoulé, tout revient à cet instant (rembobiner) :
+# blocs (même ceux tombés dans un trou), plots. Le joueur, lui, reste où il est.
+const VIOLET_TEMPS := Color(0.78, 0.42, 1.0)
+
+
+func _gerer_sablier() -> void:
+	if not _instant.is_empty():
+		var v := 0.5 + 0.5 * sin(_temps * 5.0)
+		for f in _fantomes:
+			f.modulate.a = 0.6 + 0.4 * v
+		if _calque_temps != null:
+			_calque_temps.queue_redraw()
+	if not _retours_en_attente.is_empty() and not _temps_resolu:
+		var restent := []
+		for e in _retours_en_attente:
+			if not _ramener_bloc(e):
+				restent.append(e)
+		if restent.size() != _retours_en_attente.size():
+			_retours_en_attente = restent
+			_maj_levres()
+			verifier_plaques()
+	if _temps_resolu or drapeau_sortie == "" or grille != Etat.salle_courante:
+		return
+	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
+	if joueur != null and case_des_pieds(joueur.global_position).y <= rangee_sortie:
+		Etat.poser(drapeau_sortie)
+		_resoudre_temps(false)
+
+
+# Bouton P d'une salle à sablier : il retient les plots (orange baissés, bleus levés) TANT QU'UN BLOC est dessus.
+func _poids_mode() -> bool:
+	return _sablier != null and not _plaques.is_empty() and not _plots.is_empty()
+
+
+func _maj_poids() -> void:
+	if not _poids_mode() or _plots_baisses:
+		return
+	var charge := false
+	var origine := _origine_bouton()
+	for p in _plaques:
+		if _occupe.get(p) is Bloc:
+			charge = true
+			origine = Vector2(p * TUILE) + Vector2(8, 8)
+	if charge == _orange_leves:
+		basculer_plots(origine)
+
+
+# 1er coup de lance sur le sablier : on retient l'instant ; une copie violette de chaque bloc reste à sa place.
+func marquer_temps() -> void:
+	_oublier_instant()
+	_retours_en_attente.clear()
+	var blocs := []
+	for bloc in _blocs:
+		blocs.append({"bloc": bloc, "case": bloc.case, "tombe": bloc._comble})
+		var f := Sprite2D.new()
+		f.texture = bloc._texture_normale
+		f.centered = false
+		f.position = Vector2(bloc.case * TUILE) + Vector2(0, TUILE - f.texture.get_height())
+		f.z_index = 1
+		f.material = _materiau_fantome()
+		add_child(f)
+		_fantomes.append(f)
+	_instant = {"orange": _orange_leves, "blocs": blocs}
+	if _calque_temps == null:
+		_calque_temps = Node2D.new()
+		_calque_temps.z_index = 2
+		_calque_temps.draw.connect(_dessiner_temps)
+		add_child(_calque_temps)
+	_calque_temps.visible = true
+
+
+# Copie « fantôme » : le bloc repeint tout en violet translucide, avec un liseré clair (on voit tout de suite que ce n'est pas un vrai bloc).
+var _mat_fantome: ShaderMaterial
+func _materiau_fantome() -> ShaderMaterial:
+	if _mat_fantome == null:
+		var sh := Shader.new()
+		sh.code = """shader_type canvas_item;
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	float l = dot(c.rgb, vec3(0.3, 0.59, 0.11));
+	vec2 px = TEXTURE_PIXEL_SIZE;
+	float voisins = texture(TEXTURE, UV + vec2(px.x, 0)).a + texture(TEXTURE, UV - vec2(px.x, 0)).a
+		+ texture(TEXTURE, UV + vec2(0, px.y)).a + texture(TEXTURE, UV - vec2(0, px.y)).a;
+	float bord = c.a > 0.5 && voisins < 3.5 ? 1.0 : 0.0;
+	vec3 violet = vec3(0.62, 0.32, 0.95) * (0.55 + 0.9 * l);
+	COLOR = vec4(mix(violet, vec3(1.0, 0.85, 1.0), bord), c.a * mix(0.55, 1.0, bord) * COLOR.a);
+}"""
+		_mat_fantome = ShaderMaterial.new()
+		_mat_fantome.shader = sh
+	return _mat_fantome
+
+
+func _oublier_instant() -> void:
+	for f in _fantomes:
+		f.queue_free()
+	_fantomes.clear()
+	_instant = {}
+	if _calque_temps != null:
+		_calque_temps.visible = false
+
+
+# Les plots seront-ils orange levés à l'instant retenu ?
+func _futur_orange() -> bool:
+	if _poids_mode():
+		for e in _instant["blocs"]:
+			if _plaques.has(e["case"]) and not e["tombe"]:
+				return false
+		return true
+	return _instant["orange"]
+
+
+# Pendant que le sable coule : chaque plot qui va CHANGER est cerclé de violet (plein s'il va se lever).
+func _dessiner_temps() -> void:
+	if _instant.is_empty():
+		return
+	var futur := _futur_orange()
+	var v := 0.5 + 0.5 * sin(_temps * 5.0)
+	for plot in _plots:
+		var leve_futur: bool = (plot.couleur == Plot.ORANGE) == futur
+		if leve_futur == plot.leve:
+			continue
+		var r := Rect2(plot.position + Vector2(1, 1), Vector2(14, 14))
+		if leve_futur:
+			_calque_temps.draw_rect(r, Color(VIOLET_TEMPS, 0.18 + 0.15 * v))
+		_calque_temps.draw_rect(r, Color(1.0, 0.8, 1.0, 0.45 + 0.4 * v), false, 1.0)
+
+
+# Le sable est écoulé (ou le sablier est frappé à nouveau) : tout revient à l'instant retenu, sauf le joueur.
+func rembobiner() -> void:
+	if _instant.is_empty() or _temps_resolu:
+		return
+	var instant := _instant
+	_oublier_instant()
+	_sablier.remonter()
+	_eclair_temps()
+	_retours_en_attente.clear()
+	for e in instant["blocs"]:
+		if not _ramener_bloc(e):
+			_retours_en_attente.append(e)   # il reviendra dès que le joueur aura quitté sa case
+	if not _poids_mode() and _orange_leves != instant["orange"]:
+		basculer_plots(_sablier.position + Vector2(8, 8))
+	_maj_levres()
+	verifier_plaques()
+
+
+# Ramène un bloc à sa place de l'instant retenu ; faux s'il ne peut pas encore (le joueur est sur sa case ou sur son trou).
+func _ramener_bloc(e: Dictionary) -> bool:
+	var bloc: Bloc = e["bloc"]
+	var cible: Vector2i = e["case"]
+	if bloc.case == cible and bloc._comble == e["tombe"]:
+		return true
+	# jamais un bloc qui réapparaît sous les pieds du joueur, ni un trou qui se rouvre sous lui
+	if _joueur_touche(cible) or (bloc._comble and _joueur_touche(bloc.case)):
+		return false
+	if not e["tombe"] and _occupe.has(cible) and _occupe[cible] != bloc:
+		return true   # la place est prise par autre chose : le bloc reste où il est
+	var depuis := bloc.position
+	if bloc._comble:
+		_rouvrir_trou(bloc.case)
+	elif _occupe.get(bloc.case) == bloc:
+		liberer(bloc.case)
+	bloc.revenir(cible)
+	_trainee_temps(depuis + Vector2(8, 8), Vector2(cible * TUILE) + Vector2(8, 8))
+	occuper(cible, bloc)
+	if e["tombe"]:
+		bloc_arrive(bloc)   # à l'instant retenu, il était dans un trou : il y retombe
+	return true
+
+
+func _rouvrir_trou(c: Vector2i) -> void:
+	var trou: Dictionary = _eaux_a_combler[c]
+	trou["pont"] = null
+	trou["sprite"].visible = true
+	trou["dalle"].visible = false
+	trou["corps"].process_mode = Node.PROCESS_MODE_INHERIT
+	for k in trou["corps"].get_children():
+		k.set_deferred("disabled", false)
+
+
+# La boîte des pieds du joueur (8 x 6) touche-t-elle cette case ?
+func _joueur_touche(c: Vector2i) -> bool:
+	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
+	if joueur == null:
+		return false
+	var pieds := to_local(joueur.global_position) + Vector2(0, 5)
+	return Rect2(pieds - Vector2(4, 3), Vector2(8, 6)).intersects(Rect2(Vector2(c * TUILE), Vector2(TUILE, TUILE)))
+
+
+# Traînée violette entre l'ancienne et la nouvelle place d'un bloc qui remonte le temps.
+func _trainee_temps(a: Vector2, b: Vector2) -> void:
+	var ligne := Line2D.new()
+	ligne.points = PackedVector2Array([a, b])
+	ligne.width = 10.0
+	ligne.default_color = Color(VIOLET_TEMPS, 0.7)
+	ligne.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	ligne.end_cap_mode = Line2D.LINE_CAP_ROUND
+	var m := CanvasItemMaterial.new()
+	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	ligne.material = m
+	ligne.z_index = 2
+	add_child(ligne)
+	var t := ligne.create_tween()
+	t.tween_property(ligne, "width", 2.0, 0.5)
+	t.parallel().tween_property(ligne, "modulate:a", 0.0, 0.5)
+	t.tween_callback(ligne.queue_free)
+	# poussière de sable violette le long du trajet
+	var p := CPUParticles2D.new()
+	p.position = b
+	p.one_shot = true
+	p.explosiveness = 0.8
+	p.amount = 16
+	p.lifetime = 0.7
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = 6.0
+	p.direction = Vector2(0, -1)
+	p.spread = 70.0
+	p.gravity = Vector2(0, -10)
+	p.initial_velocity_min = 6.0
+	p.initial_velocity_max = 18.0
+	p.color = Color(0.9, 0.7, 1.0, 0.9)
+	p.z_index = 2
+	add_child(p)
+	p.emitting = true
+	get_tree().create_timer(1.0).timeout.connect(p.queue_free)
+
+
+# Un voile violet traverse la salle : le temps recule.
+func _eclair_temps() -> void:
+	var voile := ColorRect.new()
+	voile.size = Vector2(TAILLE_SALLE)
+	voile.color = Color(VIOLET_TEMPS, 0.0)
+	voile.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	voile.z_index = 3
+	var m := CanvasItemMaterial.new()
+	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	voile.material = m
+	add_child(voile)
+	var t := voile.create_tween()
+	t.tween_property(voile, "color:a", 0.32, 0.12)
+	t.tween_property(voile, "color:a", 0.0, 0.6)
+	t.tween_callback(voile.queue_free)
+	Etat.secousse.emit()
+
+
+# Salle du sablier réussie : le sablier s'éteint, les plots restent baissés, un pont de pierre rebouche le gouffre (`colonne_pont`).
+func _resoudre_temps(instantane: bool) -> void:
+	_temps_resolu = true
+	_oublier_instant()
+	_sablier.endormir()
+	_plots_baisses = true
+	for plot in _plots:
+		plot.regler(false)
+	if colonne_pont >= 0:
+		for c in _eaux_a_combler.keys():
+			var trou: Dictionary = _eaux_a_combler[c]
+			if c.x != colonne_pont or trou["pont"] != null or _occupe.has(c):
+				continue
+			trou["pont"] = true
+			trou["corps"].process_mode = Node.PROCESS_MODE_DISABLED
+			for k in trou["corps"].get_children():
+				k.set_deferred("disabled", true)
+			trou["sprite"].visible = false
+			var dalle: Sprite2D = trou["dalle"]
+			dalle.visible = true
+			if not instantane:
+				dalle.modulate = Color(2.0, 1.4, 2.4)
+				dalle.create_tween().tween_property(dalle, "modulate", Color(1, 1, 1), 0.8)
+		_maj_levres()
 
 
 # --- Reflet ----------------------------------------------------------------------
@@ -1085,44 +1382,15 @@ func _gerer_reflet() -> void:
 	if courante and not _etait_courante and not resolu:
 		var joueur := get_tree().get_first_node_in_group("joueur")
 		if _reflet == null and joueur != null:
-			_reflet = Echo.new() if _echo else Reflet.new()
+			_reflet = Reflet.new()
 			add_child(_reflet)
 			_reflet.initialiser(self, _case_reflet, joueur, sombre)
 		elif _reflet != null and is_instance_valid(_reflet):
 			_reflet.reinitialiser()
 	_etait_courante = courante
-	# Salle de l'écho réussie : les plots restent baissés (on peut revenir en arrière librement)
-	if _echo and resolu:
-		if not _plots_baisses:
-			_plots_baisses = true
-			for plot in _plots:
-				plot.regler(false)
-		return
 	if not courante or _reflet == null or not is_instance_valid(_reflet):
 		return
-	if _echo:
-		# Boutons de l'écho : tant que le joueur OU l'écho en tient un, les plots orange sont baissés (et les bleus levés)
-		var tenu := false
-		var origine := Vector2(-1, -1)
-		for cellule in _boutons:
-			if _joueur_sur(cellule) or _reflet_sur(cellule):
-				tenu = true
-				origine = Vector2(cellule * TUILE) + Vector2(8, 8)
-		_maj_boutons()
-		# Maintien : après avoir lâché le bouton, les plots mettent `maintien_echo` s à remonter (fenêtre plus large)
-		if tenu:
-			_echo_lache = -1.0
-		elif _echo_appuye and maintien_echo > 0.0:
-			var maintenant := Time.get_ticks_msec() / 1000.0
-			if _echo_lache < 0.0:
-				_echo_lache = maintenant
-			if maintenant - _echo_lache < maintien_echo:
-				tenu = true   # comme si le bouton était encore tenu
-		if tenu != _echo_appuye:
-			_echo_appuye = tenu
-			if tenu == _orange_leves:
-				basculer_plots(origine if tenu else _origine_bouton())
-	elif not _boutons.is_empty():
+	if not _boutons.is_empty():
 		# Boutons : le reflet les enfonce (un bouton enfoncé une fois suffit à ouvrir pour de bon)
 		verifier_plaques()
 	# Dalles du reflet : allumées quand quelqu'un est dessus ; toutes à la fois = gagné
@@ -1136,8 +1404,7 @@ func _gerer_reflet() -> void:
 	if toutes and not resolu and drapeau_reflet != "":
 		Etat.poser(drapeau_reflet)
 		_reflet.disparaitre()
-		if not _echo:
-			Etat.annoncer("Le reflet se fond dans la lumière...")
+		Etat.annoncer("Le reflet se fond dans la lumière...")
 
 
 # Le joueur a-t-il les pieds sur cette case ?
@@ -1329,6 +1596,8 @@ func _images_serie(prefixe: String, n: int) -> Array[Texture2D]:
 # `origine` (position du cristal dans la salle) : si elle est donnée, le changement GAGNE les plots de proche en proche
 # (onde de couleur, 600 px/s) au lieu d'être instantané. Sans origine (touche R) : tout d'un coup.
 func basculer_plots(origine := Vector2(-1.0, -1.0)) -> void:
+	if _plots_baisses:
+		return   # salle du sablier réussie : les plots restent baissés
 	_orange_leves = not _orange_leves
 	var avec_onde := origine.x >= 0.0 and not _chargement
 	if avec_onde:

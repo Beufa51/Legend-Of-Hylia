@@ -470,6 +470,40 @@ func _tester_scene(chemin: String) -> void:
 				print("OK  PlumeD2b : carré de 23 dalles et 2 poteaux, tracé d'un seul trait = résolue, R remet tout en rouge")
 			else:
 				_erreurs.append("PlumeD2b : résolue %s, liseré %s, dalles %d, bleues après R %d" % [resolue, lisere_vu, d2._dalles.size(), bleues_apres_r])
+		# PlumeD4c (le sablier) : bloc sur le bouton = orange baissé ; on retient l'instant ; le bloc tombe dans le gouffre ;
+		# le sablier remonte le temps : le bloc ressort du trou et revient sur le bouton, le joueur (de l'autre côté) ne bouge pas.
+		var d4 = scene.get_node_or_null("PlumeD4c")
+		if d4 != null:
+			var et4 = root.get_node("Etat")
+			var heros4 = scene.get("joueur")
+			var bloc = d4._blocs[0]
+			var deplacer := func(c: Vector2i):
+				d4.liberer(bloc.case)
+				bloc.case = c
+				bloc.position = Vector2(c * 16)
+				d4.occuper(c, bloc)
+				d4.verifier_plaques()
+			heros4.global_position = d4.to_global(Vector2(2 * 16 + 8, 10 * 16 + 3))
+			deplacer.call(Vector2i(12, 8))
+			var orange_baisse: bool = not d4._orange_leves
+			d4.marquer_temps()
+			var fantome: bool = d4._fantomes.size() == 1
+			deplacer.call(Vector2i(12, 6))
+			d4.bloc_arrive(bloc)
+			var tombe: bool = bloc._comble and d4._eaux_a_combler[Vector2i(12, 6)]["pont"] != null and d4._orange_leves
+			heros4.global_position = d4.to_global(Vector2(12 * 16 + 8, 4 * 16 + 3))
+			d4.rembobiner()
+			var revenu: bool = bloc.case == Vector2i(12, 8) and not bloc._comble and d4._eaux_a_combler[Vector2i(12, 6)]["pont"] == null and not d4._orange_leves
+			var joueur_reste: bool = d4.case_des_pieds(heros4.global_position) == Vector2i(12, 4)
+			heros4.global_position = d4.to_global(Vector2(12 * 16 + 8, 2 * 16 + 3))
+			et4.salle_courante = d4.grille
+			d4._gerer_sablier()
+			var reussie: bool = et4.est("d4_temps3") and d4._eaux_a_combler[Vector2i(12, 6)]["pont"] != null and d4._sablier.etat == Sablier.ENDORMI
+			if orange_baisse and fantome and tombe and revenu and joueur_reste and reussie:
+				print("OK  PlumeD4c : le sablier retient l'instant, le bloc ressort du gouffre et revient sur le bouton, pas le joueur ; réussie = pont")
+			else:
+				_erreurs.append("PlumeD4c : orange baissé %s, fantôme %s, tombé %s, revenu %s, joueur resté %s, réussie %s" % [orange_baisse, fantome, tombe, revenu, joueur_reste, reussie])
+			et4.drapeaux.erase("d4_temps3")
 	if nb == 0:
 		_erreurs.append("%s : aucun écran trouvé" % chemin)
 	print("OK  %s  (%d écrans)" % [chemin, nb])

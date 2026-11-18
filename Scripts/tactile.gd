@@ -10,7 +10,6 @@ const ZONE_MORTE := 0.25        # en dessous, on ne bouge pas
 const BOUTONS := {              # nom -> [action, centre, rayon, texte]
 	"A": ["attack", Vector2(-40, -42), 22.0, "A"],
 	"B": ["run", Vector2(-84, -26), 17.0, "B"],
-	"E": ["echo", Vector2(-78, -68), 13.0, "E"],
 	"R": ["reset", Vector2(-24, 26), 11.0, "R"],
 }
 
@@ -73,8 +72,6 @@ func _centre_bouton(nom: String) -> Vector2:
 func _appui(doigt: int, pos: Vector2) -> void:
 	# 1) un bouton ?
 	for nom in BOUTONS.keys():
-		if nom == "E" and not Echo.present:
-			continue
 		var rayon: float = BOUTONS[nom][2] + 6.0   # un peu de marge pour les gros doigts
 		if pos.distance_to(_centre_bouton(nom)) <= rayon:
 			_doigts_boutons[doigt] = nom
@@ -149,15 +146,6 @@ func _impulsion(action: String) -> void:
 	_envoyer(action, false)
 
 
-var _echo_vu := false
-
-
-func _process(_delta: float) -> void:
-	if Echo.present != _echo_vu:
-		_echo_vu = Echo.present
-		_dessin.queue_redraw()
-
-
 func _dessiner() -> void:
 	if not visible:
 		return
@@ -168,8 +156,6 @@ func _dessiner() -> void:
 		_dessin.draw_circle(_stick_centre + _stick_pos, 12.0, Color(1, 1, 1, 0.35))
 	# boutons
 	for nom in BOUTONS.keys():
-		if nom == "E" and not Echo.present:
-			continue
 		var b: Array = BOUTONS[nom]
 		var c := _centre_bouton(nom)
 		var enfonce := _doigts_boutons.values().has(nom)
