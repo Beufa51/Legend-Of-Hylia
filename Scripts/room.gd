@@ -465,7 +465,7 @@ func _poser_objets() -> void:
 					_poser_anime(BRASERO, pos + DECALAGE_BRASERO, x + y)
 					_poser_lumiere(pos + Vector2(8, 6), 44.0)
 				"P":
-					_boutons[Vector2i(x, y)] = _poser("marque", pos)
+					_boutons[Vector2i(x, y)] = _poser(_nom_bouton(false), pos)
 					_plaques.append(Vector2i(x, y))
 				"L":
 					var brasero := Brasero.new()
@@ -860,11 +860,23 @@ func verifier_plaques() -> void:
 	Etat.poser(drapeau_plaque)
 
 
+# Image d'un bouton `P` : dans une salle à REFLET (lettre `r`), bouton rond de pierre à voyant bleu (c'est le reflet qui l'enfonce) ;
+# ailleurs, marque dorée au sol (on y pousse un bloc).
+func _nom_bouton(appuye: bool) -> String:
+	var reflet := false
+	for ligne in layout:
+		if ligne.contains("r"):
+			reflet = true
+	if reflet:
+		return "bouton_reflet_on" if appuye else "bouton_reflet"
+	return "marque_active" if appuye else "marque"
+
+
 # Chaque bouton s'enfonce quand un bloc est dessus, et remonte sinon.
 func _maj_boutons() -> void:
 	for cellule in _boutons:
 		var appuye: bool = _occupe.get(cellule) is Bloc or _reflet_sur(cellule)
-		_boutons[cellule].texture = _image("marque_active" if appuye else "marque")
+		_boutons[cellule].texture = _image(_nom_bouton(appuye))
 		_boutons[cellule].visible = not (_occupe.get(cellule) is Bloc)   # un bloc posé cache la marque (sinon elle se dessinait PAR-DESSUS le bloc)
 		_marques_vides[cellule] = not appuye
 	# un bloc posé sur une marque s'illumine (rune dorée) : on voit que c'est bon sans aucun texte
