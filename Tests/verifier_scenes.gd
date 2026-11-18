@@ -436,29 +436,21 @@ func _tester_scene(chemin: String) -> void:
 				print("OK  Vestibule droit : cadenas, clé au HUD, ouverture")
 			et.drapeaux.erase("d_cle_vestibule")
 			et.drapeaux.erase("d_porte_vestibule")
-		# PlumeD2b « le motif » : reproduire la plume (cases bleues listées, les autres rouges) ; R remet tout en rouge
+		# PlumeD2b : carré 5x5 avec 2 poteaux, même règle que D2a (tout bleu) ; un tracé d'un seul trait la résout ; R remet tout en rouge
 		var d2 = scene.get_node_or_null("PlumeD2b")
 		if d2 != null:
 			var et2 = root.get_node("Etat")
 			var heros2 = scene.get("joueur")
-			var V := func(x: int, y: int) -> Vector2i: return Vector2i(x, y)
-			# diagonale de la plume (3 dalles rouges retournées en trop), puis 3 allers-retours pour les remettre rouges
-			var chemin_d2 := [V.call(8, 10), V.call(9, 10), V.call(9, 9), V.call(10, 9), V.call(11, 9), V.call(11, 8), V.call(12, 8), V.call(13, 8),
-				V.call(13, 7), V.call(12, 7), V.call(12, 6), V.call(13, 6), V.call(14, 6), V.call(14, 7), V.call(15, 7), V.call(16, 7),
-				V.call(15, 7), V.call(16, 7), V.call(16, 9), V.call(8, 9), V.call(9, 9), V.call(8, 9),
-				V.call(8, 6), V.call(9, 6), V.call(10, 6), V.call(11, 6), V.call(12, 6), V.call(11, 6), V.call(10, 6), V.call(9, 6), V.call(8, 6)]
-			var a_mi_chemin := false
-			for i in chemin_d2.size():
-				var c: Vector2i = chemin_d2[i]
+			var chemin_d2 := [Vector2i(9, 7), Vector2i(10, 7), Vector2i(10, 6), Vector2i(11, 6), Vector2i(12, 6), Vector2i(13, 6), Vector2i(14, 6), Vector2i(14, 7),
+				Vector2i(13, 7), Vector2i(12, 7), Vector2i(12, 8), Vector2i(13, 8), Vector2i(14, 8), Vector2i(14, 9), Vector2i(14, 10), Vector2i(13, 10),
+				Vector2i(12, 10), Vector2i(12, 9), Vector2i(11, 9), Vector2i(11, 8), Vector2i(10, 8), Vector2i(10, 9), Vector2i(10, 10), Vector2i(11, 10)]
+			var lisere_vu := false
+			for c in chemin_d2:
 				heros2.global_position = d2.to_global(Vector2(c * 16) + Vector2(8, 3))
 				d2._suivre_pas()
-				if i == 14 and not et2.est("d2_sol2"):
-					a_mi_chemin = true   # la diagonale seule ne suffit pas (3 dalles en trop)
+				if d2._lisere != null and d2._lisere.visible:
+					lisere_vu = true
 			var resolue: bool = et2.est("d2_sol2")
-			var rouges_finales: int = 0
-			for d in d2._dalles.values():
-				if not d.bleue:
-					rouges_finales += 1
 			et2.drapeaux["plumeD2"] = true
 			var a_rejouer: Array = d2.drapeaux_a_rejouer()
 			if a_rejouer != ["d2_sol2"]:
@@ -474,11 +466,10 @@ func _tester_scene(chemin: String) -> void:
 			for d in d2._dalles.values():
 				if d.bleue:
 					bleues_apres_r += 1
-			var tableau_ok: bool = d2._tableau != null and d2._tableau.taille == Vector2i(7, 5)
-			if resolue and a_mi_chemin and rouges_finales == 24 and bleues_apres_r == 0 and tableau_ok:
-				print("OK  PlumeD2b : motif de la plume reproduit = résolue (24 dalles restent rouges), stèle du motif 7x5, R remet tout en rouge")
+			if resolue and lisere_vu and d2._dalles.size() == 23 and bleues_apres_r == 0:
+				print("OK  PlumeD2b : carré de 23 dalles et 2 poteaux, tracé d'un seul trait = résolue, R remet tout en rouge")
 			else:
-				_erreurs.append("PlumeD2b : résolue %s, mi-chemin %s, rouges %d, bleues après R %d, stèle %s" % [resolue, a_mi_chemin, rouges_finales, bleues_apres_r, tableau_ok])
+				_erreurs.append("PlumeD2b : résolue %s, liseré %s, dalles %d, bleues après R %d" % [resolue, lisere_vu, d2._dalles.size(), bleues_apres_r])
 	if nb == 0:
 		_erreurs.append("%s : aucun écran trouvé" % chemin)
 	print("OK  %s  (%d écrans)" % [chemin, nb])
