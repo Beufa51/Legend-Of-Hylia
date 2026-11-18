@@ -456,6 +456,13 @@ func _tester_scene(chemin: String) -> void:
 				if d2._lisere != null and d2._lisere.visible:
 					lisere_vu = true
 			var resolue: bool = et2.est("d2_sol2")
+			# Touche R dans une salle réussie : seuls ses drapeaux d'énigme sont à effacer, jamais la plume
+			et2.drapeaux["plumeD2"] = true
+			var a_rejouer: Array = d2.drapeaux_a_rejouer()
+			if a_rejouer != ["d2_sol2"]:
+				_erreurs.append("PlumeD2b : drapeaux à rejouer %s (attendu [d2_sol2])" % [a_rejouer])
+			else:
+				print("OK  R dans une salle réussie : drapeaux à effacer = %s (la plume reste)" % [a_rejouer])
 			et2.drapeaux.erase("d2_sol2")
 			et2.drapeaux.erase("plumeD2")
 			for d in d2._dalles.values():
