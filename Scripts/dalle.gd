@@ -9,20 +9,23 @@ class_name Dalle
 const SON := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Move2.wav"
 
 var bleue := false
+var bleue_depart := false   # lettre `y` : dalle déjà BLEUE au départ (il faut l'éviter, ou passer dessus deux fois)
 var validee := false     # énigme résolue : la dalle reste bleue, on peut marcher dessus librement
 var _face: Node2D        # le dessin (centré, pour l'animation de retournement)
 var _image: Sprite2D
 var textures: Array[Texture2D] = []   # [rouge, bleue, dorée], fournies par room.gd (images Gemini)
 
 
-func initialiser(case: Vector2i) -> void:
+func initialiser(case: Vector2i, deja_bleue := false) -> void:
+	bleue_depart = deja_bleue
+	bleue = deja_bleue
 	position = Vector2(case * 16)
 	_face = Node2D.new()
 	_face.position = Vector2(8, 8)   # au centre de la case : la dalle se retourne sur elle-même
 	add_child(_face)
 	_image = Sprite2D.new()
 	_face.add_child(_image)
-	_colorer(false, false)
+	_colorer(bleue, false)
 
 
 func _colorer(en_bleu: bool, gemme_or: bool) -> void:
@@ -51,13 +54,23 @@ func retourner() -> void:
 	t.tween_property(_face, "scale:x", 1.0, 0.07)
 
 
-# Remet la dalle rouge (touche R).
+# Remet la dalle dans son état de départ (touche R) : rouge, ou bleue pour une dalle `y`.
 func remettre() -> void:
 	if validee:
 		return
-	bleue = false
+	bleue = bleue_depart
 	_face.scale = Vector2.ONE
-	_colorer(false, false)
+	modulate = Color.WHITE
+	_colorer(bleue, false)
+
+
+# Aide (après 50 s d'inactivité) : une dalle encore ROUGE pulse 3 fois.
+func signaler() -> void:
+	if validee or bleue:
+		return
+	var t := create_tween().set_loops(3)
+	t.tween_property(self, "modulate", Color(1.9, 1.5, 1.5), 0.35)
+	t.tween_property(self, "modulate", Color.WHITE, 0.35)
 
 
 # Énigme résolue : la dalle reste bleue, sa gemme devient dorée.

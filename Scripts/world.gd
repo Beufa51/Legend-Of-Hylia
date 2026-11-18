@@ -195,6 +195,8 @@ func _aide_visuelle() -> void:
 		return
 	if "drapeau_porte" in ecran and ecran.drapeau_porte != "" and Etat.est(ecran.drapeau_porte):
 		return   # la salle est déjà résolue
+	if ecran is Room and (ecran as Room).aide_dalles():
+		return   # salle de dalles : ce sont les dalles encore rouges qui pulsent (pas les pots)
 	var cibles: Array[Node2D] = []
 	for n in get_tree().get_nodes_in_group("frappable"):
 		if n is Node2D and ecran.is_ancestor_of(n):

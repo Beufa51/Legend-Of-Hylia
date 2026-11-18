@@ -59,10 +59,11 @@ teinte = Color(1.0, 0.97, 0.92, 1)
 drapeau_fragile = "d2_sol1"
 drapeau_porte = "d2_sol1"
 retour = Vector2(-600, -30)
+passages = PackedStringArray("12 10 ! « Le rouge m'insupporte. Seul un sol d'un bleu uniforme ouvrira le chemin vers la plume. »")
 plumes_gravees = 2
-sol_style = "marbre"
+sol_style = "marbre_sombre"
 drapeau_plumes_gravees = "plumeD2"
-layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##.V.................V.##", "##.....................##", "##########zzzzz##########", "##########zzzzz##########", "##########zzzzz##########", "##########zzzzz##########", "##.....................##", "##...B..S.......O..B...##", "##.....................##", "##.V.................V.##", "###########...###########", "###########...###########")
+layout = PackedStringArray("###########DDD###########", "###########DDD###########", "##.V.................V.##", "##.....................##", "##########zzzzz##########", "##########zzzzz##########", "##########zzzzz##########", "##########zzzzz##########", "##.....................##", "##...B..S...I...O..B...##", "##.....................##", "##.V.................V.##", "###########...###########", "###########...###########")
 
 [node name="PlumeD2b" parent="." instance=ExtResource("2")]
 grille = Vector2i(-2, -2)
@@ -72,9 +73,9 @@ drapeau_porte = "d2_sol2"
 retour = Vector2(-600, -254)
 drapeau_gemme = "plumeD2"
 plumes_gravees = 2
-sol_style = "marbre"
+sol_style = "marbre_sombre"
 drapeau_plumes_gravees = "plumeD2"
-layout = PackedStringArray("#########################", "#########################", "##...S.............O...##", "##.......B..G..B.......##", "##........TTTTT........##", "###########DDD###########", "########zzzzzzzzz########", "########zz#zzzzzz########", "########zzzzzz#zz########", "########zzzzzzzzz########", "##.V.................V.##", "##.V.................V.##", "###########...###########", "###########...###########")
+layout = PackedStringArray("#########################", "#########################", "##...S.............O...##", "##.......B..G..B.......##", "##........TTTTT........##", "###########DDD###########", "########zzzyzzzzz########", "########zz#zzzzzz########", "########zzzzyz#zz########", "########zzzzzzyzz########", "##.V.................V.##", "##.V.................V.##", "###########...###########", "###########...###########")
 
 [node name="Epine3" parent="." instance=ExtResource("2")]
 grille = Vector2i(-3, 0)

@@ -28,3 +28,13 @@ for nom, (box, bas) in BANDES.items():
     for suffixe, img in (("", t[0]), ("_b", t[0].transpose(Image.FLIP_LEFT_RIGHT)), ("_c", t[1]), ("_d", t[3])):
         img.save(D + "tuiles/sol_%s%s.png" % (nom, suffixe))
     print(nom)
+
+# Plume D2 (dalles rouges / bleues) : le marbre est trop clair, les dalles ne ressortent pas -> marbre ASSOMBRI (« marbre_sombre »),
+# gris chaud neutre, ni rouge ni bleu.
+from PIL import ImageEnhance
+for suffixe in ("", "_b", "_c", "_d"):
+    img = Image.open(D + "tuiles/sol_marbre%s.png" % suffixe).convert("RGB")
+    img = ImageEnhance.Brightness(img).enhance(0.42)
+    img = ImageEnhance.Contrast(img).enhance(1.15)
+    img.save(D + "tuiles/sol_marbre_sombre%s.png" % suffixe)
+print("marbre_sombre")

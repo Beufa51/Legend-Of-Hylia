@@ -566,11 +566,11 @@ func _poser_objets() -> void:
 						var lueur := Lumiere.creer(Color(0.5, 0.8, 1.0), 0.35, 0.5)
 						lueur.position = pos + Vector2(8, 8)
 						add_child(lueur)
-				"z":
+				"z", "y":   # y = dalle déjà bleue au départ
 					var dalle := Dalle.new()
 					dalle.textures = [_image("dalle_rouge"), _image("dalle_bleue"), _image("dalle_doree")]
 					add_child(dalle)
-					dalle.initialiser(Vector2i(x, y))
+					dalle.initialiser(Vector2i(x, y), layout[y][x] == "y")
 					_dalles[Vector2i(x, y)] = dalle
 				"o", "u":
 					var plot := Plot.new()
@@ -932,6 +932,8 @@ func reinitialiser() -> void:
 	for dalle in _dalles.values():
 		dalle.remettre()
 	_case_pied = Vector2i(-1, -1)
+	if _lisere != null:
+		_lisere.visible = false
 	_pique = false
 	for pics in _pics.values():
 		pics.decoincer()
@@ -955,6 +957,7 @@ func _suivre_pas() -> void:
 	if _case_pied.x >= 0 and (dans.x < 3 or dans.y < 3 or dans.x > TUILE - 3 or dans.y > TUILE - 3):
 		return
 	_case_pied = c
+	_placer_lisere()
 	if not _dalles.has(c) or _dalles_resolues():
 		return
 	_dalles[c].retourner()
@@ -964,6 +967,31 @@ func _suivre_pas() -> void:
 	for d in _dalles.values():
 		d.valider()
 	Etat.poser(drapeau_fragile)
+	_placer_lisere()
+
+
+# LISERÉ sous les pieds : un cadre clair entoure la dalle que le jeu considère « sous les pieds » (celle qui vient de se retourner).
+# Couper un coin ne retourne rien (règle des 3 px) : le liseré reste alors sur l'ancienne dalle, on voit ce qui compte.
+var _lisere: Line2D
+
+func _placer_lisere() -> void:
+	if _lisere == null:
+		_lisere = Line2D.new()
+		_lisere.points = PackedVector2Array([Vector2(1, 1), Vector2(15, 1), Vector2(15, 15), Vector2(1, 15), Vector2(1, 1)])
+		_lisere.width = 1.0
+		_lisere.default_color = Color(1.0, 0.97, 0.8, 0.85)
+		add_child(_lisere)
+	_lisere.visible = _dalles.has(_case_pied) and not _dalles_resolues()
+	_lisere.position = Vector2(_case_pied * TUILE)
+
+
+# Aide visuelle (world.gd, après 50 s sans rien résoudre) : les dalles encore rouges pulsent. Vrai si la salle a des dalles à finir.
+func aide_dalles() -> bool:
+	if _dalles.is_empty() or _dalles_resolues():
+		return false
+	for d in _dalles.values():
+		d.signaler()
+	return true
 
 
 func _dalles_resolues() -> bool:

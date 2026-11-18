@@ -436,6 +436,39 @@ func _tester_scene(chemin: String) -> void:
 				print("OK  Vestibule droit : cadenas, clé au HUD, ouverture")
 			et.drapeaux.erase("d_cle_vestibule")
 			et.drapeaux.erase("d_porte_vestibule")
+		# PlumeD2b : 3 dalles déjà bleues (y) ; le chemin parfait (chaque rouge une fois) rend tout bleu ; R remet les y en bleu
+		var d2 = scene.get_node_or_null("PlumeD2b")
+		if d2 != null:
+			var et2 = root.get_node("Etat")
+			var heros2 = scene.get("joueur")
+			var bleues_depart: int = 0
+			for d in d2._dalles.values():
+				if d.bleue:
+					bleues_depart += 1
+			var chemin_d2 := [Vector2i(11, 10), Vector2i(11, 9), Vector2i(12, 9), Vector2i(13, 9), Vector2i(13, 8), Vector2i(13, 7), Vector2i(14, 7), Vector2i(15, 7),
+				Vector2i(15, 8), Vector2i(15, 9), Vector2i(16, 9), Vector2i(16, 8), Vector2i(16, 7), Vector2i(16, 6), Vector2i(15, 6), Vector2i(14, 6),
+				Vector2i(13, 6), Vector2i(12, 6), Vector2i(12, 7), Vector2i(11, 7), Vector2i(11, 8), Vector2i(10, 8), Vector2i(10, 9), Vector2i(9, 9),
+				Vector2i(8, 9), Vector2i(8, 8), Vector2i(9, 8), Vector2i(9, 7), Vector2i(8, 7), Vector2i(8, 6), Vector2i(9, 6), Vector2i(10, 6)]
+			var lisere_vu := false
+			for c in chemin_d2:
+				heros2.global_position = d2.to_global(Vector2(c * 16) + Vector2(8, 3))
+				d2._suivre_pas()
+				if d2._lisere != null and d2._lisere.visible:
+					lisere_vu = true
+			var resolue: bool = et2.est("d2_sol2")
+			et2.drapeaux.erase("d2_sol2")
+			et2.drapeaux.erase("plumeD2")
+			for d in d2._dalles.values():
+				d.validee = false
+			d2.reinitialiser()
+			var bleues_apres_r: int = 0
+			for d in d2._dalles.values():
+				if d.bleue:
+					bleues_apres_r += 1
+			if bleues_depart == 3 and resolue and lisere_vu and bleues_apres_r == 3:
+				print("OK  PlumeD2b : 3 dalles bleues au départ, chemin parfait = résolue, liseré sous les pieds, R remet les bleues")
+			else:
+				_erreurs.append("PlumeD2b : bleues au départ %d, résolue %s, liseré %s, bleues après R %d" % [bleues_depart, resolue, lisere_vu, bleues_apres_r])
 	if nb == 0:
 		_erreurs.append("%s : aucun écran trouvé" % chemin)
 	print("OK  %s  (%d écrans)" % [chemin, nb])

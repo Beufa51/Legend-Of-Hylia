@@ -104,6 +104,9 @@ for x in (11, 12, 13): p2a[0][x] = 'D'; p2a[1][x] = 'D'
 for y in range(4, 8):
     for x in range(10, 15): p2a[y][x] = 'z'
 put(p2a, 'V', (3, 11), (21, 11), (3, 2), (21, 2)); put(p2a, 'S', (8, 9)); put(p2a, 'O', (16, 9)); put(p2a, 'B', (5, 9), (19, 9))
+# Stèle à inscription (demande de l'utilisateur : indice POÉTIQUE, pas une explication) ; on la lit depuis la case du sud (12,10).
+put(p2a, 'I', (12, 9))
+ENIGME_D2 = "12 10 ! « Le rouge m'insupporte. Seul un sol d'un bleu uniforme ouvrira le chemin vers la plume. »"
 
 # D2b (la pointe) : 34 dalles autour de 2 piliers, une seule entrée (par le bas). Dès que toutes sont bleues, la grille de l'alcôve
 #     s'ouvre. Il existe des chemins qui passent une seule fois par chaque dalle (vérifié par un solveur).
@@ -115,6 +118,11 @@ for x in range(10, 15): put(p2b, 'T', (x, 4))
 for y in range(6, 10):
     for x in range(8, 17): p2b[y][x] = 'z'
 put(p2b, '#', (10, 7), (14, 8))
+# COMPLICATION : 3 dalles déjà BLEUES au départ (lettre y) : il faut les éviter (ou passer deux fois dessus).
+# Chemin « parfait » (chaque dalle rouge une seule fois, sans toucher une bleue) : UNIQUE, entrée par (11,9) :
+# (11,9) (12,9) (13,9) ↑(13,8) (13,7) → (14,7) (15,7) ↓(15,8) (15,9) → (16,9) ↑ jusqu'à (16,6) ← (15,6)...(12,6) ↓(12,7) ← (11,7) ↓(11,8) ← (10,8)
+# ↓(10,9) ← (9,9) (8,9) ↑(8,8) → (9,8) ↑(9,7) ← (8,7) ↑(8,6) → (9,6) (10,6). (D'autres chemins existent en repassant ou en ressortant.)
+put(p2b, 'y', (11, 6), (12, 8), (14, 9))
 put(p2b, 'V', (3, 11), (21, 11), (3, 10), (21, 10)); put(p2b, 'S', (5, 2)); put(p2b, 'O', (19, 2))
 
 # --- PLUME D3 : « LA GLACE ». Sur la glace (i), on glisse tout droit jusqu'à un obstacle (ou jusqu'au sol normal).
@@ -261,7 +269,8 @@ salles = [
     ('Epine1', (-1, 0), e1, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD1'}),
     ('PlumeD1', (-1, -1), p1, (0.98, 0.94, 1.06), {'drapeau_gemme': 'plumeD1'}),
     ('Epine2', (-2, 0), e2, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD2', 'retour': RETOUR_E2}),
-    ('PlumeD2a', (-2, -1), p2a, (1.0, 0.97, 0.92), {'drapeau_fragile': 'd2_sol1', 'drapeau_porte': 'd2_sol1', 'retour': retour_d2(1)}),
+    ('PlumeD2a', (-2, -1), p2a, (1.0, 0.97, 0.92), {'drapeau_fragile': 'd2_sol1', 'drapeau_porte': 'd2_sol1', 'retour': retour_d2(1),
+        'passages': 'PackedStringArray("%s")' % ENIGME_D2}),
     ('PlumeD2b', (-2, -2), p2b, (0.98, 0.95, 0.9), {'drapeau_fragile': 'd2_sol2', 'drapeau_porte': 'd2_sol2', 'retour': retour_d2(2),
         'drapeau_gemme': 'plumeD2'}),
     ('Epine3', (-3, 0), e3, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD3'}),
@@ -310,7 +319,7 @@ for nom, (gx, gy), g, c, ex in salles:
     if m:
         n = int(m.group(1))
         out += 'plumes_gravees = %d\n' % n
-        if nom.startswith('PlumeD') and n != 5: out += 'sol_style = "%s"\n' % {1: 'rouille', 2: 'marbre', 3: 'ardoise', 4: 'miroir', 5: 'rouille2'}[n]   # Outils/traiter_sols_droite.py
+        if nom.startswith('PlumeD') and n != 5: out += 'sol_style = "%s"\n' % {1: 'rouille', 2: 'marbre_sombre', 3: 'ardoise', 4: 'miroir', 5: 'rouille2'}[n]   # Outils/traiter_sols_droite.py
         # les plumes gravées deviennent dorées quand la plume de la colonne est ramassée (la 5e = le fragment)
         out += 'drapeau_plumes_gravees = "%s"\n' % (('%s%d' % (PREFIXE, n)) if n < 5 else FRAGMENT)
     if nom.startswith('Epine'): out += 'fenetres = true\n'   # épine = le rempart de la façade : fenêtres en arche
