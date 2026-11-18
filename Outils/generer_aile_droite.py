@@ -329,7 +329,7 @@ for nom, (gx, gy), g, c, ex in salles:
     if m:
         n = int(m.group(1))
         if not nom.startswith('PlumeD3'): out += 'plumes_gravees = %d\n' % n   # D3 (glace) : pas de plumes gravées, elles jurent avec la neige
-        if nom.startswith('PlumeD') and n != 5: out += 'sol_style = "%s"\n' % {1: 'rouille', 2: 'marbre_sombre', 3: 'ardoise', 4: 'miroir', 5: 'rouille2'}[n]   # Outils/traiter_sols_droite.py
+        if nom.startswith('PlumeD') and n != 5: out += 'sol_style = "%s"\n' % {1: 'rouille', 2: 'marbre_sombre', 3: 'ardoise', 4: 'miroir_sombre', 5: 'rouille2'}[n]   # Outils/traiter_sols_droite.py
         # les plumes gravées deviennent dorées quand la plume de la colonne est ramassée (la 5e = le fragment)
         out += 'drapeau_plumes_gravees = "%s"\n' % (('%s%d' % (PREFIXE, n)) if n < 5 else FRAGMENT)
     if nom.startswith('Epine'): out += 'fenetres = true\n'   # épine = le rempart de la façade : fenêtres en arche

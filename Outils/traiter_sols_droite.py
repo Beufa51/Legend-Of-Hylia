@@ -38,3 +38,15 @@ for suffixe in ("", "_b", "_c", "_d"):
     img = ImageEnhance.Contrast(img).enhance(1.15)
     img.save(D + "tuiles/sol_marbre_sombre%s.png" % suffixe)
 print("marbre_sombre")
+
+# Plume D4 (le reflet est un fantôme bleu glacé) : le sol « miroir » est trop clair et bleuté, le reflet s'y perd -> sol ASSOMBRI
+# et réchauffé (« miroir_sombre » : pierre brun-gris sombre) pour que le reflet bleu ressorte.
+for suffixe in ("", "_b", "_c", "_d"):
+    img = Image.open(D + "tuiles/sol_miroir%s.png" % suffixe).convert("RGB")
+    img = ImageEnhance.Color(img).enhance(0.35)
+    img = ImageEnhance.Brightness(img).enhance(0.36)
+    img = ImageEnhance.Contrast(img).enhance(1.1)
+    r, g, b = img.split()
+    r = r.point(lambda v: min(255, int(v * 1.12) + 3)); b = b.point(lambda v: int(v * 0.88))
+    Image.merge("RGB", (r, g, b)).save(D + "tuiles/sol_miroir_sombre%s.png" % suffixe)
+print("miroir_sombre")
