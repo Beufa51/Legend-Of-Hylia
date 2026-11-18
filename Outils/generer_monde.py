@@ -238,7 +238,7 @@ put(p5e, 'I', (12, 9))
 ENIGME_5E = "12 10 ! « Je dors dans la pierre jusqu'à l'aube. Qu'un rayon de soleil touche mon cœur, et je chanterai pour toi. »"
 
 salles = [
-    ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'escaliers_descente': 'PackedStringArray("11 9")', 'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal', 'drapeau_porte2': 'fragment_gauche',
+    ('Vestibule', (0, 1), vest, (0.92, 0.97, 1.05), {'drapeau_cristal': 'vestibule_cristal', 'drapeau_porte': 'vestibule_cristal', 'drapeau_porte2': 'fragment_gauche',
         'niches': 'false', 'chemin_runes': 'PackedStringArray(%s)' % ', '.join('"%s"' % r for r in RUNES_VEST), 'drapeau_runes': 'vestibule_cristal'}),
     ('Entree', (0, 0), ent, (1.0, 0.96, 0.88), {'emblemes_tapis': 'PackedStringArray("11 5")'}),
     ('Epine1', (1, 0), e1, (0.86, 0.90, 0.96), {'drapeau_porte': 'plume1'}),

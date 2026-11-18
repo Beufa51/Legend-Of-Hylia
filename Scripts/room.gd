@@ -93,8 +93,6 @@ const HAUTEUR_RAYON := -4.0   # le rayon est dessiné 4 px au-dessus du centre d
 @export var drapeau_rayon := ""      # levé quand le rayon de lumière touche le réceptacle Y
 @export var chanteur_au_soleil := false   # la statue du coq ne chante que si le rayon l'éclaire
 @export var drapeau_fragile := ""    # levé quand TOUTES les dalles de couleur z sont bleues
-# ESCALIERS DE DESCENTE (décor, on marche dessus) : "x y" = case du coin haut-gauche d'un escalier de 3x3 cases (image escalier_donjon). Voir world.gd::_descendre_escalier.
-@export var escaliers_descente: PackedStringArray
 @export var drapeau_coffre := ""     # levé quand on ouvre le coffre Q
 @export var texte_coffre := "Tu as trouvé une petite clé !"
 @export var drapeau_levier := ""     # levé quand on bascule le levier J
@@ -275,7 +273,6 @@ func _creer_decor() -> void:
 	for e in emblemes_tapis:   # emblème du coq doré au centre d'un tapis
 		var xy := e.split(" ")
 		_poser("tapis_embleme_48", Vector2(int(xy[0]) * TUILE, int(xy[1]) * TUILE))
-	_poser_escaliers()   # (après les tapis : l'escalier se pose par-dessus)
 	_poser_portes()
 	_poser_details()
 	_poser_vie_gouffre()
@@ -431,14 +428,6 @@ func _allumer_runes(instantane: bool) -> void:
 			_poser_lumiere(rune.position + Vector2(8, 8), 14.0)
 	else:
 		await get_tree().create_timer(0.15).timeout
-
-
-# Escaliers de descente (export `escaliers_descente`).
-func _poser_escaliers() -> void:
-	for ligne in escaliers_descente:
-		var m := ligne.split(" ", false)
-		if m.size() == 2:
-			_poser("escalier_donjon", Vector2(int(m[0]) * TUILE, int(m[1]) * TUILE))
 
 
 # Tapis, statues, braseros, vases posés d'après les lettres du plan.

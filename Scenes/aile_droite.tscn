@@ -14,7 +14,6 @@ cote = "droite"
 [node name="Vestibule" parent="." instance=ExtResource("2")]
 grille = Vector2i(0, 1)
 teinte = Color(0.98, 0.95, 1.06, 1)
-escaliers_descente = PackedStringArray("11 9")
 drapeau_porte2 = "fragment_droite"
 niches = false
 drapeau_coffre = "d_cle_vestibule"
