@@ -297,7 +297,7 @@ salles = [
     ('PlumeD3b', (-3, -2), p3b, (0.9, 0.97, 1.1), {'retour': retour_d3(2), 'drapeau_plaque': 'd3_marque', 'drapeau_porte': 'd3_marque'}),
     ('PlumeD3c', (-3, -3), p3c, (0.94, 0.96, 1.1), {'retour': retour_d3(3), 'drapeau_gemme': 'plumeD3', 'drapeau_plaque': 'd3_marque_gelee', 'drapeau_porte': 'd3_marque_gelee'}),
     ('Epine4', (-4, 0), e4, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD4'}),
-    ('PlumeD4a', (-4, -1), p4a, (0.96, 0.94, 1.08), {'retour': retour_d4(1), 'drapeau_reflet': 'd4_echo1', 'drapeau_porte': 'd4_echo1'}),
+    ('PlumeD4a', (-4, -1), p4a, (0.96, 0.94, 1.08), {'retour': retour_d4(1), 'drapeau_reflet': 'd4_echo1', 'drapeau_porte': 'd4_echo1', 'maintien_echo': '2.0'}),
     ('PlumeD4b', (-4, -2), p4b, (0.95, 0.93, 1.06), {'retour': retour_d4(2), 'drapeau_reflet': 'd4_echo2', 'drapeau_porte': 'd4_echo2'}),
     ('PlumeD4c', (-4, -3), p4c, (0.94, 0.95, 1.08), {'retour': retour_d4(3), 'drapeau_reflet': 'd4_echo3', 'drapeau_porte': 'd4_echo3'}),
     ('PlumeD4d', (-4, -4), p4d, (0.96, 0.94, 1.06), {'retour': retour_d4(4), 'drapeau_reflet': 'd4_echo4', 'drapeau_porte': 'd4_echo4', 'drapeau_gemme': 'plumeD4'}),

@@ -92,7 +92,8 @@ const HAUTEUR_RAYON := -4.0   # le rayon est dessiné 4 px au-dessus du centre d
 @export var periodes_sentinelles: PackedFloat32Array
 @export var retour := Vector2.ZERO   # où un garde ramène le joueur repéré (position dans le monde)
 @export var drapeau_repos := ""      # quand ce drapeau est levé, les sentinelles ne surveillent plus
-@export var duree_bruit := 3.0       # secondes pendant lesquelles les sentinelles fixent un pot sonore brisé (lettre `U`)
+@export var maintien_echo := 0.0     # salle de l'écho : secondes pendant lesquelles les plots restent baissés après avoir lâché le bouton
+@export var duree_bruit := 3.0      # secondes pendant lesquelles les sentinelles fixent un pot sonore brisé (lettre `U`)
 @export var drapeau_porte2 := ""     # les portes H de cette salle s'ouvrent quand ce drapeau est levé
 @export var drapeau_rayon := ""      # levé quand le rayon de lumière touche le réceptacle Y
 @export var chanteur_au_soleil := false   # la statue du coq ne chante que si le rayon l'éclaire
@@ -181,7 +182,8 @@ var _case_reflet := Vector2i(-1, -1)   # départ du reflet (lettre r) ; -1 = pas
 var _reflet: Reflet
 var _echo := false          # vrai = salle de l'ÉCHO (lettre e) : les boutons P baissent les plots orange TANT QU'ON APPUIE
 var _plots_baisses := false  # salle de l'écho réussie : tous les plots baissés pour de bon
-var _echo_appuye := false   # un bouton est-il tenu (par le joueur ou l'écho) en ce moment ?
+var _echo_lache := -1.0     # instant où le bouton de l'écho a été lâché (voir maintien_echo)
+var _echo_appuye := false  # un bouton est-il tenu (par le joueur ou l'écho) en ce moment ?
 var _dalles_reflet := {}   # { case : Sprite2D }
 var _etait_courante := false
 
@@ -988,6 +990,7 @@ func reinitialiser() -> void:
 		_rearmer_chemin()
 	_repere = false
 	_echo_appuye = false
+	_echo_lache = -1.0
 	if not _plots.is_empty() and not _orange_leves:
 		basculer_plots()   # les plots reprennent leur place de départ (orange levés)
 	for dalle in _dalles.values():
@@ -1106,6 +1109,15 @@ func _gerer_reflet() -> void:
 				tenu = true
 				origine = Vector2(cellule * TUILE) + Vector2(8, 8)
 		_maj_boutons()
+		# Maintien : après avoir lâché le bouton, les plots mettent `maintien_echo` s à remonter (fenêtre plus large)
+		if tenu:
+			_echo_lache = -1.0
+		elif _echo_appuye and maintien_echo > 0.0:
+			var maintenant := Time.get_ticks_msec() / 1000.0
+			if _echo_lache < 0.0:
+				_echo_lache = maintenant
+			if maintenant - _echo_lache < maintien_echo:
+				tenu = true   # comme si le bouton était encore tenu
 		if tenu != _echo_appuye:
 			_echo_appuye = tenu
 			if tenu == _orange_leves:
