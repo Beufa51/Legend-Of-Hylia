@@ -88,6 +88,9 @@ for x in range(2, 23): p1[9][x] = 'o'                       # barrière de plots
 put(p1, 'K', (12, 9))                                       # le cristal, DANS la barrière : on le frappe des deux côtés
 put(p1, 'V', (3, 11), (21, 11), (3, 6), (21, 6)); put(p1, 'S', (6, 7)); put(p1, 'O', (18, 7))
 for x in range(10, 15): put(p1, 'T', (x, 11))
+# Au nord de la barrière : 2 colonnes de plots orange (elles s'abaissent au passage de l'onde) et 2 « poteaux » bleus de part et
+# d'autre du chemin central (ils se lèvent au 1er coup, se rebaissent au 2e) ; colonnes 11-13 toujours libres.
+put(p1, 'o', (8, 6), (8, 7), (8, 8), (16, 6), (16, 7), (16, 8)); put(p1, 'u', (10, 7), (14, 7))
 
 # --- PLUME D2 : « LES DALLES DE COULEUR » (façon Zelda). Chaque pas sur une dalle z la retourne : rouge -> bleue,
 #     bleue -> rouge. Il faut rendre TOUTES les dalles bleues (donc passer une seule fois sur chacune, ou un nombre impair de fois).

@@ -71,7 +71,7 @@ func frapper() -> void:
 			return
 		_attente = 0.45
 		_jouer_son()
-		_salle.basculer_plots()
+		_salle.basculer_plots(position + Vector2(8, 8))
 		return
 	if actif:
 		return

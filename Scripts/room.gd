@@ -1184,12 +1184,28 @@ func _images_serie(prefixe: String, n: int) -> Array[Texture2D]:
 
 
 # Un coup sur le cristal commutateur : les plots levés se baissent, les baissés se lèvent.
-func basculer_plots() -> void:
+# `origine` (position du cristal dans la salle) : si elle est donnée, le changement GAGNE les plots de proche en proche
+# (onde de couleur, 600 px/s) au lieu d'être instantané. Sans origine (touche R) : tout d'un coup.
+func basculer_plots(origine := Vector2(-1.0, -1.0)) -> void:
 	_orange_leves = not _orange_leves
+	var avec_onde := origine.x >= 0.0 and not _chargement
+	if avec_onde:
+		OndePlots.jouer(self, origine, _orange_leves)
 	for plot in _plots:
-		plot.regler((plot.couleur == Plot.ORANGE) == _orange_leves)
+		if avec_onde:
+			var delai := origine.distance_to(plot.position + Vector2(8, 8)) / OndePlots.VITESSE
+			_regler_plot_apres(plot, delai)
+		else:
+			plot.regler((plot.couleur == Plot.ORANGE) == _orange_leves)
 	for cristal in _commutateurs:
 		cristal.colorer(_orange_leves)
+
+
+# L'état voulu est relu au moment où l'onde arrive (deux coups rapprochés restent cohérents).
+func _regler_plot_apres(plot: Plot, delai: float) -> void:
+	await get_tree().create_timer(delai).timeout
+	if is_instance_valid(plot):
+		plot.regler((plot.couleur == Plot.ORANGE) == _orange_leves)
 
 
 # L'eau éteint la lance enflammée du joueur.
