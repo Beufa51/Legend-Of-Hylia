@@ -27,7 +27,8 @@ func _lancer() -> void:
 	var ecran := "Plume3b" if a.size() < 2 else a[1]
 	Etat.arrivee_ecran = ecran
 	Etat.arrivee_case = Vector2i(12, 12) if a.size() < 4 else Vector2i(int(a[2]), int(a[3]))
-	monde = load("res://Scenes/world.tscn").instantiate()
+	var scene := OS.get_environment("BOT_SCENE")   # ex. BOT_SCENE=res://Scenes/aile_droite.tscn (par défaut : l'aile gauche)
+	monde = load(scene if scene != "" else "res://Scenes/world.tscn").instantiate()
 	add_child(monde)
 	await get_tree().create_timer(2.0).timeout
 	for e in monde.get_children():
@@ -67,6 +68,35 @@ func marcher(case: Vector2i, x_d_abord := true, pause := 0.15) -> void:
 			_echec = true
 		if pause > 0.0:
 			await get_tree().create_timer(pause).timeout
+
+
+## Scénario « glace » (`-- glace <Ecran> <x> <y> <coups>`, avec BOT_SCENE=res://Scenes/aile_droite.tscn) : joue une suite de coups
+## séparés par des virgules : H B G D = une touche de direction (glisser, ou pousser le bloc qui est devant), A = coup de lance,
+## h b g d (minuscule) = touche MAINTENUE 0,6 s (pousser un bloc depuis une case de sol, comme dans le jeu).
+## Exemple : -- glace PlumeD3b 12 11 H,H,D,B,G,G,H,G,H
+func _scenario_glace() -> void:
+	var a := OS.get_cmdline_user_args()
+	var touches := {"H": "move_up", "B": "move_down", "G": "move_left", "D": "move_right", "h": "move_up", "b": "move_down", "g": "move_left", "d": "move_right"}
+	for coup in a[4].split(","):
+		if coup == "A":
+			Input.action_press("attack")
+			await get_tree().create_timer(0.1).timeout
+			Input.action_release("attack")
+			await get_tree().create_timer(0.8).timeout
+		else:
+			Input.action_press(touches[coup])
+			await get_tree().create_timer(0.12 if coup == coup.to_upper() else 0.6).timeout
+			Input.action_release(touches[coup])
+			await get_tree().create_timer(0.1).timeout
+			while monde.joueur._glisse:
+				await get_tree().physics_frame
+			await get_tree().create_timer(0.7).timeout   # un bloc qui glisse, des plots qui changent
+		print("  ", coup, " -> case ", salle.case_des_pieds(monde.joueur.global_position), " (image ", _image, ")")
+	await get_tree().create_timer(1.0).timeout
+	var drap := String(salle.drapeau_porte)
+	print("drapeau ", drap, " : ", Etat.est(drap) if drap != "" else "-")
+	if drap != "" and not Etat.est(drap):
+		_echec = true
 
 
 func comblees() -> int:

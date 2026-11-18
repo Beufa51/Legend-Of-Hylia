@@ -91,26 +91,30 @@ retour = Vector2(-1000, -45)
 plumes_gravees = 3
 sol_style = "ardoise"
 drapeau_plumes_gravees = "plumeD3"
-layout = PackedStringArray("###########...###########", "###########...###########", "###########...###########", "###########...###########", "###########...###########", "########iiiikiiii########", "########iiiiiiiii########", "########iiiiiiiii########", "########iiiiikiii########", "########iiiiiiiii########", "########iiiciiiii########", "########.........########", "###########...###########", "###########...###########")
+layout = PackedStringArray("###########...###########", "###########...###########", "###########...###########", "##iiiiiiiiiikiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiikikiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##.....................##", "###########...###########", "###########...###########")
 
 [node name="PlumeD3b" parent="." instance=ExtResource("2")]
 grille = Vector2i(-3, -2)
 teinte = Color(0.9, 0.97, 1.1, 1)
 retour = Vector2(-1000, -269)
+drapeau_plaque = "d3_marque"
+drapeau_porte = "d3_marque"
 plumes_gravees = 3
 sol_style = "ardoise"
 drapeau_plumes_gravees = "plumeD3"
-layout = PackedStringArray("###########...###########", "###########...###########", "###########...###########", "###########...###########", "###########...###########", "########iiiiiiiii########", "########iiiiciiii########", "########iiikikiii########", "########iiiiiiiii########", "########iiXiiiiii########", "########iiiiiiiii########", "########.........########", "###########...###########", "###########...###########")
+layout = PackedStringArray("###########DDD###########", "###########DDD###########", "###########...###########", "##iiiiiiiiiikiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiiiPiiiiiiiXii##", "##kiiiiiiiiiiiiiiiiiiik##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##.....................##", "###########...###########", "###########...###########")
 
 [node name="PlumeD3c" parent="." instance=ExtResource("2")]
 grille = Vector2i(-3, -3)
 teinte = Color(0.94, 0.96, 1.1, 1)
 retour = Vector2(-1000, -493)
 drapeau_gemme = "plumeD3"
+drapeau_plaque = "d3_marque_gelee"
+drapeau_porte = "d3_marque_gelee"
 plumes_gravees = 3
 sol_style = "ardoise"
 drapeau_plumes_gravees = "plumeD3"
-layout = PackedStringArray("#########################", "#########################", "#########B..G..B#########", "#########.TTTTT.#########", "############.############", "########iiiiiiiii########", "########iiiiiiiii########", "########ioiiikiii########", "########Kiiiiiiii########", "########iikiciiii########", "########iiioiiiii########", "########.........########", "###########...###########", "###########...###########")
+layout = PackedStringArray("#########################", "##########B.G.B##########", "##########.TTT.##########", "###########DDD###########", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiicioiiioiciiiiii##", "##iioiiiiiiupiiiiiiXoii##", "##iiiiiiiiiiiiiiiiiiiiK##", "##iiiiiiiiiiiiiiiiiiiii##", "##iiiiiiiiciiiciiiiiiii##", "##.....................##", "###########...###########", "###########...###########")
 
 [node name="Epine4" parent="." instance=ExtResource("2")]
 grille = Vector2i(-4, 0)
