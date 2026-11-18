@@ -126,7 +126,7 @@ put(p2b, 'V', (3, 11), (21, 11), (3, 10), (21, 10), (4, 11), (20, 11))
 # --- PLUME D3 : « LA GLACE ». Sur la glace (i), on glisse tout droit jusqu'à un obstacle (ou jusqu'au sol normal).
 #     Un bloc poussé sur la glace glisse aussi. Un plot BAISSÉ n'est pas glissant : on s'arrête dessus.
 #     R = retour au début de la salle (on peut se coincer). Les 3 salles ont été vérifiées par un solveur (mêmes règles) :
-#     3a = 5 coups (leçon) ; 3b = 8 coups dont 1 poussée (impossible sans le bloc) ; 3c = 7 coups (impossible sans le cristal). Bassins 9 x 6.
+#     3a = 5 coups (leçon) ; 3b = 9 coups, pousser le bloc sur la marque ; 3c = 10 coups, marque gelée + cristal (impossible sans). Pleine largeur.
 def retour_d3(n):   # bas de l'écran n de la plume D3 (case (12,11), sol normal), en position dans le monde
     return 'Vector2(%d, %d)' % (-3 * 400 + 12 * 16 + 8, -224 * n + 11 * 16 + 3)
 
@@ -136,32 +136,38 @@ def champ_de_glace(g):
         for x in range(2, 23): g[y][x] = 'i'
     sol(g, 2, 22, 11, 11); sol(g, 11, 13, 12, 13); sol(g, 11, 13, 0, 2)
 
-def bassin(g, alcove=False):
-    """BASSIN GELÉ de 9 x 6 cases (colonnes 8-16, rangées 5-10) entouré de murs épais ; quai de sol rangée 11, entrée en bas.
-    Sortie en haut par les colonnes 11-13 (rangées 0-4), ou (alcove=True) par la seule case (12,4) vers l'alcôve de la plume."""
-    for y in range(5, 11):
-        for x in range(8, 17): g[y][x] = 'i'
-    sol(g, 8, 16, 11, 11); sol(g, 11, 13, 12, 13)
+def salle_gelee(g, alcove=False):
+    """Salle de glace PLEINE LARGEUR : glace colonnes 2-22, quai de sol rangée 11, entrée en bas.
+    Sortie en haut par les colonnes 11-13 (rangées 0-2) ; ou (alcove=True) mur rangée 3 avec une porte D vers l'alcôve de la plume (rangées 1-2)."""
+    y0 = 4 if alcove else 3
+    for y in range(y0, 11):
+        for x in range(2, 23): g[y][x] = 'i'
+    sol(g, 2, 22, 11, 11); sol(g, 11, 13, 12, 13)
     if alcove:
-        sol(g, 9, 15, 2, 3); put(g, '.', (12, 4))
+        sol(g, 10, 14, 1, 2)
+        for x in (11, 12, 13): g[3][x] = 'D'
     else:
-        sol(g, 11, 13, 0, 4)
+        sol(g, 11, 13, 0, 2)
 
-# Plans trouvés par recherche automatique + solveur (Outils/resoudre_glace.py) : peu d'obstacles, solution courte, mécanique obligatoire.
-# k = rocher pris dans la glace, c = colonne brisée givrée (tous deux solides).
-# D3a (leçon, 5 coups) : monter (on bute sous le rocher du haut), glisser à gauche contre le mur, monter, glisser à droite contre le rocher, sortir.
-p3a = vide(); bassin(p3a)
-put(p3a, 'k', (12, 5), (13, 8)); put(p3a, 'c', (11, 10))
-# D3b (bloc, 8 coups) : impossible sans le bloc. On monte sous le bloc (10,9), on le pousse : il glisse jusqu'au mur du haut (10,5)
-#      et devient la butée qui arrête le joueur en (10,6) ; de là, glisser à droite contre la colonne (12,6), puis monter.
-p3b = vide(); bassin(p3b)
-put(p3b, 'c', (12, 6)); put(p3b, 'k', (11, 7), (13, 7)); put(p3b, 'X', (10, 9))
-# D3c (pointe, 7 coups) : impossible sans le cristal. Monter contre le rocher (13,7), glisser à gauche jusqu'au cristal (8,8),
-#      le frapper : le plot orange (9,7) se BAISSE et devient une case où l'on s'arrête ; monter dessus, glisser à droite contre (13,7), monter.
-p3c = vide(); bassin(p3c, alcove=True)
-put(p3c, 'o', (9, 7), (11, 10)); put(p3c, 'k', (13, 7), (10, 9)); put(p3c, 'c', (12, 9)); put(p3c, 'K', (8, 8))
-put(p3c, 'G', (12, 2)); put(p3c, 'B', (9, 2), (15, 2))
-for x in range(10, 15): put(p3c, 'T', (x, 3))
+# Plans SYMÉTRIQUES (ils se lisent comme dessinés), choisis parmi des centaines de dispositions testées par le solveur
+# (Outils/resoudre_glace.py) : peu d'obstacles, solution courte, mécanique obligatoire. k = pilier givré, c = statue prise dans la glace.
+# D3a (leçon, 5 coups) : une « porte » de 2 piliers au milieu et un pilier sous la sortie : on monte, on bute sous ce pilier,
+#      on glisse contre le mur de gauche, on monte, on glisse vers la droite et on bute contre le pilier : on est sous la sortie.
+p3a = vide(); salle_gelee(p3a)
+put(p3a, 'k', (12, 3), (11, 6), (13, 6))
+# D3b « le bloc sur la marque » (9 coups) : la MARQUE dorée est sur un îlot de sol enneigé au centre (12,7) ; le BLOC est sur la
+#      même rangée (20,7) : il faut se placer derrière lui (à droite) et le pousser : il glisse et s'arrête sur l'îlot -> la grille s'ouvre.
+p3b = vide(); salle_gelee(p3b)
+for x in (11, 12, 13): p3b[0][x] = 'D'; p3b[1][x] = 'D'
+put(p3b, 'k', (12, 3), (2, 8), (22, 8)); put(p3b, 'P', (12, 7)); put(p3b, 'X', (20, 7))
+# D3c « la marque gelée » (10 coups, combinaison avec les plots de D1) : même image qu'en 3b, mais la marque (12,7) est SUR LA GLACE :
+#      le bloc (19,7) glisserait par-dessus. Le CRISTAL (22,8) fait deux choses : il BAISSE le plot orange (20,7) collé derrière le bloc
+#      (on peut enfin s'y placer pour pousser) et LÈVE le plot bleu (11,7) juste après la marque : le bloc s'y arrête -> alcôve de la plume.
+p3c = vide(); salle_gelee(p3c, alcove=True)
+put(p3c, 'p', (12, 7)); put(p3c, 'u', (11, 7)); put(p3c, 'X', (19, 7)); put(p3c, 'K', (22, 8))
+put(p3c, 'o', (4, 7), (20, 7), (10, 6), (14, 6)); put(p3c, 'c', (8, 6), (16, 6), (10, 10), (14, 10))
+put(p3c, 'G', (12, 1)); put(p3c, 'B', (10, 1), (14, 1))
+for x in (11, 12, 13): put(p3c, 'T', (x, 2))
 
 # --- PLUME D4 : « LE REFLET ». Un double fantôme (part de la case r) fait les mêmes gestes que le joueur, gauche et droite
 #     INVERSÉES. Bloqué par un mur pendant que le joueur avance, il se décale. Dalles du reflet (a) : toutes occupées en même
@@ -275,8 +281,8 @@ salles = [
         'drapeau_gemme': 'plumeD2'}),
     ('Epine3', (-3, 0), e3, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD3'}),
     ('PlumeD3a', (-3, -1), p3a, (0.92, 0.98, 1.08), {'retour': retour_d3(1)}),
-    ('PlumeD3b', (-3, -2), p3b, (0.9, 0.97, 1.1), {'retour': retour_d3(2)}),
-    ('PlumeD3c', (-3, -3), p3c, (0.94, 0.96, 1.1), {'retour': retour_d3(3), 'drapeau_gemme': 'plumeD3'}),
+    ('PlumeD3b', (-3, -2), p3b, (0.9, 0.97, 1.1), {'retour': retour_d3(2), 'drapeau_plaque': 'd3_marque', 'drapeau_porte': 'd3_marque'}),
+    ('PlumeD3c', (-3, -3), p3c, (0.94, 0.96, 1.1), {'retour': retour_d3(3), 'drapeau_gemme': 'plumeD3', 'drapeau_plaque': 'd3_marque_gelee', 'drapeau_porte': 'd3_marque_gelee'}),
     ('Epine4', (-4, 0), e4, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD4'}),
     ('PlumeD4a', (-4, -1), p4a, (0.96, 0.94, 1.08), {'retour': retour_d4(1), 'drapeau_reflet': 'd4_reflet1', 'drapeau_porte': 'd4_reflet1'}),
     ('PlumeD4b', (-4, -2), p4b, (0.95, 0.93, 1.06), {'retour': retour_d4(2), 'drapeau_reflet': 'd4_reflet2', 'drapeau_porte': 'd4_reflet2'}),

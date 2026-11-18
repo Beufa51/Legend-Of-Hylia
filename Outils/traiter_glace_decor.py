@@ -75,3 +75,22 @@ a_largeur(detourer((30, 530, 710, 700)), 48).save(S + "congere.png")
 
 for n in ["rocher_glace", "colonne_givree", "glace_lisse_1", "glace_lisse_2", "stalactites", "congere"]:
     print(n, Image.open(S + n + ".png").size)
+
+# --- 2e planche (2026-11-18) : originaux/glace_decor2.jpg -------------------------------------------------------
+# GIVRE sur le haut des murs (remplace les stalactites), congère de coin, statue prise dans la glace, pilier givré, dalle de sol enneigée.
+a = np.array(Image.open(O + "glace_decor2.jpg").convert("RGB")).astype(int)
+# Givre : la bande de neige + petits glaçons du morceau du milieu, sans les briques (pixels sombres -> transparents)
+g = detourer((345, 32, 680, 112))
+px = np.array(g)
+px[..., 3] = np.where(px[..., :3].sum(axis=2) < 260, 0, px[..., 3])
+a_largeur(Image.fromarray(px), 48).save(S + "givre_mur.png")
+# Congère (sans le coin de mur)
+a_largeur(detourer((255, 372, 515, 562)), 30).save(S + "congere_coin.png")
+# Statue de chevalier prise dans la glace (lettre c) et pilier givré (lettre k)
+a_hauteur(detourer((710, 286, 908, 688)), 30).save(S + "statue_glace.png")
+a_hauteur(detourer((450, 710, 576, 920)), 22).save(S + "pilier_givre.png")
+# Dalle de sol enneigée (îlots de sol au milieu de la glace, quai) : opaque 16x16
+d = Image.fromarray(a[770:960, 700:916].astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8)).resize((16, 16), Image.LANCZOS)
+d.convert("RGBA").save(S + "sol_neige.png")
+for n in ["givre_mur", "congere_coin", "statue_glace", "pilier_givre", "sol_neige"]:
+    print(n, Image.open(S + n + ".png").size)

@@ -1,8 +1,8 @@
 extends Node2D
 class_name VieGlace
 # VIE D'UNE SALLE DE GLACE (posée par room.gd dans toute salle qui contient de la glace `i`) :
-# - rangées de STALACTITES pendues sous les murs qui bordent la glace par le haut, avec des gouttes qui tombent ;
-# - CONGÈRES de neige sur le rebord des murs, de part et d'autre de l'entrée ;
+# - GIVRE (neige + petits glaçons) sur le haut des faces de mur, avec des gouttes qui tombent ;
+# - CONGÈRES de neige au pied des murs, aux deux bouts du quai ;
 # - ÉTINCELLES de givre qui scintillent sur la glace ; BUÉE froide qui dérive lentement.
 # Aucune collision, tout est léger (sprites, tweens, CPUParticles2D). Images : Outils/traiter_glace_decor.py.
 
@@ -33,47 +33,43 @@ func _est_glace(plan: PackedStringArray, x: int, y: int) -> bool:
 	return y >= 0 and y < plan.size() and x >= 0 and x < plan[y].length() and "ikco".contains(plan[y][x])
 
 
-# Stalactites : par groupes de 3 cases de mur qui ont de la glace juste en dessous
+# GIVRE : une bande de neige et de petits glaçons sur le haut de chaque face de mur qui borde la salle (planche Gemini glace_decor2)
 func _poser_stalactites(plan: PackedStringArray) -> void:
-	var tex: Texture2D = _salle._image("stalactites")
+	var tex: Texture2D = _salle._image("givre_mur")
 	if tex == null:
 		return
 	for y in range(1, plan.size() - 1):
-		var x := 0
-		while x < plan[y].length() - 2:
-			var ok := true
-			for k in 3:
-				if plan[y][x + k] != "#" or not _est_glace(plan, x + k, y + 1):
-					ok = false
-			if ok:
-				var s := Sprite2D.new()
-				s.texture = tex
-				s.centered = false
-				s.position = Vector2(x * TUILE, (y + 1) * TUILE - 8)
-				s.flip_h = (x + y) % 2 == 1
-				s.modulate = Color(1, 1, 1, 0.92)
-				add_child(s)
-				for k in [6, 18, 30, 42]:
-					_bouts.append(s.position + Vector2(k, 18))
-				x += 3
-			else:
-				x += 1
-
-
-# Congères : sur le rebord du mur, juste à gauche et à droite de l'entrée du bas
-func _poser_congeres(plan: PackedStringArray) -> void:
-	var tex: Texture2D = _salle._image("congere")
-	if tex == null:
-		return
-	var y := plan.size() - 2   # rangée 12 : les murs qui encadrent le couloir d'entrée
-	for x0 in [8, 14]:
-		if x0 + 2 < plan[y].length() and plan[y][x0] == "#" and plan[y][x0 + 2] == "#" and plan[y - 1][x0 + 1] != "#":
+		for x in plan[y].length():
+			# une face de mur : un mur avec du sol ou de la glace juste en dessous
+			if plan[y][x] != "#" or "#D".contains(plan[y + 1][x]):
+				continue
 			var s := Sprite2D.new()
 			s.texture = tex
 			s.centered = false
-			s.position = Vector2(x0 * TUILE, y * TUILE - 3)
-			s.flip_h = x0 > 12
+			s.region_enabled = true
+			s.region_rect = Rect2((x % 3) * TUILE, 0, TUILE, tex.get_height())   # les cases voisines se suivent : bande continue
+			s.position = Vector2(x * TUILE, y * TUILE - 2)
 			add_child(s)
+			if (x * 7 + y) % 4 == 0:
+				_bouts.append(s.position + Vector2(8, tex.get_height() - 2))   # un glaçon d'où tombe parfois une goutte
+
+
+# Congères : tas de neige au pied des murs de côté, aux deux bouts du quai (sans collision)
+func _poser_congeres(plan: PackedStringArray) -> void:
+	var tex: Texture2D = _salle._image("congere_coin")
+	if tex == null:
+		return
+	var y := plan.size() - 3   # rangée du quai
+	for gauche in [true, false]:
+		var x := 2 if gauche else plan[y].length() - 3
+		if plan[y][x] == "#":
+			continue
+		var s := Sprite2D.new()
+		s.texture = tex
+		s.centered = false
+		s.flip_h = not gauche
+		s.position = Vector2(x * TUILE - (14 if gauche else 0), y * TUILE - 8)
+		add_child(s)
 
 
 # Étincelles de givre : petits points blancs qui apparaissent et s'éteignent au hasard sur la glace

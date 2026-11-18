@@ -30,7 +30,8 @@ class_name Room
 #   Q  = coffre (un coup de lance l'ouvre, lève `drapeau_coffre` ; ex. une clé)      J = levier (lève `drapeau_levier`)
 #   E  = porte à serrure (porte de bois) : s'ouvre si le joueur la touche avec la clé `drapeau_cle` (lève `drapeau_serrure`)
 #   Z  = pics qui sortent du sol en boucle (sortis = retour à `retour`)              ~ = eau (bloque)
-#   k  = rocher pris dans la glace (solide)   c = colonne brisée givrée (solide) : obstacles des salles de glace
+#   k  = pilier givré (solide)   c = statue prise dans la glace (solide) : obstacles des salles de glace
+#   p  = marque GELÉE (comme P, mais c'est de la glace : un bloc qui glisse ne s'y arrête pas tout seul)
 #   i  = GLACE : le joueur (et un bloc poussé) glisse tout droit jusqu'à un obstacle ou jusqu'au sol normal
 #        (un plot baissé n'est pas de la glace : on s'arrête dessus). R = retour au début de la salle.
 #   r  = départ du REFLET (double fantôme aux gestes inversés gauche/droite, voir reflet.gd) ; il appuie aussi sur les boutons P
@@ -324,11 +325,13 @@ func _creer_decor() -> void:
 
 # Tuile de sol (pack donjon Craftpix) : gris-bleu uni comme dans Zelda SNES, avec de rares dalles gravées. Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
 func _nom_sol(x: int, y: int) -> String:
-	if "ikc".contains(layout[y][x]):
+	if "ikcp".contains(layout[y][x]):
 		# glace UNIE (Outils/traiter_glace_decor.py : pas de bordure, pas de quadrillage) ; un reflet de temps en temps
 		return "glace_lisse_2" if (x * 3 + y * 5) % 11 == 0 else "glace_lisse_1"
 	var h := (x * 7 + y * 13 + x * y * 3) % 37
 	var lettre := layout[y][x]
+	if (lettre == "P" or lettre == "X") and _salle_de_glace():   # îlot de la marque, case de départ d'un bloc (sol, pas glace) : dalle enneigée
+		return "sol_neige"
 	if ciel_etoile and lettre == ".":   # cour du château : dalles de pierre claire et chaude, joints décalés (Outils/fabriquer_sol_corps.py)
 		return "sol_dalle_cour" + ["", "_b", "", "_c", "_b", ""][(x + y * 2 + h) % 6]
 	if lettre == "," or lettre == ";":   # donjon final : terre battue de la queue, herbe de la cour (Outils/fabriquer_sol_corps.py)
@@ -496,7 +499,7 @@ func _poser_objets() -> void:
 				"B":
 					_poser_anime(BRASERO, pos + DECALAGE_BRASERO, x + y)
 					_poser_lumiere(pos + Vector2(8, 6), 44.0)
-				"P":
+				"P", "p":   # p = marque GELÉE : posée sur la glace, un bloc qui glisse passe par-dessus sans s'arrêter
 					_boutons[Vector2i(x, y)] = _poser(_nom_bouton(false), pos)
 					_plaques.append(Vector2i(x, y))
 				"L":
@@ -622,11 +625,10 @@ func _poser_objets() -> void:
 					plume.position = pos
 					add_child(plume)
 					plume.initialiser(drapeau_gemme, "Plume obtenue !")
-				"k":   # rocher pris dans la glace (solide)
-					_poser("rocher_glace", pos)
-				"c":   # colonne de pierre brisée et givrée (solide, dépasse vers le haut)
-					var col := _image("colonne_givree")
-					_poser("colonne_givree", pos + Vector2((TUILE - col.get_width()) / 2.0, TUILE - col.get_height()))
+				"k", "c":   # k = pilier givré, c = statue de chevalier prise dans la glace (solides, dépassent vers le haut)
+					var nom_glace := "pilier_givre" if layout[y][x] == "k" else "statue_glace"
+					var img_glace := _image(nom_glace)
+					_poser(nom_glace, pos + Vector2(floorf((TUILE - img_glace.get_width()) / 2.0), TUILE - img_glace.get_height()))
 				"F":
 					_poser("dalle_fleches", pos)
 				"1", "2", "3", "4", "5":
@@ -883,7 +885,7 @@ func case_libre(cellule: Vector2i) -> bool:
 		return true   # un trou : le bloc y entre et le comble ; une fois comblé, c'est du sol
 	if pics_doux and _pics.has(cellule):
 		return true   # un bloc peut entrer dans les pics : il coince leur mécanisme
-	return ".TPFXVouziar".contains(layout[cellule.y][cellule.x])
+	return ".TPFXVouziarp".contains(layout[cellule.y][cellule.x])
 
 
 # Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
@@ -1128,8 +1130,15 @@ func position_sur_case(c: Vector2i) -> Vector2:
 	return global_position + Vector2(c * TUILE) + Vector2(8, 3)
 
 
+var _glace_connue := -1
+func _salle_de_glace() -> bool:
+	if _glace_connue < 0:
+		_glace_connue = 1 if "".join(layout).contains("i") else 0
+	return _glace_connue == 1
+
+
 func est_glace(c: Vector2i) -> bool:
-	return c.y >= 0 and c.y < layout.size() and c.x >= 0 and c.x < layout[c.y].length() and layout[c.y][c.x] == "i"
+	return c.y >= 0 and c.y < layout.size() and c.x >= 0 and c.x < layout[c.y].length() and "ip".contains(layout[c.y][c.x])
 
 
 # Une case où l'on ne peut pas entrer en glissant : mur, objet solide, bloc, plot levé, porte fermée...
