@@ -179,6 +179,9 @@ var _chargement := true    # vrai pendant _ready : les portes déjà ouvertes s'
 var _a_glace := false      # la salle contient de la glace (lettre i)
 var _case_reflet := Vector2i(-1, -1)   # départ du reflet (lettre r) ; -1 = pas de reflet
 var _reflet: Reflet
+var _echo := false          # vrai = salle de l'ÉCHO (lettre e) : les boutons P baissent les plots orange TANT QU'ON APPUIE
+var _plots_baisses := false  # salle de l'écho réussie : tous les plots baissés pour de bon
+var _echo_appuye := false   # un bouton est-il tenu (par le joueur ou l'écho) en ce moment ?
 var _dalles_reflet := {}   # { case : Sprite2D }
 var _etait_courante := false
 
@@ -595,6 +598,9 @@ func _poser_objets() -> void:
 					_eaux_a_combler[Vector2i(x, y)] = {"corps": corps, "pont": null, "sprite": sprite_trou, "dalle": sprite_dalle}
 				"r":
 					_case_reflet = Vector2i(x, y)
+				"e":   # départ de l'ÉCHO (l'ombre qui refait tes gestes 2 s plus tard, voir echo.gd)
+					_case_reflet = Vector2i(x, y)
+					_echo = true
 				"a":
 					_dalles_reflet[Vector2i(x, y)] = _poser("dalle_reflet", pos)
 					if sombre:   # on doit les voir dans le noir
@@ -885,7 +891,7 @@ func case_libre(cellule: Vector2i) -> bool:
 		return true   # un trou : le bloc y entre et le comble ; une fois comblé, c'est du sol
 	if pics_doux and _pics.has(cellule):
 		return true   # un bloc peut entrer dans les pics : il coince leur mécanisme
-	return ".TPFXVouziarp".contains(layout[cellule.y][cellule.x])
+	return ".TPFXVouziarpe".contains(layout[cellule.y][cellule.x])
 
 
 # Appelé après chaque poussée : si toutes les plaques portent un bloc, on lève le drapeau.
@@ -904,7 +910,7 @@ func verifier_plaques() -> void:
 func _nom_bouton(appuye: bool) -> String:
 	var reflet := false
 	for ligne in layout:
-		if ligne.contains("r"):
+		if ligne.contains("r") or ligne.contains("e"):
 			reflet = true
 	if reflet:
 		return "bouton_reflet_on" if appuye else "bouton_reflet"
@@ -914,7 +920,7 @@ func _nom_bouton(appuye: bool) -> String:
 # Chaque bouton s'enfonce quand un bloc est dessus, et remonte sinon.
 func _maj_boutons() -> void:
 	for cellule in _boutons:
-		var appuye: bool = _occupe.get(cellule) is Bloc or _reflet_sur(cellule)
+		var appuye: bool = _occupe.get(cellule) is Bloc or _reflet_sur(cellule) or (_echo and _joueur_sur(cellule))
 		_boutons[cellule].texture = _image(_nom_bouton(appuye))
 		_boutons[cellule].visible = not (_occupe.get(cellule) is Bloc)   # un bloc posé cache la marque (sinon elle se dessinait PAR-DESSUS le bloc)
 		_marques_vides[cellule] = not appuye
@@ -981,6 +987,7 @@ func reinitialiser() -> void:
 	if _calque_chemin != null and not _braseros.is_empty() and not _braseros[0].verrouille:
 		_rearmer_chemin()
 	_repere = false
+	_echo_appuye = false
 	if not _plots.is_empty() and not _orange_leves:
 		basculer_plots()   # les plots reprennent leur place de départ (orange levés)
 	for dalle in _dalles.values():
@@ -1075,16 +1082,36 @@ func _gerer_reflet() -> void:
 	if courante and not _etait_courante and not resolu:
 		var joueur := get_tree().get_first_node_in_group("joueur")
 		if _reflet == null and joueur != null:
-			_reflet = Reflet.new()
+			_reflet = Echo.new() if _echo else Reflet.new()
 			add_child(_reflet)
 			_reflet.initialiser(self, _case_reflet, joueur, sombre)
 		elif _reflet != null and is_instance_valid(_reflet):
 			_reflet.reinitialiser()
 	_etait_courante = courante
+	# Salle de l'écho réussie : les plots restent baissés (on peut revenir en arrière librement)
+	if _echo and resolu:
+		if not _plots_baisses:
+			_plots_baisses = true
+			for plot in _plots:
+				plot.regler(false)
+		return
 	if not courante or _reflet == null or not is_instance_valid(_reflet):
 		return
-	# Boutons : le reflet les enfonce (un bouton enfoncé une fois suffit à ouvrir pour de bon)
-	if not _boutons.is_empty():
+	if _echo:
+		# Boutons de l'écho : tant que le joueur OU l'écho en tient un, les plots orange sont baissés (et les bleus levés)
+		var tenu := false
+		var origine := Vector2(-1, -1)
+		for cellule in _boutons:
+			if _joueur_sur(cellule) or _reflet_sur(cellule):
+				tenu = true
+				origine = Vector2(cellule * TUILE) + Vector2(8, 8)
+		_maj_boutons()
+		if tenu != _echo_appuye:
+			_echo_appuye = tenu
+			if tenu == _orange_leves:
+				basculer_plots(origine if tenu else _origine_bouton())
+	elif not _boutons.is_empty():
+		# Boutons : le reflet les enfonce (un bouton enfoncé une fois suffit à ouvrir pour de bon)
 		verifier_plaques()
 	# Dalles du reflet : allumées quand quelqu'un est dessus ; toutes à la fois = gagné
 	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
@@ -1097,7 +1124,21 @@ func _gerer_reflet() -> void:
 	if toutes and not resolu and drapeau_reflet != "":
 		Etat.poser(drapeau_reflet)
 		_reflet.disparaitre()
-		Etat.annoncer("Le reflet se fond dans la lumière...")
+		if not _echo:
+			Etat.annoncer("Le reflet se fond dans la lumière...")
+
+
+# Le joueur a-t-il les pieds sur cette case ?
+func _joueur_sur(c: Vector2i) -> bool:
+	var joueur := get_tree().get_first_node_in_group("joueur") as Node2D
+	return joueur != null and case_des_pieds(joueur.global_position) == c
+
+
+# Centre du premier bouton (l'onde des plots part de là quand on le relâche).
+func _origine_bouton() -> Vector2:
+	for cellule in _boutons:
+		return Vector2(cellule * TUILE) + Vector2(8, 8)
+	return Vector2(-1, -1)
 
 
 # Le reflet a-t-il les pieds sur cette case ?

@@ -123,6 +123,36 @@ func _scenario_reflet() -> void:
 
 
 
+## Scénario « echo » (`-- echo <Ecran> <x> <y> <coups>`, BOT_SCENE=res://Scenes/aile_droite.tscn) : salles de l'ÉCHO (plume D4).
+## Coups : « H3 » = marcher 3 cases vers le haut D'UN SEUL TRAIT (sans pause : le temps compte), « W1.5 » = attendre 1,5 s,
+## « C » = courir (Maj enfoncée) / ne plus courir. Vérifie que le drapeau de la salle (dalles) est levé.
+## Exemple : -- echo PlumeD4a 12 11 H3,W0.5,H2,W1.5,H3
+func _scenario_echo() -> void:
+	var a := OS.get_cmdline_user_args()
+	var dirs := {"H": Vector2i(0, -1), "B": Vector2i(0, 1), "G": Vector2i(-1, 0), "D": Vector2i(1, 0)}
+	var court := false
+	for coup in a[4].split(","):
+		if coup == "C":
+			court = not court
+			if court:
+				Input.action_press("run")
+			else:
+				Input.action_release("run")
+		elif coup.begins_with("W"):
+			await get_tree().create_timer(float(coup.substr(1))).timeout
+		else:
+			var d: Vector2i = dirs[coup[0]]
+			var ici: Vector2i = salle.case_des_pieds(monde.joueur.global_position)
+			await marcher(ici + d * int(coup.substr(1)), true, 0.0)
+		print("  ", coup, " -> joueur ", salle.case_des_pieds(monde.joueur.global_position), " écho ", salle.case_des_pieds(salle._reflet.global_position) if salle._reflet != null and is_instance_valid(salle._reflet) else "-", " (t=%.2f s)" % (_image / 60.0))
+	Input.action_release("run")
+	await get_tree().create_timer(1.0).timeout
+	var drap := String(salle.drapeau_reflet)
+	print("drapeau ", drap, " : ", Etat.est(drap))
+	if not Etat.est(drap):
+		_echec = true
+
+
 func comblees() -> int:
 	var n := 0
 	for trou in salle._eaux_a_combler.values():

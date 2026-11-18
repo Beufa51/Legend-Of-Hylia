@@ -65,6 +65,9 @@ func _shader_verre() -> Shader:
 		_shader_cache.code = """
 shader_type canvas_item;
 uniform float intensite = 1.0;
+uniform vec3 couleur_sombre = vec3(0.16, 0.34, 0.62);
+uniform vec3 couleur_claire = vec3(0.62, 0.9, 1.0);
+uniform vec3 couleur_contour = vec3(0.78, 0.96, 1.0);
 void fragment() {
 	vec4 t = texture(TEXTURE, UV);
 	vec2 p = TEXTURE_PIXEL_SIZE;
@@ -72,10 +75,10 @@ void fragment() {
 		max(texture(TEXTURE, UV + vec2(0.0, p.y)).a, texture(TEXTURE, UV - vec2(0.0, p.y)).a));
 	float bord = clamp(voisin - t.a, 0.0, 1.0);
 	float lum = dot(t.rgb, vec3(0.3, 0.59, 0.11));
-	vec3 verre = mix(vec3(0.16, 0.34, 0.62), vec3(0.62, 0.9, 1.0), lum);
+	vec3 verre = mix(couleur_sombre, couleur_claire, lum);
 	float scint = 0.5 + 0.5 * sin(UV.y / max(p.y, 0.0001) * 0.55 - TIME * 4.0);
 	verre += vec3(0.10, 0.14, 0.18) * scint;
-	vec3 contour = vec3(0.78, 0.96, 1.0);
+	vec3 contour = couleur_contour;
 	float a_corps = t.a * 0.58 * intensite;
 	float a_bord = bord * 0.95 * intensite;
 	float a = max(a_corps, a_bord);

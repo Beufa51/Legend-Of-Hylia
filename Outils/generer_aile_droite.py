@@ -182,35 +182,44 @@ def salle_reflet(sortie):
     for x in (11, 12, 13): g[0][x] = sortie; g[1][x] = sortie
     return g
 
-# Plans D4a-d trouvés par recherche automatique (Outils/chercher_d4.py : courts, aucun cul-de-sac) puis relus par le solveur.
+# PLUME D4 = « L'ÉCHO » (remplace le reflet, 2026-11-18) : une ombre violette refait TES gestes 2 s plus tard (Scripts/echo.gd).
+#   e = départ de l'écho (là où tu entres) ; P = bouton : TANT QUE toi ou l'écho êtes dessus, les plots orange (o) se baissent
+#   et les bleus (u) se lèvent ; a = dalle : toutes occupées en même temps (toi + l'écho) = drapeau -> la porte s'ouvre.
+#   Réussie, la salle garde ses plots baissés. Vérifié par le bot en vraie physique (Tests/bot_jeu.gd, scénario « reflet »).
 def depuis(lignes): return [list(l) for l in lignes]
 
-# D4a (leçon, 8 coups) : le reflet part dans TA colonne, en face de toi : 5 pas à droite et 3 en haut, il va à gauche et en haut.
-p4a = salle_reflet('D'); put(p4a, 'r', (12, 6)); put(p4a, 'a', (17, 8), (7, 3))
-put(p4a, 'V', (22, 11), (2, 11)); put(p4a, 'B', (20, 3), (4, 8))
+# D4a (leçon) : tu passes sur le bouton, la barrière tombe... et remonte dès que tu en descends. 2 s plus tard, ton écho
+#     marche sur le bouton : la barrière retombe, le temps de passer. Puis la dalle devant la porte.
+p4a = depuis(['###########DDD###########', '###########DDD###########',
+    '##.....................##', '##..........a..........##', '##.....................##', '##ooooooooooooooooooooo##',
+    '##.....................##', '##.....................##', '##..........P..........##', '##.....................##',
+    '##.....................##', '##..........e..........##', '###########...###########', '###########...###########'])
+put(p4a, 'B', (4, 3), (20, 3)); put(p4a, 'V', (2, 11), (3, 11), (22, 11))
 
-# D4b (11 coups) : un mur bloque le reflet : pendant qu'il est collé dessous, on continue de monter et l'écart se creuse.
+# D4b (2 secondes) : le bouton est LOIN, dans le coin, derrière un muret : reste dessus, puis COURS (l'écho te donne 2 s).
 p4b = depuis(['###########DDD###########', '###########DDD###########',
-    '##.....................##', '##.....................##', '##.r..####.............##', '##.a...................##',
-    '##..........a..........##', '##.....................##', '##.....................##', '##.....................##',
-    '###....................##', '##.....................##', '###########...###########', '###########...###########'])
-put(p4b, 'V', (22, 11), (2, 11))
+    '##..........a..........##', '##.....................##', '##ooooooooooooooooooooo##', '##.....................##',
+    '##.....................##', '#######.#################', '##.....................##', '##.....................##',
+    '##P....................##', '##..........e..........##', '###########...###########', '###########...###########'])
+put(p4b, 'B', (5, 2), (19, 2)); put(p4b, 'V', (21, 11), (22, 11), (22, 10))
 
-# D4c (19 coups) : le reflet doit aller appuyer sur le bouton (P), au fond d'une petite niche à gauche : la herse du haut s'ouvre.
-p4c = depuis(['###########HHH###########', '###########HHH###########',
-    '###....................##', '##P...#................##', '###....................##', '##.....................##',
-    '##.#...r...............##', '##.............##......##', '##.....................##', '##.....................##',
-    '##.........#.....#..#..##', '##.....................##', '###########...###########', '###########...###########'])
-put(p4c, 'V', (22, 11), (2, 11))
+# D4c (le relais orange / bleu) : le bouton baisse l'orange mais LÈVE le bleu. Un petit coup sur le bouton, file passer le bleu
+#     pendant que personne n'appuie, attends entre les deux barrières : ton écho appuie, l'orange tombe.
+p4c = depuis(['###########DDD###########', '###########DDD###########',
+    '##..........a..........##', '##.....................##', '##ooooooooooooooooooooo##', '##.....................##',
+    '##.....................##', '##uuuuuuuuuuuuuuuuuuuuu##', '##.....................##', '##.....................##',
+    '##..........P..........##', '##..........e..........##', '###########...###########', '###########...###########'])
+put(p4c, 'B', (4, 2), (20, 2)); put(p4c, 'V', (2, 11), (22, 11))
 
-# D4d (pointe, SOMBRE, 19 coups) : le reflet enfonce le bouton (P) -> la herse H de l'enclos s'ouvre ; toi sur la dalle de l'enclos
-#      ET le reflet sur l'autre -> la grille D de l'alcôve s'ouvre -> plume.
+# D4d (combinaison) : en montant tu passes sur le bouton P puis sur la dalle A. Attends sur A : ton écho appuie sur P, la barrière
+#     orange de gauche tombe -> file sur la dalle B. Ton écho arrive sur A pendant que tu es sur B : la grille de l'alcôve s'ouvre.
 p4d = depuis(['#########################', '#########################',
     '#########.......#########', '#########.......#########', '#########.......#########', '#########..DDD..#########',
-    '##...P..........#......##', '##.....#........#.a....##', '##......a.....r.##HHH####', '##..............#......##',
-    '##.......#..........#..##', '##.....................##', '###########...###########', '###########...###########'])
-put(p4d, 'G', (12, 3)); put(p4d, 'B', (9, 2), (15, 2))
+    '##.......o.............##', '##.......o.............##', '##.....a.o..a..........##', '##.......o.............##',
+    '##.......o..P..........##', '##.......o..e..........##', '###########...###########', '###########...###########'])
+put(p4d, 'G', (12, 3)); put(p4d, 'B', (9, 2), (15, 2), (20, 6))
 for x in range(10, 15): put(p4d, 'T', (x, 4))
+put(p4d, 'V', (2, 11), (3, 11), (22, 11), (22, 10))
 
 # --- PLUME D5 : LA POINTE DE L'AILE (5 écrans, colonne x=-5) : chaque écran COMBINE des mécaniques de l'aile droite.
 #     Vérifié par Outils/resoudre_d5.py (sauf 5a : le rythme des pics n'est pas simulé).
@@ -288,11 +297,10 @@ salles = [
     ('PlumeD3b', (-3, -2), p3b, (0.9, 0.97, 1.1), {'retour': retour_d3(2), 'drapeau_plaque': 'd3_marque', 'drapeau_porte': 'd3_marque'}),
     ('PlumeD3c', (-3, -3), p3c, (0.94, 0.96, 1.1), {'retour': retour_d3(3), 'drapeau_gemme': 'plumeD3', 'drapeau_plaque': 'd3_marque_gelee', 'drapeau_porte': 'd3_marque_gelee'}),
     ('Epine4', (-4, 0), e4, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD4'}),
-    ('PlumeD4a', (-4, -1), p4a, (0.96, 0.94, 1.08), {'retour': retour_d4(1), 'drapeau_reflet': 'd4_reflet1', 'drapeau_porte': 'd4_reflet1'}),
-    ('PlumeD4b', (-4, -2), p4b, (0.95, 0.93, 1.06), {'retour': retour_d4(2), 'drapeau_reflet': 'd4_reflet2', 'drapeau_porte': 'd4_reflet2'}),
-    ('PlumeD4c', (-4, -3), p4c, (0.94, 0.95, 1.08), {'retour': retour_d4(3), 'drapeau_plaque': 'd4_bouton', 'drapeau_porte2': 'd4_bouton'}),
-    ('PlumeD4d', (-4, -4), p4d, (1.0, 1.0, 1.0), {'sombre': 'true', 'retour': retour_d4(4), 'drapeau_plaque': 'd4_bouton2', 'drapeau_porte2': 'd4_bouton2',
-        'drapeau_reflet': 'd4_reflet3', 'drapeau_porte': 'd4_reflet3', 'drapeau_gemme': 'plumeD4'}),
+    ('PlumeD4a', (-4, -1), p4a, (0.96, 0.94, 1.08), {'retour': retour_d4(1), 'drapeau_reflet': 'd4_echo1', 'drapeau_porte': 'd4_echo1'}),
+    ('PlumeD4b', (-4, -2), p4b, (0.95, 0.93, 1.06), {'retour': retour_d4(2), 'drapeau_reflet': 'd4_echo2', 'drapeau_porte': 'd4_echo2'}),
+    ('PlumeD4c', (-4, -3), p4c, (0.94, 0.95, 1.08), {'retour': retour_d4(3), 'drapeau_reflet': 'd4_echo3', 'drapeau_porte': 'd4_echo3'}),
+    ('PlumeD4d', (-4, -4), p4d, (0.96, 0.94, 1.06), {'retour': retour_d4(4), 'drapeau_reflet': 'd4_echo4', 'drapeau_porte': 'd4_echo4', 'drapeau_gemme': 'plumeD4'}),
     ('Epine5', (-5, 0), e5, (0.90, 0.88, 0.98), {}),
     ('PlumeD5a', (-5, -1), p5a, (1.0, 0.95, 0.92), {'retour': retour_d5(1), 'drapeau_levier': 'd5_levier', 'drapeau_porte': 'd5_levier',
         'drapeau_coffre': 'd5_cle', 'drapeau_cle': 'd5_cle', 'drapeau_serrure': 'd5_porte'}),
