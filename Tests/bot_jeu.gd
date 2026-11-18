@@ -99,6 +99,30 @@ func _scenario_glace() -> void:
 		_echec = true
 
 
+## Scénario « reflet » (`-- reflet <Ecran> <x> <y> <coups>`, BOT_SCENE=res://Scenes/aile_droite.tscn) : marche CASE PAR CASE (vraie physique)
+## suivant des coups « H3,D5 » (lettre = direction, chiffre = nombre de cases) et vérifie que le drapeau de la salle est levé.
+## Exemple : -- reflet PlumeD4a 12 11 H3,D5
+func _scenario_reflet() -> void:
+	var a := OS.get_cmdline_user_args()
+	var dirs := {"H": Vector2i(0, -1), "B": Vector2i(0, 1), "G": Vector2i(-1, 0), "D": Vector2i(1, 0)}
+	for coup in a[4].split(","):
+		var d: Vector2i = dirs[coup[0]]
+		for i in int(coup.substr(1)):
+			var ici: Vector2i = salle.case_des_pieds(monde.joueur.global_position)
+			await marcher(ici + d, true, 0.08)
+			await get_tree().create_timer(0.1).timeout
+		print("  ", coup, " -> joueur ", salle.case_des_pieds(monde.joueur.global_position), " reflet ", salle.case_des_pieds(salle._reflet.global_position) if salle._reflet != null else "-", " px ", (salle._reflet.global_position - salle.position) if salle._reflet != null else "-", " joueur px ", monde.joueur.global_position - salle.position, " (image ", _image, ")")
+	await get_tree().create_timer(1.0).timeout
+	for nom in ["drapeau_reflet", "drapeau_plaque"]:
+		var drap := String(salle.get(nom))
+		if drap != "":
+			print(nom, " ", drap, " : ", Etat.est(drap))
+	var attendu := String(salle.drapeau_reflet if salle.drapeau_reflet != "" else salle.drapeau_plaque)
+	if attendu != "" and not Etat.est(attendu):
+		_echec = true
+
+
+
 func comblees() -> int:
 	var n := 0
 	for trou in salle._eaux_a_combler.values():

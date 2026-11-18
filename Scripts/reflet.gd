@@ -106,6 +106,7 @@ func _physics_process(delta: float) -> void:
 	# Miroir : la gauche devient la droite, le haut reste le haut
 	velocity = Vector2(-deplacement.x, deplacement.y) / delta
 	move_and_slide()
+	_recaler_contre_obstacle()
 	# Animation : la même que le joueur, tournée dans l'autre sens à gauche/droite
 	var sens: String = _joueur.direction
 	if sens == "gauche":
@@ -113,6 +114,24 @@ func _physics_process(delta: float) -> void:
 	elif sens == "droite":
 		sens = "gauche"
 	_sprite.play(("marche_" if deplacement.length() > 0.05 else "repos_") + sens)
+
+
+# Quand le reflet est bloqué par un mur, il s'arrête collé au mur, donc décalé de ~5 px par rapport au centre de sa case :
+# il ne passerait plus dans une niche d'une case. On le recentre dans sa case (sur l'axe du blocage) : il reste « sur la grille ».
+func _recaler_contre_obstacle() -> void:
+	if get_slide_collision_count() == 0 or salle == null:
+		return
+	var origine: Vector2 = salle.global_position
+	var rel: Vector2 = global_position - origine
+	var cible := rel
+	for i in get_slide_collision_count():
+		var n: Vector2 = get_slide_collision(i).get_normal()
+		if absf(n.y) > 0.5:
+			cible.y = roundf((rel.y - 3.0) / 16.0) * 16.0 + 3.0
+		if absf(n.x) > 0.5:
+			cible.x = roundf((rel.x - 8.0) / 16.0) * 16.0 + 8.0
+	if cible != rel and not test_move(Transform2D(0.0, origine + cible), Vector2.ZERO):
+		global_position = origine + cible
 
 
 # L'énigme est résolue : le reflet s'efface.
