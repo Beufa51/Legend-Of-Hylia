@@ -666,7 +666,7 @@ const CENTRE_BLASON := Vector2(200, 112)   # centre du blason à l'écran (l'éc
 const TAILLE_BLASON := Vector2(244, 132)   # taille de blason_socle.png
 # Racine de chaque aile dans l'image (affichée par fabriquer_objets.py) = point où l'aile s'accroche au corps
 const PIVOTS := {"gauche": Vector2(98, 61), "droite": Vector2(146, 61)}
-const VUE_AERIENNE_A_LA_SORTIE := false   # l'ancienne vue du ciel à la sortie d'une aile (image du coq) : coupée en attendant la nouvelle cinématique
+const VUE_AERIENNE_A_LA_SORTIE := true    # vue du ciel à la sortie d'une aile (l'aile seule, 5 plumes qui s'allument)
 const SORTIE_DONJON := Vector2i(0, 2)      # l'écran sous le vestibule = dehors
 const SON_ENVOL := "res://Assets/Ninja_adventure/Audio/Sounds/Whoosh & Slash/Launch.wav"
 const SON_REVELATION := "res://Assets/Ninja_adventure/Audio/Jingles/Secret1.wav"

@@ -66,7 +66,16 @@ a = charger("escalier.jpg")
 for nom, boite in (("escalier_donjon", (55, 40, 675, 722)), ("escalier_lumiere", (735, 40, 1355, 722))):
     im = detourer(a, boite)
     im = im.crop(im.getbbox())
-    reduire(im, 48, 48).save(S + nom + ".png")
+    petit = reduire(im, 48, 48)
+    if nom == "escalier_donjon":
+        # Marches retournées : sombre en BAS (côté sortie vers le village), clair en haut (on monte dans la salle) ;
+        # les rampes avec les coqs d'or (9 px de chaque côté) restent à l'endroit.
+        from PIL import ImageOps
+        r = ImageOps.flip(petit)
+        for x0, x1 in ((0, 9), (petit.width - 9, petit.width)):
+            r.paste(petit.crop((x0, 0, x1, petit.height)), (x0, 0))
+        petit = r
+    petit.save(S + nom + ".png")
 print("escalier_donjon (48x48), escalier_lumiere")
 
 # --- Icônes -----------------------------------------------------------------------------------
