@@ -36,16 +36,54 @@ func initialiser(une_salle: Room, case_depart: Vector2i, joueur: Node2D, sombre:
 	_sprite = AnimatedSprite2D.new()
 	_sprite.sprite_frames = modele.sprite_frames
 	_sprite.offset = modele.offset
-	_sprite.modulate = Color(0.55, 0.85, 1.25, 0.6)
+	# Silhouette de VERRE : le héros passé en bleu glacé translucide (le dessin se devine en clair/sombre)
+	# avec un CONTOUR lumineux blanc-bleu et un léger scintillement qui monte. Mêmes poses que le héros.
+	var mat := ShaderMaterial.new()
+	mat.shader = _shader_verre()
+	_sprite.material = mat
 	add_child(_sprite)
 	_sprite.play("repos_bas")
 	if sombre:   # dans le noir, le reflet luit
 		_lumiere = Lumiere.creer(Color(0.5, 0.8, 1.0), 0.55, 0.7)
 		add_child(_lumiere)
 	_pulse = create_tween().set_loops()
-	_pulse.tween_property(_sprite, "modulate:a", 0.45, 0.8)
-	_pulse.tween_property(_sprite, "modulate:a", 0.7, 0.8)
+	_pulse.tween_method(_regler_intensite, 0.75, 1.0, 0.8)
+	_pulse.tween_method(_regler_intensite, 1.0, 0.75, 0.8)
 	reinitialiser()
+
+
+func _regler_intensite(v: float) -> void:
+	if _sprite != null and _sprite.material is ShaderMaterial:
+		(_sprite.material as ShaderMaterial).set_shader_parameter("intensite", v)
+
+
+static var _shader_cache: Shader
+
+func _shader_verre() -> Shader:
+	if _shader_cache == null:
+		_shader_cache = Shader.new()
+		_shader_cache.code = """
+shader_type canvas_item;
+uniform float intensite = 1.0;
+void fragment() {
+	vec4 t = texture(TEXTURE, UV);
+	vec2 p = TEXTURE_PIXEL_SIZE;
+	float voisin = max(max(texture(TEXTURE, UV + vec2(p.x, 0.0)).a, texture(TEXTURE, UV - vec2(p.x, 0.0)).a),
+		max(texture(TEXTURE, UV + vec2(0.0, p.y)).a, texture(TEXTURE, UV - vec2(0.0, p.y)).a));
+	float bord = clamp(voisin - t.a, 0.0, 1.0);
+	float lum = dot(t.rgb, vec3(0.3, 0.59, 0.11));
+	vec3 verre = mix(vec3(0.16, 0.34, 0.62), vec3(0.62, 0.9, 1.0), lum);
+	float scint = 0.5 + 0.5 * sin(UV.y / max(p.y, 0.0001) * 0.55 - TIME * 4.0);
+	verre += vec3(0.10, 0.14, 0.18) * scint;
+	vec3 contour = vec3(0.78, 0.96, 1.0);
+	float a_corps = t.a * 0.58 * intensite;
+	float a_bord = bord * 0.95 * intensite;
+	float a = max(a_corps, a_bord);
+	vec3 c = (verre * a_corps + contour * a_bord) / max(a_corps + a_bord, 0.001);
+	COLOR = vec4(c, a);
+}
+"""
+	return _shader_cache
 
 
 # Retour à la case de départ (entrée dans la salle, touche R, retour au début).
@@ -82,5 +120,5 @@ func disparaitre() -> void:
 	set_physics_process(false)
 	_pulse.kill()
 	var t := create_tween()
-	t.tween_property(_sprite, "modulate:a", 0.0, 0.8)
+	t.tween_method(_regler_intensite, 1.0, 0.0, 0.8)
 	t.tween_callback(queue_free)
