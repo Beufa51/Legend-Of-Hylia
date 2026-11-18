@@ -24,7 +24,7 @@ func initialiser(salle: Node2D) -> void:
 	if glace.is_empty():
 		return
 	_poser_stalactites(plan)
-	_poser_congeres(plan)
+	# (tas de neige dans les coins des murs retirés : peu naturels)
 	_poser_etincelles(glace)
 	_poser_brume(glace)
 
