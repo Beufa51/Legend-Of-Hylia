@@ -324,7 +324,7 @@ for nom, (gx, gy), g, c, ex in salles:
     m = re.match(r'PlumeD?(\d)', nom)   # plumes de pierre gravées au mur = numéro de la plume (décor repris de la façade)
     if m:
         n = int(m.group(1))
-        out += 'plumes_gravees = %d\n' % n
+        if not nom.startswith('PlumeD3'): out += 'plumes_gravees = %d\n' % n   # D3 (glace) : pas de plumes gravées, elles jurent avec la neige
         if nom.startswith('PlumeD') and n != 5: out += 'sol_style = "%s"\n' % {1: 'rouille', 2: 'marbre_sombre', 3: 'ardoise', 4: 'miroir', 5: 'rouille2'}[n]   # Outils/traiter_sols_droite.py
         # les plumes gravées deviennent dorées quand la plume de la colonne est ramassée (la 5e = le fragment)
         out += 'drapeau_plumes_gravees = "%s"\n' % (('%s%d' % (PREFIXE, n)) if n < 5 else FRAGMENT)
