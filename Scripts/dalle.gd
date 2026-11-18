@@ -10,6 +10,7 @@ const SON := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Move2.wav"
 
 var bleue := false
 var bleue_depart := false   # lettre `y` : dalle déjà BLEUE au départ (il faut l'éviter, ou passer dessus deux fois)
+var cible_bleue := true   # couleur à obtenir (motif de la plume D2b : certaines dalles doivent rester ROUGES)
 var validee := false     # énigme résolue : la dalle reste bleue, on peut marcher dessus librement
 var _face: Node2D        # le dessin (centré, pour l'animation de retournement)
 var _image: Sprite2D
@@ -64,20 +65,20 @@ func remettre() -> void:
 	_colorer(bleue, false)
 
 
-# Aide (après 50 s d'inactivité) : une dalle encore ROUGE pulse 3 fois.
+# Aide (après 50 s d'inactivité) : une dalle qui n'a pas encore la bonne couleur pulse 3 fois.
 func signaler() -> void:
-	if validee or bleue:
+	if validee or bleue == cible_bleue:
 		return
 	var t := create_tween().set_loops(3)
 	t.tween_property(self, "modulate", Color(1.9, 1.5, 1.5), 0.35)
 	t.tween_property(self, "modulate", Color.WHITE, 0.35)
 
 
-# Énigme résolue : la dalle reste bleue, sa gemme devient dorée.
+# Énigme résolue : la dalle garde sa couleur finale (bleue = gemme dorée ; rouge du motif = reste rouge).
 func valider(anime := true) -> void:
 	validee = true
-	bleue = true
-	_colorer(true, true)
+	bleue = cible_bleue
+	_colorer(bleue, bleue)
 	if anime:
 		_face.scale = Vector2(1.3, 1.3)
 		create_tween().tween_property(_face, "scale", Vector2.ONE, 0.25)

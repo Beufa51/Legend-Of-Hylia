@@ -25,6 +25,8 @@ class_name Room
 #   o  = plot ORANGE (levé au départ)   u = plot BLEU (baissé au départ). Dans une salle à plots,
 #        le cristal K est un commutateur : chaque coup de lance inverse les plots (voir plot.gd).
 #   z  = dalle de couleur : chaque pas la retourne (rouge <-> bleue). Toutes bleues = `drapeau_fragile` (voir dalle.gd).
+#        Si `motif_dalles` est rempli : il faut au contraire reproduire ce DESSIN (cases listées bleues, les autres rouges).
+#   m  = stèle du MOTIF : le dessin à reproduire, gravé en petites cases (voir tableau_motif.gd)
 #   Q  = coffre (un coup de lance l'ouvre, lève `drapeau_coffre` ; ex. une clé)      J = levier (lève `drapeau_levier`)
 #   E  = porte à serrure (porte de bois) : s'ouvre si le joueur la touche avec la clé `drapeau_cle` (lève `drapeau_serrure`)
 #   Z  = pics qui sortent du sol en boucle (sortis = retour à `retour`)              ~ = eau (bloque)
@@ -39,7 +41,7 @@ class_name Room
 
 
 # Caractères qui bloquent le joueur (en plus des murs)
-const SOLIDES := "#SOBR~I"
+const SOLIDES := "#SOBR~Im"
 # Épaisseur des murs du bord (en tuiles)
 const EPAISSEUR := 2
 # Son d'une fausse note (pack Ninja Adventure)
@@ -92,7 +94,8 @@ const HAUTEUR_RAYON := -4.0   # le rayon est dessiné 4 px au-dessus du centre d
 @export var drapeau_porte2 := ""     # les portes H de cette salle s'ouvrent quand ce drapeau est levé
 @export var drapeau_rayon := ""      # levé quand le rayon de lumière touche le réceptacle Y
 @export var chanteur_au_soleil := false   # la statue du coq ne chante que si le rayon l'éclaire
-@export var drapeau_fragile := ""    # levé quand TOUTES les dalles de couleur z sont bleues
+@export var drapeau_fragile := ""    # levé quand TOUTES les dalles de couleur z sont bleues (ou quand le motif est reproduit)
+@export var motif_dalles := PackedStringArray()   # "x y" : cases qui doivent être BLEUES (les autres rouges) ; vide = tout bleu
 @export var drapeau_coffre := ""     # levé quand on ouvre le coffre Q
 @export var texte_coffre := "Tu as trouvé une petite clé !"
 @export var drapeau_levier := ""     # levé quand on bascule le levier J
@@ -165,6 +168,7 @@ var _plots: Array[Plot] = []
 var _commutateurs: Array[Cristal] = []
 var _orange_leves := true  # vrai = les plots orange bloquent, les bleus sont baissés
 var _dalles := {}          # { case : Dalle } dalles de couleur
+var _tableau: TableauMotif   # stèle du motif (lettre m), s'il y en a une
 var _case_pied := Vector2i(-1, -1)   # case où le joueur avait les pieds à l'image précédente
 var _portes_cle: Array[Porte] = []
 var _pics := {}            # { case : Pics }
@@ -194,9 +198,31 @@ func _ready() -> void:
 	if Etat.est(drapeau_melodie):
 		for cloche in _cloches.values():
 			cloche.dorer()
+	_preparer_motif()
 	if Etat.est(drapeau_fragile):
 		for dalle in _dalles.values():
 			dalle.valider(false)
+
+
+# Motif des dalles (plume D2b) : chaque dalle sait si elle doit finir bleue ou rouge ; la stèle du motif connaît le champ.
+func _preparer_motif() -> void:
+	if motif_dalles.is_empty() or _dalles.is_empty():
+		return
+	var motif := {}
+	for t in motif_dalles:
+		var p := t.split(" ")
+		motif[Vector2i(int(p[0]), int(p[1]))] = true
+	var mini := Vector2i(999, 999)
+	var maxi := Vector2i(-1, -1)
+	for c in _dalles:
+		_dalles[c].cible_bleue = motif.has(c)
+		mini = Vector2i(mini.x if mini.x < c.x else c.x, mini.y if mini.y < c.y else c.y)
+		maxi = Vector2i(maxi.x if maxi.x > c.x else c.x, maxi.y if maxi.y > c.y else c.y)
+	if _tableau != null:
+		_tableau.salle = self
+		_tableau.motif = motif
+		_tableau.origine = mini
+		_tableau.taille = maxi - mini + Vector2i.ONE
 
 
 # Anime torches et braseros en alternant leurs images.
@@ -446,6 +472,11 @@ func _poser_objets() -> void:
 					_poser("statue_chevalier", pos + Vector2(-3, TUILE - 34))
 				"O":
 					_poser("statue_oiseau", pos + Vector2(-3, TUILE - 34))
+				"m":
+					var tableau := TableauMotif.new()
+					tableau.position = pos
+					add_child(tableau)
+					_tableau = tableau
 				"I":
 					_poser("stele_inscription", pos + Vector2(-1, TUILE - _image("stele_inscription").get_height()))   # stèle à inscription : le texte se lit en marchant devant (passage « ! »)
 				"V":
@@ -977,7 +1008,7 @@ func _suivre_pas() -> void:
 		return
 	_dalles[c].retourner()
 	for d in _dalles.values():
-		if not d.bleue:
+		if d.bleue != d.cible_bleue:
 			return
 	for d in _dalles.values():
 		d.valider()

@@ -72,10 +72,12 @@ drapeau_fragile = "d2_sol2"
 drapeau_porte = "d2_sol2"
 retour = Vector2(-600, -254)
 drapeau_gemme = "plumeD2"
+passages = PackedStringArray("5 9 ! « Ici, le bleu ne suffit plus. Que le sol dessine la plume gravée dans cette pierre : pas une dalle de plus, pas une de moins. »")
+motif_dalles = PackedStringArray("13 6", "14 6", "12 7", "13 7", "14 7", "11 8", "12 8", "13 8", "10 9", "11 9", "9 10")
 plumes_gravees = 2
 sol_style = "marbre_sombre"
 drapeau_plumes_gravees = "plumeD2"
-layout = PackedStringArray("#########################", "#########################", "##...S.............O...##", "##.......B..G..B.......##", "##........TTTTT........##", "###########DDD###########", "########zzzyzzzzz########", "########zz#zzzzzz########", "########zzzzyz#zz########", "########zzzzzzyzz########", "##.V.................V.##", "##.V.................V.##", "###########...###########", "###########...###########")
+layout = PackedStringArray("#########################", "#########################", "##...S.............O...##", "##.......B..G..B.......##", "##........TTTTT........##", "###########DDD###########", "##.......zzzzzzz.......##", "##.......zzzzzzz.......##", "##...m...zzzzzzz...O...##", "##.......zzzzzzz.......##", "##.V.....zzzzzzz.....V.##", "##.V.................V.##", "###########...###########", "###########...###########")
 
 [node name="Epine3" parent="." instance=ExtResource("2")]
 grille = Vector2i(-3, 0)

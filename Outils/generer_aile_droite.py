@@ -108,22 +108,22 @@ put(p2a, 'V', (3, 11), (21, 11), (3, 2), (21, 2)); put(p2a, 'S', (8, 9)); put(p2
 put(p2a, 'I', (12, 9))
 ENIGME_D2 = "12 10 ! « Le rouge m'insupporte. Seul un sol d'un bleu uniforme ouvrira le chemin vers la plume. »"
 
-# D2b (la pointe) : 34 dalles autour de 2 piliers, une seule entrée (par le bas). Dès que toutes sont bleues, la grille de l'alcôve
-#     s'ouvre. Il existe des chemins qui passent une seule fois par chaque dalle (vérifié par un solveur).
-p2b = vide(); sol(p2b, 2, 22, 2, 4); sol(p2b, 2, 22, 10, 11); sol(p2b, 11, 13, 12, 13)
+# D2b (la pointe) : « LE MOTIF ». La règle change : il ne faut plus tout mettre en bleu mais REPRODUIRE le dessin gravé
+#     sur la stèle du motif (lettre m) : une PLUME en diagonale (bleu) sur fond rouge. Le champ 7 x 5 (colonnes 9-15, rangées 6-10)
+#     est entouré de sol : on peut entrer et ressortir partout. Astuce : un aller-retour remet les dalles traversées dans leur
+#     couleur et ne retourne que la dernière. Chaque petite case de la stèle s'éclaire (liseré doré) quand sa dalle est juste.
+p2b = vide(); sol(p2b, 2, 22, 2, 4); sol(p2b, 2, 22, 6, 11); sol(p2b, 11, 13, 12, 13)
 for x in range(2, 23): p2b[5][x] = '#'
 for x in (11, 12, 13): p2b[5][x] = 'D'
 put(p2b, 'G', (12, 3)); put(p2b, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p2b, 'T', (x, 4))
-for y in range(6, 10):
-    for x in range(8, 17): p2b[y][x] = 'z'
-put(p2b, '#', (10, 7), (14, 8))
-# COMPLICATION : 3 dalles déjà BLEUES au départ (lettre y) : il faut les éviter (ou passer deux fois dessus).
-# Chemin « parfait » (chaque dalle rouge une seule fois, sans toucher une bleue) : UNIQUE, entrée par (11,9) :
-# (11,9) (12,9) (13,9) ↑(13,8) (13,7) → (14,7) (15,7) ↓(15,8) (15,9) → (16,9) ↑ jusqu'à (16,6) ← (15,6)...(12,6) ↓(12,7) ← (11,7) ↓(11,8) ← (10,8)
-# ↓(10,9) ← (9,9) (8,9) ↑(8,8) → (9,8) ↑(9,7) ← (8,7) ↑(8,6) → (9,6) (10,6). (D'autres chemins existent en repassant ou en ressortant.)
-put(p2b, 'y', (11, 6), (12, 8), (14, 9))
+for y in range(6, 11):
+    for x in range(9, 16): p2b[y][x] = 'z'
+MOTIF_D2 = [(13, 6), (14, 6), (12, 7), (13, 7), (14, 7), (11, 8), (12, 8), (13, 8), (10, 9), (11, 9), (9, 10)]   # la plume
+put(p2b, 'm', (5, 8))      # la stèle du motif, à gauche du champ ; on lit son inscription depuis (5,9)
+put(p2b, 'O', (19, 8))
 put(p2b, 'V', (3, 11), (21, 11), (3, 10), (21, 10)); put(p2b, 'S', (5, 2)); put(p2b, 'O', (19, 2))
+ENIGME_D2B = "5 9 ! « Ici, le bleu ne suffit plus. Que le sol dessine la plume gravée dans cette pierre : pas une dalle de plus, pas une de moins. »"
 
 # --- PLUME D3 : « LA GLACE ». Sur la glace (i), on glisse tout droit jusqu'à un obstacle (ou jusqu'au sol normal).
 #     Un bloc poussé sur la glace glisse aussi. Un plot BAISSÉ n'est pas glissant : on s'arrête dessus.
@@ -272,7 +272,8 @@ salles = [
     ('PlumeD2a', (-2, -1), p2a, (1.0, 0.97, 0.92), {'drapeau_fragile': 'd2_sol1', 'drapeau_porte': 'd2_sol1', 'retour': retour_d2(1),
         'passages': 'PackedStringArray("%s")' % ENIGME_D2}),
     ('PlumeD2b', (-2, -2), p2b, (0.98, 0.95, 0.9), {'drapeau_fragile': 'd2_sol2', 'drapeau_porte': 'd2_sol2', 'retour': retour_d2(2),
-        'drapeau_gemme': 'plumeD2'}),
+        'drapeau_gemme': 'plumeD2', 'passages': 'PackedStringArray("%s")' % ENIGME_D2B,
+        'motif_dalles': 'PackedStringArray(%s)' % ', '.join('"%d %d"' % c for c in MOTIF_D2)}),
     ('Epine3', (-3, 0), e3, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD3'}),
     ('PlumeD3a', (-3, -1), p3a, (0.92, 0.98, 1.08), {'retour': retour_d3(1)}),
     ('PlumeD3b', (-3, -2), p3b, (0.9, 0.97, 1.1), {'retour': retour_d3(2)}),
