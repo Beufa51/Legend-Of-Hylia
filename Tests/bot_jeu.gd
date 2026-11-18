@@ -140,6 +140,10 @@ func _scenario_echo() -> void:
 				Input.action_release("run")
 		elif coup.begins_with("W"):
 			await get_tree().create_timer(float(coup.substr(1))).timeout
+		elif coup == "E":   # touche E : poser l'écho / valider l'enregistrement
+			Input.action_press("echo")
+			await get_tree().create_timer(0.12).timeout
+			Input.action_release("echo")
 		else:
 			var d: Vector2i = dirs[coup[0]]
 			var ici: Vector2i = salle.case_des_pieds(monde.joueur.global_position)
