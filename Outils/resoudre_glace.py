@@ -23,7 +23,7 @@ def resoudre(plan, depart, buts, plots_init=None, maxi=200000):
     def bloquee_f(blocs, orange):
         def f(c):
             l = lettre(c)
-            if l in '#VSOBK~': return True
+            if l in '#VSOBK~kc': return True
             if c in blocs: return True
             if l == 'o' and orange: return True
             if l == 'u' and not orange: return True
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     import os, re
     racine = os.path.join(os.path.dirname(__file__), "..")
     w = open(os.path.join(racine, "Scenes", "aile_droite.tscn"), encoding="utf-8").read()
-    for nom, buts in [("PlumeD3a", {(11, 2), (12, 2), (13, 2)}), ("PlumeD3b", {(11, 2), (12, 2), (13, 2)}), ("PlumeD3c", {(12, 4)})]:
+    for nom, buts in [("PlumeD3a", {(11, 4), (12, 4), (13, 4)}), ("PlumeD3b", {(11, 4), (12, 4), (13, 4)}), ("PlumeD3c", {(12, 4)})]:
         bloc = w.split('name="%s"' % nom)[1]
         plan = re.findall(r'"([^"]+)"', re.search(r"layout = PackedStringArray\((.*)\)", bloc).group(1))
         plan = [l.replace("V", "#").replace("S", "#").replace("O", "#") if i >= 11 else l for i, l in enumerate(plan)]

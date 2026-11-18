@@ -30,6 +30,7 @@ class_name Room
 #   Q  = coffre (un coup de lance l'ouvre, lève `drapeau_coffre` ; ex. une clé)      J = levier (lève `drapeau_levier`)
 #   E  = porte à serrure (porte de bois) : s'ouvre si le joueur la touche avec la clé `drapeau_cle` (lève `drapeau_serrure`)
 #   Z  = pics qui sortent du sol en boucle (sortis = retour à `retour`)              ~ = eau (bloque)
+#   k  = rocher pris dans la glace (solide)   c = colonne brisée givrée (solide) : obstacles des salles de glace
 #   i  = GLACE : le joueur (et un bloc poussé) glisse tout droit jusqu'à un obstacle ou jusqu'au sol normal
 #        (un plot baissé n'est pas de la glace : on s'arrête dessus). R = retour au début de la salle.
 #   r  = départ du REFLET (double fantôme aux gestes inversés gauche/droite, voir reflet.gd) ; il appuie aussi sur les boutons P
@@ -41,7 +42,7 @@ class_name Room
 
 
 # Caractères qui bloquent le joueur (en plus des murs)
-const SOLIDES := "#SOBR~Im"
+const SOLIDES := "#SOBR~Imkc"
 # Épaisseur des murs du bord (en tuiles)
 const EPAISSEUR := 2
 # Son d'une fausse note (pack Ninja Adventure)
@@ -303,6 +304,10 @@ func _creer_decor() -> void:
 	_poser_details()
 	_poser_vie_gouffre()
 	_poser_vie_salle()
+	if layout.size() > 0 and "".join(layout).contains("i"):
+		var vie_glace := VieGlace.new()
+		add_child(vie_glace)
+		vie_glace.initialiser(self)
 	if ciel_ouvert:
 		var ciel := CielOuvert.new()
 		ciel.cases_etoiles = _cases_ciel
@@ -319,13 +324,9 @@ func _creer_decor() -> void:
 
 # Tuile de sol (pack donjon Craftpix) : gris-bleu uni comme dans Zelda SNES, avec de rares dalles gravées. Le calcul est fixe (pas de hasard) : une salle a toujours le même aspect.
 func _nom_sol(x: int, y: int) -> String:
-	if layout[y][x] == "i":
-		var v := (x * 3 + y * 5) % 9   # 4 dalles fissurées au hasard, 2 dalles à étincelle plus rares (Outils/traiter_lot3.py)
-		if v == 0:
-			return "glace_5"
-		if v == 4:
-			return "glace_6"
-		return "glace_%d" % (v % 4 + 1)
+	if "ikc".contains(layout[y][x]):
+		# glace UNIE (Outils/traiter_glace_decor.py : pas de bordure, pas de quadrillage) ; un reflet de temps en temps
+		return "glace_lisse_2" if (x * 3 + y * 5) % 11 == 0 else "glace_lisse_1"
 	var h := (x * 7 + y * 13 + x * y * 3) % 37
 	var lettre := layout[y][x]
 	if ciel_etoile and lettre == ".":   # cour du château : dalles de pierre claire et chaude, joints décalés (Outils/fabriquer_sol_corps.py)
@@ -621,6 +622,11 @@ func _poser_objets() -> void:
 					plume.position = pos
 					add_child(plume)
 					plume.initialiser(drapeau_gemme, "Plume obtenue !")
+				"k":   # rocher pris dans la glace (solide)
+					_poser("rocher_glace", pos)
+				"c":   # colonne de pierre brisée et givrée (solide, dépasse vers le haut)
+					var col := _image("colonne_givree")
+					_poser("colonne_givree", pos + Vector2((TUILE - col.get_width()) / 2.0, TUILE - col.get_height()))
 				"F":
 					_poser("dalle_fleches", pos)
 				"1", "2", "3", "4", "5":
@@ -1605,7 +1611,7 @@ func _voit(sentinelle: Sentinelle, point: Vector2) -> bool:
 func _opaque(c: Vector2i) -> bool:
 	if c.y < 0 or c.y >= layout.size() or c.x < 0 or c.x >= layout[c.y].length():
 		return true
-	if "#SOBKR".contains(layout[c.y][c.x]):
+	if "#SOBKRkc".contains(layout[c.y][c.x]):
 		return true
 	var occupant = _occupe.get(c)
 	if occupant == null or not is_instance_valid(occupant):

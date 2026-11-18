@@ -108,60 +108,60 @@ put(p2a, 'V', (3, 11), (21, 11), (3, 2), (21, 2)); put(p2a, 'S', (8, 9)); put(p2
 put(p2a, 'I', (12, 9))
 ENIGME_D2 = "12 10 ! « Le rouge m'insupporte. Seul un sol d'un bleu uniforme ouvrira le chemin vers la plume. »"
 
-# D2b (la pointe) : « LE MOTIF ». La règle change : il ne faut plus tout mettre en bleu mais REPRODUIRE le dessin gravé
-#     sur la stèle du motif (lettre m) : une PLUME en diagonale (bleu) sur fond rouge. Le champ 7 x 5 (colonnes 9-15, rangées 6-10)
-#     est entouré de sol : on peut entrer et ressortir partout. Astuce : un aller-retour remet les dalles traversées dans leur
-#     couleur et ne retourne que la dernière. Chaque petite case de la stèle s'éclaire (liseré doré) quand sa dalle est juste.
+# D2b (la pointe) : MÊME RÈGLE que D2a (tout mettre en bleu), complication = un CARRÉ de 5 x 5 dalles (colonnes 10-14, rangées 6-10)
+#     avec 2 POTEAUX sur la diagonale (11,7) et (13,9). Le serpentin ligne par ligne de D2a bute sur un poteau : il faut penser le
+#     tracé. Sol à gauche, à droite et en bas du carré : on entre et on ressort par ces 3 côtés. Solveur : 29 tracés d'un seul trait
+#     (entrée et sortie sur un bord, ex. entrer par (10,10) ... ), et d'autres en ressortant puis en revenant.
 p2b = vide(); sol(p2b, 2, 22, 2, 4); sol(p2b, 2, 22, 6, 11); sol(p2b, 11, 13, 12, 13)
 for x in range(2, 23): p2b[5][x] = '#'
 for x in (11, 12, 13): p2b[5][x] = 'D'
 put(p2b, 'G', (12, 3)); put(p2b, 'B', (9, 3), (15, 3))
 for x in range(10, 15): put(p2b, 'T', (x, 4))
 for y in range(6, 11):
-    for x in range(9, 16): p2b[y][x] = 'z'
-MOTIF_D2 = [(13, 6), (14, 6), (12, 7), (13, 7), (14, 7), (11, 8), (12, 8), (13, 8), (10, 9), (11, 9), (9, 10)]   # la plume
-put(p2b, 'm', (5, 8))      # la stèle du motif, à gauche du champ ; on lit son inscription depuis (5,9)
-put(p2b, 'O', (19, 8))
-put(p2b, 'V', (3, 11), (21, 11), (3, 10), (21, 10)); put(p2b, 'S', (5, 2)); put(p2b, 'O', (19, 2))
-ENIGME_D2B = "5 9 ! « Ici, le bleu ne suffit plus. Que le sol dessine la plume gravée dans cette pierre : pas une dalle de plus, pas une de moins. »"
+    for x in range(10, 15): p2b[y][x] = 'z'
+put(p2b, '#', (11, 7), (13, 9))      # les 2 poteaux
+put(p2b, 'B', (6, 7), (18, 7)); put(p2b, 'S', (5, 2)); put(p2b, 'O', (19, 2))
+put(p2b, 'V', (3, 11), (21, 11), (3, 10), (21, 10), (4, 11), (20, 11))
 
 # --- PLUME D3 : « LA GLACE ». Sur la glace (i), on glisse tout droit jusqu'à un obstacle (ou jusqu'au sol normal).
 #     Un bloc poussé sur la glace glisse aussi. Un plot BAISSÉ n'est pas glissant : on s'arrête dessus.
 #     R = retour au début de la salle (on peut se coincer). Les 3 salles ont été vérifiées par un solveur (mêmes règles) :
-#     3a = 3 glissades ; 3b = 12 coups dont 2 poussées (impossible sans le bloc) ; 3c = 13 coups (impossible sans le cristal).
+#     3a = 5 coups (leçon) ; 3b = 8 coups dont 1 poussée (impossible sans le bloc) ; 3c = 7 coups (impossible sans le cristal). Bassins 9 x 6.
 def retour_d3(n):   # bas de l'écran n de la plume D3 (case (12,11), sol normal), en position dans le monde
     return 'Vector2(%d, %d)' % (-3 * 400 + 12 * 16 + 8, -224 * n + 11 * 16 + 3)
 
 def champ_de_glace(g):
-    """Glace sur les rangées 3 à 10, sol normal rangée 11, entrée en bas, sortie en haut (rangées 0-2, colonnes 11-13)."""
+    """Grand champ (plume D5c) : glace sur les rangées 3 à 10, sol rangée 11, entrée en bas, sortie en haut (colonnes 11-13)."""
     for y in range(3, 11):
         for x in range(2, 23): g[y][x] = 'i'
     sol(g, 2, 22, 11, 11); sol(g, 11, 13, 12, 13); sol(g, 11, 13, 0, 2)
 
-# D3a (leçon) : monter, glisser à droite contre le rocher, remonter. La colonne du milieu est fermée en bas.
-p3a = vide(); champ_de_glace(p3a)
-put(p3a, '#', (11, 10), (12, 10), (13, 10), (13, 3), (6, 7), (18, 6), (16, 9))
-put(p3a, 'V', (2, 11), (22, 11)); put(p3a, 'S', (5, 11)); put(p3a, 'O', (19, 11))
+def bassin(g, alcove=False):
+    """BASSIN GELÉ de 9 x 6 cases (colonnes 8-16, rangées 5-10) entouré de murs épais ; quai de sol rangée 11, entrée en bas.
+    Sortie en haut par les colonnes 11-13 (rangées 0-4), ou (alcove=True) par la seule case (12,4) vers l'alcôve de la plume."""
+    for y in range(5, 11):
+        for x in range(8, 17): g[y][x] = 'i'
+    sol(g, 8, 16, 11, 11); sol(g, 11, 13, 12, 13)
+    if alcove:
+        sol(g, 9, 15, 2, 3); put(g, '.', (12, 4))
+    else:
+        sol(g, 11, 13, 0, 4)
 
-# D3b : la sortie ne s'atteint qu'en remontant la colonne 12 ; aucun rocher ne permet de s'y arrêter : il faut
-#      d'abord pousser le BLOC (il monte jusqu'au rocher (16,5)), puis le pousser à gauche (il s'arrête contre (10,6)).
-p3b = vide(); champ_de_glace(p3b)
-put(p3b, '#', (12, 10), (11, 3), (13, 3), (16, 5), (17, 5), (10, 6), (4, 8), (20, 9), (6, 4))
-put(p3b, 'X', (16, 9))
-put(p3b, 'V', (2, 11), (22, 11)); put(p3b, 'O', (5, 11))
-
-# D3c (la pointe) : glace + PLOTS + CRISTAL. L'alcôve de la plume (rangées 2-3) ne s'ouvre que par (12,4), qu'on atteint
-#      en remontant la colonne 12. Le cristal (21,8) se frappe depuis la glace : il lève le plot bleu (13,8), qui devient la butée.
-p3c = vide()
-sol(p3c, 9, 15, 2, 3); put(p3c, '.', (12, 4))
-for y in range(5, 11):
-    for x in range(2, 23): p3c[y][x] = 'i'
-sol(p3c, 2, 22, 11, 11); sol(p3c, 11, 13, 12, 13)
-put(p3c, '#', (12, 10), (11, 5), (13, 5), (7, 6), (18, 9), (4, 9), (20, 5), (2, 7))
-put(p3c, 'o', (16, 7), (9, 9), (5, 8)); put(p3c, 'u', (13, 8), (10, 6)); put(p3c, 'K', (21, 8))
+# Plans trouvés par recherche automatique + solveur (Outils/resoudre_glace.py) : peu d'obstacles, solution courte, mécanique obligatoire.
+# k = rocher pris dans la glace, c = colonne brisée givrée (tous deux solides).
+# D3a (leçon, 5 coups) : monter (on bute sous le rocher du haut), glisser à gauche contre le mur, monter, glisser à droite contre le rocher, sortir.
+p3a = vide(); bassin(p3a)
+put(p3a, 'k', (12, 5), (13, 8)); put(p3a, 'c', (11, 10))
+# D3b (bloc, 8 coups) : impossible sans le bloc. On monte sous le bloc (10,9), on le pousse : il glisse jusqu'au mur du haut (10,5)
+#      et devient la butée qui arrête le joueur en (10,6) ; de là, glisser à droite contre la colonne (12,6), puis monter.
+p3b = vide(); bassin(p3b)
+put(p3b, 'c', (12, 6)); put(p3b, 'k', (11, 7), (13, 7)); put(p3b, 'X', (10, 9))
+# D3c (pointe, 7 coups) : impossible sans le cristal. Monter contre le rocher (13,7), glisser à gauche jusqu'au cristal (8,8),
+#      le frapper : le plot orange (9,7) se BAISSE et devient une case où l'on s'arrête ; monter dessus, glisser à droite contre (13,7), monter.
+p3c = vide(); bassin(p3c, alcove=True)
+put(p3c, 'o', (9, 7), (11, 10)); put(p3c, 'k', (13, 7), (10, 9)); put(p3c, 'c', (12, 9)); put(p3c, 'K', (8, 8))
 put(p3c, 'G', (12, 2)); put(p3c, 'B', (9, 2), (15, 2))
 for x in range(10, 15): put(p3c, 'T', (x, 3))
-put(p3c, 'V', (2, 11), (22, 11))
 
 # --- PLUME D4 : « LE REFLET ». Un double fantôme (part de la case r) fait les mêmes gestes que le joueur, gauche et droite
 #     INVERSÉES. Bloqué par un mur pendant que le joueur avance, il se décale. Dalles du reflet (a) : toutes occupées en même
@@ -272,8 +272,7 @@ salles = [
     ('PlumeD2a', (-2, -1), p2a, (1.0, 0.97, 0.92), {'drapeau_fragile': 'd2_sol1', 'drapeau_porte': 'd2_sol1', 'retour': retour_d2(1),
         'passages': 'PackedStringArray("%s")' % ENIGME_D2}),
     ('PlumeD2b', (-2, -2), p2b, (0.98, 0.95, 0.9), {'drapeau_fragile': 'd2_sol2', 'drapeau_porte': 'd2_sol2', 'retour': retour_d2(2),
-        'drapeau_gemme': 'plumeD2', 'passages': 'PackedStringArray("%s")' % ENIGME_D2B,
-        'motif_dalles': 'PackedStringArray(%s)' % ', '.join('"%d %d"' % c for c in MOTIF_D2)}),
+        'drapeau_gemme': 'plumeD2'}),
     ('Epine3', (-3, 0), e3, (0.90, 0.88, 0.98), {'drapeau_porte': 'plumeD3'}),
     ('PlumeD3a', (-3, -1), p3a, (0.92, 0.98, 1.08), {'retour': retour_d3(1)}),
     ('PlumeD3b', (-3, -2), p3b, (0.9, 0.97, 1.1), {'retour': retour_d3(2)}),
