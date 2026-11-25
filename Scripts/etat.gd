@@ -50,6 +50,7 @@ const VILLAGE := "res://Scenes/village.tscn"
 
 
 func _ready() -> void:
+	Reglages.demarrer()   # volumes du joueur (bus « Musique »)
 	charger()
 
 

@@ -96,6 +96,22 @@ func _tester_recommencer(monde: Node, pause: Pause) -> void:
 	await _touche("attack")
 	await get_tree().create_timer(0.5).timeout
 	_verifier(not get_tree().paused, "« Recommencer l'énigme » relance le jeu")
+	_verifier(pause._ids.has("indice"), "« Un indice » est dans le menu des ailes")
+	await _touche("pause")
+	await _choisir(pause, "indice")
+	await _touche("attack")
+	await get_tree().create_timer(0.5).timeout
+	_verifier(not get_tree().paused, "« Un indice » relance le jeu")
+	var anneaux := 0
+	for e in monde.get_children():
+		for n in e.get_children():
+			if n is Line2D:
+				anneaux += 1
+	_verifier(anneaux > 0, "« Un indice » fait apparaître au moins un anneau doré (%d)" % anneaux)
+	# on remet les réglages à zéro pour les tests suivants
+	Reglages.general = Reglages.NIVEAU_MAX
+	Reglages.musique = Reglages.NIVEAU_MAX
+	Reglages.appliquer()
 
 
 func _ready() -> void:
@@ -130,13 +146,36 @@ func _ready() -> void:
 	await _capture("carte")
 	await _touche("pause")
 	_verifier(pause._menu.visible and not pause._carte.visible, "pause (ou retour) revient au menu depuis la carte")
-	# commandes
-	await _choisir(pause, "commandes")
+	# options : volumes, commandes, crédits
+	await _choisir(pause, "options")
 	await _touche("attack")
-	_verifier(pause._commandes.visible, "la page Commandes s'ouvre")
+	_verifier(pause._page == Pause.Page.OPTIONS, "la page Options s'ouvre")
+	Reglages.general = 10
+	await _touche("move_left")
+	_verifier(Reglages.general == 9, "gauche baisse le volume général d'un cran")
+	await _touche("move_right")
+	_verifier(Reglages.general == 10, "droite le remonte")
+	await _touche("move_down")
+	for i in 12:   # tout en bas : le volume de la musique tombe à 0 puis ne descend plus
+		await _touche("move_left")
+	_verifier(Reglages.musique == 0 and AudioServer.is_bus_mute(AudioServer.get_bus_index(Reglages.BUS_MUSIQUE)), "la musique à 0 coupe le bus Musique")
+	for i in 12:
+		await _touche("move_right")
+	_verifier(Reglages.musique == Reglages.NIVEAU_MAX and not AudioServer.is_bus_mute(AudioServer.get_bus_index(Reglages.BUS_MUSIQUE)), "la musique remonte au maximum")
+	await _touche("move_down")
+	await _touche("attack")
+	_verifier(pause._commandes.visible, "la page Commandes s'ouvre (depuis Options)")
 	await _capture("commandes")
 	await _touche("ui_cancel")
-	_verifier(pause._menu.visible, "retour au menu depuis les commandes")
+	_verifier(pause._page == Pause.Page.OPTIONS, "retour aux Options depuis les commandes")
+	await _touche("move_down")
+	await _touche("attack")
+	_verifier(pause._credits.visible and pause._credits_texte.text.length() > 100, "la page Crédits s'ouvre avec du texte")
+	await _capture("credits")
+	await _touche("ui_cancel")
+	await _capture("options")
+	await _touche("ui_cancel")
+	_verifier(pause._menu.visible and pause._page == Pause.Page.MENU, "retour au menu depuis les options")
 	# fermeture
 	await _touche("pause")
 	await get_tree().create_timer(0.4).timeout

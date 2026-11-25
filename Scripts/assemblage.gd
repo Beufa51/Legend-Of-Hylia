@@ -326,6 +326,7 @@ func _lecteur(chemin: String, volume: float, boucle: bool) -> AudioStreamPlayer:
 			flux.loop = true
 		l.stream = flux
 	l.volume_db = volume
+	Reglages.vers_musique(l)   # (musique et vent de la cinématique)
 	add_child(l)
 	if flux != null:
 		l.play()

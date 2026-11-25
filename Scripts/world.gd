@@ -187,7 +187,9 @@ func _surveiller_aide(delta: float) -> void:
 		_aide_visuelle()
 
 
-func _aide_visuelle() -> void:
+# `a_la_demande` : le joueur a demandé un indice (menu pause) : en plus des objets à frapper, on entoure aussi les PORTES encore fermées
+# de la salle (= ce qu'il faut ouvrir). Utile dans les salles sans objet à frapper (glace, reflet...) où l'aide automatique ne montrait rien.
+func _aide_visuelle(a_la_demande := false) -> void:
 	var ecran: Ecran = null
 	for enfant in get_children():
 		if enfant is Ecran and enfant.grille == salle_actuelle:
@@ -196,21 +198,35 @@ func _aide_visuelle() -> void:
 		return
 	if "drapeau_porte" in ecran and ecran.drapeau_porte != "" and Etat.est(ecran.drapeau_porte):
 		return   # la salle est déjà résolue
-	if ecran is Room and (ecran as Room).aide_dalles():
+	var dalles: bool = ecran is Room and (ecran as Room).aide_dalles()
+	if dalles and not a_la_demande:
 		return   # salle de dalles : ce sont les dalles encore rouges qui pulsent (pas les pots)
 	var cibles: Array[Node2D] = []
-	for n in get_tree().get_nodes_in_group("frappable"):
-		if n is Node2D and ecran.is_ancestor_of(n):
-			cibles.append(n)
-	for n in cibles:
-		if n is Chanteur:   # salle des cloches : le chanteur seul
-			cibles = [n]
-			break
-	for n in cibles:
-		_anneau_aide(n)
+	if not dalles:
+		for n in get_tree().get_nodes_in_group("frappable"):
+			if n is Node2D and ecran.is_ancestor_of(n):
+				cibles.append(n)
+		for n in cibles:
+			if n is Chanteur:   # salle des cloches : le chanteur seul
+				cibles = [n]
+				break
+		for n in cibles:
+			_anneau_aide(n)
+	if a_la_demande:
+		for n in ecran.get_children():
+			if n is Porte and not n.ouverte:
+				_anneau_aide(n, n.taille() / 2.0, maxf(n.taille().x, n.taille().y) / 18.0)   # (anneau centré sur la porte, à sa taille)
 
 
-func _anneau_aide(cible: Node2D) -> void:
+## « Un indice » du menu pause (Pause.gd) : fait pulser ce qu'il faut frapper et les portes à ouvrir dans la salle où l'on est.
+func demander_indice() -> void:
+	if en_transition or Etat.en_dialogue or not donjon:
+		return
+	_inactif = 0.0
+	_aide_visuelle(true)
+
+
+func _anneau_aide(cible: Node2D, decalage := Vector2(8, 0), taille := 1.0) -> void:
 	var anneau := Line2D.new()
 	var points := PackedVector2Array()
 	for i in 25:
@@ -219,10 +235,10 @@ func _anneau_aide(cible: Node2D) -> void:
 	anneau.width = 1.5
 	anneau.default_color = Color(1.0, 0.85, 0.35, 0.9)
 	anneau.z_index = 50
-	anneau.position = cible.position + Vector2(8, 0)
+	anneau.position = cible.position + decalage
 	cible.get_parent().add_child(anneau)
 	var t := anneau.create_tween().set_loops(2)
-	t.tween_property(anneau, "scale", Vector2(2.4, 2.4), 1.0).from(Vector2(0.5, 0.5))
+	t.tween_property(anneau, "scale", Vector2(2.4, 2.4) * taille, 1.0).from(Vector2(0.5, 0.5) * taille)
 	t.parallel().tween_property(anneau, "modulate:a", 0.0, 1.0).from(1.0)
 	await get_tree().create_timer(2.2).timeout
 	if is_instance_valid(anneau):
@@ -260,6 +276,7 @@ func _lancer_ambiance_donjon() -> void:
 	var lecteur := AudioStreamPlayer.new()
 	lecteur.stream = flux
 	lecteur.volume_db = -19.0
+	Reglages.vers_musique(lecteur)
 	add_child(lecteur)
 	lecteur.play()
 
@@ -300,6 +317,7 @@ func _lancer_musique() -> void:
 	var lecteur := AudioStreamPlayer.new()
 	lecteur.stream = flux
 	lecteur.volume_db = _volume_piste(musique)
+	Reglages.vers_musique(lecteur)
 	add_child(lecteur)
 	lecteur.play()
 	_musique = lecteur
@@ -406,7 +424,7 @@ func _creer_messages() -> void:
 	Etat.message.connect(_afficher_message)
 	# Rappel des touches au début
 	await get_tree().create_timer(0.8).timeout
-	Etat.annoncer((Noms.VILLAGE if not donjon else Noms.TITRE_JEU) + " — Flèches/ZQSD : bouger   Maj/K : courir   Espace/J : lance   R : recommencer")
+	Etat.annoncer((Noms.VILLAGE if not donjon else Noms.TITRE_JEU) + " — Flèches/ZQSD ou stick : bouger   Maj/K ou B : courir   Espace/J ou A : lance   Échap/Start : pause")
 
 
 func _afficher_message(texte: String) -> void:
