@@ -12,6 +12,13 @@ const CASE_G := Vector2i(48, 32)
 # Héros PIXEL CRAWLER habillé (Outils/habiller_heros.py) : cases 62x53, 16 lignes (marche / repos / estoc / touché x bas, haut, DROITE, GAUCHE... voir LIGNES_PC)
 # Prioritaire sur le héros Gemini s'il existe ; supprimer ou renommer heros_pc.png pour revenir au héros Gemini.
 const HEROS_PC := "res://Assets/Heros/heros_pc.png"
+# HÉROS ACTUEL (2026-11-25) : le garde au casque à cimier rouge, fait par l'utilisateur avec un générateur LPC (Assets/Heros/garde_lpc.png,
+# découpé par Outils/preparer_garde_lpc.py). PRIORITAIRE sur tous les autres héros, de toute la partie. Cases de 32 px,
+# lignes : marche (0-3), repos (4-7), estoc (8-11), course (12-15), touché (16) ; directions bas, haut, gauche, droite.
+const HEROS_LPC := "res://Assets/Heros/heros_lpc.png"
+const CASE_LPC := Vector2i(32, 32)
+const LIGNE_LPC := {"bas": 0, "haut": 1, "gauche": 2, "droite": 3}
+var _lpc := false
 const ECHELLE_PC := 0.8   # taille du héros Pixel Crawler (1.0 = taille d'origine, 31 px)
 # Recrue à l'épée (pack Fantasy Tileset) : héros de toute l'épreuve ; la lance ne lui est remise qu'à l'adoubement (drapeau "lance_recue").
 const RECRUE_REPOS := "res://Assets/Heros/recrue_Idle_p.png"
@@ -75,8 +82,13 @@ var _invulnerable := 0.0      # temps restant pendant lequel on ne peut plus êt
 
 func _ready() -> void:
 	add_to_group("joueur")
-	_recrue = ResourceLoader.exists(RECRUE_MARCHE) and ResourceLoader.exists(RECRUE_COUP) and ResourceLoader.exists(RECRUE_REPOS) and not Etat.est("lance_recue")
-	if _recrue:
+	_lpc = ResourceLoader.exists(HEROS_LPC)
+	_recrue = not _lpc and ResourceLoader.exists(RECRUE_MARCHE) and ResourceLoader.exists(RECRUE_COUP) and ResourceLoader.exists(RECRUE_REPOS) and not Etat.est("lance_recue")
+	if _lpc:
+		sprite.sprite_frames = _creer_animations_lpc()
+		sprite.scale = Vector2.ONE
+		sprite.offset = Vector2(0, -10)   # pieds à la ligne 31 d'une case de 32 : on les pose sur la collision (sous le joueur)
+	elif _recrue:
 		sprite.sprite_frames = _creer_animations_recrue()
 		sprite.scale = Vector2.ONE * ECHELLE_RECRUE
 		sprite.offset = Vector2(0, -9)   # pieds à la ligne 30 d'une case de 36 : on les pose sur la collision
@@ -334,7 +346,10 @@ func _mettre_a_jour_animation(entree: Vector2) -> void:
 			direction = "droite" if entree.x > 0 else "gauche"
 		else:
 			direction = "bas" if entree.y > 0 else "haut"
-		sprite.play("marche_" + direction)
+		var anim := "marche_" + direction
+		if Input.is_action_pressed("run") and sprite.sprite_frames.has_animation("course_" + direction):
+			anim = "course_" + direction   # héros LPC : une vraie animation de course
+		sprite.play(anim)
 	else:
 		sprite.play("repos_" + direction)
 
@@ -400,9 +415,9 @@ func _creer_lance() -> void:
 	add_child(lance)
 	var image := Sprite2D.new()
 	image.texture = load(LANCE_IMAGE)
-	image.visible = not (_recrue or ResourceLoader.exists(HEROS_G) or ResourceLoader.exists(HEROS_PC))   # les héros Gemini / Pixel Crawler tiennent leur lance dans leurs images : on ne dessine pas la lance du pack en plus
+	image.visible = not (_lpc or _recrue or ResourceLoader.exists(HEROS_G) or ResourceLoader.exists(HEROS_PC))   # les héros Gemini / Pixel Crawler tiennent leur lance dans leurs images : on ne dessine pas la lance du pack en plus
 	lance.add_child(image)
-	if ResourceLoader.exists(HEROS_G) and ResourceLoader.exists(LANCE_G) and not ResourceLoader.exists(HEROS_PC):
+	if not _lpc and ResourceLoader.exists(HEROS_G) and ResourceLoader.exists(LANCE_G) and not ResourceLoader.exists(HEROS_PC):
 		_lance_g = Sprite2D.new()
 		_lance_g.texture = load(LANCE_G)
 		_lance_g.centered = false
@@ -535,6 +550,25 @@ func _decoupe_recrue(texture: Texture2D, col: int, ligne: int) -> AtlasTexture:
 
 
 # Animations du héros Pixel Crawler : marche 6 images, repos 4, estoc 8 (la lance est dans les images), touché 4.
+func _creer_animations_lpc() -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	frames.remove_animation("default")
+	var planche: Texture2D = load(HEROS_LPC)
+	# (nom, 1re ligne, nombre d'images, images/s, en boucle)
+	for a in [["marche", 0, 8, 12.0, true], ["repos", 4, 2, 2.0, true], ["attaque", 8, 8, 30.0, false], ["course", 12, 8, 14.0, true]]:
+		for d in DIRECTIONS:
+			var nom: String = a[0] + "_" + d
+			frames.add_animation(nom)
+			frames.set_animation_speed(nom, a[3])
+			frames.set_animation_loop(nom, a[4])
+			for col in a[2]:
+				var atlas := AtlasTexture.new()
+				atlas.atlas = planche
+				atlas.region = Rect2(col * CASE_LPC.x, (a[1] + LIGNE_LPC[d]) * CASE_LPC.y, CASE_LPC.x, CASE_LPC.y)
+				frames.add_frame(nom, atlas)
+	return frames
+
+
 func _creer_animations_pc() -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
