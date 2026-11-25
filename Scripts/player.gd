@@ -14,7 +14,7 @@ const CASE_G := Vector2i(48, 32)
 const HEROS_PC := "res://Assets/Heros/heros_pc.png"
 # HÉROS ACTUEL (2026-11-25) : le garde au casque à cimier rouge, fait par l'utilisateur avec un générateur LPC (Assets/Heros/garde_lpc.png,
 # découpé par Outils/preparer_garde_lpc.py). PRIORITAIRE sur tous les autres héros, de toute la partie. Cases de 32 px,
-# lignes : marche (0-3), repos (4-7), estoc (8-11), course (12-15), touché (16) ; directions bas, haut, gauche, droite.
+# lignes : marche (0-3), repos (4-7, pose debout), estoc (8-11), touché (12) ; directions bas, haut, gauche, droite.
 const HEROS_LPC := "res://Assets/Heros/heros_lpc.png"
 const CASE_LPC := Vector2i(32, 32)
 const LIGNE_LPC := {"bas": 0, "haut": 1, "gauche": 2, "droite": 3}
@@ -555,7 +555,7 @@ func _creer_animations_lpc() -> SpriteFrames:
 	frames.remove_animation("default")
 	var planche: Texture2D = load(HEROS_LPC)
 	# (nom, 1re ligne, nombre d'images, images/s, en boucle)
-	for a in [["marche", 0, 8, 12.0, true], ["repos", 4, 2, 2.0, true], ["attaque", 8, 8, 30.0, false], ["course", 12, 8, 14.0, true]]:
+	for a in [["marche", 0, 8, 12.0, true], ["repos", 4, 1, 1.0, true], ["attaque", 8, 8, 30.0, false]]:
 		for d in DIRECTIONS:
 			var nom: String = a[0] + "_" + d
 			frames.add_animation(nom)

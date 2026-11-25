@@ -2,12 +2,12 @@
 exportée par le générateur (« Feuille de Sprite (PNG) ») : Assets/Heros/garde_lpc.png (13 colonnes x 54 lignes de cases carrées,
 864x3456 en général ; la taille d'une case est lue dans l'image). Crédits obligatoires (licence LPC) : Assets/Heros/garde_lpc_credits.txt.
 Ordre des lignes dans une planche LPC : haut, gauche, bas, droite (pour chaque animation).
-  lignes 4-7   estoc (lance)  8 images       lignes 8-11  marche  9 images (la 1re = debout)
-  ligne  20    touché         6 images       lignes 22-25 repos   2 images
-  lignes 38-41 course         8 images
+  lignes 4-7   estoc (lance)  8 images       lignes 8-11  marche  9 images (la 1re = debout = le repos)
+  ligne  20    touché         6 images
+  (les lignes « repos » 22-25 et « course » 38-41 du générateur n'ont PAS la lance : pas utilisées)
 Sortie : Assets/Heros/heros_lpc.png, cases de 32 px (réduites de MOITIÉ : un pixel du jeu = 2x2 pixels de la planche, bords nets),
 lignes dans l'ordre du jeu (bas, haut, gauche, droite) :
-  0-3 marche (8)   4-7 repos (2)   8-11 estoc (8)   12-15 course (8)   16 touché (6, une seule direction)
+  0-3 marche (8)   4-7 repos (1)   8-11 estoc (8)   12 touché (6, une seule direction)
 Usage : python3 Outils/preparer_garde_lpc.py [planche.png] [sortie.png]"""
 import os, sys
 import numpy as np
@@ -19,9 +19,8 @@ CASE = 32
 ORDRE_JEU = [2, 0, 1, 3]
 ANIMS = [  # (nom, 1re ligne LPC, colonne de départ, nombre d'images, 4 directions ?)
     ("marche", 8, 1, 8, True),
-    ("repos", 22, 0, 2, True),
+    ("repos", 8, 0, 1, True),     # pose DEBOUT de la marche : les lignes « repos » et « course » du générateur n'ont pas la lance
     ("estoc", 4, 0, 8, True),
-    ("course", 38, 0, 8, True),
     ("touche", 20, 0, 6, False),
 ]
 
