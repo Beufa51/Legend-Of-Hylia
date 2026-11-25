@@ -311,15 +311,46 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1 and OS.is_debug_build():
 		_basculer_menu_dev()
 		return
-	if event.is_action_pressed("reset") and not en_transition and not Etat.en_dialogue:
-		for enfant in get_children():
-			if enfant is Ecran and enfant.grille == salle_actuelle:
-				if enfant is Room and not enfant.drapeaux_a_rejouer().is_empty():
-					_rejouer_salle(enfant)   # salle déjà RÉUSSIE : on la remet comme neuve pour la refaire
-				elif enfant is Room and enfant.recommence_au_debut() and enfant.retour != Vector2.ZERO:
-					_raccompagner(enfant.retour, "recommencer")   # glace, reflet : on peut être coincé -> retour au début
-				else:
-					enfant.reinitialiser()
+	if event.is_action_pressed("reset"):
+		recommencer_salle()
+
+
+## Recommence la salle où l'on est (touche R / Y, ou « Recommencer l'énigme » du menu pause).
+func recommencer_salle() -> void:
+	if en_transition or Etat.en_dialogue:
+		return
+	for enfant in get_children():
+		if enfant is Ecran and enfant.grille == salle_actuelle:
+			if enfant is Room and not enfant.drapeaux_a_rejouer().is_empty():
+				_rejouer_salle(enfant)   # salle déjà RÉUSSIE : on la remet comme neuve pour la refaire
+			elif enfant is Room and enfant.recommence_au_debut() and enfant.retour != Vector2.ZERO:
+				_raccompagner(enfant.retour, "recommencer")   # glace, reflet : on peut être coincé -> retour au début
+			else:
+				enfant.reinitialiser()
+
+
+## Sauvegarde MANUELLE (menu pause) : retient l'endroit exact où l'on est, puis copie la partie dans le fichier de sauvegarde manuelle.
+func sauvegarder_partie() -> bool:
+	Etat.memoriser_position(joueur.position)
+	return Etat.sauver_manuel()
+
+
+## Charge la sauvegarde MANUELLE : fondu au noir, puis la scène sauvegardée est rechargée (via demarrage.tscn).
+func charger_partie() -> void:
+	if en_transition or not Etat.a_sauvegarde_manuelle():
+		return
+	en_transition = true
+	joueur.set_physics_process(false)
+	var t := create_tween()
+	t.tween_property(_fondu, "modulate:a", 1.0, 0.5)
+	await t.finished
+	if not peut_changer_scene:   # (tests automatiques : on ne recharge pas la scène)
+		_fondu.modulate.a = 0.0
+		joueur.set_physics_process(true)
+		en_transition = false
+		return
+	Etat.charger_manuel()
+	get_tree().change_scene_to_file("res://Scenes/demarrage.tscn")
 
 
 # R dans une salle déjà réussie : on efface SES drapeaux d'énigme (jamais les plumes ni les fragments ramassés),

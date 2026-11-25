@@ -2,15 +2,18 @@ class_name Pause
 extends CanvasLayer
 ## MENU PAUSE (créé par world.gd). Ouvert par l'action « pause » : Échap ou P au clavier, Start à la manette, bouton « II » à l'écran tactile.
 ## Le jeu est gelé (get_tree().paused) ; ce menu, lui, continue de tourner (process_mode = ALWAYS).
-## Pages : le menu (Reprendre / Carte / Commandes / Quitter), la carte (carte.gd) et la liste des commandes.
+## Entrées : Reprendre / Recommencer l'énigme (aile du donjon seulement, comme la touche R ou Y) / Sauvegarder / Charger / Carte / Commandes / Quitter.
+## SAUVEGARDER écrit une sauvegarde MANUELLE (fichier à part) ; CHARGER la recharge (après confirmation). La sauvegarde automatique continue de fonctionner à côté.
 ## Navigation : haut/bas (flèches, ZQSD, stick, croix), valider = Espace/J/Entrée/A, retour = Échap/B ; la souris et le doigt marchent aussi.
 
-enum Page { FERMEE, MENU, CARTE, COMMANDES }
+enum Page { FERMEE, MENU, CARTE, COMMANDES, CONFIRMER }
 
 const SON_CHOIX := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Move2.wav"
 const SON_VALIDER := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Accept.wav"
 const SON_RETOUR := "res://Assets/Ninja_adventure/Audio/Sounds/Menu/Cancel.wav"
 const OR := Color(0.98, 0.84, 0.4)
+const GRIS := Color(0.5, 0.52, 0.62)
+const TEXTE_AIDE := "Échap / Start : reprendre"
 const DELAI_STICK := 180   # millisecondes entre deux déplacements quand on pousse le stick (sinon il défile trop vite)
 
 const COMMANDES := [
@@ -25,14 +28,19 @@ var _monde: Node
 var _page := Page.FERMEE
 var _choix := 0
 var _ids: Array[String] = []        # les entrées du menu (« reprendre », « carte »...)
-var _labels: Array[Label] = []
 var _textes: Array[String] = []     # le texte de chaque entrée, sans la flèche
+var _labels: Array[Label] = []
 var _fond: ColorRect
 var _menu: Panel
+var _aide: Label                    # ligne du bas du menu : rappel des touches, ou message (« Partie sauvegardée ! »)
 var _commandes: Panel
+var _confirmation: Panel
+var _conf_labels: Array[Label] = []
+var _conf := 0                      # 0 = Non, 1 = Oui
 var _carte: Carte
 var _dernier_stick := 0
 var _fermeture := false
+var _numero_info := 0               # pour n'effacer un message que s'il n'a pas été remplacé entre-temps
 
 
 static func creer(monde: Node) -> Pause:
@@ -51,6 +59,7 @@ func _ready() -> void:
 	add_child(_fond)
 	_creer_menu()
 	_creer_commandes()
+	_creer_confirmation()
 	_carte = Carte.new()
 	_carte.visible = false
 	add_child(_carte)
@@ -85,27 +94,36 @@ func _etiquette(parent: Control, pos: Vector2, taille: Vector2, texte: String, c
 	return e
 
 
+func _ajouter(id: String, texte: String) -> void:
+	_ids.append(id)
+	_textes.append(texte)
+
+
 func _creer_menu() -> void:
-	_ids = ["reprendre", "carte", "commandes"]
-	_textes = ["Reprendre", "Carte", "Commandes"]
+	_ajouter("reprendre", "Reprendre")
+	if _monde.donjon and _monde.cote in ["gauche", "droite"]:   # (l'équivalent de la touche R / du bouton Y ; sans objet au village)
+		_ajouter("recommencer", "Recommencer l'énigme")
+	_ajouter("sauver", "Sauvegarder")
+	_ajouter("charger", "Charger")
+	_ajouter("carte", "Carte")
+	_ajouter("commandes", "Commandes")
 	if not OS.has_feature("web"):   # (dans un navigateur on ferme l'onglet : pas de bouton Quitter)
-		_ids.append("quitter")
-		_textes.append("Quitter le jeu")
-	var hauteur := 52 + _ids.size() * 22
+		_ajouter("quitter", "Quitter le jeu")
+	var hauteur := 52 + _ids.size() * 19
 	_menu = Panel.new()
-	_menu.size = Vector2(150, hauteur)
-	_menu.position = Vector2(125, (224 - hauteur) / 2)
+	_menu.size = Vector2(176, hauteur)
+	_menu.position = Vector2(112, (224 - hauteur) / 2)
 	_menu.add_theme_stylebox_override("panel", _style())
 	add_child(_menu)
-	var titre := _etiquette(_menu, Vector2(0, 8), Vector2(150, 16), "PAUSE", OR, 12)
+	var titre := _etiquette(_menu, Vector2(0, 6), Vector2(176, 16), "PAUSE", OR, 12)
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	for i in _ids.size():
-		var l := _etiquette(_menu, Vector2(16, 34 + i * 22), Vector2(120, 18), _textes[i], Color.WHITE, 11)
+		var l := _etiquette(_menu, Vector2(14, 28 + i * 19), Vector2(150, 18), _textes[i], Color.WHITE, 11)
 		l.mouse_filter = Control.MOUSE_FILTER_STOP   # cliquable / touchable
 		l.gui_input.connect(_clic_entree.bind(i))
 		_labels.append(l)
-	var aide := _etiquette(_menu, Vector2(0, hauteur - 18), Vector2(150, 14), "Échap / Start : reprendre", Color(0.6, 0.62, 0.75), 8)
-	aide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_aide = _etiquette(_menu, Vector2(0, hauteur - 18), Vector2(176, 14), TEXTE_AIDE, Color(0.6, 0.62, 0.75), 8)
+	_aide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_maj_choix()
 
 
@@ -129,6 +147,26 @@ func _creer_commandes() -> void:
 	tactile.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 
+# Petite fenêtre « Charger la sauvegarde ? » avec Non / Oui (Non est choisi au départ : on ne perd rien par erreur).
+func _creer_confirmation() -> void:
+	_confirmation = Panel.new()
+	_confirmation.size = Vector2(250, 92)
+	_confirmation.position = Vector2(75, 66)
+	_confirmation.add_theme_stylebox_override("panel", _style())
+	_confirmation.visible = false
+	add_child(_confirmation)
+	var question := _etiquette(_confirmation, Vector2(10, 8), Vector2(230, 40), "Charger la sauvegarde ? Ce qui a été fait depuis sera perdu.", Color.WHITE, 10)
+	question.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	question.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	for i in 2:
+		var l := _etiquette(_confirmation, Vector2(40 + i * 100, 58), Vector2(80, 18), "Non" if i == 0 else "Oui", Color.WHITE, 11)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.mouse_filter = Control.MOUSE_FILTER_STOP
+		l.gui_input.connect(_clic_confirmation.bind(i))
+		_conf_labels.append(l)
+	_maj_confirmation()
+
+
 # --- Ouvrir / fermer / changer de page -----------------------------------------------------------------
 
 func _peut_ouvrir() -> bool:
@@ -149,8 +187,8 @@ func ouvrir() -> void:
 	get_tree().paused = true
 	visible = true
 	_choix = 0
-	_maj_choix()
 	_aller(Page.MENU)
+	_maj_choix()
 	_son(SON_VALIDER)
 
 
@@ -170,24 +208,69 @@ func fermer() -> void:
 
 func _aller(page: Page) -> void:
 	_page = page
-	_menu.visible = page == Page.MENU
+	_menu.visible = page == Page.MENU or page == Page.CONFIRMER
 	_commandes.visible = page == Page.COMMANDES
+	_confirmation.visible = page == Page.CONFIRMER
 	_carte.visible = page == Page.CARTE
 	_fond.color = Color(0, 0, 0, 0.93) if page == Page.CARTE else Color(0, 0, 0, 0.62)
 	if page == Page.CARTE:
 		_carte.ouvrir(_monde)
+	if page == Page.CONFIRMER:
+		_conf = 0
+		_maj_confirmation()
+	if page == Page.MENU:
+		_maj_choix()
 
 
 func _maj_choix() -> void:
 	for i in _labels.size():
 		_labels[i].text = ("▶ " if i == _choix else "    ") + _textes[i]
-		_labels[i].add_theme_color_override("font_color", OR if i == _choix else Color.WHITE)
+		var couleur := OR if i == _choix else Color.WHITE
+		if _ids[i] == "charger" and not Etat.a_sauvegarde_manuelle():
+			couleur = Color(0.78, 0.65, 0.3) if i == _choix else GRIS   # pas de sauvegarde manuelle : grisé
+		_labels[i].add_theme_color_override("font_color", couleur)
+
+
+func _maj_confirmation() -> void:
+	for i in _conf_labels.size():
+		_conf_labels[i].text = ("▶ " if i == _conf else "") + ("Non" if i == 0 else "Oui")
+		_conf_labels[i].add_theme_color_override("font_color", OR if i == _conf else Color.WHITE)
+
+
+# Un message à la place du rappel des touches (disparaît après 2 s).
+func _info(texte: String) -> void:
+	_numero_info += 1
+	var mon_numero := _numero_info
+	_aide.text = texte
+	_aide.add_theme_color_override("font_color", OR)
+	await get_tree().create_timer(2.0).timeout
+	if mon_numero == _numero_info:
+		_aide.text = TEXTE_AIDE
+		_aide.add_theme_color_override("font_color", Color(0.6, 0.62, 0.75))
 
 
 func _valider() -> void:
 	match _ids[_choix]:
 		"reprendre":
 			fermer()
+		"recommencer":
+			await fermer()   # on relance le jeu d'abord, puis la salle est recommencée comme avec la touche R
+			_monde.recommencer_salle()
+		"sauver":
+			if _monde.sauvegarder_partie():
+				_son(SON_VALIDER)
+				_info("Partie sauvegardée !")
+				_maj_choix()   # « Charger » n'est plus grisé
+			else:
+				_son(SON_RETOUR)
+				_info("Sauvegarde impossible.")
+		"charger":
+			if Etat.a_sauvegarde_manuelle():
+				_aller(Page.CONFIRMER)
+				_son(SON_VALIDER)
+			else:
+				_son(SON_RETOUR)
+				_info("Aucune sauvegarde manuelle.")
 		"carte":
 			_aller(Page.CARTE)
 			_son(SON_VALIDER)
@@ -199,19 +282,37 @@ func _valider() -> void:
 			get_tree().quit()
 
 
+func _valider_confirmation() -> void:
+	if _conf == 1:
+		await fermer()
+		_monde.charger_partie()
+	else:
+		_retour()
+
+
 func _retour() -> void:
 	if _page == Page.MENU:
 		fermer()
+	elif _page == Page.CONFIRMER:
+		_aller(Page.MENU)
+		_son(SON_RETOUR)
 	else:
 		_aller(Page.MENU)
 		_son(SON_RETOUR)
 
 
 func _clic_entree(event: InputEvent, i: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if _page == Page.MENU and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		_choix = i
 		_maj_choix()
 		_valider()
+
+
+func _clic_confirmation(event: InputEvent, i: int) -> void:
+	if _page == Page.CONFIRMER and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_conf = i
+		_maj_confirmation()
+		_valider_confirmation()
 
 
 # --- Entrées -------------------------------------------------------------------------------------------
@@ -228,17 +329,29 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel"):
 		_retour()
 		return
-	if _page == Page.MENU:
-		var bas := event.is_action_pressed("move_down") or event.is_action_pressed("ui_down")
-		var haut := event.is_action_pressed("move_up") or event.is_action_pressed("ui_up")
-		if (bas or haut) and _stick_ok(event):
-			_choix = posmod(_choix + (1 if bas else -1), _ids.size())
-			_maj_choix()
-			_son(SON_CHOIX)
-		elif event.is_action_pressed("attack") or event.is_action_pressed("ui_accept"):
-			_valider()
-	elif event.is_action_pressed("attack") or event.is_action_pressed("ui_accept"):
-		_retour()   # carte, commandes : un appui revient au menu
+	var bas := event.is_action_pressed("move_down") or event.is_action_pressed("ui_down")
+	var haut := event.is_action_pressed("move_up") or event.is_action_pressed("ui_up")
+	var droite := event.is_action_pressed("move_right") or event.is_action_pressed("ui_right")
+	var gauche := event.is_action_pressed("move_left") or event.is_action_pressed("ui_left")
+	var valide := event.is_action_pressed("attack") or event.is_action_pressed("ui_accept")
+	match _page:
+		Page.MENU:
+			if (bas or haut) and _stick_ok(event):
+				_choix = posmod(_choix + (1 if bas else -1), _ids.size())
+				_maj_choix()
+				_son(SON_CHOIX)
+			elif valide:
+				_valider()
+		Page.CONFIRMER:
+			if (bas or haut or droite or gauche) and _stick_ok(event):
+				_conf = 1 - _conf
+				_maj_confirmation()
+				_son(SON_CHOIX)
+			elif valide:
+				_valider_confirmation()
+		_:
+			if valide:
+				_retour()   # carte, commandes : un appui revient au menu
 
 
 # Un clic / un appui sur une page sans bouton (carte, commandes) revient au menu.
