@@ -1,7 +1,7 @@
 class_name Tactile
 extends CanvasLayer
 ## Contrôles tactiles (mobile) : un joystick flottant à gauche, 3 boutons à droite.
-## Rien n'est affiché sur un appareil sans écran tactile, ni après l'appui d'une touche du clavier.
+## Rien n'est affiché sur un appareil sans écran tactile, ni après l'appui d'une touche du clavier ou d'un bouton de manette.
 ## Principe : on fabrique de VRAIS événements d'action (move_left, attack...) :
 ## le reste du jeu (joueur, dialogues, choix) ne voit aucune différence avec le clavier.
 
@@ -41,7 +41,7 @@ func _exit_tree() -> void:
 
 func _input(event: InputEvent) -> void:
 	# un joueur qui utilise le clavier ne veut pas voir les boutons
-	if event is InputEventKey and event.pressed and visible:
+	if (event is InputEventKey or event is InputEventJoypadButton) and event.pressed and visible:
 		visible = false
 		_tout_relacher()
 		return
