@@ -54,7 +54,7 @@ var zone: Area2D        # zone de touche de la lance
 var lumiere: PointLight2D  # petite lumière autour du joueur (allumée seulement dans les salles sombres)
 var _recul := Vector2.ZERO  # poussée subie (coup de bec d'une poule...), s'éteint toute seule
 # --- Feu (salle « lance enflammée », Plume 2a) : toucher un brasero allumé enflamme la lance quelques secondes ; l'eau l'éteint ---
-const FEU_DUREE := 2.5
+const FEU_DUREE := 4.0   # secondes de lance enflammée (était 2,5 : trop court pour atteindre les braseros en évitant l'eau)
 const SON_FEU := "res://Assets/Ninja_adventure/Audio/Sounds/Elemental/Fire.wav"
 const SON_ETEINT := "res://Assets/Ninja_adventure/Audio/Sounds/Elemental/Bubble.wav"
 var feu := 0.0                # secondes de feu restantes (0 = lance normale)
