@@ -14,6 +14,7 @@ var cible_bleue := true   # couleur à obtenir (motif de la plume D2b : certaine
 var validee := false     # énigme résolue : la dalle reste bleue, on peut marcher dessus librement
 var _face: Node2D        # le dessin (centré, pour l'animation de retournement)
 var _image: Sprite2D
+var _symbole: Symbole    # croix = rouge, cercle = bleue (daltonisme) ; absent une fois la dalle dorée
 var textures: Array[Texture2D] = []   # [rouge, bleue, dorée], fournies par room.gd (images Gemini)
 
 
@@ -26,6 +27,8 @@ func initialiser(case: Vector2i, deja_bleue := false) -> void:
 	add_child(_face)
 	_image = Sprite2D.new()
 	_face.add_child(_image)
+	_symbole = Symbole.creer(Symbole.Forme.CROIX, Vector2.ZERO, 3.0)
+	_face.add_child(_symbole)
 	_colorer(bleue, false)
 
 
@@ -33,6 +36,9 @@ func _colorer(en_bleu: bool, gemme_or: bool) -> void:
 	if textures.size() < 3:
 		return
 	_image.texture = textures[2] if gemme_or else (textures[1] if en_bleu else textures[0])
+	_symbole.visible = not gemme_or
+	_symbole.forme = Symbole.Forme.CERCLE if en_bleu else Symbole.Forme.CROIX
+	_symbole.queue_redraw()
 
 
 # Le joueur pose le pied dessus : la dalle se retourne (animation + petit bruit, aigu si elle devient bleue).
