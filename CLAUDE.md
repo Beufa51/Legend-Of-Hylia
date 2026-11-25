@@ -854,6 +854,15 @@
   4) CINÉMATIQUE (`assemblage.gd::_ailes`) : retour utilisateur « le plan des salles et l'aile de pierre ne sont pas dans le même sens » -> maintenant c'est le PLAN DORÉ qui fait le quart de tour (même sens que le pivot de l'aile du donjon) et vient se poser à côté de l'épaule (échelle `ECHELLE_PLAN_TOURNE`),
      puis il se CHANGE en aile de pierre déjà dans le bon sens (`MUE` = 0,45 s, éclat `_plan_devient_aile`), qui glisse de `GLISSE` = 150 px dans l'épaule (avant : 330 px, hors du cadre). L'aile ne flotte plus à la verticale. `Tests/verifier_assemblage.gd -- capture t=26,27.4` = captures à des instants choisis.
 
+- 2026-11-25 : **CORRECTIONS DE L'AUDIT (hors écran titre / titre du jeu et export web, reportés par l'utilisateur ; pas de connexion à Gemini : décision utilisateur)** — Godot 4.7.2, tests OK, pas joué :
+  1) PAUSE : page OPTIONS (`Scripts/reglages.gd` : volume général + musique 0..10, bus « Musique », `user://reglages.cfg`) avec Commandes et CRÉDITS (`Scripts/credits.gd`, texte défilant) ; entrée « Un indice » (aide visuelle à la demande : anneaux dorés, aussi sur les portes fermées, `world.gd::demander_indice`) ; message de début complété (pause / manette).
+     À COMPLÉTER PAR L'UTILISATEUR : `Assets/Heros/garde_lpc_credits.txt` (bouton « Crédits (TXT) » du générateur LPC, ATTRIBUTION OBLIGATOIRE : ajouté automatiquement à l'écran Crédits) + auteurs du pack MIDI et de « First Light in the Village ».
+  2) CŒURS : `Player.coeurs_max()` = 5 + 1 tous les 3 insignes (max 8) ; HUD du Gardien masque les cœurs en trop ; tableau d'honneur l'indique.
+  3) DALTONISME : `Scripts/symbole.gd` (class Symbole : cercle / carré / triangle / losange / croix) : plots orange = carré, bleus = cercle ; dalles rouge = croix, bleue = cercle ; plaques des 5 cloches = 5 formes différentes (sans ordre). Captures D1, D2a, 3a vérifiées.
+  4) DIALOGUES : 3 répliques trop longues raccourcies (`generer_village.py`, village.tscn régénéré, `verifier_carte.py` OK). CODE MORT : `mode7.gd` supprimé (`vue_aerienne.gd` sert toujours ; `Etat.chute` gardé, inutilisé).
+  5) TESTS : `Tests/verifier_scenes.gd` converti EN SCÈNE (`godot --headless --path . res://Tests/verifier_scenes.tscn`, plus de faux vert : autoload Etat résolu, 0 erreur de script) ; bot `gouffre` recalé (trajet par (12,11) puis rangée 11) = OK. Reste dans `Tests/verifier_pause.tscn` : menu, options, crédits, indice, cœurs.
+  RESTE de l'audit : écran titre / titre définitif + export web (reportés), récompenses utiles autres que les cœurs (objets), test humain avec un enfant, refonte de la chaîne d'outils Python.
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
