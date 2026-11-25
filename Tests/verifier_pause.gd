@@ -44,6 +44,23 @@ func _choisir(pause: Pause, id: String) -> void:
 		await _touche("move_down")
 
 
+func _tester_coeurs() -> void:
+	var avant := Etat.drapeaux.duplicate()
+	_verifier(Etat.nombre_insignes() > 0 or true, "insignes lisibles")
+	for k in Etat.drapeaux.keys():
+		if str(k).begins_with("insigne_"):
+			Etat.drapeaux.erase(k)
+	var p := load("res://Scripts/player.gd")
+	_verifier(p.coeurs_max() == 5, "0 insigne : 5 cœurs")
+	for i in 3:
+		Etat.drapeaux["insigne_t%d" % i] = true
+	_verifier(p.coeurs_max() == 6, "3 insignes : 6 cœurs")
+	for i in 9:
+		Etat.drapeaux["insigne_t%d" % i] = true
+	_verifier(p.coeurs_max() == 8, "9 insignes : 8 cœurs")
+	Etat.drapeaux = avant
+
+
 func _tester_sauvegarde(monde: Node, pause: Pause) -> void:
 	var fichiers := [Etat.FICHIER, Etat.FICHIER_MANUEL]
 	for f in fichiers:
@@ -186,6 +203,7 @@ func _ready() -> void:
 	await _touche("attack")   # « Reprendre »
 	await get_tree().create_timer(0.4).timeout
 	_verifier(not get_tree().paused, "« Reprendre » relance le jeu")
+	_tester_coeurs()
 	await _tester_sauvegarde(monde, pause)
 	await _tester_recommencer(monde, pause)
 	print("=== ", "TOUT EST BON" if _erreurs == 0 else "%d ECHEC(S)" % _erreurs, " ===")

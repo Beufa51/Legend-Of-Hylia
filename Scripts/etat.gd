@@ -230,7 +230,7 @@ func texte_records() -> String:
 		var record = records.get(jeu[0])
 		var valeur := "jamais joué" if record == null else "%s %s" % [str(int(record)) if is_equal_approx(record, roundf(record)) else "%.1f" % record, jeu[2]]
 		lignes.append("%s : %s (%s)" % [jeu[1], valeur, ruban])
-	lignes.append("Insignes de la Garde : %d / %d" % [nombre_insignes(), TOTAL_INSIGNES])
+	lignes.append("Insignes de la Garde : %d / %d (un cœur de plus tous les 3)" % [nombre_insignes(), TOTAL_INSIGNES])
 	return "Tableau d'honneur. " + " // ".join(lignes)
 
 

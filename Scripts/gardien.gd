@@ -19,7 +19,7 @@ const PV_MAX := 6
 const PV_PHASE2 := 3           # à partir de là : phase 2 (plus rapide, pierres qui tombent)
 const DISTANCE_CHOIX := 80.0      # le Gardien parle quand le héros s'approche à cette distance
 const CASE_DEPART_HEROS := Vector2i(12, 11)
-const COEURS_HEROS := 5          # = COEURS_MAX de player.gd
+const COEURS_HEROS := 8          # nombre maximal de cœurs affichables (voir Player.coeurs_max)
 
 enum { ATTENTE, PARLE, MARCHE, PREPARE, CHARGE, ETOURDI, KO, FINI }
 var etat := ATTENTE
@@ -273,8 +273,8 @@ func _vaincu() -> void:
 
 
 # Le héros n'a plus de cœurs : le Gardien l'aide à se relever, et le choix revient.
-func _sur_coeurs(coeurs: int, _maxi: int) -> void:
-	_maj_coeurs(coeurs)
+func _sur_coeurs(coeurs: int, maxi: int) -> void:
+	_maj_coeurs(coeurs, maxi)
 	if coeurs > 0 or etat == FINI:
 		return
 	etat = KO
@@ -386,8 +386,9 @@ func _creer_hud() -> void:
 	_hud.add_child(nom)
 
 
-func _maj_coeurs(coeurs: int) -> void:
+func _maj_coeurs(coeurs: int, maxi: int) -> void:
 	for i in _coeurs.size():
+		_coeurs[i].visible = i < maxi
 		# Heart.png : 5 images de 16 px, de vide (0) à plein (4)
 		(_coeurs[i].texture as AtlasTexture).region = Rect2(64 if i < coeurs else 0, 0, 16, 16)
 
