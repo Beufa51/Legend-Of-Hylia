@@ -63,6 +63,7 @@ func _ready() -> void:
 		add_child(EditeurDecor.creer(self))   # éditeur de décor (F2) : déplacer les objets à la souris
 	add_child(Dialogue.new())   # boîte de dialogue des habitants
 	add_child(Tactile.new())    # joystick + boutons (visibles seulement sur écran tactile)
+	add_child(Pause.creer(self))   # menu pause (Échap / P / Start) : reprendre, carte, commandes
 	if not donjon:
 		var ambiance := Ambiance.new()   # vent, feuilles, nuages, papillons, oiseaux (extérieur seulement)
 		ambiance.camera = camera

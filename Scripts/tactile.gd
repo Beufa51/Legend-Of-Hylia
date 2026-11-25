@@ -11,6 +11,7 @@ const BOUTONS := {              # nom -> [action, centre, rayon, texte]
 	"A": ["attack", Vector2(-40, -42), 22.0, "A"],
 	"B": ["run", Vector2(-84, -26), 17.0, "B"],
 	"R": ["reset", Vector2(-24, 26), 11.0, "R"],
+	"II": ["pause", Vector2(-52, 26), 11.0, "II"],
 }
 
 var _dessin: Control
@@ -40,6 +41,11 @@ func _exit_tree() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	# pendant la pause (pause.gd) le menu gère les doigts lui-même : on relâche seulement ce qui était tenu
+	if Etat.en_pause:
+		if event is InputEventScreenTouch and not event.pressed:
+			_relache(event.index)
+		return
 	# un joueur qui utilise le clavier ne veut pas voir les boutons
 	if (event is InputEventKey or event is InputEventJoypadButton) and event.pressed and visible:
 		visible = false
@@ -63,8 +69,8 @@ func _centre_bouton(nom: String) -> Vector2:
 	var taille := get_viewport().get_visible_rect().size
 	var b: Array = BOUTONS[nom]
 	var c: Vector2 = b[1]
-	# le bouton R (recommencer) est en haut à droite, A et B en bas à droite
-	if nom == "R":
+	# les boutons R (recommencer) et II (pause) sont en haut à droite, A et B en bas à droite
+	if nom == "R" or nom == "II":
 		return Vector2(taille.x + c.x, c.y)
 	return taille + c
 

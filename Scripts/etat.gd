@@ -34,6 +34,8 @@ var passage_texte := ""               # message à afficher après le prochain p
 var scene_sauvee := ""                # dans quelle scène (donjon ou village) reprendre la partie
 var ecran_sauve := ""                 # SAUVEGARDE v2 : NOM de l'écran où reprendre (indépendant de la grille, donc la carte peut changer)
 var decalage_sauve := Vector2.ZERO    # position en pixels DANS cet écran (0,0 = coin haut-gauche)
+var visites := {}                     # écrans déjà visités (pour la CARTE) : "chemin de la scène|NomEcran" -> true (sauvegardé)
+var en_pause := false                 # vrai pendant le menu pause (pause.gd) : les contrôles tactiles se taisent
 
 # Anciennes sauvegardes (v1 = position en pixels sur l'ancienne grille du village) : ancienne case de grille -> nom d'écran.
 # À compléter si la grille du village change encore (voir world.gd::_position_reprise).
@@ -96,6 +98,7 @@ func memoriser_position(pos: Vector2) -> void:
 		if e is Ecran and e.grille == grille:
 			ecran_sauve = e.name
 			decalage_sauve = pos - e.position
+			visites[scene_sauvee + "|" + e.name] = true   # la carte retient cet écran
 			break
 	sauver()
 
@@ -112,6 +115,7 @@ func sauver() -> void:
 		return
 	fichier.store_string(JSON.stringify({
 		"drapeaux": drapeaux.keys(),
+		"visites": visites.keys(),
 		"records": records,
 		"version": 2,
 		"scene": scene_sauvee,
@@ -132,6 +136,8 @@ func charger() -> void:
 	for nom in donnees.get("drapeaux", []):
 		drapeaux[nom] = true
 	records = donnees.get("records", {})
+	for cle in donnees.get("visites", []):
+		visites[cle] = true
 	position_sauvee = Vector2(donnees.get("x", 0.0), donnees.get("y", 0.0))
 	# (les premières sauvegardes n'avaient pas de scène : elles venaient forcément du donjon)
 	scene_sauvee = donnees.get("scene", "res://Scenes/world.tscn" if position_sauvee != Vector2.ZERO else "")
@@ -152,6 +158,7 @@ func charger() -> void:
 func effacer() -> void:
 	drapeaux.clear()
 	records.clear()
+	visites.clear()
 	position_sauvee = Vector2.ZERO
 	scene_sauvee = ""
 	ecran_sauve = ""
