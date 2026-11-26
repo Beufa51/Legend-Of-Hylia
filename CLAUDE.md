@@ -1162,3 +1162,18 @@
   Les lignes « repos » et « course » du générateur n'ont PAS la lance -> repos = pose DEBOUT de la marche (1 image), course = la marche accélérée (comme avant). Lignes de `heros_lpc.png` : marche 0-3 (8), repos 4-7 (1), estoc 8-11 (8), touché 12 (6).
   Bot `heros` en vraie physique OK (lance toujours en main, estoc 4 directions), `verifier_scenes.gd` TOUT BON ; pas joué par l'utilisateur. MANQUE : `garde_lpc_credits.txt` (crédits LPC obligatoires) ; animation « touché » non branchée.
 - 2026-11-25 : **MANETTE** (non testée dans Godot, aucune manette côté Claude) : événements joypad ajoutés aux actions existantes dans `project.godot` (aucun script de jeu modifié) : déplacement = stick gauche (axes 0/1) + croix directionnelle ; `attack` = A (bouton 0) ou X (2) ; `run` = B (1), RB (10) ou gâchette droite (axe 5) ; `reset` = Y (3) ; dialogues/choix = A (`ui_accept` natif) + haut/bas. `tactile.gd` : un bouton de manette masque aussi les contrôles tactiles. Pas encore : touche de menu/pause, F1/F2 (dev, clavier seulement).
+
+## Reprise de session (état au 2026-11-26)
+
+- **Workflow** : Claude écrit code, scènes et ressources et pousse une branche par étape. L'utilisateur fait Pull, mise à jour et merge dans GitHub Desktop, puis teste dans Godot 4.7.2.
+- **Dépôt** : public pour l'instant. À rendre privé ou à nettoyer avant toute publication (voir Audit du 14/11).
+- **Dernière mise à jour du CLAUDE.md** : branche `maj-claude-md-workflow` (commit 5552f1c), à fusionner après relecture.
+- **Licences à régler** : Craftpix (redistribution interdite des fichiers seuls), Jadson (pas de fichier de licence), Aesthetic pack, pack MIDI, planche LPC (attribution CC-BY-SA), absence d'écran de crédits.
+- **Skills Godot envisagées, non installées** : bfollington/terma (godot, CC-BY-SA) et haxqer/godot-skill (vérifiée en Godot 4.7 selon sa description, licence à vérifier). À lire avant installation : elles peuvent exécuter du code.
+- **Prochaines étapes, dans l'ordre** :
+  1. Régler les licences et les fichiers parasites du dépôt.
+  2. Lire les skills Godot, puis décider de les installer dans `.claude/skills/` du projet.
+  3. Mettre à jour le GDD, qui décrit encore « zéro combat ».
+  4. Préparer l'export web et tester sur mobile.
+  5. Réduire le CLAUDE.md, qui pèse 260 Ko et est relu à chaque session.
+  6. Lancer une revue projet régulière (développement, plaisir de jeu, idées, priorités).
