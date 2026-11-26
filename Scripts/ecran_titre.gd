@@ -7,7 +7,6 @@ signal choisi(continuer: bool)
 
 const OR := Color(0.98, 0.84, 0.4)
 const FOND := "res://Assets/Titre/fond_titre.jpg"
-const VIDEO := "res://Assets/Titre/intro.ogv"   # intro en boucle ; sans elle, on garde l'image fixe
 
 var _boutons: Array[Button] = []
 var _menu: VBoxContainer
@@ -25,16 +24,6 @@ func _ready() -> void:
 	fond.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	fond.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(fond)
-
-	# Intro vidéo par-dessus l'image : elle tourne en boucle (l'image reste visible si la vidéo manque).
-	if ResourceLoader.exists(VIDEO):
-		var video := VideoStreamPlayer.new()
-		video.stream = load(VIDEO)
-		video.expand = true   # remplit tout l'écran
-		video.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		video.finished.connect(video.play)   # boucle
-		add_child(video)
-		video.play()
 
 	# Léger voile sombre pour que le texte ressorte.
 	var voile := ColorRect.new()
