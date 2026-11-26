@@ -66,6 +66,9 @@
       (1) AJOUTER tôt des interactions SANS combat : épée/coup pour casser les pots (`V`), pousser des blocs, lire des panneaux, leviers/interrupteurs, ramasser des objets (cœurs, clés) ;
       (2) le vrai COMBAT (ennemis) seulement après les 2 ailes, si l'utilisateur le veut : cela modifie le GDD ("zéro combat"). À trancher plus tard.
 
+- **Cocorico** (décision utilisateur, 2026-11-26) : nom ASSUMÉ (le mot n'appartient à personne). C'est le **village de la garde royale**, où le héros rêve d'aller (bulle de l'intro vidéo : « devenir garde de la famille royale au village Cocorico »).
+  Le héros y va **APRÈS le jeu, jamais pendant**. Constante `Noms.COCORICO` dans `Scripts/noms.gd` ; aucune scène ni texte ne l'utilise encore. Le Village du Coq Chantant reste le village du héros.
+
 ## Journal des étapes
 - 2026-11-12 : GDD v1 reçu, premier avis donné, questions posées. Rien de créé dans Godot encore.
 - 2026-11-12 : réponses reçues (voir Décisions). Étape suivante : création du dépôt GitHub + projet Godot.

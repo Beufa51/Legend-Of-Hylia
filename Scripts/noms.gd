@@ -7,3 +7,4 @@ const TITRE_JEU := "Legend of the Guard"
 const FORTERESSE := "la Forteresse du Coq"   # LE mot du jeu pour le grand bâtiment (jamais « temple » ni « donjon » dans les textes du joueur) : 2 ailes + corps + queue
 const VILLAGE := "Village du Coq Chantant"   # nom choisi par l'utilisateur
 const ROYAUME := "Hylio"        # nom de travail (trop proche de Zelda : à changer)
+const COCORICO := "Cocorico"    # village de la garde royale : le héros y va APRÈS le jeu, jamais pendant (rien n'est encore codé)
