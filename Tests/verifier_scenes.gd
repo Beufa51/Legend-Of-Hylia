@@ -1,8 +1,9 @@
-extends SceneTree
+extends Node
 ## TEST DE CHARGEMENT (sans fenêtre) : charge chaque scène du jeu, laisse tourner quelques images
 ## et vérifie des règles simples (plans 25x14, grilles uniques, drapeaux de portes non vides...).
 ## Lancer depuis le dossier du projet :
-##   godot --headless --path . -s res://Tests/verifier_scenes.gd
+##   godot --headless --path . res://Tests/verifier_scenes.tscn
+## (en SCÈNE, pas avec -s : en mode -s l'autoload Etat n'est pas résolu et le test donnait un faux « tout est bon »)
 ## Code de sortie 0 = tout est bon ; 1 = au moins une erreur (listées dans la console).
 ## La sauvegarde du joueur n'est PAS touchée (on coupe Etat.sauver pendant le test).
 
@@ -18,9 +19,9 @@ const RANGEES := 14
 var _erreurs: Array[String] = []
 
 
-func _initialize() -> void:
-	await process_frame
-	var etat: Node = root.get_node_or_null("Etat")
+func _ready() -> void:
+	await get_tree().process_frame
+	var etat: Node = get_tree().root.get_node_or_null("Etat")
 	if etat == null:
 		_erreurs.append("Autoload Etat introuvable (project.godot).")
 	else:
@@ -41,8 +42,8 @@ func _tester_editeur() -> void:
 	if FileAccess.file_exists(EditeurDecor.FICHIER):
 		avant = FileAccess.get_file_as_string(EditeurDecor.FICHIER)
 	var scene := (load("res://Scenes/world.tscn") as PackedScene).instantiate()
-	root.add_child(scene)
-	await process_frame
+	get_tree().root.add_child(scene)
+	await get_tree().process_frame
 	var salle = scene.get_node("Entree")
 	var plan: Array = Array(salle.layout)
 	var depart := Vector2i(-1, -1)
@@ -77,8 +78,8 @@ func _tester_editeur() -> void:
 		nouveau[arrivee.y] = ligne.substr(0, arrivee.x) + "V" + ligne.substr(arrivee.x + 1)
 		EditeurDecor._ecrire({"world.tscn": {"Entree": nouveau}})
 		var scene2 := (load("res://Scenes/world.tscn") as PackedScene).instantiate()
-		root.add_child(scene2)
-		await process_frame
+		get_tree().root.add_child(scene2)
+		await get_tree().process_frame
 		if scene2.get_node("Entree").layout[arrivee.y][arrivee.x] != "V" or scene2.get_node("Entree").layout[depart.y][depart.x] != ".":
 			_erreurs.append("Éditeur : le plan ajusté n'est pas repris au chargement")
 		else:
@@ -93,7 +94,7 @@ func _tester_editeur() -> void:
 		f.store_string(avant)
 		f.close()
 		EditeurDecor._cache = null
-	await process_frame
+	await get_tree().process_frame
 
 
 func _tester_scene(chemin: String) -> void:
@@ -102,9 +103,9 @@ func _tester_scene(chemin: String) -> void:
 		_erreurs.append("%s : chargement impossible" % chemin)
 		return
 	var scene := paquet.instantiate()
-	root.add_child(scene)
+	get_tree().root.add_child(scene)
 	for i in 5:
-		await process_frame
+		await get_tree().process_frame
 	var grilles := {}
 	var nb := 0
 	for e in scene.get_children():
@@ -121,7 +122,7 @@ func _tester_scene(chemin: String) -> void:
 			if _est_ecran(e):
 				scene._teleporter(e)
 				for i in 3:
-					await process_frame
+					await get_tree().process_frame
 	# vue aérienne (cinématique de fin d'aile) : fabrication du plan + début de la séquence
 	if chemin.ends_with("world.tscn"):
 		var vue = load("res://Scripts/vue_aerienne.gd").new(scene)
@@ -129,7 +130,7 @@ func _tester_scene(chemin: String) -> void:
 		if not (plan.has("carte") and plan.has("contour") and plan.has("coin")):
 			_erreurs.append("%s : plan vu du ciel incomplet" % chemin)
 		vue.jouer("gauche")
-		await create_timer(5.0).timeout
+		await get_tree().create_timer(5.0).timeout
 	# Plume 1 : pousser les 3 blocs sur les 3 marques doit lever le drapeau de la porte
 	if chemin.ends_with("world.tscn"):
 		var salle = scene.get_node_or_null("Plume1")
@@ -142,11 +143,11 @@ func _tester_scene(chemin: String) -> void:
 				var poussees := 3 if bloc.case.x == 12 else 1
 				for i in poussees:
 					await bloc.pousser(Vector2i.UP)
-			if not root.get_node("Etat").est("p1_plaque"):
+			if not get_tree().root.get_node("Etat").est("p1_plaque"):
 				_erreurs.append("Plume1 : les 3 blocs sont sur les marques mais la porte ne s'ouvre pas")
 			else:
 				print("OK  Plume1 : 3 blocs sur 3 marques = porte ouverte")
-			root.get_node("Etat").drapeaux.erase("p1_plaque")
+			get_tree().root.get_node("Etat").drapeaux.erase("p1_plaque")
 	# Plume 3b : 3 blocs poussés dans le couloir comblent les 3 trous (ponts) ; R rouvre les trous
 	if chemin.ends_with("world.tscn"):
 		var salle3 = scene.get_node_or_null("Plume3b")
@@ -176,7 +177,7 @@ func _tester_scene(chemin: String) -> void:
 					colonne_ok = false
 			if combles != 3 or not colonne_ok:
 				_erreurs.append("Plume3b : %d case(s) comblée(s), colonne 17 complète : %s" % [combles, colonne_ok])
-			elif not salle3._pont_fini or not root.get_node("Etat").est("pont_3_-2_17"):
+			elif not salle3._pont_fini or not get_tree().root.get_node("Etat").est("pont_3_-2_17"):
 				_erreurs.append("Plume3b : le pont fini doit être mémorisé (drapeau pont_3_-2_17)")
 			else:
 				salle3.reinitialiser()      # un pont FINI ne se défait plus
@@ -187,7 +188,7 @@ func _tester_scene(chemin: String) -> void:
 				if restes != 3:
 					_erreurs.append("Plume3b : R ne doit pas défaire un pont fini")
 				# test du reset : on « oublie » le pont
-				root.get_node("Etat").drapeaux.erase("pont_3_-2_17")
+				get_tree().root.get_node("Etat").drapeaux.erase("pont_3_-2_17")
 				salle3._pont_fini = false
 				salle3.reinitialiser()
 				var ouverts := 0
@@ -235,7 +236,7 @@ func _tester_scene(chemin: String) -> void:
 			_erreurs.append("Plume4c : il faut 2 pots sonores et 1 sentinelle")
 		else:
 			s4c.reinitialiser()
-			await process_frame
+			await get_tree().process_frame
 			var garde = s4c._sentinelles[0]
 			s4c._surveiller(0.05)
 			var avant: Vector2i = garde.direction
@@ -249,7 +250,7 @@ func _tester_scene(chemin: String) -> void:
 				s4c._surveiller(s4c.duree_bruit)
 				s4c._surveiller(0.05)
 				var apres: Vector2i = garde.direction
-				await process_frame
+				await get_tree().process_frame
 				s4c._reformer_pot(Vector2i(17, 7))   # (normalement après duree_bruit + 1,5 s : le pot se reforme tout seul)
 				if not (s4c._occupe.get(Vector2i(17, 7)) is PotSonore):
 					_erreurs.append("Plume4c : un pot sonore brisé doit se reformer (sinon on peut rester coincé)")
@@ -266,7 +267,7 @@ func _tester_scene(chemin: String) -> void:
 			_erreurs.append("Plume4d : il faut 2 sentinelles, 1 brasero, 1 pot sonore, salle sombre")
 		else:
 			s4d.reinitialiser()
-			await process_frame
+			await get_tree().process_frame
 			var gche = s4d._sentinelles[0]
 			var drte = s4d._sentinelles[1]
 			s4d._surveiller(0.05)
@@ -319,7 +320,7 @@ func _tester_scene(chemin: String) -> void:
 			bloc.position = Vector2(bloc.case * 16)
 			s5c.occuper(bloc.case, bloc)
 			s5c.verifier_plaques()
-			await process_frame
+			await get_tree().process_frame
 			s5c._tracer_rayon()
 			var apres: bool = s5c._cible.allumee
 			s5c.reinitialiser()
@@ -376,7 +377,7 @@ func _tester_scene(chemin: String) -> void:
 	if chemin.ends_with("world.tscn"):
 		var salle2 = scene.get_node_or_null("Plume2a")
 		var heros = scene.get("joueur")
-		await process_frame
+		await get_tree().process_frame
 		if salle2 == null or heros == null or salle2._braseros.size() != 6:
 			_erreurs.append("Plume2a : il faut 6 braseros à allumer")
 		else:
@@ -391,23 +392,23 @@ func _tester_scene(chemin: String) -> void:
 			heros.prendre_feu()
 			for b in salle2._braseros:
 				b.frapper()
-			if not root.get_node("Etat").est("p2_braseros"):
+			if not get_tree().root.get_node("Etat").est("p2_braseros"):
 				_erreurs.append("Plume2a : 6 braseros allumés mais la porte ne s'ouvre pas")
 			else:
 				print("OK  Plume2a : lance enflammée, 6 braseros = porte ouverte")
 			heros.eteindre_feu()
-			root.get_node("Etat").drapeaux.erase("p2_braseros")
+			get_tree().root.get_node("Etat").drapeaux.erase("p2_braseros")
 	# Vestibule gauche : le cristal lance l'énergie dans les runes du sol ; la porte ne s'ouvre qu'une fois les runes dorées
 	if chemin.ends_with("world.tscn"):
 		var v = scene.get_node_or_null("Vestibule")
-		var et = root.get_node("Etat")
+		var et = get_tree().root.get_node("Etat")
 		if v == null or v._runes.size() != 5 or v._portes.is_empty():
 			_erreurs.append("Vestibule gauche : il faut 5 runes et une porte")
 		else:
 			et.poser("vestibule_cristal")
-			await process_frame
+			await get_tree().process_frame
 			var trop_tot: bool = v._portes[0].ouverte
-			await create_timer(1.0).timeout
+			await get_tree().create_timer(1.0).timeout
 			var dorees: bool = v._runes.all(func(r): return r.modulate.a > 0.99)
 			if trop_tot or not dorees or not v._portes[0].ouverte:
 				_erreurs.append("Vestibule gauche : runes (%s) puis porte (trop tôt %s, ouverte %s)" % [dorees, trop_tot, v._portes[0].ouverte])
@@ -417,7 +418,7 @@ func _tester_scene(chemin: String) -> void:
 	# Vestibule droit : cadenas sur la porte, refus sans clé, icône de clé au HUD, le cadenas saute avec la clé
 	if chemin.ends_with("aile_droite.tscn"):
 		var v = scene.get_node_or_null("Vestibule")
-		var et = root.get_node("Etat")
+		var et = get_tree().root.get_node("Etat")
 		var heros = scene.get("joueur")
 		if v == null or v._portes_cle.is_empty() or v._portes_cle[0]._cadenas == null:
 			_erreurs.append("Vestibule droit : porte à serrure sans cadenas")
@@ -429,7 +430,7 @@ func _tester_scene(chemin: String) -> void:
 			var cle_hud: bool = scene._icone_cle.visible
 			p._refus_t = -10.0
 			p._touchee(heros)
-			await process_frame
+			await get_tree().process_frame
 			if not (refus and cle_hud and p.ouverte and p._cadenas == null and not scene._icone_cle.visible):
 				_erreurs.append("Vestibule droit : refus %s, clé au HUD %s, ouverte %s, cadenas parti %s, clé rangée %s" % [refus, cle_hud, p.ouverte, p._cadenas == null, not scene._icone_cle.visible])
 			else:
@@ -439,7 +440,7 @@ func _tester_scene(chemin: String) -> void:
 		# PlumeD2b : carré 5x5 avec 2 poteaux, même règle que D2a (tout bleu) ; un tracé d'un seul trait la résout ; R remet tout en rouge
 		var d2 = scene.get_node_or_null("PlumeD2b")
 		if d2 != null:
-			var et2 = root.get_node("Etat")
+			var et2 = get_tree().root.get_node("Etat")
 			var heros2 = scene.get("joueur")
 			var chemin_d2 := [Vector2i(9, 7), Vector2i(10, 7), Vector2i(10, 6), Vector2i(11, 6), Vector2i(12, 6), Vector2i(13, 6), Vector2i(14, 6), Vector2i(14, 7),
 				Vector2i(13, 7), Vector2i(12, 7), Vector2i(12, 8), Vector2i(13, 8), Vector2i(14, 8), Vector2i(14, 9), Vector2i(14, 10), Vector2i(13, 10),
@@ -474,7 +475,7 @@ func _tester_scene(chemin: String) -> void:
 		# le sablier remonte le temps : le bloc ressort du trou et revient sur le bouton, le joueur (de l'autre côté) ne bouge pas.
 		var d4 = scene.get_node_or_null("PlumeD4c")
 		if d4 != null:
-			var et4 = root.get_node("Etat")
+			var et4 = get_tree().root.get_node("Etat")
 			var heros4 = scene.get("joueur")
 			var bloc = d4._blocs[0]
 			var deplacer := func(c: Vector2i):
@@ -508,7 +509,7 @@ func _tester_scene(chemin: String) -> void:
 		_erreurs.append("%s : aucun écran trouvé" % chemin)
 	print("OK  %s  (%d écrans)" % [chemin, nb])
 	scene.queue_free()
-	await process_frame
+	await get_tree().process_frame
 
 
 # (on évite de nommer la classe Ecran ici : elle utilise l'autoload Etat, pas encore prêt quand ce script se compile)
@@ -519,8 +520,8 @@ func _est_ecran(n: Node) -> bool:
 # Contrôles tactiles : un doigt à gauche = joystick, un doigt sur le bouton A = attack.
 func _tester_tactile() -> void:
 	var t = load("res://Scripts/tactile.gd").new()
-	root.add_child(t)
-	await process_frame
+	get_tree().root.add_child(t)
+	await get_tree().process_frame
 	t.visible = true
 	var toucher := func(index: int, pos: Vector2, appuye: bool) -> void:
 		var e := InputEventScreenTouch.new()
@@ -535,24 +536,24 @@ func _tester_tactile() -> void:
 		t._input(e)
 	toucher.call(0, Vector2(60, 150), true)
 	glisser.call(0, Vector2(90, 150))
-	await process_frame
+	await get_tree().process_frame
 	if not Input.is_action_pressed("move_right"):
 		_erreurs.append("Tactile : le joystick vers la droite n'appuie pas move_right")
 	glisser.call(0, Vector2(60, 120))
-	await process_frame
+	await get_tree().process_frame
 	if not Input.is_action_pressed("move_up") or Input.is_action_pressed("move_right"):
 		_erreurs.append("Tactile : le joystick vers le haut est incorrect")
 	toucher.call(0, Vector2(60, 120), false)
-	await process_frame
+	await get_tree().process_frame
 	if Input.is_action_pressed("move_up"):
 		_erreurs.append("Tactile : lâcher le joystick ne relâche pas move_up")
 	var a: Vector2 = t._centre_bouton("A")
 	toucher.call(1, a, true)
-	await process_frame
+	await get_tree().process_frame
 	if not Input.is_action_pressed("attack"):
 		_erreurs.append("Tactile : le bouton A n'appuie pas attack")
 	toucher.call(1, a, false)
-	await process_frame
+	await get_tree().process_frame
 	if Input.is_action_pressed("attack"):
 		_erreurs.append("Tactile : relâcher A ne relâche pas attack")
 	print("OK  contrôles tactiles")
@@ -561,13 +562,13 @@ func _tester_tactile() -> void:
 
 # Village : le garde de l'aile droite (tant que l'aile gauche n'est pas réussie), les deux stèles-pattes, la forêt qui s'ouvre.
 func _tester_garde_et_steles() -> void:
-	var etat = root.get_node("Etat")
+	var etat = get_tree().root.get_node("Etat")
 	var paquet := load("res://Scenes/village.tscn") as PackedScene
 	# 1) aile gauche NON réussie : façade fermée (G) et un garde devant
 	etat.drapeaux.erase("fragment_gauche")
 	var v1 := paquet.instantiate()
-	root.add_child(v1)
-	await process_frame
+	get_tree().root.add_child(v1)
+	await get_tree().process_frame
 	var droit1 = v1.get_node("TempleDroit")
 	var gardes1 := 0
 	for c in droit1.get_children():
@@ -593,11 +594,11 @@ func _tester_garde_et_steles() -> void:
 	if not etat.est("stele_droite") or not etat.est("corps_revele"):
 		_erreurs.append("Stèles : les deux symboles déposés doivent ouvrir la forêt (corps_revele)")
 	v1.queue_free()
-	await process_frame
+	await get_tree().process_frame
 	# 3) rechargé avec les drapeaux : garde parti, porte ouverte (J, 3 passages), parvis ouvert au nord, stèles allumées
 	var v2 := paquet.instantiate()
-	root.add_child(v2)
-	await process_frame
+	get_tree().root.add_child(v2)
+	await get_tree().process_frame
 	var droit2 = v2.get_node("TempleDroit")
 	var gardes2 := 0
 	for c in droit2.get_children():
@@ -614,14 +615,14 @@ func _tester_garde_et_steles() -> void:
 	for nom in ["stele_gauche", "stele_droite", "corps_revele", "fragment_gauche", "fragment_droite"]:
 		etat.drapeaux.erase(nom)
 	v2.queue_free()
-	await process_frame
+	await get_tree().process_frame
 
 
 # Donjon final : vestibule (queue) -> couloir -> arène.
 func _tester_donjon_final() -> void:
 	var scene := (load("res://Scenes/corps.tscn") as PackedScene).instantiate()
-	root.add_child(scene)
-	await process_frame
+	get_tree().root.add_child(scene)
+	await get_tree().process_frame
 	var attendu := {"Vestibule": Vector2i(0, 2), "Couloir": Vector2i(0, 1), "Arene": Vector2i(0, 0)}
 	for nom in attendu:
 		var e = scene.get_node_or_null(nom)
@@ -631,7 +632,7 @@ func _tester_donjon_final() -> void:
 		_erreurs.append("Donjon final : le vestibule doit avoir 3 passages vers la queue, l'arène aucun")
 	print("OK  donjon final : vestibule, couloir, arène")
 	scene.queue_free()
-	await process_frame
+	await get_tree().process_frame
 
 
 func _verifier_plan(chemin: String, e: Node) -> void:
@@ -656,17 +657,17 @@ func _tester_audio_et_sans_texte() -> void:
 		_erreurs.append("niveaux_musiques.gd vide (lancer Outils/rogner_musiques.py)")
 	for chemin in ["res://Scenes/world.tscn", "res://Scenes/aile_droite.tscn"]:
 		var monde: Node = (load(chemin) as PackedScene).instantiate()
-		root.add_child(monde)
-		await process_frame
+		get_tree().root.add_child(monde)
+		await get_tree().process_frame
 		for e in monde.get_children():
 			if _est_ecran(e) and e.indice != "":
 				_erreurs.append("%s / %s : un indice texte reste (les énigmes sont sans texte)" % [chemin, e.name])
 		monde.queue_free()
-		await process_frame
+		await get_tree().process_frame
 	# surface des pas : herbe/terre au village, bois dans la maison, dalle dans le donjon
 	var village: Node = (load("res://Scenes/village.tscn") as PackedScene).instantiate()
-	root.add_child(village)
-	await process_frame
+	get_tree().root.add_child(village)
+	await get_tree().process_frame
 	var vus := {}
 	for e in village.get_children():
 		if _est_ecran(e):
@@ -675,16 +676,16 @@ func _tester_audio_et_sans_texte() -> void:
 		if not vus.has(attendu):
 			_erreurs.append("Surface de pas « %s » jamais renvoyée au village" % attendu)
 	village.queue_free()
-	await process_frame
+	await get_tree().process_frame
 	print("OK  audio (pas, ambiance, niveaux) et énigmes sans texte")
 
 
 func _conclure() -> void:
 	if _erreurs.is_empty():
 		print("=== TOUT EST BON ===")
-		quit(0)
+		get_tree().quit(0)
 	else:
 		for t in _erreurs:
 			printerr("ERREUR : ", t)
 		printerr("=== %d erreur(s) ===" % _erreurs.size())
-		quit(1)
+		get_tree().quit(1)

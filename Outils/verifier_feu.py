@@ -4,7 +4,7 @@ entrer dans une flaque l'éteint. Chaque brasero à allumer doit être atteignab
 Usage : python3 Outils/verifier_feu.py   (lit Scenes/world.tscn, salle Plume2a)"""
 import os, re
 from collections import deque
-FEU, VITESSE = 2.5, 8.75   # secondes de feu ; cases par seconde
+FEU, VITESSE = 4.0, 8.75   # secondes de feu ; cases par seconde
 racine = os.path.join(os.path.dirname(__file__), "..")
 w = open(os.path.join(racine, "Scenes", "world.tscn"), encoding="utf-8").read()
 bloc = w.split('name="Plume2a"')[1]

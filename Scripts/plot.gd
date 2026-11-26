@@ -46,6 +46,10 @@ func initialiser(une_salle: Room, sa_case: Vector2i, orange: bool) -> void:
 	image.position = Vector2(0, 0)
 	image.texture = salle._image("plot_haut_o" if orange else "plot_haut_u")
 	_haut.add_child(image)
+	# symbole (daltonisme) : carré = orange, cercle = bleu
+	var sym := Symbole.Forme.CARRE if orange else Symbole.Forme.CERCLE
+	_haut.add_child(Symbole.creer(sym, Vector2(8, 7), 2.0))
+	_bas.add_child(Symbole.creer(sym, Vector2(8, 8), 2.0))
 	var forme := RectangleShape2D.new()
 	forme.size = Vector2(TUILE, TUILE)
 	_collision = CollisionShape2D.new()

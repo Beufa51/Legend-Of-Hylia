@@ -168,7 +168,9 @@ func comblees() -> int:
 
 func _scenario_gouffre() -> void:
 	var vu := 0
-	# A (17,8) : 2 poussées vers le haut
+	# A (17,8) : 2 poussées vers le haut (on longe la rangée du bas : la statue du centre barre la colonne 12)
+	await marcher(Vector2i(12, 11), false)
+	await marcher(Vector2i(17, 11), true)
 	await marcher(Vector2i(17, 9), false)
 	await marcher(Vector2i(17, 7), false)
 	await get_tree().create_timer(1.0).timeout

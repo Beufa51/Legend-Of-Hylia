@@ -26,6 +26,11 @@ var _cadenas: Sprite2D   # gros cadenas doré sur la porte : « il faut une clé
 var _refus_t := 0.0
 
 
+# Taille de la porte en pixels : pour l'indice « voici ce qu'il faut ouvrir » (world.gd::demander_indice).
+func taille() -> Vector2:
+	return _taille
+
+
 # `taille` : taille de la porte en pixels (multiple de 16) ; `texture` : son image (fermée) ;
 # `images` : les étapes de l'ouverture (arche animée), facultatif.
 func initialiser(taille: Vector2, texture: Texture2D, images: Array[Texture2D] = []) -> void:

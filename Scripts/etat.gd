@@ -19,7 +19,8 @@ signal choix_fait(index: int)        # le joueur a choisi l'option n° index (0 
 signal stele_touchee(cote: String)   # le joueur s'approche d'une stèle-patte (parvis), "gauche" ou "droite" : world.gd lance le dépôt du symbole
 signal pique(retour: Vector2)        # le joueur a marché sur des pics sortis : retour à `retour`
 
-const FICHIER := "user://sauvegarde.json"
+const FICHIER := "user://sauvegarde.json"                      # sauvegarde AUTOMATIQUE (reprise au lancement)
+const FICHIER_MANUEL := "user://sauvegarde_manuelle.json"      # sauvegarde choisie par le joueur (menu pause)
 
 var drapeaux := {}
 var records := {}                     # meilleurs scores des mini-jeux : { "tir": 14, "poules": 38.5 }
@@ -34,6 +35,8 @@ var passage_texte := ""               # message à afficher après le prochain p
 var scene_sauvee := ""                # dans quelle scène (donjon ou village) reprendre la partie
 var ecran_sauve := ""                 # SAUVEGARDE v2 : NOM de l'écran où reprendre (indépendant de la grille, donc la carte peut changer)
 var decalage_sauve := Vector2.ZERO    # position en pixels DANS cet écran (0,0 = coin haut-gauche)
+var visites := {}                     # écrans déjà visités (pour la CARTE) : "chemin de la scène|NomEcran" -> true (sauvegardé)
+var en_pause := false                 # vrai pendant le menu pause (pause.gd) : les contrôles tactiles se taisent
 
 # Anciennes sauvegardes (v1 = position en pixels sur l'ancienne grille du village) : ancienne case de grille -> nom d'écran.
 # À compléter si la grille du village change encore (voir world.gd::_position_reprise).
@@ -47,6 +50,7 @@ const VILLAGE := "res://Scenes/village.tscn"
 
 
 func _ready() -> void:
+	Reglages.demarrer()   # volumes du joueur (bus « Musique »)
 	charger()
 
 
@@ -96,6 +100,7 @@ func memoriser_position(pos: Vector2) -> void:
 		if e is Ecran and e.grille == grille:
 			ecran_sauve = e.name
 			decalage_sauve = pos - e.position
+			visites[scene_sauvee + "|" + e.name] = true   # la carte retient cet écran
 			break
 	sauver()
 
@@ -104,14 +109,29 @@ var sauvegarde_active := true         # faux pendant les tests automatiques (Tes
 
 
 func sauver() -> void:
+	_ecrire(FICHIER)
+
+
+## SAUVEGARDE MANUELLE (menu pause) : une copie de l'état actuel dans un fichier à part, que la sauvegarde automatique n'écrase pas.
+## Renvoie faux si l'écriture a échoué.
+func sauver_manuel() -> bool:
+	return _ecrire(FICHIER_MANUEL)
+
+
+func a_sauvegarde_manuelle() -> bool:
+	return FileAccess.file_exists(FICHIER_MANUEL)
+
+
+func _ecrire(chemin: String) -> bool:
 	if not sauvegarde_active:
-		return
-	var fichier := FileAccess.open(FICHIER, FileAccess.WRITE)
+		return true
+	var fichier := FileAccess.open(chemin, FileAccess.WRITE)
 	if fichier == null:
-		push_warning("Sauvegarde impossible : " + FICHIER)
-		return
+		push_warning("Sauvegarde impossible : " + chemin)
+		return false
 	fichier.store_string(JSON.stringify({
 		"drapeaux": drapeaux.keys(),
+		"visites": visites.keys(),
 		"records": records,
 		"version": 2,
 		"scene": scene_sauvee,
@@ -121,17 +141,20 @@ func sauver() -> void:
 		"x": position_sauvee.x,   # (gardés pour les scènes dont la grille n'a pas changé)
 		"y": position_sauvee.y,
 	}))
+	return true
 
 
-func charger() -> void:
-	if not FileAccess.file_exists(FICHIER):
+func charger(chemin := FICHIER) -> void:
+	if not FileAccess.file_exists(chemin):
 		return
-	var donnees = JSON.parse_string(FileAccess.get_file_as_string(FICHIER))
+	var donnees = JSON.parse_string(FileAccess.get_file_as_string(chemin))
 	if not donnees is Dictionary:
 		return
 	for nom in donnees.get("drapeaux", []):
 		drapeaux[nom] = true
 	records = donnees.get("records", {})
+	for cle in donnees.get("visites", []):
+		visites[cle] = true
 	position_sauvee = Vector2(donnees.get("x", 0.0), donnees.get("y", 0.0))
 	# (les premières sauvegardes n'avaient pas de scène : elles venaient forcément du donjon)
 	scene_sauvee = donnees.get("scene", "res://Scenes/world.tscn" if position_sauvee != Vector2.ZERO else "")
@@ -148,16 +171,40 @@ func charger() -> void:
 		sauver()   # réécrit en v2
 
 
+## Recharge la sauvegarde MANUELLE à la place de la partie en cours (menu pause). La sauvegarde automatique prend aussitôt cet état.
+## Renvoie faux s'il n'y a aucune sauvegarde manuelle (rien n'est changé). C'est à l'appelant de recharger la scène (demarrage.tscn).
+func charger_manuel() -> bool:
+	if not a_sauvegarde_manuelle():
+		return false
+	drapeaux.clear()
+	records.clear()
+	visites.clear()
+	position_sauvee = Vector2.ZERO
+	scene_sauvee = ""
+	ecran_sauve = ""
+	decalage_sauve = Vector2.ZERO
+	arrivee_ecran = ""
+	arrivee_texte = ""
+	arrivee_direction = ""
+	en_dialogue = false
+	charger(FICHIER_MANUEL)
+	sauver()
+	return true
+
+
 # Nouvelle partie : tout oublier (mode développeur).
 func effacer() -> void:
 	drapeaux.clear()
 	records.clear()
+	visites.clear()
 	position_sauvee = Vector2.ZERO
 	scene_sauvee = ""
 	ecran_sauve = ""
 	decalage_sauve = Vector2.ZERO
 	if FileAccess.file_exists(FICHIER):
 		DirAccess.remove_absolute(FICHIER)
+	if FileAccess.file_exists(FICHIER_MANUEL):
+		DirAccess.remove_absolute(FICHIER_MANUEL)
 
 
 # Enregistre un score de mini-jeu. Renvoie vrai s'il bat le record (ou s'il n'y en avait pas).
@@ -183,7 +230,7 @@ func texte_records() -> String:
 		var record = records.get(jeu[0])
 		var valeur := "jamais joué" if record == null else "%s %s" % [str(int(record)) if is_equal_approx(record, roundf(record)) else "%.1f" % record, jeu[2]]
 		lignes.append("%s : %s (%s)" % [jeu[1], valeur, ruban])
-	lignes.append("Insignes de la Garde : %d / %d" % [nombre_insignes(), TOTAL_INSIGNES])
+	lignes.append("Insignes de la Garde : %d / %d (un cœur de plus tous les 3)" % [nombre_insignes(), TOTAL_INSIGNES])
 	return "Tableau d'honneur. " + " // ".join(lignes)
 
 

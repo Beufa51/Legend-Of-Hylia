@@ -125,6 +125,7 @@ func _bruit_du_vent() -> void:
 	var lecteur := AudioStreamPlayer.new()
 	lecteur.stream = flux
 	lecteur.volume_db = -32.0
+	Reglages.vers_musique(lecteur)   # (le vent fait partie des ambiances)
 	add_child(lecteur)
 	lecteur.play()
 	lecteur.finished.connect(lecteur.play)

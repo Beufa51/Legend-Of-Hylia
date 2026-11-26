@@ -63,6 +63,7 @@ func _ready() -> void:
 		add_child(EditeurDecor.creer(self))   # éditeur de décor (F2) : déplacer les objets à la souris
 	add_child(Dialogue.new())   # boîte de dialogue des habitants
 	add_child(Tactile.new())    # joystick + boutons (visibles seulement sur écran tactile)
+	add_child(Pause.creer(self))   # menu pause (Échap / P / Start) : reprendre, carte, commandes
 	if not donjon:
 		var ambiance := Ambiance.new()   # vent, feuilles, nuages, papillons, oiseaux (extérieur seulement)
 		ambiance.camera = camera
@@ -186,7 +187,9 @@ func _surveiller_aide(delta: float) -> void:
 		_aide_visuelle()
 
 
-func _aide_visuelle() -> void:
+# `a_la_demande` : le joueur a demandé un indice (menu pause) : en plus des objets à frapper, on entoure aussi les PORTES encore fermées
+# de la salle (= ce qu'il faut ouvrir). Utile dans les salles sans objet à frapper (glace, reflet...) où l'aide automatique ne montrait rien.
+func _aide_visuelle(a_la_demande := false) -> void:
 	var ecran: Ecran = null
 	for enfant in get_children():
 		if enfant is Ecran and enfant.grille == salle_actuelle:
@@ -195,21 +198,35 @@ func _aide_visuelle() -> void:
 		return
 	if "drapeau_porte" in ecran and ecran.drapeau_porte != "" and Etat.est(ecran.drapeau_porte):
 		return   # la salle est déjà résolue
-	if ecran is Room and (ecran as Room).aide_dalles():
+	var dalles: bool = ecran is Room and (ecran as Room).aide_dalles()
+	if dalles and not a_la_demande:
 		return   # salle de dalles : ce sont les dalles encore rouges qui pulsent (pas les pots)
 	var cibles: Array[Node2D] = []
-	for n in get_tree().get_nodes_in_group("frappable"):
-		if n is Node2D and ecran.is_ancestor_of(n):
-			cibles.append(n)
-	for n in cibles:
-		if n is Chanteur:   # salle des cloches : le chanteur seul
-			cibles = [n]
-			break
-	for n in cibles:
-		_anneau_aide(n)
+	if not dalles:
+		for n in get_tree().get_nodes_in_group("frappable"):
+			if n is Node2D and ecran.is_ancestor_of(n):
+				cibles.append(n)
+		for n in cibles:
+			if n is Chanteur:   # salle des cloches : le chanteur seul
+				cibles = [n]
+				break
+		for n in cibles:
+			_anneau_aide(n)
+	if a_la_demande:
+		for n in ecran.get_children():
+			if n is Porte and not n.ouverte:
+				_anneau_aide(n, n.taille() / 2.0, maxf(n.taille().x, n.taille().y) / 18.0)   # (anneau centré sur la porte, à sa taille)
 
 
-func _anneau_aide(cible: Node2D) -> void:
+## « Un indice » du menu pause (Pause.gd) : fait pulser ce qu'il faut frapper et les portes à ouvrir dans la salle où l'on est.
+func demander_indice() -> void:
+	if en_transition or Etat.en_dialogue or not donjon:
+		return
+	_inactif = 0.0
+	_aide_visuelle(true)
+
+
+func _anneau_aide(cible: Node2D, decalage := Vector2(8, 0), taille := 1.0) -> void:
 	var anneau := Line2D.new()
 	var points := PackedVector2Array()
 	for i in 25:
@@ -218,10 +235,10 @@ func _anneau_aide(cible: Node2D) -> void:
 	anneau.width = 1.5
 	anneau.default_color = Color(1.0, 0.85, 0.35, 0.9)
 	anneau.z_index = 50
-	anneau.position = cible.position + Vector2(8, 0)
+	anneau.position = cible.position + decalage
 	cible.get_parent().add_child(anneau)
 	var t := anneau.create_tween().set_loops(2)
-	t.tween_property(anneau, "scale", Vector2(2.4, 2.4), 1.0).from(Vector2(0.5, 0.5))
+	t.tween_property(anneau, "scale", Vector2(2.4, 2.4) * taille, 1.0).from(Vector2(0.5, 0.5) * taille)
 	t.parallel().tween_property(anneau, "modulate:a", 0.0, 1.0).from(1.0)
 	await get_tree().create_timer(2.2).timeout
 	if is_instance_valid(anneau):
@@ -259,6 +276,7 @@ func _lancer_ambiance_donjon() -> void:
 	var lecteur := AudioStreamPlayer.new()
 	lecteur.stream = flux
 	lecteur.volume_db = -19.0
+	Reglages.vers_musique(lecteur)
 	add_child(lecteur)
 	lecteur.play()
 
@@ -299,6 +317,7 @@ func _lancer_musique() -> void:
 	var lecteur := AudioStreamPlayer.new()
 	lecteur.stream = flux
 	lecteur.volume_db = _volume_piste(musique)
+	Reglages.vers_musique(lecteur)
 	add_child(lecteur)
 	lecteur.play()
 	_musique = lecteur
@@ -310,15 +329,46 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1 and OS.is_debug_build():
 		_basculer_menu_dev()
 		return
-	if event.is_action_pressed("reset") and not en_transition and not Etat.en_dialogue:
-		for enfant in get_children():
-			if enfant is Ecran and enfant.grille == salle_actuelle:
-				if enfant is Room and not enfant.drapeaux_a_rejouer().is_empty():
-					_rejouer_salle(enfant)   # salle déjà RÉUSSIE : on la remet comme neuve pour la refaire
-				elif enfant is Room and enfant.recommence_au_debut() and enfant.retour != Vector2.ZERO:
-					_raccompagner(enfant.retour, "recommencer")   # glace, reflet : on peut être coincé -> retour au début
-				else:
-					enfant.reinitialiser()
+	if event.is_action_pressed("reset"):
+		recommencer_salle()
+
+
+## Recommence la salle où l'on est (touche R / Y, ou « Recommencer l'énigme » du menu pause).
+func recommencer_salle() -> void:
+	if en_transition or Etat.en_dialogue:
+		return
+	for enfant in get_children():
+		if enfant is Ecran and enfant.grille == salle_actuelle:
+			if enfant is Room and not enfant.drapeaux_a_rejouer().is_empty():
+				_rejouer_salle(enfant)   # salle déjà RÉUSSIE : on la remet comme neuve pour la refaire
+			elif enfant is Room and enfant.recommence_au_debut() and enfant.retour != Vector2.ZERO:
+				_raccompagner(enfant.retour, "recommencer")   # glace, reflet : on peut être coincé -> retour au début
+			else:
+				enfant.reinitialiser()
+
+
+## Sauvegarde MANUELLE (menu pause) : retient l'endroit exact où l'on est, puis copie la partie dans le fichier de sauvegarde manuelle.
+func sauvegarder_partie() -> bool:
+	Etat.memoriser_position(joueur.position)
+	return Etat.sauver_manuel()
+
+
+## Charge la sauvegarde MANUELLE : fondu au noir, puis la scène sauvegardée est rechargée (via demarrage.tscn).
+func charger_partie() -> void:
+	if en_transition or not Etat.a_sauvegarde_manuelle():
+		return
+	en_transition = true
+	joueur.set_physics_process(false)
+	var t := create_tween()
+	t.tween_property(_fondu, "modulate:a", 1.0, 0.5)
+	await t.finished
+	if not peut_changer_scene:   # (tests automatiques : on ne recharge pas la scène)
+		_fondu.modulate.a = 0.0
+		joueur.set_physics_process(true)
+		en_transition = false
+		return
+	Etat.charger_manuel()
+	get_tree().change_scene_to_file("res://Scenes/demarrage.tscn")
 
 
 # R dans une salle déjà réussie : on efface SES drapeaux d'énigme (jamais les plumes ni les fragments ramassés),
@@ -374,7 +424,7 @@ func _creer_messages() -> void:
 	Etat.message.connect(_afficher_message)
 	# Rappel des touches au début
 	await get_tree().create_timer(0.8).timeout
-	Etat.annoncer((Noms.VILLAGE if not donjon else Noms.TITRE_JEU) + " — Flèches/ZQSD : bouger   Maj/K : courir   Espace/J : lance   R : recommencer")
+	Etat.annoncer((Noms.VILLAGE if not donjon else Noms.TITRE_JEU) + " — Flèches/ZQSD ou stick : bouger   Maj/K ou B : courir   Espace/J ou A : lance   Échap/Start : pause")
 
 
 func _afficher_message(texte: String) -> void:

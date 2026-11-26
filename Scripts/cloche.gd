@@ -42,6 +42,9 @@ func initialiser(une_salle: Node2D, sa_note: int, dans_le_noir: bool, support: T
 	plaque.position = Vector2(1, 9)
 	add_child(plaque)
 	_plaque = plaque
+	# forme propre à chaque note (daltonisme), sans ordre apparent
+	var formes := [Symbole.Forme.TRIANGLE, Symbole.Forme.CARRE, Symbole.Forme.CERCLE, Symbole.Forme.LOSANGE, Symbole.Forme.CROIX]
+	plaque.add_child(Symbole.creer(formes[clampi(note - 1, 0, 4)], Vector2(7, 3.5), 1.8))
 	_pivot = Node2D.new()
 	_pivot.position = Vector2(8, 13)   # la cloche se balance autour de sa base
 	add_child(_pivot)

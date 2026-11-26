@@ -54,7 +54,7 @@ var zone: Area2D        # zone de touche de la lance
 var lumiere: PointLight2D  # petite lumière autour du joueur (allumée seulement dans les salles sombres)
 var _recul := Vector2.ZERO  # poussée subie (coup de bec d'une poule...), s'éteint toute seule
 # --- Feu (salle « lance enflammée », Plume 2a) : toucher un brasero allumé enflamme la lance quelques secondes ; l'eau l'éteint ---
-const FEU_DUREE := 2.5
+const FEU_DUREE := 4.0   # secondes de lance enflammée (était 2,5 : trop court pour atteindre les braseros en évitant l'eau)
 const SON_FEU := "res://Assets/Ninja_adventure/Audio/Sounds/Elemental/Fire.wav"
 const SON_ETEINT := "res://Assets/Ninja_adventure/Audio/Sounds/Elemental/Bubble.wav"
 var feu := 0.0                # secondes de feu restantes (0 = lance normale)
@@ -74,9 +74,16 @@ var _attente_glace := 0.0     # petite pause entre deux glissades / poussées de
 
 # --- Cœurs (seulement utiles contre le Gardien du corps du coq : le reste du jeu ne blesse jamais) ---
 signal coeurs_change(coeurs: int, maxi: int)
-const COEURS_MAX := 5
+const COEURS_BASE := 5
+
+
+# Cœurs maximum : 5, +1 tous les 3 insignes de la Garde trouvés (8 au plus).
+static func coeurs_max() -> int:
+	return COEURS_BASE + mini(Etat.nombre_insignes() / 3, 3)
+
+
 const SON_BLESSE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Hit2.wav"
-var coeurs := COEURS_MAX
+var coeurs := COEURS_BASE
 var _invulnerable := 0.0      # temps restant pendant lequel on ne peut plus être touché (le héros clignote)
 
 
@@ -310,15 +317,15 @@ func blesser(source: Vector2, degats := 1) -> void:
 	_invulnerable = 1.2
 	_recul = (global_position - source).normalized() * 240.0
 	_jouer_son(SON_BLESSE, -2.0)
-	coeurs_change.emit(coeurs, COEURS_MAX)
+	coeurs_change.emit(coeurs, coeurs_max())
 
 
 # Tous les cœurs reviennent.
 func soigner() -> void:
-	coeurs = COEURS_MAX
+	coeurs = coeurs_max()
 	_invulnerable = 0.0
 	sprite.visible = true
-	coeurs_change.emit(coeurs, COEURS_MAX)
+	coeurs_change.emit(coeurs, coeurs_max())
 
 
 # Si on avance contre un bloc "poussable" pendant un instant, il glisse d'une case.
