@@ -4,9 +4,10 @@
 > par Claude Code à chaque session. À mettre à jour après chaque étape importante.
 
 ## Contexte utilisateur
-- Débutant complet sur Godot → guider **pas à pas**, expliquer chaque manipulation dans l'éditeur.
-- Claude ne peut pas ouvrir l'éditeur Godot : l'utilisateur fait les manipulations dans l'éditeur,
-  Claude écrit le GDScript, les fichiers et explique.
+- Débutant sur Godot : l'utilisateur ne touche ni aux nœuds ni aux scènes dans l'éditeur.
+- Claude écrit le GDScript, les scènes (.tscn), les ressources et les fichiers, puis les pousse sur une branche.
+- L'utilisateur fait le reste dans GitHub Desktop (Pull, mise à jour, merge) et dans Godot (test et retours).
+- Pour chaque étape, Claude indique : les corrections apportées et les points précis à tester.
 - Projet hébergé sur GitHub (comme les précédents projets de l'utilisateur).
 - Langue de travail : français.
 
@@ -45,7 +46,7 @@
 - Énigmes : définies plus tard, on pose d'abord les bases (déplacement, salles, transitions).
 - Assets proposés : pack **Ninja Adventure** (Pixel-boy, CC0, itch.io) — à confirmer par l'utilisateur.
 - Résolution : **400x224 (tuiles 16x16, salle 25x14 tuiles, murs du bord de 2 tuiles)**, fenêtre 1200x672, stretch viewport, filtre Nearest. Le Knight reste à 16 px (scale 1, vitesse 70). (Essai à 32 px le 2026-11-12 : jugé "trop zoomé" par l'utilisateur, abandonné.) Références de style : Zelda ALttP = sol plat uni, peu de détails, gros objets simples, murs épais.
-- Workflow Git : l'utilisateur utilise GitHub Desktop ; toujours "Pull" avant de travailler, "Push" après.
+- Workflow Git : l'utilisateur utilise GitHub Desktop pour Pull, mettre à jour et merger. Claude travaille sur une branche par étape, pousse la branche, et l'utilisateur fusionne après test.
 
 - Histoire : préquelle d'un garde royal (inspiré de l'esprit Zelda OoT). Noms de TRAVAIL :
   village **« Village du Coq Chantant »** (nom choisi par l'utilisateur, 2026-11-12 ; ex-Cocoricou/Chantecler), royaume **Hylio** (à changer). Ils restent trop proches de Zelda : avant toute publication
