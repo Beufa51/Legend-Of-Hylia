@@ -2,7 +2,7 @@ extends StaticBody2D
 class_name SecretPierre
 # Un ROCHER FISSURÉ : un coup de lance le brise et révèle un secret (un coffre caché, voir exterieur.gd::_poser_coffres).
 
-const SON := "res://Assets/Ninja_adventure/Audio/Sounds/Impact/Impact3.wav"
+const SON := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impact3.wav"
 
 var _revele: Callable
 var _casse := false
