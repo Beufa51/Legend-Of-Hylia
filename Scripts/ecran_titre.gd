@@ -9,6 +9,9 @@ const OR := Color(0.98, 0.84, 0.4)
 const FOND := "res://Assets/Titre/fond_titre.jpg"
 
 var _boutons: Array[Button] = []
+var _menu: VBoxContainer
+var _confirmation: VBoxContainer
+var _bouton_non: Button
 
 
 func _ready() -> void:
@@ -45,17 +48,51 @@ func _ready() -> void:
 	menu.position = Vector2(140, 130)
 	menu.size = Vector2(120, 70)
 	add_child(menu)
+	_menu = menu
 	if Etat.scene_sauvee != "":
 		_ajouter_bouton(menu, "Continuer", func() -> void: choisi.emit(true))
-	_ajouter_bouton(menu, "Nouvelle partie", func() -> void: choisi.emit(false))
+	_ajouter_bouton(menu, "Nouvelle partie", _nouvelle_partie)
 	if _boutons.size() > 0:
 		_boutons[0].grab_focus()
 
+	# Confirmation (affichée seulement si une sauvegarde existe et serait effacée).
+	_confirmation = VBoxContainer.new()
+	_confirmation.position = Vector2(100, 120)
+	_confirmation.size = Vector2(200, 80)
+	_confirmation.visible = false
+	add_child(_confirmation)
+	var question := Label.new()
+	question.text = "Effacer la partie sauvegardée ?"
+	question.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	question.add_theme_color_override("font_color", OR)
+	question.add_theme_color_override("font_outline_color", Color(0.2, 0.12, 0.02))
+	question.add_theme_constant_override("outline_size", 3)
+	_confirmation.add_child(question)
+	_bouton_non = _ajouter_bouton(_confirmation, "Non, continuer", _annuler_confirmation)
+	_ajouter_bouton(_confirmation, "Oui, effacer", func() -> void: choisi.emit(false))
 
-func _ajouter_bouton(parent: Node, texte: String, action: Callable) -> void:
+
+# « Nouvelle partie » : s'il existe une sauvegarde, on demande d'abord confirmation (Non par défaut).
+func _nouvelle_partie() -> void:
+	if Etat.scene_sauvee == "" and not Etat.a_sauvegarde_manuelle():
+		choisi.emit(false)
+		return
+	_menu.visible = false
+	_confirmation.visible = true
+	_bouton_non.grab_focus()
+
+
+func _annuler_confirmation() -> void:
+	_confirmation.visible = false
+	_menu.visible = true
+	_boutons[0].grab_focus()
+
+
+func _ajouter_bouton(parent: Node, texte: String, action: Callable) -> Button:
 	var bouton := Button.new()
 	bouton.text = texte
 	bouton.custom_minimum_size = Vector2(120, 22)
 	bouton.pressed.connect(action)
 	parent.add_child(bouton)
 	_boutons.append(bouton)
+	return bouton
