@@ -17,7 +17,7 @@ PLANCHE = "Assets/PNG/SuperRetroWorld_CharacterPack_Full/rpgmaker/MV/characters/
 DOSSIER = "Assets/Heros/"
 CASE_W, CASE_H = 48, 60
 CASE = 32
-HAUTEUR_VISIBLE = 27   # le personnage fait environ 27 px de haut, comme les anciens PNJ
+HAUTEUR_VISIBLE = 24   # un peu plus petit qu avant ; réduction au plus proche (NEAREST) pour rester net comme le héros
 MV_DIR = {"bas": 0, "gauche": 1, "droite": 2, "haut": 3}
 # Personnage du pack (numéro 1 à 8, dans l'ordre de la planche) pour chaque PNJ du village
 CHOIX = {"OldMan": 4, "Woman": 5, "Villager5": 2, "Villager4": 7, "Villager": 6, "Villager2": 3, "Boy": 1}
@@ -47,7 +47,7 @@ def mise_a_echelle(images):
         for im in fr:
             rogne = im.crop((gauche, haut, droite, bas))
             if echelle < 1:
-                rogne = rogne.resize((round(rogne.width * echelle), round(rogne.height * echelle)), Image.LANCZOS)
+                rogne = rogne.resize((round(rogne.width * echelle), round(rogne.height * echelle)), Image.NEAREST)
             sortie[d].append(rogne)
     return sortie
 
