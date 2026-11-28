@@ -91,7 +91,7 @@ func _appui(doigt: int, pos: Vector2) -> void:
 		_stick_pos = Vector2.ZERO
 		_dessin.queue_redraw()
 	# 3) un appui ailleurs sert à avancer un dialogue : on simule « attack » le temps d'un appui
-	elif Etat.en_dialogue:
+	elif Etat.en_dialogue and not Etat.en_menu:   # (boutique / décoration : les doigts servent aux boutons du menu)
 		_impulsion("attack")
 
 

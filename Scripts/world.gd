@@ -68,6 +68,8 @@ func _ready() -> void:
 	add_child(Tactile.new())    # joystick + boutons (visibles seulement sur écran tactile)
 	add_child(Pause.creer(self))   # menu pause (Échap / P / Start) : reprendre, carte, commandes
 	if not donjon:
+		add_child(Boutique.new())   # la boutique de Rosine (meubles pour la maison)
+	if not donjon:
 		var hud_village := HudVillage.new()   # cœurs + rubis
 		add_child(hud_village)
 		hud_village.demarrer(joueur)

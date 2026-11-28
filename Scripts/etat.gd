@@ -25,6 +25,8 @@ const FICHIER_MANUEL := "user://sauvegarde_manuelle.json"      # sauvegarde choi
 
 var drapeaux := {}
 var rubis := 0                        # monnaie du jeu (herbes, pots, coffres) : sert à acheter des décors pour la maison
+var decors: Array = []                # meubles achetés pour la maison : [{ "id", "x", "y" }] (x = -1 : dans la malle), voir decors.gd
+var en_menu := false                  # vrai dans la boutique ou le mode décoration : un appui tactile ne vaut pas « attack »
 var records := {}                     # meilleurs scores des mini-jeux : { "tir": 14, "poules": 38.5 }
 var en_dialogue := false              # vrai pendant une conversation (le joueur est figé)
 var salle_courante := Vector2i.ZERO   # case de la grille où se trouve la caméra (mise à jour par world.gd)
@@ -150,6 +152,7 @@ func _ecrire(chemin: String) -> bool:
 		"visites": visites.keys(),
 		"records": records,
 		"rubis": rubis,
+		"decors": decors,
 		"version": 2,
 		"scene": scene_sauvee,
 		"ecran": ecran_sauve,
@@ -171,6 +174,10 @@ func charger(chemin := FICHIER) -> void:
 		drapeaux[nom] = true
 	records = donnees.get("records", {})
 	rubis = int(donnees.get("rubis", 0))
+	decors = []
+	for d in donnees.get("decors", []):   # (le JSON rend des nombres à virgule : on les remet en entiers)
+		if d is Dictionary and Decors.CATALOGUE.has(str(d.get("id", ""))):
+			decors.append({"id": str(d["id"]), "x": int(d.get("x", -1)), "y": int(d.get("y", -1))})
 	for cle in donnees.get("visites", []):
 		visites[cle] = true
 	position_sauvee = Vector2(donnees.get("x", 0.0), donnees.get("y", 0.0))
@@ -216,6 +223,7 @@ func effacer() -> void:
 	drapeaux.clear()
 	records.clear()
 	rubis = 0
+	decors = []
 	visites.clear()
 	position_sauvee = Vector2.ZERO
 	scene_sauvee = ""

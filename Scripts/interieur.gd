@@ -11,9 +11,15 @@ class_name Interieur
 #               o tonneau  p pot  q marmite  B banc  t tapis rouge  Y tapis rond
 #     caserne : G lit  H râtelier lances  I râtelier armes  J boucliers  K mannequin  F brasero  M table de carte
 #               D coffre d'armes  N bannière  B banc long  o tonneau
+#   Z = MALLE À DÉCORS (maison du héros) : un coup de lance ouvre le mode décoration (decoration.gd)
 # Les habitants (`pnjs`) fonctionnent comme dehors.
+# MAISON À DÉCORER (`decorable`) : les meubles achetés chez Rosine (Etat.decors, catalogue decors.gd) sont posés par-dessus le plan.
+# `cases_vitales` ("x y") : des cases qui doivent toujours rester libres et atteignables depuis la porte (réveil au lit, tableau d'honneur...).
+# AGRANDIR : la maison utilise `layout_revele` quand `drapeau_revele` est levé (voir ecran.gd), même en direct (on reconstruit l'écran).
 
 @export var style := "maison"
+@export var decorable := false
+@export var cases_vitales: PackedStringArray
 
 # Par style : sol, murs. Meubles : lettre -> [image, emprise (largeur, hauteur) en cases, bloque ?]
 const STYLES := {
@@ -53,9 +59,13 @@ const MEUBLES := {
 	"D": ["v_coffre_armes", Vector2i(2, 2), true],
 	"N": ["v_banniere", Vector2i(1, 2), false],
 	"m": ["v_paillasson", Vector2i(1, 1), false],
+	"Z": ["v_coffre", Vector2i(2, 2), true],
 }
 
-var _solides := {}
+var _solides := {}           # cases bloquées par le plan (murs, meubles fixes) ; les décors du joueur n'y sont pas
+var _calque_tapis: Node2D    # décors posés à plat (tapis, bannières), sous les meubles
+var _calque_decors: Node2D   # décors du joueur (images + collisions)
+var _malle: MalleDeco
 
 
 func _init() -> void:
@@ -68,6 +78,23 @@ func surface_pas(_pos: Vector2) -> String:
 
 
 func _ready() -> void:
+	_construire()
+	Etat.drapeau_change.connect(func(nom):
+		if nom == drapeau_revele and drapeau_revele != "":
+			call_deferred("_reconstruire"))
+
+
+# Agrandissement acheté pendant la partie : on refait l'écran avec le nouveau plan.
+func _reconstruire() -> void:
+	for enfant in get_children():
+		remove_child(enfant)
+		enfant.queue_free()
+	_solides.clear()
+	_construire()
+
+
+func _construire() -> void:
+	_appliquer_revelation()
 	position = Vector2(grille * TAILLE_SALLE)
 	modulate = teinte
 	var def: Dictionary = STYLES.get(style, STYLES["maison"])
@@ -90,6 +117,8 @@ func _ready() -> void:
 				_solides[cellule] = true   # (le dessin du pan de mur vient après)
 			else:
 				_poser(sols[(x * 7 + y * 13) % sols.size()], Vector2(cellule * TUILE))
+	_calque_tapis = Node2D.new()   # (les tapis du joueur : au-dessus du sol, sous les meubles)
+	add_child(_calque_tapis)
 	# 2) les pans de mur du haut (2x2), puis 3) les meubles, de haut en bas
 	for y in layout.size():
 		for x in layout[y].length():
@@ -112,6 +141,16 @@ func _ready() -> void:
 					for dx in emprise.x:
 						for dy in emprise.y:
 							_solides[Vector2i(x + dx, y + dy)] = true
+				if c == "Z":   # la malle : un corps à part, qui réagit au coup de lance
+					_malle = MalleDeco.new()
+					_malle.position = Vector2(x, y) * TUILE + Vector2(emprise * TUILE) / 2.0
+					_malle.interieur = self
+					add_child(_malle)
+	_calque_decors = Node2D.new()
+	add_child(_calque_decors)
+	if decorable:
+		Decors.preparer()
+		poser_decors()
 	_poser_pnjs()
 	_poser_passages()
 	_poser_minijeu()
@@ -143,3 +182,150 @@ func point_arrivee() -> Vector2:
 					meilleure = c
 					distance = d
 	return position + Vector2(meilleure * TUILE) + Vector2(8, 3)
+
+
+# --- MAISON À DÉCORER --------------------------------------------------------------------------------
+
+func _def(id: String) -> Dictionary:
+	return Decors.CATALOGUE[id]
+
+
+# (Re)pose tous les décors du joueur : images alignées comme les meubles (centrées sur l'emprise, posées en bas), + collisions.
+func poser_decors() -> void:
+	for calque in [_calque_tapis, _calque_decors]:
+		for enfant in calque.get_children():
+			enfant.queue_free()
+	var places := []
+	for d in Etat.decors:
+		if d["x"] >= 0:
+			places.append(d)
+	places.sort_custom(func(a, b): return a["y"] + _def(a["id"])["emprise"].y < b["y"] + _def(b["id"])["emprise"].y)
+	for d in places:
+		var def := _def(d["id"])
+		var calque := _calque_decors if def["bloque"] else _calque_tapis
+		var sprite := Sprite2D.new()
+		sprite.texture = _image(def["image"])
+		sprite.centered = false
+		var emprise: Vector2i = def["emprise"]
+		var taille := Vector2(sprite.texture.get_size())
+		sprite.position = (Vector2((d["x"] + emprise.x / 2.0) * TUILE, (d["y"] + emprise.y) * TUILE) - Vector2(taille.x / 2.0, taille.y)).round()
+		calque.add_child(sprite)
+		if def["bloque"]:
+			var corps := StaticBody2D.new()
+			var forme := RectangleShape2D.new()
+			forme.size = Vector2(emprise * TUILE)
+			var collision := CollisionShape2D.new()
+			collision.shape = forme
+			collision.position = Vector2(d["x"], d["y"]) * TUILE + Vector2(emprise * TUILE) / 2.0
+			corps.add_child(collision)
+			_calque_decors.add_child(corps)
+
+
+# Les cases (de l'écran) couvertes par un décor posé en `case`.
+func cases_de(id: String, case: Vector2i) -> Array[Vector2i]:
+	var liste: Array[Vector2i] = []
+	var emprise: Vector2i = _def(id)["emprise"]
+	for dx in emprise.x:
+		for dy in emprise.y:
+			liste.append(case + Vector2i(dx, dy))
+	return liste
+
+
+# Le décor posé sur cette case (index dans Etat.decors), les meubles avant les tapis ; -1 s'il n'y en a pas.
+func decor_en(case: Vector2i) -> int:
+	var tapis := -1
+	for i in Etat.decors.size():
+		var d: Dictionary = Etat.decors[i]
+		if d["x"] >= 0 and case in cases_de(d["id"], Vector2i(d["x"], d["y"])):
+			if _def(d["id"])["bloque"]:
+				return i
+			tapis = i
+	return tapis
+
+
+func _vitales() -> Array[Vector2i]:
+	var liste: Array[Vector2i] = []
+	for ligne in cases_vitales:
+		var m := ligne.split(" ")
+		liste.append(Vector2i(int(m[0]), int(m[1])))
+	return liste
+
+
+# Une case de SOL de la pièce (pas un mur, pas la porte, pas sous un meuble fixe) ?
+func _sol_libre(case: Vector2i) -> bool:
+	if case.y < 0 or case.y >= layout.size() or case.x < 0 or case.x >= layout[case.y].length():
+		return false
+	return layout[case.y][case.x] == "." and not _solides.has(case)
+
+
+# Les cases occupées par les décors bloquants (sauf celui d'index `sauf`).
+func _cases_decors(sauf: int) -> Dictionary:
+	var occupe := {}
+	for i in Etat.decors.size():
+		var d: Dictionary = Etat.decors[i]
+		if i != sauf and d["x"] >= 0 and _def(d["id"])["bloque"]:
+			for c in cases_de(d["id"], Vector2i(d["x"], d["y"])):
+				occupe[c] = true
+	return occupe
+
+
+# Peut-on poser le décor n° `index` (de type `id`) en `case` ? Vérifie le sol, les autres décors, le joueur, les habitants,
+# et que la porte mène toujours aux cases vitales (on ne s'enferme jamais).
+func peut_poser(index: int, case: Vector2i) -> bool:
+	var id: String = Etat.decors[index]["id"]
+	var def := _def(id)
+	var cases := cases_de(id, case)
+	for c in cases:
+		if not _sol_libre(c):
+			return false
+	if not def["bloque"]:   # un tapis : seulement pas sur un autre tapis
+		for i in Etat.decors.size():
+			var d: Dictionary = Etat.decors[i]
+			if i != index and d["x"] >= 0 and not _def(d["id"])["bloque"]:
+				for c in cases_de(d["id"], Vector2i(d["x"], d["y"])):
+					if c in cases:
+						return false
+		return true
+	var occupe := _cases_decors(index)
+	var vitales := _vitales()
+	for c in cases:
+		if occupe.has(c) or c in vitales:
+			return false
+	# ni sur le joueur, ni sur un habitant
+	var corps: Array = get_tree().get_nodes_in_group("pnj")
+	var joueur := get_tree().get_first_node_in_group("joueur")
+	if joueur:
+		corps.append(joueur)
+	for n in corps:
+		var pied := Vector2i(((n.global_position - position) / TUILE).floor())
+		if pied in cases:
+			return false
+	for c in cases:
+		occupe[c] = true
+	return _vitales_atteignables(occupe)
+
+
+# Depuis la porte (1re case vitale), toutes les cases vitales sont-elles atteignables à pied ?
+func _vitales_atteignables(occupe: Dictionary) -> bool:
+	var vitales := _vitales()
+	if vitales.is_empty():
+		return true
+	var vus := {vitales[0]: true}
+	var file: Array[Vector2i] = [vitales[0]]
+	while not file.is_empty():
+		var c: Vector2i = file.pop_back()
+		for v in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + v
+			if not vus.has(n) and _sol_libre(n) and not occupe.has(n):
+				vus[n] = true
+				file.append(n)
+	for c in vitales:
+		if not vus.has(c):
+			return false
+	return true
+
+
+# Coup de lance sur la malle : le mode décoration s'ouvre.
+func ouvrir_decoration() -> void:
+	if decorable and not Etat.en_dialogue:
+		add_child(Decoration.creer(self))

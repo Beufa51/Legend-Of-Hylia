@@ -211,7 +211,7 @@ put(est, 'w', (8, 4), (15, 4), (14, 10), (23, 10), (1, 7))
 pnjs_est = [
     "KnightGold 16 7 gauche | Capitaine Aubrac | [fin_paix] Recrue ! Le Gardien de la Forteresse m'a parlé de toi. // Tu as baissé ta lance devant lui... Il faut plus de courage pour cela que pour frapper. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fin_combat] Recrue ! Le Gardien de la Forteresse m'a parlé de toi. // Tu l'as vaincu en l'observant, sans colère. C'est ainsi que se bat un garde. // Agenouille-toi. ... Par le coq qui chante à l'aube, je te fais GARDE DU ROYAUME. // Bienvenue dans la Garde. Ta mère va être si fière ! ## [fragment_gauche] Une aile complète ! Je n'y croyais plus. // Mais ce n'est que la moitié du blason : l'aile droite t'attend, et au centre, l'épreuve finale. // Repose-toi, recrue. Tu l'as mérité. ## [capitaine_vu] Alors, cette épreuve ? La Forteresse est au nord du village. // Souviens-toi : observer, réfléchir, et frapper seulement ce qui doit l'être. ## Te voilà enfin, recrue ! L'épreuve d'adoubement t'attend à la Forteresse, au nord du village. // Deux ailes et un corps : voilà la forme de la Forteresse. Observe, réfléchis. // Un garde ne se bat pas pour rien : il comprend d'abord. Va, et reviens avec l'honneur. >> capitaine_vu",
     "Villager3 7 7 droite | Soldat Merle | [plume4] La quatrième plume ? Des sentinelles qui tournent la tête ? Brr. Reste dans l'ombre, c'est le conseil d'un vétéran. ## Dix ans de garde et je n'ai jamais vu le fond de la Forteresse. // Les plumes de l'aile gauche sont de plus en plus longues, dit-on. Mystère !",
-    "Villager 6 9 haut | Marchande Rosine | Des pommes ! Des pommes de la ferme ! // Les gardes sont mes meilleurs clients... et les pires payeurs.",
+    "Villager 6 9 haut | Marchande Rosine | [rosine_vue] Te revoilà ! Un petit meuble pour ta maison ? ## Bienvenue chez Rosine ! Meubles, tapis, plantes... de quoi faire de ta maison un palais. // Je suis payée en rubis : coupe les herbes hautes, casse les pots, tu en trouveras partout. // Ce que tu achètes, je le livre dans la malle de ta maison. >> rosine_vue | boutique",
 ]
 animaux_est = ['d 20 7', 'c 12 11']
 passages_est = ["18 6 InterieurCaserne 12 9"]   # porte de la caserne (maison beige en (10,2)) ; l'intérieur est en bas de la carte
@@ -337,8 +337,13 @@ def interieur(porte, meubles, haut, gauche=6, droite=17, bas=10):
     for (c, x, y) in meubles: g[y][x] = c
     return g
 
-int_heros = interieur(12, [('L', 7, 5), ('S', 14, 5), ('q', 11, 5), ('t', 9, 7), ('T', 14, 8), ('C', 13, 8), ('o', 7, 9), ('p', 16, 7)],
-                      ['w', 'y', 'z', 'v', 'x'])
+# MAISON DU HÉROS, À DÉCORER : seuls le lit, l'étagère, la marmite et la MALLE (Z) sont fixes ; les autres meubles sont des
+# DÉCORS (Scripts/decors.gd, Etat.decors) que le joueur déplace et achète chez Rosine. Version AGRANDIE (achetée 150 rubis) :
+# mêmes meubles fixes aux mêmes cases, murs de côté repoussés (colonnes 2 et 23).
+MEUBLES_HEROS = [('L', 7, 5), ('S', 14, 5), ('q', 11, 5), ('Z', 15, 8)]
+int_heros = interieur(12, MEUBLES_HEROS, ['w', 'y', 'z', 'v', 'x'])
+int_heros_grand = interieur(12, MEUBLES_HEROS, ['w', 'x', 'w', 'y', 'z', 'v', 'x', 'y', 'w', 'x'], gauche=2, droite=23)
+VITALES_HEROS = ["12 9", "9 6", "14 7", "14 9", "10 7"]   # porte (en 1er), réveil, tableau d'honneur, malle, Maman
 pnjs_int_heros = ["Woman 10 7 bas | Maman | [epreuve_reussie] Garde du royaume ! Ma fille, garde du royaume ! // Ton père aurait été si fier de toi. Viens, le repas de fête est prêt ! ## [fragment_gauche] Ma fille, la moitié du blason ! Je vais préparer un grand repas. // Mais d'abord, va te reposer. ## [capitaine_vu] Le capitaine t'a parlé ? Alors file à la Forteresse, et fais attention à toi ! ## Bien dormi ? Aujourd'hui, c'est ton grand jour ! // Le capitaine Aubrac t'attend à la caserne, à l'est de la place du village. // N'oublie pas la lance de ton père, près de la porte. ... Ah, tu l'as déjà !"]
 int_caserne = interieur(12, [('G', 7, 5), ('G', 10, 5), ('H', 13, 5), ('J', 15, 7), ('F', 7, 8), ('M', 8, 8), ('D', 15, 8)],
                         ['w', 'z', 'x', 'w', 'x'])
@@ -523,6 +528,9 @@ for _n, _gr, _g, _p in ecrans:
 # Intérieurs : en bas de la carte (rangée 5), dans une scène à part (Scenes/interieur.tscn)
 interieurs = [
     ('InterieurHeros', (4, 5), int_heros, {'pnjs': pnjs_int_heros, 'passages': ["12 10 MaisonHeros 6 7", "14 6 $records"],
+        'decorable': True, 'cases_vitales': VITALES_HEROS,
+        'drapeau_revele': 'maison_agrandie', 'layout_revele': int_heros_grand, 'pnjs_revele': pnjs_int_heros,
+        'passages_revele': ["12 10 MaisonHeros 6 7", "14 6 $records"],
         'indice': "Tu te réveilles chez toi. Aujourd'hui, c'est ton adoubement ! Parle à Maman, puis rejoins le capitaine à la caserne (à l'est de la place du village)."}),
     ('InterieurStand', (1, 5), int_stand, {'pnjs': pnjs_int_stand, 'passages': ["12 10 VillageOuest 17 7"], 'minijeu': 'tir'}),
     ('InterieurCaserne', (3, 5), int_caserne, {'pnjs': pnjs_int_caserne, 'passages': ["12 10 VillageEst 18 7"], 'style': 'caserne'}),
@@ -573,6 +581,9 @@ donjon = false
         out += '[node name="%s" parent="." instance=ExtResource("%s")]\n' % (nom, "4" if nom.startswith("Interieur") else "2")
         out += 'grille = Vector2i(%d, %d)\n' % (gx, gy)
         for k, v in props.items():
+            if isinstance(v, bool):
+                out += '%s = %s\n' % (k, 'true' if v else 'false')
+                continue
             if v and isinstance(v[0], list):   # un plan (liste de rangées-listes) : on le transforme en texte seulement ICI, une fois finalisé
                 v = [''.join(r) for r in v]
             if isinstance(v, tuple):   # une couleur (r, g, b, a)
