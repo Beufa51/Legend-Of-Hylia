@@ -19,6 +19,11 @@ const HEROS_LPC := "res://Assets/Heros/heros_lpc.png"
 const CASE_LPC := Vector2i(64, 64)   # cases de la planche LPC, taille d'origine (le perso est affiché à demi-taille, filtre linéaire)
 const LIGNE_LPC := {"bas": 0, "haut": 1, "gauche": 2, "droite": 3}
 var _lpc := false
+# HÉROS « TINY QUESTERS » (pack gratuit de Bobddadoo, licence : usage libre, crédit apprécié) : épée et bouclier, vue de dessus.
+# Feuille fabriquée par Outils/preparer_tiny.py : cases de 128 px, une ligne par animation (voir _creer_animations_tiny).
+const HEROS_TINY := "res://Assets/Heros/heros_tiny.png"
+const CASE_TINY := Vector2i(128, 128)
+var _tiny := false
 const ECHELLE_PC := 0.8   # taille du héros Pixel Crawler (1.0 = taille d'origine, 31 px)
 # Recrue à l'épée (pack Fantasy Tileset) : héros de toute l'épreuve ; la lance ne lui est remise qu'à l'adoubement (drapeau "lance_recue").
 const RECRUE_REPOS := "res://Assets/Heros/recrue_Idle_p.png"
@@ -89,9 +94,14 @@ var _invulnerable := 0.0      # temps restant pendant lequel on ne peut plus êt
 
 func _ready() -> void:
 	add_to_group("joueur")
-	_lpc = ResourceLoader.exists(HEROS_LPC)
-	_recrue = not _lpc and ResourceLoader.exists(RECRUE_MARCHE) and ResourceLoader.exists(RECRUE_COUP) and ResourceLoader.exists(RECRUE_REPOS) and not Etat.est("lance_recue")
-	if _lpc:
+	_tiny = ResourceLoader.exists(HEROS_TINY)
+	_lpc = not _tiny and ResourceLoader.exists(HEROS_LPC)
+	_recrue = not _tiny and not _lpc and ResourceLoader.exists(RECRUE_MARCHE) and ResourceLoader.exists(RECRUE_COUP) and ResourceLoader.exists(RECRUE_REPOS) and not Etat.est("lance_recue")
+	if _tiny:
+		sprite.sprite_frames = _creer_animations_tiny()
+		sprite.scale = Vector2.ONE   # cases de 128 px ; le personnage ne fait qu'une vingtaine de pixels
+		sprite.offset = Vector2(0, -10)   # pieds alignés sur la collision (sous le joueur)
+	elif _lpc:
 		sprite.sprite_frames = _creer_animations_lpc()
 		sprite.scale = Vector2.ONE * 0.5   # demi-taille : la planche (64 px) garde ses détails, le filtre linéaire lisse la réduction
 		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR   # seul ce héros est lissé (le reste du jeu reste en pixels nets)
@@ -423,9 +433,9 @@ func _creer_lance() -> void:
 	add_child(lance)
 	var image := Sprite2D.new()
 	image.texture = load(LANCE_IMAGE)
-	image.visible = not (_lpc or _recrue or ResourceLoader.exists(HEROS_G) or ResourceLoader.exists(HEROS_PC))   # les héros Gemini / Pixel Crawler tiennent leur lance dans leurs images : on ne dessine pas la lance du pack en plus
+	image.visible = not (_tiny or _lpc or _recrue or ResourceLoader.exists(HEROS_G) or ResourceLoader.exists(HEROS_PC))   # les héros Gemini / Pixel Crawler tiennent leur lance dans leurs images : on ne dessine pas la lance du pack en plus
 	lance.add_child(image)
-	if not _lpc and ResourceLoader.exists(HEROS_G) and ResourceLoader.exists(LANCE_G) and not ResourceLoader.exists(HEROS_PC):
+	if not _tiny and not _lpc and ResourceLoader.exists(HEROS_G) and ResourceLoader.exists(LANCE_G) and not ResourceLoader.exists(HEROS_PC):
 		_lance_g = Sprite2D.new()
 		_lance_g.texture = load(LANCE_G)
 		_lance_g.centered = false
@@ -555,6 +565,35 @@ func _decoupe_recrue(texture: Texture2D, col: int, ligne: int) -> AtlasTexture:
 	atlas.atlas = texture
 	atlas.region = Rect2(col * CASE_RECRUE.x, ligne * CASE_RECRUE.y, CASE_RECRUE.x, CASE_RECRUE.y)
 	return atlas
+
+
+# Animations du héros « Tiny Questers » : une ligne par animation dans la feuille (voir Outils/preparer_tiny.py).
+# Repos gauche/droite = 1re image de la marche (le perso ne se tient debout que de face et de dos dans le pack).
+# Attaques : sur place (le coup est géré par le code).
+const LIGNE_TINY := {"repos_bas": 0, "repos_haut": 1, "marche_bas": 2, "marche_haut": 3, "marche_gauche": 4, "marche_droite": 5,
+	"attaque_bas": 6, "attaque_haut": 7, "attaque_gauche": 8, "attaque_droite": 9, "touche": 10,
+	"repos_gauche": 4, "repos_droite": 5}
+const IMAGES_TINY := {"repos_bas": 5, "repos_haut": 5, "marche_bas": 4, "marche_haut": 4, "marche_gauche": 4, "marche_droite": 4,
+	"attaque_bas": 20, "attaque_haut": 20, "attaque_gauche": 18, "attaque_droite": 18, "touche": 2,
+	"repos_gauche": 1, "repos_droite": 1}
+
+
+func _creer_animations_tiny() -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	frames.remove_animation("default")
+	var planche: Texture2D = load(HEROS_TINY)
+	for nom in LIGNE_TINY:
+		frames.add_animation(nom)
+		var vitesse := 5.0 if nom.begins_with("repos") else (9.0 if nom.begins_with("marche") else (30.0 if nom.begins_with("attaque") else 8.0))
+		frames.set_animation_speed(nom, vitesse)
+		frames.set_animation_loop(nom, not nom.begins_with("attaque") and nom != "touche")
+		var n: int = IMAGES_TINY[nom]
+		for col in n:
+			var atlas := AtlasTexture.new()
+			atlas.atlas = planche
+			atlas.region = Rect2(col * CASE_TINY.x, LIGNE_TINY[nom] * CASE_TINY.y, CASE_TINY.x, CASE_TINY.y)
+			frames.add_frame(nom, atlas)
+	return frames
 
 
 # Animations du héros Pixel Crawler : marche 6 images, repos 4, estoc 8 (la lance est dans les images), touché 4.
