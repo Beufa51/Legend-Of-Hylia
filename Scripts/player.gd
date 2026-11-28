@@ -13,10 +13,10 @@ const CASE_G := Vector2i(48, 32)
 # Prioritaire sur le héros Gemini s'il existe ; supprimer ou renommer heros_pc.png pour revenir au héros Gemini.
 const HEROS_PC := "res://Assets/Heros/heros_pc.png"
 # HÉROS ACTUEL (2026-11-25) : le garde au casque à cimier rouge, fait par l'utilisateur avec un générateur LPC (Assets/Heros/garde_lpc.png,
-# découpé par Outils/preparer_garde_lpc.py). PRIORITAIRE sur tous les autres héros, de toute la partie. Cases de 32 px,
+# découpé par Outils/preparer_garde_lpc.py). PRIORITAIRE sur tous les autres héros, de toute la partie. Cases de 64 px (taille d'origine),
 # lignes : marche (0-3), repos (4-7, pose debout), estoc (8-11), touché (12) ; directions bas, haut, gauche, droite.
 const HEROS_LPC := "res://Assets/Heros/heros_lpc.png"
-const CASE_LPC := Vector2i(32, 32)
+const CASE_LPC := Vector2i(64, 64)   # cases de la planche LPC, taille d'origine (le perso est affiché à demi-taille, filtre linéaire)
 const LIGNE_LPC := {"bas": 0, "haut": 1, "gauche": 2, "droite": 3}
 var _lpc := false
 const ECHELLE_PC := 0.8   # taille du héros Pixel Crawler (1.0 = taille d'origine, 31 px)
@@ -93,8 +93,9 @@ func _ready() -> void:
 	_recrue = not _lpc and ResourceLoader.exists(RECRUE_MARCHE) and ResourceLoader.exists(RECRUE_COUP) and ResourceLoader.exists(RECRUE_REPOS) and not Etat.est("lance_recue")
 	if _lpc:
 		sprite.sprite_frames = _creer_animations_lpc()
-		sprite.scale = Vector2.ONE
-		sprite.offset = Vector2(0, -10)   # pieds à la ligne 31 d'une case de 32 : on les pose sur la collision (sous le joueur)
+		sprite.scale = Vector2.ONE * 0.5   # demi-taille : la planche (64 px) garde ses détails, le filtre linéaire lisse la réduction
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR   # seul ce héros est lissé (le reste du jeu reste en pixels nets)
+		sprite.offset = Vector2(0, -20)   # décalage en pixels de la planche (soit -10 px à l'écran) : pieds posés sur la collision (sous le joueur)
 	elif _recrue:
 		sprite.sprite_frames = _creer_animations_recrue()
 		sprite.scale = Vector2.ONE * ECHELLE_RECRUE

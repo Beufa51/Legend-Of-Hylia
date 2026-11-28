@@ -5,7 +5,8 @@ Ordre des lignes dans une planche LPC : haut, gauche, bas, droite (pour chaque a
   lignes 4-7   estoc (lance)  8 images       lignes 8-11  marche  9 images (la 1re = debout = le repos)
   ligne  20    touché         6 images
   (les lignes « repos » 22-25 et « course » 38-41 du générateur n'ont PAS la lance : pas utilisées)
-Sortie : Assets/Heros/heros_lpc.png, cases de 32 px (réduites de MOITIÉ : un pixel du jeu = 2x2 pixels de la planche, bords nets),
+Sortie : Assets/Heros/heros_lpc.png, cases de 64 px = TAILLE D'ORIGINE de la planche (pas de réduction : le jeu l'affiche à
+demi-taille avec un filtre linéaire, ce qui garde les détails du casque et du visage ; voir player.gd CASE_LPC / ECHELLE_LPC),
 lignes dans l'ordre du jeu (bas, haut, gauche, droite) :
   0-3 marche (8)   4-7 repos (1)   8-11 estoc (8)   12 touché (6, une seule direction)
 Usage : python3 Outils/preparer_garde_lpc.py [planche.png] [sortie.png]"""
@@ -15,7 +16,7 @@ from PIL import Image
 
 SOURCE = sys.argv[1] if len(sys.argv) > 1 else "Assets/Heros/garde_lpc.png"
 SORTIE = sys.argv[2] if len(sys.argv) > 2 else "Assets/Heros/heros_lpc.png"
-CASE = 32
+CASE = 64   # taille d'une case de la planche : on NE réduit plus (la réduction rendait le perso trop pixelisé)
 ORDRE_JEU = [2, 0, 1, 3]
 ANIMS = [  # (nom, 1re ligne LPC, colonne de départ, nombre d'images, 4 directions ?)
     ("marche", 8, 1, 8, True),
@@ -26,7 +27,8 @@ ANIMS = [  # (nom, 1re ligne LPC, colonne de départ, nombre d'images, 4 directi
 
 
 def reduire(case):
-    """Moitié de la taille, sans flou : chaque pixel du jeu = le pixel opaque le plus présent de son bloc 2x2."""
+    """Ancienne réduction de moitié (médiane des 2x2), gardée pour mémoire : elle rendait le perso trop pixelisé.
+    Plus utilisée : la case est copiée telle quelle (voir main)."""
     a = np.array(case.resize((CASE * 2, CASE * 2), Image.NEAREST)).astype(int)   # case normalisée à 64x64
     out = np.zeros((CASE, CASE, 4), np.uint8)
     for y in range(CASE):
@@ -48,7 +50,7 @@ def main():
     lignes_dispo = planche.height // taille
     print("planche", planche.size, "cases de", taille, "px,", lignes_dispo, "lignes")
     rangees = sum(4 if quatre else 1 for _, _, _, _, quatre in ANIMS)
-    out = Image.new("RGBA", (9 * CASE, rangees * CASE), (0, 0, 0, 0))
+    out = Image.new("RGBA", (8 * CASE, rangees * CASE), (0, 0, 0, 0))
     r = 0
     for nom, ligne0, col0, n, quatre in ANIMS:
         dirs = ORDRE_JEU if quatre else [0]
@@ -58,7 +60,7 @@ def main():
                 print("!! ligne", ligne, "absente pour", nom)
             for c in range(n):
                 x0, y0 = (col0 + c) * taille, ligne * taille
-                out.alpha_composite(reduire(planche.crop((x0, y0, x0 + taille, y0 + taille))), (c * CASE, r * CASE))
+                out.alpha_composite(planche.crop((x0, y0, x0 + taille, y0 + taille)), (c * CASE, r * CASE))
             r += 1
     out.save(SORTIE)
     # pieds = dernière ligne opaque de la marche vers le bas (pour caler le sprite sur la collision du joueur)
