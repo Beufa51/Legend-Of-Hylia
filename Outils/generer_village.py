@@ -492,7 +492,31 @@ ecrans = [
     # --- queue (y=4)
     ('RouteSud', (2, 4), route, {'animaux': animaux_route, 'pnjs': pnjs_route, 'terrasses': terrasses_route, 'escaliers': escaliers_route}),
 ]
+# HERBES À COUPER ("x y largeur hauteur", les obstacles sont sautés par le jeu) et POTS À RUBIS ("x y") : des rubis et des cœurs à chaque coin du village
+HERBES = {
+    'Verger': ["14 1 2 12", "16 7 7 2"],
+    'GrandChemin': ["14 8 6 3", "1 9 6 3"],
+    'TerrainGarde': ["16 3 8 8", "1 9 9 2"],
+    'VillageOuest': ["3 10 7 3", "15 10 8 3", "3 3 7 1"],
+    'PlaceDuCoq': ["16 3 8 1", "7 9 4 2", "15 9 3 2"],
+    'VillageEst': ["1 9 9 4", "15 9 7 3"],
+    'MaisonHeros': ["1 3 7 1", "15 3 3 3", "4 9 12 2"],
+    'Riviere': ["1 9 8 3", "14 9 9 3"],
+    'RouteSud': ["1 5 9 5", "14 5 9 5"],
+}
+POTS = {
+    'PlaceDuCoq': ["3 3", "5 3", "18 3", "21 3"],
+    'VillageOuest': ["3 12", "5 12", "16 12"],
+    'VillageEst': ["3 12", "5 12", "12 12", "16 10", "21 10"],
+    'MaisonHeros': ["2 3", "6 3", "10 10", "15 3"],
+    'TerrainGarde': ["2 1", "5 1", "22 9"],
+    'Verger': ["10 3", "10 9"],
+}
 for _n, _gr, _g, _p in ecrans:
+    if _n in HERBES:
+        _p['herbes'] = HERBES[_n]
+    if _n in POTS:
+        _p['pots_village'] = POTS[_n]
     if _n in COFFRES:
         _p['coffres'], _p['secrets'] = COFFRES[_n]
 

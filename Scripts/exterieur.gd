@@ -104,6 +104,9 @@ const ANIMAUX := {
 @export var secrets: PackedStringArray
 @export var terrasses: PackedStringArray
 @export var escaliers: PackedStringArray
+# HERBES À COUPER : "x y largeur hauteur" = un champ rectangulaire de touffes (1 case sur 1, sauf obstacles). POTS : "x y" = un pot cassable à rubis.
+@export var herbes: PackedStringArray
+@export var pots_village: PackedStringArray
 
 var _solides := {}   # cases bloquées par un objet
 var _couvertes := {} # cases recouvertes par un objet (bloquant ou non) : pas de touffe d'herbe dessus
@@ -128,6 +131,7 @@ func _ready() -> void:
 	_poser_passages()
 	_poser_minijeu()
 	_poser_coffres()
+	_poser_herbes_et_pots()
 
 
 # Le vent : les petites plantes se décalent d'un pixel selon une vague qui traverse l'écran.
@@ -265,6 +269,39 @@ func ouvrir_porte(case: Vector2i, duree := 1.4) -> void:
 	t.tween_interval(duree)
 	t.tween_property(ouverture, "modulate:a", 0.0, 0.3)
 	t.tween_callback(ouverture.queue_free)
+
+
+# HERBES et POTS À RUBIS (voir les exports `herbes` et `pots_village`) : on les coupe / casse à la lance, ils laissent parfois un rubis ou un cœur.
+func _poser_herbes_et_pots() -> void:
+	var images: Array[Texture2D] = []
+	for nom in Herbe.VARIANTES:
+		images.append(_image(nom))
+	for ligne in herbes:
+		var t := ligne.strip_edges().split(" ", false)
+		if t.size() != 4:
+			push_warning("Exterieur : champ d'herbe mal écrit : " + ligne)
+			continue
+		for y in range(int(t[1]), int(t[1]) + int(t[3])):
+			for x in range(int(t[0]), int(t[0]) + int(t[2])):
+				var c := Vector2i(x, y)
+				if _solides.has(c) or _couvertes.has(c) or _cases_portes.has(c) or layout[y][x] == ":":   # jamais sur un chemin ni une porte
+					continue
+				var h := Herbe.new()
+				h.position = Vector2(c * TUILE)
+				add_child(h)
+				h.initialiser(images[(x * 3 + y * 5) % images.size()])
+	for ligne in pots_village:
+		var t := ligne.strip_edges().split(" ", false)
+		if t.size() != 2:
+			continue
+		var c := Vector2i(int(t[0]), int(t[1]))
+		if _solides.has(c) or _couvertes.has(c) or layout[c.y][c.x] == ":":
+			continue
+		var pot := Pot.new()
+		pot.position = Vector2(c * TUILE)
+		add_child(pot)
+		pot.initialiser(_image("pot_%d" % (1 + (c.x * 7 + c.y * 3) % 6)), Pot.COULEURS[(c.x + c.y) % 3])
+		pot.butin = true
 
 
 # COFFRES et SECRETS (voir les exports `coffres` et `secrets`).

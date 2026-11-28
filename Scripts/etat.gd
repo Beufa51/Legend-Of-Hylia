@@ -17,12 +17,14 @@ signal chute(retour: Vector2)        # le joueur est tombé dans un trou : retou
 signal choix_demande(nom: String, lignes: PackedStringArray, options: PackedStringArray)   # dialogue qui finit par un CHOIX
 signal choix_fait(index: int)        # le joueur a choisi l'option n° index (0 = la première)
 signal stele_touchee(cote: String)   # le joueur s'approche d'une stèle-patte (parvis), "gauche" ou "droite" : world.gd lance le dépôt du symbole
+signal rubis_change(total: int)      # le nombre de rubis a changé (HUD)
 signal pique(retour: Vector2)        # le joueur a marché sur des pics sortis : retour à `retour`
 
 const FICHIER := "user://sauvegarde.json"                      # sauvegarde AUTOMATIQUE (reprise au lancement)
 const FICHIER_MANUEL := "user://sauvegarde_manuelle.json"      # sauvegarde choisie par le joueur (menu pause)
 
 var drapeaux := {}
+var rubis := 0                        # monnaie du jeu (herbes, pots, coffres) : sert à acheter des décors pour la maison
 var records := {}                     # meilleurs scores des mini-jeux : { "tir": 14, "poules": 38.5 }
 var en_dialogue := false              # vrai pendant une conversation (le joueur est figé)
 var salle_courante := Vector2i.ZERO   # case de la grille où se trouve la caméra (mise à jour par world.gd)
@@ -79,6 +81,20 @@ func nombre_insignes() -> int:
 	return n
 
 
+func gagner_rubis(n: int) -> void:
+	rubis = maxi(rubis + n, 0)
+	rubis_change.emit(rubis)
+	sauver()
+
+
+# Dépense n rubis. Renvoie faux (sans rien changer) s'il n'y en a pas assez.
+func depenser_rubis(n: int) -> bool:
+	if rubis < n:
+		return false
+	gagner_rubis(-n)
+	return true
+
+
 func est(nom: String) -> bool:
 	return nom != "" and drapeaux.get(nom, false)
 
@@ -133,6 +149,7 @@ func _ecrire(chemin: String) -> bool:
 		"drapeaux": drapeaux.keys(),
 		"visites": visites.keys(),
 		"records": records,
+		"rubis": rubis,
 		"version": 2,
 		"scene": scene_sauvee,
 		"ecran": ecran_sauve,
@@ -153,6 +170,7 @@ func charger(chemin := FICHIER) -> void:
 	for nom in donnees.get("drapeaux", []):
 		drapeaux[nom] = true
 	records = donnees.get("records", {})
+	rubis = int(donnees.get("rubis", 0))
 	for cle in donnees.get("visites", []):
 		visites[cle] = true
 	position_sauvee = Vector2(donnees.get("x", 0.0), donnees.get("y", 0.0))
@@ -178,6 +196,7 @@ func charger_manuel() -> bool:
 		return false
 	drapeaux.clear()
 	records.clear()
+	rubis = 0
 	visites.clear()
 	position_sauvee = Vector2.ZERO
 	scene_sauvee = ""
@@ -196,6 +215,7 @@ func charger_manuel() -> bool:
 func effacer() -> void:
 	drapeaux.clear()
 	records.clear()
+	rubis = 0
 	visites.clear()
 	position_sauvee = Vector2.ZERO
 	scene_sauvee = ""

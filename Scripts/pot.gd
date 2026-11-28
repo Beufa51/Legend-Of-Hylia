@@ -6,6 +6,7 @@ const SON_CASSE := "res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Impac
 const COULEUR_MORCEAUX := Color(0.72, 0.42, 0.27)
 const COULEURS := [Color(0.78, 0.45, 0.24), Color(0.42, 0.5, 0.62), Color(0.42, 0.56, 0.3)]   # ocre, bleu, vert (pots Gemini)
 
+var butin := false   # vrai (village) : un pot cassé peut laisser un rubis ou un cœur
 var _casse := false
 var _couleur := COULEUR_MORCEAUX
 
@@ -37,6 +38,8 @@ func casser() -> void:
 	if _casse:
 		return
 	_casse = true
+	if butin:
+		Butin.lacher(get_parent(), global_position + Vector2(8, 8), 0.55, 0.15)
 	_lancer_morceaux()
 	_jouer_son()
 	queue_free()

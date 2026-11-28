@@ -55,7 +55,10 @@ func _ready() -> void:
 	Etat.chute.connect(_raccompagner.bind("chute"))
 	Etat.pique.connect(_raccompagner.bind("pics"))
 	Etat.stele_touchee.connect(_ceremonie_stele)
-	Etat.passage.connect(func(ecran, case): _passer_porte(ecran, case, Etat.passage_texte))
+	Etat.passage.connect(func(ecran, case):
+		if not donjon and str(ecran).begins_with("Interieur"):
+			joueur.soigner()   # à l'abri dans une maison : tous les cœurs reviennent
+		_passer_porte(ecran, case, Etat.passage_texte))
 	Etat.drapeau_change.connect(_sur_drapeau)
 	Etat.drapeau_change.connect(func(_nom): _inactif = 0.0)
 	_creer_hud()
@@ -65,6 +68,10 @@ func _ready() -> void:
 	add_child(Tactile.new())    # joystick + boutons (visibles seulement sur écran tactile)
 	add_child(Pause.creer(self))   # menu pause (Échap / P / Start) : reprendre, carte, commandes
 	if not donjon:
+		var hud_village := HudVillage.new()   # cœurs + rubis
+		add_child(hud_village)
+		hud_village.demarrer(joueur)
+		joueur.coeurs_change.connect(_sur_coeurs_village)
 		var ambiance := Ambiance.new()   # vent, feuilles, nuages, papillons, oiseaux (extérieur seulement)
 		ambiance.camera = camera
 		add_child(ambiance)
@@ -83,6 +90,52 @@ func _ready() -> void:
 		create_tween().tween_property(_fondu, "modulate:a", 0.0, 0.8)
 		if texte != "":
 			get_tree().create_timer(1.0).timeout.connect(func(): Etat.annoncer(texte))
+
+
+# --- KO au village (poules en colère...) : plus de cœurs -> évanouissement, réveil dans son lit, cœurs rendus ---
+var _ko := false
+
+
+func _sur_coeurs_village(coeurs: int, _maxi: int) -> void:
+	if coeurs > 0 or _ko:
+		return
+	_ko = true
+	_evanouir()
+
+
+func _evanouir() -> void:
+	en_transition = true
+	joueur.set_physics_process(false)
+	joueur.velocity = Vector2.ZERO
+	_jouer_son("res://Assets/Ninja_adventure/Audio/Sounds/Hit & Impact/Hit3.wav", -2.0)
+	Etat.annoncer("Tu t'évanouis sous les coups de bec...")
+	var chute := create_tween()
+	chute.tween_property(joueur.sprite, "rotation", PI / 2.0, 0.35)
+	chute.parallel().tween_property(joueur.sprite, "modulate", Color(0.6, 0.6, 0.7), 0.35)
+	await get_tree().create_timer(1.5).timeout
+	var t := create_tween()
+	t.tween_property(_fondu, "modulate:a", 1.0, 0.6)
+	await t.finished
+	for enfant in get_children():
+		if enfant is Ecran and enfant.name == "InterieurHeros":
+			joueur.arreter_glissade()
+			joueur.position = enfant.position + Vector2(Vector2i(9, 6) * Ecran.TUILE) + Vector2(8, 3)
+	joueur.velocity = Vector2.ZERO
+	joueur.sprite.rotation = 0.0
+	joueur.sprite.modulate = Color.WHITE
+	joueur.direction = "bas"
+	joueur.sprite.play("repos_bas")
+	joueur.soigner()
+	_placer_camera()
+	Etat.memoriser_position(joueur.position)
+	await get_tree().create_timer(1.0).timeout
+	t = create_tween()
+	t.tween_property(_fondu, "modulate:a", 0.0, 0.8)
+	await t.finished
+	joueur.set_physics_process(true)
+	en_transition = false
+	_ko = false
+	Etat.annoncer("Tu te réveilles dans ton lit. Les poules, ce n'est pas à prendre à la légère...")
 
 
 # Où reprendre la partie ? On cherche l'écran par son NOM (la grille a pu changer depuis la sauvegarde) ;

@@ -294,7 +294,7 @@ func _poule_proche() -> Animal:
 	return null
 
 
-# Lance la poule devant soi, le plus loin possible (44, 30 ou 14 px) sur une place libre : elle passe par-dessus les clôtures.
+# Lance la poule devant soi, le plus loin possible (60, 44, 30 ou 14 px) sur une place libre : elle passe par-dessus les clôtures.
 func _lancer_poule() -> void:
 	var poule := porte
 	porte = null
@@ -302,7 +302,7 @@ func _lancer_poule() -> void:
 		return
 	var vecteur: Vector2 = VECTEURS[direction]
 	var cible := global_position + vecteur * 14.0
-	for d in [44.0, 30.0, 14.0]:
+	for d in [60.0, 44.0, 30.0, 14.0]:
 		var point: Vector2 = global_position + vecteur * d
 		var requete := PhysicsPointQueryParameters2D.new()
 		requete.position = point
@@ -315,7 +315,7 @@ func _lancer_poule() -> void:
 	poule.lancer(global_position + Vector2(0, -12), cible)
 
 
-# Pousse le joueur (sans le blesser) : utilisé par les poules en colère.
+# Pousse le joueur (sans le blesser).
 func repousser(force: Vector2) -> void:
 	_recul = force
 
@@ -328,6 +328,14 @@ func blesser(source: Vector2, degats := 1) -> void:
 	_invulnerable = 1.2
 	_recul = (global_position - source).normalized() * 240.0
 	_jouer_son(SON_BLESSE, -2.0)
+	coeurs_change.emit(coeurs, coeurs_max())
+
+
+# Rend `n` cœurs (petit cœur ramassé).
+func guerir(n := 1) -> void:
+	if coeurs <= 0:
+		return
+	coeurs = mini(coeurs + n, coeurs_max())
 	coeurs_change.emit(coeurs, coeurs_max())
 
 
