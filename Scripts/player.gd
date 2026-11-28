@@ -584,7 +584,7 @@ func _creer_animations_tiny() -> SpriteFrames:
 	var planche: Texture2D = load(HEROS_TINY)
 	for nom in LIGNE_TINY:
 		frames.add_animation(nom)
-		var vitesse := 5.0 if nom.begins_with("repos") else (9.0 if nom.begins_with("marche") else (30.0 if nom.begins_with("attaque") else 8.0))
+		var vitesse := 5.0 if nom.begins_with("repos") else (9.0 if nom.begins_with("marche") else (14.0 if nom.begins_with("attaque") else 8.0))
 		frames.set_animation_speed(nom, vitesse)
 		frames.set_animation_loop(nom, not nom.begins_with("attaque") and nom != "touche")
 		var n: int = IMAGES_TINY[nom]
