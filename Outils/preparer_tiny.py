@@ -17,8 +17,9 @@ C = 128
 # (animation, nombre d'images, taille de l'image : 'petit' 64x49 ou 'grand' 128x128)
 LIGNES = [("idle_down", 5, "petit"), ("idle_up", 5, "petit"), ("walk_down", 4, "petit"), ("walk_up", 4, "petit"),
           ("walk_left", 4, "petit"), ("walk_right", 4, "petit"),
-          ("attack_down_stay", 20, "grand"), ("attack_up_stay", 20, "grand"), ("attack_left_stay", 18, "grand"),
-          ("attack_right_stay", 18, "grand"), ("hit", 2, "petit")]
+          ("attack_down_stay", 20, "grand"), ("attack_up_stay", 20, "grand"),
+          ("attack_right_stay", 18, "grand"), ("attack_left_stay", 18, "grand"),   # gauche/droite INVERSÉS dans le pack : on les échange
+          ("hit", 2, "petit")]
 
 z = zipfile.ZipFile(ZIP)
 
