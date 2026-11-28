@@ -69,6 +69,12 @@
 - **Cocorico** (décision utilisateur, 2026-11-26) : nom ASSUMÉ (le mot n'appartient à personne). C'est le **village de la garde royale**, où le héros rêve d'aller (bulle de l'intro vidéo : « devenir garde de la famille royale au village Cocorico »).
   Le héros y va **APRÈS le jeu, jamais pendant**. Constante `Noms.COCORICO` dans `Scripts/noms.gd` ; aucune scène ni texte ne l'utilise encore. Le Village du Coq Chantant reste le village du héros.
 
+- 2026-11-28 : **TITRE ET INTRO** : titre « Legend of the Guard » (`Noms.TITRE_JEU`). Écran titre = image fixe + menu (`Scripts/ecran_titre.gd`) ; « Nouvelle partie » demande confirmation si une sauvegarde existe, puis joue l'intro vidéo (`Assets/Titre/intro.ogv`, passable) ; « Continuer » ne rejoue pas l'intro (`Scripts/demarrage.gd`). Vidéo d'accueil de l'écran titre : PLUS TARD (l'utilisateur la trouvera).
+  Cocorico = village de la garde royale, visité APRÈS le jeu (`Noms.COCORICO`). Héros = garde LPC, armure bronze (`Outils/recolorer_armure.py`), planche à taille d'origine 64 px affichée à demi-taille avec filtre linéaire (`player.gd`, `preparer_garde_lpc.py`). Son du rocher fissuré corrigé.
+  SKILL GODOT : `haxqer/godot-skill` (MIT) copié dans `.claude/skills/godot` sur la branche `install-skill-godot` (NON fusionnée : à fusionner après test ; le lint du skill signale des faux positifs `pas_%s`).
+  Tests : `Tests/verifier_scenes.tscn` TOUT BON après les changements du héros.
+  À FAIRE ensuite : fusion de `install-skill-godot` ; vidéo d'accueil ; test humain du héros (rendu lissé) ; export web ; reste de l'audit (filet de tests, enfant).
+
 ## Journal des étapes
 - 2026-11-12 : GDD v1 reçu, premier avis donné, questions posées. Rien de créé dans Godot encore.
 - 2026-11-12 : réponses reçues (voir Décisions). Étape suivante : création du dépôt GitHub + projet Godot.
