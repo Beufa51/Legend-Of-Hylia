@@ -32,7 +32,7 @@ var en_transition := false
 
 
 func _ready() -> void:
-	get_tree().root.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT   # (sécurité : l'écran redevient 400x224 mis à l'échelle, même si une cinématique HD a été interrompue)
+	get_tree().root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS   # (sécurité : l'écran redevient 400x224 mis à l'échelle, même si une cinématique HD a été interrompue)
 	if Etat.position_sauvee != Vector2.ZERO and Etat.scene_sauvee == scene_file_path:
 		joueur.position = _position_reprise()   # partie sauvegardée : on reprend là où on était
 	if Etat.arrivee_ecran != "":   # on arrive d'une autre scène (village <-> donjon)
