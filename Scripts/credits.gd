@@ -37,6 +37,7 @@ const LIGNES := [
 ## Tout le texte à afficher (la liste ci-dessus + le fichier LPC s'il est présent).
 static func texte() -> String:
 	var t := "\n".join(LIGNES)
+	t += "\nPersonnages du village (Super Retro World, crédit obligatoire) :\nGif (@gif_not_jif), Noiracide (@Noiracide), Romi (@DessRomaric)\n"
 	if FileAccess.file_exists(FICHIER_LPC):
 		t += "\nCrédits LPC :\n" + FileAccess.get_file_as_string(FICHIER_LPC).strip_edges() + "\n"
 	return t
