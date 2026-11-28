@@ -14,8 +14,8 @@ const DISTANCE_PEUR := 30.0   # px : un animal peureux fuit si le joueur est plu
 
 static var _coups_poules := 0   # à force de frapper les poules...
 static var _dernier_coup_poule := -100.0
-const COUPS_AVANT_COLERE := 5   # ...elles s'énervent (comme dans Zelda), mais sans jamais blesser
-const DUREE_COLERE := 12.0
+const COUPS_AVANT_PANIQUE := 5   # ...elles s'affolent et se dispersent (elles n'attaquent JAMAIS : plus de poules qui coincent le joueur)
+const DUREE_PANIQUE := 3.0
 
 var _sprite: Sprite2D
 var _vitesse := 0.0
@@ -28,9 +28,6 @@ var _fuite := 0.0             # temps de fuite restant
 var _image_chrono := 0.0
 var _dernier_coup := -10.0
 var _plumes: CPUParticles2D
-var _colere := 0.0            # temps restant de colère (poule qui fonce sur le joueur)
-var _bec := 0.0               # délai entre deux coups de bec
-var _renfort := false         # poule venue en renfort : disparaît après la colère
 
 
 func initialiser(planche: String, vitesse: float, peureux: bool, espece: String, zone: Rect2) -> void:
@@ -118,28 +115,38 @@ func _physics_process(delta: float) -> void:
 	_chrono -= delta
 	_fuite -= delta
 	var joueur := _joueur()
-	if _colere > 0.0:
-		_attaquer(delta, joueur)
-		return
-	if _peureux and joueur and joueur.global_position.distance_to(global_position) < DISTANCE_PEUR and _fuite <= 0.0:
-		_fuir(joueur, 0.9)
-	if _fuite <= 0.0 and _chrono <= 0.0:
+	if _peureux and joueur and _fuite <= 0.0 and joueur.global_position.distance_to(global_position) < DISTANCE_PEUR:
+		_fuite = 0.9
+	if _fuite > 0.0 and joueur:
+		# Fuite : droit devant, mais en contournant ce qui bloque (arbre, mur, bord de l'écran) au lieu de vibrer contre
+		_direction = _direction_libre((global_position - joueur.global_position).normalized())
+	elif _fuite <= 0.0 and _chrono <= 0.0:
 		# Nouvel état : se promener (60 %) ou s'arrêter pour picorer (40 %)
 		if _vitesse > 0.0 and randf() < 0.6:
-			_direction = Vector2.from_angle(randf() * TAU)
+			_direction = _direction_libre(Vector2.from_angle(randf() * TAU))
 			_chrono = randf_range(0.8, 2.2)
 		else:
 			_direction = Vector2.ZERO
 			_chrono = randf_range(1.0, 3.5)
 	var vitesse := _vitesse * (3.2 if _fuite > 0.0 else 1.0)
 	velocity = _direction * vitesse
-	# Ne pas sortir de son écran : demi-tour au bord
-	var suivante := position + velocity * delta
-	if not _zone.has_point(suivante):
-		_direction = (_zone.get_center() - position).normalized()
-		velocity = _direction * vitesse
 	move_and_slide()
+	# Bloqué au repos : on choisit tout de suite autre chose à faire
+	if _fuite <= 0.0 and get_slide_collision_count() > 0:
+		_chrono = 0.0
+		_direction = Vector2.ZERO
 	_animer(delta)
+
+
+# Première direction praticable en partant de `voulue` puis en tournant de plus en plus (jamais vers un obstacle ni hors de la zone).
+func _direction_libre(voulue: Vector2) -> Vector2:
+	if voulue == Vector2.ZERO:
+		voulue = Vector2.RIGHT
+	for angle in [0.0, 0.6, -0.6, 1.2, -1.2, 1.9, -1.9, PI]:
+		var d := voulue.rotated(angle)
+		if _zone.has_point(position + d * 8.0) and not test_move(global_transform, d * 6.0):
+			return d
+	return Vector2.ZERO
 
 
 # Marche : les 2 images alternent ; à l'arrêt : il picore de temps en temps (image 2 un instant).
@@ -155,9 +162,7 @@ func _animer(delta: float) -> void:
 
 func _fuir(joueur: Node2D, duree: float) -> void:
 	_fuite = duree
-	_direction = (global_position - joueur.global_position).normalized()
-	if _direction == Vector2.ZERO:
-		_direction = Vector2.RIGHT
+	_direction = _direction_libre((global_position - joueur.global_position).normalized())
 
 
 # Coup de lance : sursaut, cri, fuite. (Appelé à chaque image tant que la lance le touche : anti-répétition.)
@@ -180,9 +185,9 @@ func frapper() -> void:
 			_coups_poules = 0   # on a laissé les poules tranquilles : elles pardonnent
 		_dernier_coup_poule = maintenant
 		_coups_poules += 1
-		if _coups_poules >= COUPS_AVANT_COLERE:
+		if _coups_poules >= COUPS_AVANT_PANIQUE:
 			_coups_poules = 0
-			_declencher_colere()
+			_paniquer()
 	elif _espece == "chat":
 		Etat.annoncer("Le chat ouvre un œil, soupire... et se rendort.")
 
@@ -207,51 +212,12 @@ func _joueur() -> Node2D:
 	return get_tree().get_first_node_in_group("joueur") as Node2D
 
 
-# TOUTES les poules de l'écran s'énervent, et des renforts arrivent par les bords (comme les cocottes de Zelda).
-func _declencher_colere() -> void:
-	Etat.annoncer("Oh non... les poules sont furieuses !")
+# Trop de coups : TOUTES les poules de l'écran s'affolent et se dispersent en caquetant (aucune attaque, aucun dégât).
+func _paniquer() -> void:
+	Etat.annoncer("Les poules s'affolent de tous côtés !")
+	var joueur := _joueur()
 	for p in get_tree().get_nodes_in_group("poules"):
-		p._se_facher()
-	for i in 5:
-		var renfort := Animal.new()
-		var bord := Vector2(_zone.position.x if i % 2 == 0 else _zone.end.x, randf_range(_zone.position.y, _zone.end.y))
-		renfort.position = bord
-		get_parent().add_child(renfort)
-		renfort.initialiser("res://Assets/Ninja_adventure/Actor/Animal/Chicken/SpriteSheetWhite.png", _vitesse, true, "poule", _zone)
-		renfort._renfort = true
-		renfort._se_facher()
-
-
-func _se_facher() -> void:
-	_colere = DUREE_COLERE
-	_bec = 0.0
-	_sprite.modulate = Color(1.0, 0.55, 0.5)
-	_crier()
-
-
-# Colère : la poule fonce sur le joueur et le repousse à coups de bec (aucun dégât). Elle se calme au bout d'un moment.
-func _attaquer(delta: float, joueur: Node2D) -> void:
-	_colere -= delta
-	_bec -= delta
-	if _colere <= 0.0:
-		_sprite.modulate = Color.WHITE
-		_sprite.rotation = 0.0
-		_fuite = 0.0
-		_chrono = 0.5
-		if _renfort:
-			queue_free()
-		return
-	if joueur:
-		_direction = (joueur.global_position - global_position).normalized()
-		velocity = _direction * _vitesse * 3.6
-		move_and_slide()
-		if _bec <= 0.0 and joueur.global_position.distance_to(global_position) < 13.0:
-			_bec = 0.8
-			_crier()
-			if joueur.has_method("repousser"):
-				joueur.repousser(_direction * 170.0)
-			var saut := create_tween()
-			saut.tween_property(_sprite, "position:y", -11.0, 0.08)
-			saut.tween_property(_sprite, "position:y", -5.0, 0.1)
-	_animer(delta)
-	_sprite.rotation = sin(Time.get_ticks_msec() / 40.0) * 0.12   # elle s'agite
+		if p.portee or p.verrouillee or joueur == null:
+			continue
+		p._fuir(joueur, DUREE_PANIQUE)
+		p._crier()

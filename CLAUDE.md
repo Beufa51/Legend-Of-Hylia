@@ -879,6 +879,10 @@
   5) TESTS : `Tests/verifier_scenes.gd` converti EN SCÈNE (`godot --headless --path . res://Tests/verifier_scenes.tscn`, plus de faux vert : autoload Etat résolu, 0 erreur de script) ; bot `gouffre` recalé (trajet par (12,11) puis rangée 11) = OK. Reste dans `Tests/verifier_pause.tscn` : menu, options, crédits, indice, cœurs.
   RESTE de l'audit : écran titre / titre définitif + export web (reportés), récompenses utiles autres que les cœurs (objets), test humain avec un enfant, refonte de la chaîne d'outils Python.
 
+- 2026-11-28 : retours « village pas fun, animaux qui bugent à l'approche, poules qui attaquent à l'infini jusqu'à coincer le joueur, mini-jeux pas fun ». **CORRIGÉ (non testé dans Godot : pas de Godot côté Claude)** :
+  1) POULES : plus de colère ni de renforts (`animal.gd`) ; après 5 coups de lance elles s'AFFOLENT et se dispersent 3 s (`_paniquer`), sans jamais attaquer. 2) BUG D'APPROCHE : la fuite vibrait contre les obstacles/bords (demi-tour vers le centre = vers le joueur) ; maintenant `_direction_libre` contourne arbres/murs/bords (`test_move`) et un animal bloqué au repos change d'idée aussitôt.
+  3) STAND DE TIR (`mini_tir.gd`) : rythme qui s'accélère (plus de pots, moins longtemps), pot DORÉ 1 sur 5 = 3 points ; rubans 12 / 20 / 28. Poules de la ferme : inchangées (à rediscuter). VILLAGE « pas fun » : demandé à l'utilisateur ce qui manque (voir réponse).
+
 ## PROCHAINE ÉTAPE (Sonnet) : tester 14b dans Godot, puis harmoniser le reste du village
 - Temple, corps du coq, intérieurs, clôtures, puits, tonneau, bannière encore dans l'ancien style (maisons FAITES en 14e) ; héros à harmoniser avec les habitants ; animation « au repos » des habitants (4 images dispo) ; secrets (bois/cascade) ; route du sud à ouvrir à l'épilogue.
 - Ensuite : stèle à refaire, rééquilibrage D5/énigmes, mode 7, contrôles tactiles.
