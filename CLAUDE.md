@@ -75,6 +75,12 @@
   Tests : `Tests/verifier_scenes.tscn` TOUT BON après les changements du héros.
   À FAIRE ensuite : fusion de `install-skill-godot` ; vidéo d'accueil ; test humain du héros (rendu lissé) ; export web ; reste de l'audit (filet de tests, enfant).
 
+- 2026-11-28 (suite) : **HÉROS ET PNJ** : héros = « Tiny Questers — Free Warrior » (Bobddadoo, épée et bouclier, vue de dessus, licence libre avec crédit apprécié) : `Assets/Heros/heros_tiny.png` fabriqué par `Outils/preparer_tiny.py` (cases 128 px, lignes repos / marche / attaque sur place / touché ; attaques gauche-droite échangées car le pack les inverse ; attaque à 14 i/s). Prioritaire dans `player.gd` (`HEROS_TINY`). L'ancien garde LPC (`heros_lpc.png`) n'est plus affiché si la feuille Tiny existe.
+  PNJ : 7 habitants remplacés par le pack Super Retro World (style RPG Maker, licence : crédit obligatoire des 3 auteurs, ajouté dans `Scripts/credits.gd`), fabriqués par `Outils/preparer_pnj_superretro.py` (24 px, réduction au plus proche). Soldat `Villager3` et capitaine `KnightGold` gardent l'ancien style (pas de soldat en armure dans le pack).
+  Mode haute résolution : `project.godot` stretch `canvas_items` et `world.gd` idem (dessin à la résolution de la fenêtre, monde toujours net) — fusionné sans test humain.
+  Essais abandonnés : bouche du garde (branche `heros-bouche`, non fusionnée). Pack de héros « FreeCharactersAnimationsAssetPack » (soldat à épée, payant : écarté).
+  À FAIRE ensuite : refaire l'INTRO avec le nouveau héros (la vidéo actuelle ne lui ressemble pas) ; SYSTÈME DE RÉCOMPENSES à la fin de l'épreuve (décision utilisateur : « on verra après ») ; soldat et capitaine dans le même style (pas trouvé) ; vidéo d'accueil de l'écran titre (plus tard).
+
 ## Journal des étapes
 - 2026-11-12 : GDD v1 reçu, premier avis donné, questions posées. Rien de créé dans Godot encore.
 - 2026-11-12 : réponses reçues (voir Décisions). Étape suivante : création du dépôt GitHub + projet Godot.
